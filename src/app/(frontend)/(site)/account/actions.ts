@@ -204,7 +204,7 @@ export const sendOrderRequest = async (
     customer: { email: customer.email, name: customer.name },
     orderId,
     orderSummary: (ownedOrder.items ?? [])
-      .map((item) => item.planTitle)
+      .map((item) => item.productTitle)
       .filter((title): title is string => Boolean(title))
       .join(', '),
     pauseFrom:

@@ -14,6 +14,8 @@ import * as migration_20261101_140000_plan_points from './20261101_140000_plan_p
 import * as migration_20261101_150000_paid_orders_only from './20261101_150000_paid_orders_only';
 import * as migration_20261102_200000_order_requests from './20261102_200000_order_requests';
 import * as migration_20261105_170000_plan_category_audience from './20261105_170000_plan_category_audience';
+import * as migration_20261106_120000_plan_subcategories from './20261106_120000_plan_subcategories';
+import * as migration_20261107_100000_rename_plans_to_products from './20261107_100000_rename_plans_to_products';
 
 
 export const migrations = [
@@ -96,5 +98,15 @@ export const migrations = [
     up: migration_20261105_170000_plan_category_audience.up,
     down: migration_20261105_170000_plan_category_audience.down,
     name: '20261105_170000_plan_category_audience',
+  },
+  {
+    up: migration_20261106_120000_plan_subcategories.up,
+    down: migration_20261106_120000_plan_subcategories.down,
+    name: '20261106_120000_plan_subcategories',
+  },
+  {
+    up: migration_20261107_100000_rename_plans_to_products.up,
+    down: migration_20261107_100000_rename_plans_to_products.down,
+    name: '20261107_100000_rename_plans_to_products',
   },
 ];

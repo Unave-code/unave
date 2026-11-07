@@ -100,7 +100,7 @@ export const ACCOUNT_REQUEST_PAUSE = 'Request to pause'
 export const ACCOUNT_REQUEST_CANCEL_HEADING = 'Request cancellation'
 
 export const ACCOUNT_REQUEST_CANCEL_INTRO =
-  'Tell us why you want to stop this plan. The kitchen will message you to confirm before anything changes.'
+  'Tell us why you want to stop this order. The kitchen will message you to confirm before anything changes.'
 
 export const ACCOUNT_REQUEST_PAUSE_HEADING = 'Request to pause'
 

@@ -3,6 +3,15 @@ import { randomUUID } from 'node:crypto'
 import type { Endpoint, PayloadRequest } from 'payload'
 
 import { authenticateCustomerToken } from '@/auth/customerSession'
+import {
+  CART_COOKIE,
+  CART_MAX_LINES,
+  clearCartCookie,
+  hasDuplicateCartLines,
+  normalizeCartLines,
+  parseCartEntries,
+} from '@/utilities/cart'
+import { resolveCartLines } from '@/utilities/cartLines'
 import { CUSTOMER_SESSION_COOKIE, readCookie } from '@/utilities/customerSession'
 import { isSameOriginPost } from '@/utilities/formPost'
 import { checkOrderIpLimit, getClientIp } from '@/utilities/rateLimit'
@@ -14,8 +23,6 @@ import {
   razorpayMode,
   verifyPaymentSignature,
 } from '@/utilities/razorpay'
-
-import { findDurationIndex } from '@/utilities/checkoutPlan'
 
 import { recordPaidOrder } from './confirm'
 import { buildOrderNotes, readOrderNotes } from './intent'
@@ -29,15 +36,16 @@ import { orderCreateSchema, orderVerifySchema } from './schema'
  * order id, the amount, the key id) to open the Razorpay popup, and a plain
  * form redirect cannot carry those.
  *
- * Every money value is computed here from the plan record a checkout link names.
- * The link is a claim — a plan slug and a duration label — and both are checked
- * against the live plan before a rupee is used.
+ * Every money value is computed here from the basket and the live product
+ * records. The cart cookie is a claim — a product slug and a duration label per
+ * line — and every line is checked against the live product before a rupee is
+ * used.
  *
- * No order row is written at checkout. The plan, its duration and the delivery
- * details ride on the Razorpay order's notes, so a row can be written the moment
- * a payment is captured, whether that signal comes from the browser's return or
- * from the signed webhook. An abandoned checkout therefore leaves nothing
- * behind, and a row in Orders always means one completed payment.
+ * No order row is written at checkout. The lines, their prices and days, and the
+ * delivery details ride on the Razorpay order's notes, so a row can be written
+ * the moment a payment is captured, whether that signal comes from the browser's
+ * return or from the signed webhook. An abandoned checkout therefore leaves
+ * nothing behind, and a row in Orders always means one completed payment.
  */
 
 const readJson = async (req: PayloadRequest): Promise<Record<string, unknown> | null> => {
@@ -64,9 +72,12 @@ const SLOW_DOWN = 'That was too many attempts. Please wait a bit and try again.'
 const NOT_CONFIGURED =
   'Online payment is not set up yet. Please message the kitchen to place your order.'
 const BAD_BODY = 'Something in the order did not read correctly. Please try again.'
-const PLAN_NOT_FOUND = 'That plan is not on the menu any more. Please choose a plan again.'
-const PLAN_CHANGED = 'That duration has changed. Please choose again.'
-const PLAN_PAUSED = 'That plan is paused right now. Message the kitchen and we will help.'
+const EMPTY_BASKET = 'Your cart is empty. Add a product before checking out.'
+const TOO_MANY = 'A cart holds at most ten products. Remove one before checking out.'
+const DUPLICATE_LINES =
+  'Your cart has the same product and duration twice. Remove one before checking out.'
+const BASKET_CHANGED =
+  'One of the products in your cart has changed or left the menu. Please review your cart and try again.'
 const PAYMENT_UNCONFIRMED =
   'We could not confirm this payment yet. If your bank debited the amount it usually settles within a few minutes, and the order will appear on your account page.'
 const ORDER_NOT_SAVED = 'Your order could not be saved. Please try again.'
@@ -102,45 +113,36 @@ export const createOrderEndpoint: Endpoint = {
       return json(parsed.error.issues[0]?.message ?? BAD_BODY, 422)
     }
 
-    const { delivery, duration: durationLabel, note, plan: planSlug } = parsed.data
+    const { delivery, note } = parsed.data
 
-    // Resolve the plan and the duration against the live records. The browser
-    // sends no price and no day count; these values are the truth the order
-    // will be written from.
+    // The lines come from the cart cookie read on the server, never from the
+    // request body. Every price and day count is resolved here from the live
+    // product records, so no browser value can decide an amount.
     const payload = req.payload
+    const entries = parseCartEntries(readCookie(req.headers.get('cookie'), CART_COOKIE))
 
-    const plans = await payload.find({
-      collection: 'plans',
-      depth: 0,
-      limit: 1,
-      where: { slug: { equals: planSlug } },
-    })
+    if (entries.length === 0) return json(EMPTY_BASKET, 422)
+    if (entries.length > CART_MAX_LINES) return json(TOO_MANY, 422)
+    if (hasDuplicateCartLines(entries)) return json(DUPLICATE_LINES, 422)
 
-    const plan = plans.docs[0]
+    const cart = await resolveCartLines({ lines: normalizeCartLines(entries), payload })
 
-    if (!plan) {
-      return json(PLAN_NOT_FOUND, 422)
+    if (cart.stale.length > 0 || cart.usable.length === 0) {
+      return json(BASKET_CHANGED, 422)
     }
 
-    if (!plan.available) {
-      return json(PLAN_PAUSED, 422)
-    }
-
-    const durationIndex = findDurationIndex(plan, durationLabel)
-    const chosenDuration = plan.durations?.[durationIndex]
-
-    if (durationIndex < 0 || !chosenDuration) {
-      return json(PLAN_CHANGED, 422)
-    }
-
-    const unitPrice = Number(chosenDuration.price)
-    const days = Number(chosenDuration.days)
+    const items = cart.usable.map((line) => ({
+      days: line.days ?? 0,
+      durationLabel: line.duration,
+      productId: line.productId ?? 0,
+      productTitle: line.productTitle,
+      unitPrice: line.price ?? 0,
+    }))
 
     // The whole checkout intent rides on the gateway order, so either payment
     // signal can write the paid row later. Nothing is written here.
     const notes = buildOrderNotes({
       customerId: customer.id,
-      days,
       delivery: {
         city: delivery.city,
         foodPreference: delivery.foodPreference,
@@ -151,17 +153,14 @@ export const createOrderEndpoint: Endpoint = {
         pincode: delivery.pincode,
         state: delivery.state,
       },
-      durationLabel: chosenDuration.label,
+      items,
       note,
-      planId: plan.id,
-      planTitle: plan.title,
-      unitPrice,
     })
 
     let gateway
 
     try {
-      gateway = await createRazorpayOrder(unitPrice, randomUUID(), notes)
+      gateway = await createRazorpayOrder(cart.total, randomUUID(), notes)
     } catch (error) {
       req.payload.logger.error({
         err: error instanceof Error ? error.message : String(error),
@@ -171,10 +170,10 @@ export const createOrderEndpoint: Endpoint = {
     }
 
     const mode = razorpayMode()
-    req.payload.logger.info({ msg: 'order_started', mode, total: unitPrice })
+    req.payload.logger.info({ msg: 'order_started', mode, lines: items.length, total: cart.total })
 
     return Response.json({
-      amount: unitPrice,
+      amount: cart.total,
       customer: { email: customer.email, name: delivery.name, phone: delivery.phone },
       gatewayOrderId: gateway.id,
       keyId: process.env.RAZORPAY_KEY_ID ?? '',
@@ -214,7 +213,7 @@ export const verifyOrderEndpoint: Endpoint = {
       return json(PAYMENT_UNCONFIRMED, 400)
     }
 
-    // The plan and the delivery live on the gateway order, not in a local row.
+    // The product and the delivery live on the gateway order, not in a local row.
     let razorpayOrder
 
     try {
@@ -284,11 +283,19 @@ export const verifyOrderEndpoint: Endpoint = {
       return json(ORDER_NOT_SAVED, 500)
     }
 
-    return Response.json({
-      orderId: recorded.order.id,
-      recorded: recorded.recorded,
-      status: 'paid',
-    })
+    return Response.json(
+      {
+        orderId: recorded.order.id,
+        recorded: recorded.recorded,
+        status: 'paid',
+      },
+      {
+        // The payment is confirmed, so the basket is emptied whether this
+        // return or the webhook wrote the row: a paid basket can never be
+        // checked out twice.
+        headers: { 'Set-Cookie': clearCartCookie() },
+      },
+    )
   },
   method: 'post',
   path: '/verify',

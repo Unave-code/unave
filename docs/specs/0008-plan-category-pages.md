@@ -2,11 +2,13 @@
 
 **Date**: 2026-11-05
 **Revised**: 2026-11-06, a subcategory layer is added: an admin managed option list per category, required on every plan, filtered on the category pages beside the audience. New criteria AC-8 to AC-10; the earlier criteria keep their numbers and their meaning.
+**Revised**: 2026-11-06, the filter controls gain art: each audience pill carries an icon beside its label, and the subcategory controls become round image tiles, each fed by an optional image on the option. New criterion AC-11; AC-2, AC-8 and AC-10 keep their numbers and their meaning.
+**Revised**: 2026-11-06, the subcategory filter row is withdrawn from the category pages, so the audience pills are each page's only filter; the subcategory data layer stays. AC-10 is withdrawn and AC-11 is narrowed to the audience pills.
 **Status**: In Progress
 
 ## Summary
 
-Each plan category gets its own page: ready to cook, ready to eat, and fresh from produce, at web addresses like `/plans/ready-to-cook`. The words on the page (headlines, intros) live in code, while the plan cards on it come from the Plans collection in the admin, the same split every existing page uses. Each page carries pills that filter the plans by audience (All, Kids, Adults, Special), and the category labels on plan cards become links to these pages. The 2026-11-06 revision adds a subcategory layer: the kitchen manages a list of finer labels per category in the admin, every plan carries one, and each category page gains a second row of filter pills so visitors can narrow within a category.
+Each plan category gets its own page: ready to cook, ready to eat, and fresh from produce, at web addresses like `/plans/ready-to-cook`. The words on the page (headlines, intros) live in code, while the plan cards on it come from the Plans collection in the admin, the same split every existing page uses. Each page carries pills that filter the plans by audience (All, Kids, Adults, Special), and the category labels on plan cards become links to these pages. The 2026-11-06 revision adds a subcategory layer: the kitchen manages a list of finer labels per category in the admin and every plan carries one. A second filter row for those labels was tried on the category pages and then withdrawn, so the audience pills carry the page's only filter. The same revision gives those pills art: each carries an icon beside its label.
 
 ## Context
 
@@ -29,20 +31,20 @@ Not deciding means the labels stay inert text, the only browsing aid stays the o
 - As a visitor, I want to narrow a category page to an audience (kids, adults, special), so that I find meals for my household.
 - As the kitchen, I want the category labels on plan cards to lead to these pages, so that browsing by category needs no extra menu work from me.
 - As the kitchen, I want to define and edit the subcategory list for each category in the admin, so that finer grouping never needs a developer.
-- As a visitor, I want to narrow a category page by subcategory as well as audience, so that I find the exact kind of meal I want.
 
 **Acceptance criteria** (the contract, each criterion is IDed and independently checkable):
 
 - **AC-1**: `/plans/ready-to-cook`, `/plans/ready-to-eat` and `/plans/fresh-from-produce` each render with a green opening band (the category name and a one line intro) and a grid of that category's plans. Open plans are buyable; paused plans render with the paused label and no buy action, and the paused plans notice renders whenever the category has paused plans, exactly as on `/plans`.
-- **AC-2**: Each category page has an audience filter with the choices All, Kids, Adults and Special. All is the default. Choosing a pill filters the visible cards in the browser with no page reload and no change to the web address. The pills meet the design system's accessibility rules: a labelled group of buttons with pressed state, 44px targets, a polite live region that announces how many plans match, and no motion.
+- **AC-2**: Each category page has an audience filter with the choices All, Kids, Adults and Special. All is the default. Each choice is a pill carrying its own icon beside its label. Choosing a pill filters the visible cards in the browser with no page reload and no change to the web address. The pills meet the design system's accessibility rules: a labelled group of buttons with pressed state, 44px targets, a polite live region that announces how many plans match, and no motion.
 - **AC-3**: When a category has no plans at all, the page shows the same empty state card the plans page uses: a heading, a line of copy, and the WhatsApp button when the footer carries a number. When a filter choice matches no card (but the category has plans), the same card component shows with a filter specific line, so the copy never claims the shelf is empty when it is only filtered.
 - **AC-4**: A category web address that is not one of the three category values renders the site group's not found page.
 - **AC-5**: On `/plans` and on the home page, each plan card's category pill is a link to that category's page, with a distinct accessible name (for example "Browse ready to cook plans") and AA contrast in its green treatment. Each category page links to the other two category pages as a plain text link row under the grid.
 - **AC-6**: Each category page carries its own title, description and canonical URL, and appears in the sitemap generated by the pages sitemap route.
 - **AC-7**: A plan's slug can never equal one of the three category route slugs, so the address space under `/plans` never carries two meanings. The three category slugs are reserved; audience values take no route space and are not reserved.
-- **AC-8**: A Subcategories collection grouped with the store content holds the option list: a title (the pill label) and exactly one category each (the same three values the Plans category select uses), identified by the document id (no slug field: nothing public reads one, and two categories may each carry a same named option). Staff manage the list entirely in the admin, and a plan's subcategory picker offers only the subcategories of the plan's own category.
+- **AC-8**: A Subcategories collection grouped with the store content holds the option list: a title (the filter label) and exactly one category each (the same three values the Plans category select uses), identified by the document id (no slug field: nothing public reads one, and two categories may each carry a same named option). Staff manage the list entirely in the admin, and a plan's subcategory picker offers only the subcategories of the plan's own category.
 - **AC-9**: Every plan carries exactly one subcategory from its own category, required with no default: creating or editing a plan without one is refused, and a plan whose subcategory belongs to a different category is refused on save. A subcategory that plans still use cannot be deleted; staff reassign those plans first. The three plans that existed before this revision stay unassigned until staff assign them in the admin, and the migration that adds the field touches no existing row.
-- **AC-10**: Each category page gains a second filter row: All subcategories plus one pill per subcategory of that category, in alphabetical order by title, rendered only when the category has options. The two filters combine, so a card shows only when it matches both the chosen audience and the chosen subcategory. A plan with no subcategory yet matches only All subcategories. A combination that matches nothing shows the existing filter empty state card unchanged. The filter stays client side: no reload, no change to the web address, and the same accessibility rules as the audience pills (a labelled group, pressed state, 44px targets, a polite live region, no motion).
+- **AC-10 (withdrawn 2026-11-06)**: A second filter row for subcategories briefly followed AC-11 on the category pages. It is withdrawn: the pages carry the audience filter only, and the subcategory layer stays in the admin and on the plans, read by no page filter.
+- **AC-11**: Each audience pill carries art: an icon drawn from code shipped with the site (one per audience, plus All), shown beside its label. The icon is decorative to assistive technology, the label stays the pill's accessible name, the pill keeps a 44px target and a pressed state, and there is no motion beyond a colour change.
 
 ## Options considered
 
@@ -107,7 +109,7 @@ One guarded migration (the build plan sizes it). The feature reads what exists:
 
 The 2026-11-06 revision adds:
 
-- `subcategories` (new Payload collection, staff write, public read): `title` text required (the pill label), `category` select required carrying the same three values the Plans category select uses; the document id is the identity (no slug field)
+- `subcategories` (new Payload collection, staff write, public read): `title` text required (the filter label) and `category` select required carrying the same three values the Plans category select uses; the document id is the identity (no slug field)
 - `plans.subcategory`: a new relation to `subcategories`, required in admin validation with no default; the column is added nullable so the migration never touches existing rows, and validation enforces the requirement from deployment on
 
 The route's single input, the category slug, must be one of the three category values. Display labels (for example "Fresh from produce") live in the copy module, keyed by value, shared with the plan card badges so the two never drift apart.
@@ -125,15 +127,13 @@ The route's single input, the category slug, must be one of the three category v
 | Render opening band | Eyebrow, headline, accent phrase, intro line | Copy module, keyed by category slug (new code file) |
 | Render plan grid | Plan cards for the category | `plans` rows filtered by `category` (DB column) |
 | Paused label on a card | Paused pill and no buy panel | `plans.available` (DB column) |
-| Audience pills | Labels All, Kids, Adults, Special | Copy module (shared audience label map) |
+| Audience pills | Labels All, Kids, Adults, Special, each with an icon | Copy module (shared audience label map); icons are code in the filter component |
 | Filtered grid | Cards matching the chosen audience | `plans.audience` (DB column), filtered client side |
 | Empty state card | Heading, copy, WhatsApp CTA | Copy module for words; `footer.contact.whatsapp` global for the number (same source the plans page uses) |
 | Page metadata | Title, description, canonical URL | Copy module; canonical derived from the category slug |
 | Sitemap entry | One URL per category page | The three category values, added to `defaultSitemap` in `src/app/(frontend)/(sitemaps)/pages-sitemap.xml/route.ts` |
 | Category links on badges | Link target and accessible name for each pill | Derived from `plans.category` value through the shared route map; accessible name from the copy module |
 | Category page cross links | Links to the other two categories | Copy module (the three known values) |
-| Subcategory pills | The option labels of the page's category | `subcategories.title` rows whose `category` equals the page's category, ordered alphabetically by title |
-| Subcategory filtered grid | Cards matching both filters | `plans.subcategory` (relation) and `plans.audience`, filtered client side; a plan with no subcategory matches only All subcategories |
 
 **Key invariants**:
 
@@ -148,8 +148,7 @@ The revision adds these invariants:
 
 - A plan's subcategory always belongs to the plan's category: the save validation refuses a mismatched pair, so a card can never be offered under a category its subcategory does not serve
 - A subcategory that plans still use cannot be deleted; staff reassign the plans first
-- The subcategory filter is client side like the audience filter: it never changes the URL and never triggers a server round trip
-- The subcategory pill list reaches the client as an id to label map, the same shape the audience filter already uses; cards never hydrate
+- The filter art never reaches the accessible name: the audience icons are decorative, and every pill is named by its visible label
 
 **Security model**:
 
@@ -161,8 +160,9 @@ Public read, no accounts, no personal data on these pages. Plans are already rea
 - Failure case: open `/plans/lunch-plan` (a plan slug, not a category) and receive the not found page, verifies **AC-4**
 - Empty case: open a category whose every plan is paused and see the paused cards, the paused notice and no buy action; open a filter choice with no cards and see the filter specific empty card with the WhatsApp button, verifies **AC-3**
 - Accessibility: tab to the filter group, toggle a pill with the keyboard, hear the live region report the new count, verifies **AC-2**
-- Subcategory case: give a category two subcategories, filter by one and by an audience, and see only cards matching both; save a plan with no subcategory and see it only under All subcategories, verifies **AC-9**, **AC-10**
+- Subcategory case: creating or editing a plan with no subcategory is refused, verifies **AC-9**
 - Admin/permission: a plan saved with a subcategory from another category is refused; deleting a subcategory that plans use is denied, verifies **AC-9**
+- Art case: every audience pill renders its icon, and the pill's accessible name is exactly its label, verifies **AC-11**
 
 ## Build plan
 
@@ -179,8 +179,12 @@ Revision tasks (2026-11-06, the subcategory layer), one guarded migration that c
 
 7. Create the `subcategories` collection: title, category select, store grouping, staff only write and public read, satisfies **AC-8**
 8. Add `plans.subcategory`: the relation with `filterOptions` limited to the plan's own category, the required with no default validation, the category match validation on save, the delete denial, and the guarded migration, satisfies **AC-9**
-9. Extend the category page filter to two rows: fetch the category's subcategories server side, render the alphabetical pills only when options exist, combine the two filters client side, keep the empty state unchanged, and pass the id to label map to the client component, satisfies **AC-10**
-10. Tests and typecheck: the collection and validation rules, the combined filter behavior, the legacy plan matching only All, and the delete denial, satisfies **AC-8**, **AC-9**, **AC-10**
+9. (withdrawn 2026-11-06) Extend the category page filter to two rows: fetch the category's subcategories server side, render the alphabetical pills only when options exist, combine the two filters client side, keep the empty state unchanged, and pass the id to label map to the client component, satisfies **AC-10**
+10. Tests and typecheck: the collection and validation rules, the legacy plan matching only All, and the delete denial, satisfies **AC-8**, **AC-9**
+
+Revision task (2026-11-06, the filter art), no migration (the audience icons are code):
+
+11. Give the audience pills their art: an icon per pill, plus the tests that pin the accessible names, satisfies **AC-11**
 
 ## Consequences
 
@@ -206,8 +210,8 @@ Positive:
 - The filter stays client side, so the address space and the sitemap stay honest: still three pages
 
 Negative / tradeoffs:
-- The filter grows a second row, and two dimensions together raise the chance of an empty combination (handled by the existing empty state card)
-- A required field with no default means the three existing plans match no subcategory pill until staff assign them in the admin
+- The subcategory layer now has no page that reads it, so it serves the kitchen's own labels until it earns a surface
+- A second filter row was tried and withdrawn, churn the audience pills now avoid
 
 Neutral:
 - One guarded migration (a new table plus a nullable column); no backfill, nothing destructive

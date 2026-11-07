@@ -241,8 +241,8 @@ export const seed = async ({
           {
             link: {
               type: 'custom',
-              label: 'Plans',
-              url: '/plans',
+              label: 'Products',
+              url: '/products',
             },
           },
           {
@@ -278,9 +278,9 @@ export const seed = async ({
           },
         ],
         cta: {
-          label: 'Order a plan',
+          label: 'Browse the products',
           newTab: false,
-          url: '/plans',
+          url: '/products',
         },
         // Left empty until the business supplies a number, which hides the
         // floating WhatsApp button (design.md §6.2).
@@ -299,7 +299,7 @@ export const seed = async ({
           {
             title: 'Explore',
             links: [
-              { link: { type: 'custom', label: 'Plans', url: '/plans' } },
+              { link: { type: 'custom', label: 'Products', url: '/products' } },
               { link: { type: 'custom', label: 'How it works', url: '/#how-it-works' } },
               { link: { type: 'custom', label: 'Common questions', url: '/#faq' } },
               {

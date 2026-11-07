@@ -23,7 +23,7 @@ interface Props {
  * Playfair headline with a gold accent phrase, one lead line, on a photograph
  * under a green-900 scrim, with the logo swoosh faint behind it.
  *
- * About, Contact and Plans each carry their own copy of this band, because each
+ * About, Contact and Products each carry their own copy of this band, because each
  * adds something of its own. This is the shared one, so a page added later does
  * not hand-roll the same block a fourth time.
  */

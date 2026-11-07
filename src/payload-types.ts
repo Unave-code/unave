@@ -78,7 +78,8 @@ export interface Config {
     'email-log': EmailLog;
     orders: Order;
     'order-requests': OrderRequest;
-    plans: Plan;
+    products: Product;
+    subcategories: Subcategory;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -106,7 +107,8 @@ export interface Config {
     'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'order-requests': OrderRequestsSelect<false> | OrderRequestsSelect<true>;
-    plans: PlansSelect<false> | PlansSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -924,7 +926,7 @@ export interface EmailLog {
   createdAt: string;
 }
 /**
- * One row per paid order. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.
+ * One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders".
@@ -933,11 +935,11 @@ export interface Order {
   id: number;
   customer: number | Customer;
   /**
-   * What was bought, copied from the plan at purchase time. Plan edits never change these rows.
+   * What was bought, copied from the product at purchase time. Product edits never change these rows.
    */
   items: {
-    plan?: (number | null) | Plan;
-    planTitle?: string | null;
+    product?: (number | null) | Product;
+    productTitle?: string | null;
     durationLabel?: string | null;
     days?: number | null;
     unitPrice?: number | null;
@@ -971,16 +973,16 @@ export interface Order {
   createdAt: string;
 }
 /**
- * The meal plans sold on the site. Turn `available` off to pause a plan without deleting it; prices are entered and shown in rupees.
+ * The meal products sold on the site. Turn `available` off to pause a product without deleting it; prices are entered and shown in rupees.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plans".
+ * via the `definition` "products".
  */
-export interface Plan {
+export interface Product {
   id: number;
   title: string;
   /**
-   * Lowercase, with dashes instead of spaces. Anchors the plan on /plans and travels in checkout links.
+   * Lowercase, with dashes instead of spaces. Anchors the product on /products and travels in checkout links.
    */
   slug: string;
   description?: {
@@ -999,7 +1001,7 @@ export interface Plan {
     [k: string]: unknown;
   } | null;
   /**
-   * Up to five short lines shown on the plan card, under the description. For example "Delivered in an insulated tiffin".
+   * Up to five short lines shown on the product card, under the description. For example "Delivered in an insulated tiffin".
    */
   points?:
     | {
@@ -1007,13 +1009,16 @@ export interface Plan {
         id?: string | null;
       }[]
     | null;
+  /**
+   * The photo shown at the top of the product card on the shelf. Leave it empty and a branded placeholder is used instead.
+   */
   image?: (number | null) | Media;
   /**
    * What a customer chooses: a label, how many days of meals it covers, and the price in rupees.
    */
   durations: {
     /**
-     * Shown on the plan card and at checkout, for example "One week".
+     * Shown on the product card and at checkout, for example "One week".
      */
     label: string;
     days: number;
@@ -1024,17 +1029,40 @@ export interface Plan {
     id?: string | null;
   }[];
   /**
-   * How the meal reaches the customer. Shown as a label on the plan card.
+   * How the meal reaches the customer. Shown as a label on the product card.
    */
   category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
   /**
-   * Who the plan is for. Shown as a label on the plan card, next to the category.
+   * The finer label inside the category, for example "Breakfast". Only options of the chosen category are offered, and the category pages filter by them.
+   */
+  subcategory?: (number | null) | Subcategory;
+  /**
+   * Who the product is for. Shown as a label on the product card, next to the category.
    */
   audience: 'kids' | 'adults' | 'special';
   /**
-   * Off means the plan shows a paused label and cannot be bought.
+   * Off means the product shows a paused label and cannot be bought.
    */
   available?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The finer labels inside each product category. Products pick one from their own category, and the category pages filter by them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories".
+ */
+export interface Subcategory {
+  id: number;
+  /**
+   * The filter label, for example "Breakfast" or "Tiffin".
+   */
+  title: string;
+  /**
+   * Which shelf this option belongs to. A product can only pick options from its own category.
+   */
+  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
   updatedAt: string;
   createdAt: string;
 }
@@ -1300,8 +1328,12 @@ export interface PayloadLockedDocument {
         value: number | OrderRequest;
       } | null)
     | ({
-        relationTo: 'plans';
-        value: number | Plan;
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'subcategories';
+        value: number | Subcategory;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1763,8 +1795,8 @@ export interface OrdersSelect<T extends boolean = true> {
   items?:
     | T
     | {
-        plan?: T;
-        planTitle?: T;
+        product?: T;
+        productTitle?: T;
         durationLabel?: T;
         days?: T;
         unitPrice?: T;
@@ -1811,9 +1843,9 @@ export interface OrderRequestsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plans_select".
+ * via the `definition` "products_select".
  */
-export interface PlansSelect<T extends boolean = true> {
+export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   description?: T;
@@ -1833,8 +1865,19 @@ export interface PlansSelect<T extends boolean = true> {
         id?: T;
       };
   category?: T;
+  subcategory?: T;
   audience?: T;
   available?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories_select".
+ */
+export interface SubcategoriesSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2146,7 +2189,7 @@ export interface Header {
     newTab?: boolean | null;
   };
   /**
-   * Shown in the desktop bar and in the mobile drawer. Six at most.
+   * Shown in the desktop bar and in the mobile drawer. Seven at most.
    */
   navItems?:
     | {

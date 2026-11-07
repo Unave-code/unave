@@ -101,7 +101,7 @@ export default async function OurKitchenPage() {
             </Cta>
           )}
 
-          <Cta href="/plans" variant="onDarkSecondary">
+          <Cta href="/products" variant="onDarkSecondary">
             {KITCHEN_HERO_SECONDARY}
           </Cta>
         </div>
@@ -229,7 +229,7 @@ export default async function OurKitchenPage() {
               </Cta>
             )}
 
-            <Cta href="/plans" variant="onDarkSecondary">
+            <Cta href="/products" variant="onDarkSecondary">
               {KITCHEN_FINAL_SECONDARY}
             </Cta>
           </div>

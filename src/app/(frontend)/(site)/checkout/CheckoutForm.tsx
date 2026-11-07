@@ -33,16 +33,18 @@ import {
 } from './copy'
 
 /**
- * The checkout form (spec 0007, AC-3 and AC-4).
+ * The checkout form (spec 0007, AC-4 and AC-5).
  *
- * It posts the one plan slug and duration label it was given, plus the delivery
- * details, to `/api/orders/create`, then opens the Razorpay popup with what
- * comes back. The server resolves the live price, so this component never sends
- * an amount and never needs to be trusted. When the popup reports success, the
- * browser posts the returned values to `/api/orders/verify`, which writes the
- * paid order and answers its id, and the browser walks to that order page. A
- * confirmation that never arrives leaves the payment to the signed webhook and
- * shows one plain sentence instead of a page for an order that may not exist.
+ * It posts the delivery details and the optional note to
+ * `/api/orders/create`, then opens the Razorpay popup with what comes back. The
+ * lines are never part of the request: the server reads the cart cookie itself,
+ * resolves every line from the product records, and opens the gateway order for the
+ * sum, so this component never sends an amount and never needs to be trusted.
+ * When the popup reports success, the browser posts the returned values to
+ * `/api/orders/verify`, which writes the paid order and answers its id, and the
+ * browser walks to that order page. A confirmation that never arrives leaves the
+ * payment to the signed webhook and shows one plain sentence instead of a page
+ * for an order that may not exist.
  *
  * The delivery rules are the same Zod schema the endpoint enforces, so a value
  * the browser accepts is a value the server accepts too.
@@ -92,11 +94,7 @@ export const CheckoutForm: React.FC<{
     state: string
   }
   email: string
-  selection: {
-    durationLabel: string
-    planSlug: string
-  }
-}> = ({ defaults, email, selection }) => {
+}> = ({ defaults, email }) => {
   const router = useRouter()
   const [errors, setErrors] = useState<FieldErrors>({})
   const [message, setMessage] = useState<string | null>(null)
@@ -183,9 +181,7 @@ export const CheckoutForm: React.FC<{
       const answer = await fetch('/api/orders/create', {
         body: JSON.stringify({
           delivery: parsed.data,
-          duration: selection.durationLabel,
           note: readNote(),
-          plan: selection.planSlug,
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -228,7 +224,7 @@ export const CheckoutForm: React.FC<{
         const checkout = new Razorpay({
           amount: created.amount,
           currency: 'INR',
-          description: 'UNAVE meal plan',
+          description: 'UNAVE meal product',
           handler: (response) => {
             void verifyAndContinue(response)
           },

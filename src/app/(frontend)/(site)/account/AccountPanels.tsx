@@ -136,7 +136,7 @@ export const OrdersPanel: React.FC<{
                 {(order.items ?? [])
                   .map(
                     (item) =>
-                      `${item.planTitle}, ${item.durationLabel} (${Number(item.days)} days)`,
+                      `${item.productTitle}, ${item.durationLabel} (${Number(item.days)} days)`,
                   )
                   .join(' + ')}
               </p>

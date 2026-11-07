@@ -63,7 +63,8 @@ let payload: Payload
 const run = `it-hook-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const orderIDs: (number | string)[] = []
 const customerIDs: (number | string)[] = []
-let planId: number | string
+let productId: number | string
+let subcategoryId: number | string
 
 const TOTAL = 150000
 
@@ -88,7 +89,6 @@ const createCustomer = async (): Promise<Customer> => {
 const stagedNotes = (customer: Customer): Record<string, string> =>
   buildOrderNotes({
     customerId: customer.id,
-    days: 5,
     delivery: {
       city: 'Pune',
       foodPreference: 'vegetarian',
@@ -98,11 +98,16 @@ const stagedNotes = (customer: Customer): Record<string, string> =>
       pincode: '411001',
       state: 'Maharashtra',
     },
-    durationLabel: 'One week',
+    items: [
+      {
+        days: 5,
+        durationLabel: 'One week',
+        productId,
+        productTitle: 'Lunch plan',
+        unitPrice: TOTAL,
+      },
+    ],
     note: '',
-    planId,
-    planTitle: 'Lunch plan',
-    unitPrice: TOTAL,
   })
 
 const findOrderByGateway = async (gatewayOrderId: string): Promise<Order | null> => {
@@ -192,24 +197,33 @@ const capturedEventNested = (
 beforeAll(async () => {
   payload = await getPayload({ config })
 
-  const plan = await payload.create({
-    collection: 'plans',
+  const subcategory = await payload.create({
+    collection: 'subcategories',
+    data: { category: 'ready-to-eat', title: `${run} tiffin` },
+    overrideAccess: true,
+  })
+
+  subcategoryId = subcategory.id
+
+  const product = await payload.create({
+    collection: 'products',
     data: {
       available: true,
       durations: [{ days: 5, label: 'One week', price: TOTAL }],
       slug: `${run}-plan`,
       title: 'Lunch plan',
       category: 'ready-to-eat',
+      subcategory: subcategoryId as number,
       audience: 'adults',
     },
     depth: 0,
-    // The revalidatePlans hook calls Next's revalidateTag, which only exists
+    // The revalidateProducts hook calls Next's revalidateTag, which only exists
     // inside the Next runtime this spec does not run in.
     context: { disableRevalidate: true },
     overrideAccess: true,
   })
 
-  planId = plan.id
+  productId = product.id
 })
 
 beforeEach(() => {
@@ -228,7 +242,13 @@ afterAll(async () => {
   }
 
   try {
-    await payload.delete({ collection: 'plans', id: planId, overrideAccess: true, context: { disableRevalidate: true } })
+    await payload.delete({ collection: 'products', id: productId, overrideAccess: true, context: { disableRevalidate: true } })
+  } catch {
+    // Best effort cleanup.
+  }
+
+  try {
+    await payload.delete({ collection: 'subcategories', id: subcategoryId, overrideAccess: true })
   } catch {
     // Best effort cleanup.
   }
@@ -260,7 +280,7 @@ describe('the Razorpay webhook', () => {
     expect(String(after!.customer)).toBe(String(customer.id))
     expect(after!.gatewayPaymentId).toBe('pay_hook_1')
     expect(after!.delivery?.name).toBe('Asha Kale')
-    expect(after!.items?.[0]?.planTitle).toBe('Lunch plan')
+    expect(after!.items?.[0]?.productTitle).toBe('Lunch plan')
     expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 

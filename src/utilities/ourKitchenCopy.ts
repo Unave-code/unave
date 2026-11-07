@@ -15,7 +15,7 @@ export const KITCHEN_HERO_HEADLINE_ACCENT = 'actually get cooked'
 export const KITCHEN_HERO_SUB =
   'One kitchen, a small team, and a routine we keep to every morning. Here is what happens between fresh produce arriving and your box leaving for your door.'
 export const KITCHEN_HERO_CTA = WHATSAPP_CTA_LABEL
-export const KITCHEN_HERO_SECONDARY = 'Browse the plans'
+export const KITCHEN_HERO_SECONDARY = 'Browse the products'
 export const KITCHEN_HERO_POINTS = [
   'Cooked the same morning',
   'Portioned by hand',
@@ -124,6 +124,6 @@ export const KITCHEN_STANDARDS = [
 
 export const KITCHEN_FINAL_HEADING = 'Fresh meals start in this kitchen'
 export const KITCHEN_FINAL_BODY =
-  'Ask us anything about how we cook, or look at the plans if you already know what you need. Browsing and messaging never need an account.'
+  'Ask us anything about how we cook, or look at the products if you already know what you need. Browsing and messaging never need an account.'
 export const KITCHEN_FINAL_PRIMARY = WHATSAPP_CTA_LABEL
-export const KITCHEN_FINAL_SECONDARY = 'Browse the plans'
+export const KITCHEN_FINAL_SECONDARY = 'Browse the products'

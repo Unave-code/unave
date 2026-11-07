@@ -1,6 +1,6 @@
 # UNAVE
 
-The website for **UNAVE**, a cloud kitchen. It carries the brand pages, the blog, meal plans with online payment, customer accounts, the enquiry path, and a staff admin, all in one Next.js app.
+The website for **UNAVE**, a cloud kitchen. It carries the brand pages, the blog, meal products with online payment, customer accounts, the enquiry path, and a staff admin, all in one Next.js app.
 
 Browsing the site and messaging the kitchen never need an account. An account saves a customer's details, and it is asked for only when someone buys a plan.
 
@@ -80,11 +80,11 @@ Production is Docker on one server, managed by Dokploy, with Postgres running be
 
 | Route | What it is |
 | --- | --- |
-| `/` | Home: hero, trust strip, welcome, what makes us different, the newest plans, what we cook, how it works, kitchen photographs, customer words, FAQ, closing call to action |
+| `/` | Home: hero, trust strip, welcome, what makes us different, the newest products, what we cook, how it works, kitchen photographs, customer words, FAQ, closing call to action |
 | `/about` | The story, what we stand for, how it works here, goals notice |
 | `/our-kitchen` | Inside the kitchen: the day in five steps, ingredient preparation, how a plate is planned, hygiene standards |
 | `/contact` | Ways to reach the kitchen and the enquiry form, which works without JavaScript |
-| `/plans` | Meal plans, with a buy action on each card |
+| `/products` | Meal products, with a buy action on each card |
 | `/checkout` | Sign in and pay for the chosen plan through Razorpay |
 | `/order-placed/[id]` | The receipt for a paid order |
 | `/blog` | The blog index, with a grid or list view and numbered paging |
@@ -124,7 +124,7 @@ The admin is Payload, branded in `src/app/(payload)/custom.scss` and dressed wit
 | `users` | Staff accounts, the only identity that reaches the CMS |
 | `customers` | Customer accounts, separate from staff and on its own session cookie |
 | `enquiries` | Contact form submissions, written by the public endpoint and read by staff |
-| `plans` | Meal plans on sale, with durations and prices |
+| `products` | Meal products on sale, with durations and prices |
 | `orders` | Paid orders, one plan per order |
 | `order-requests` | Pause and cancellation requests from customers, written by the account action and triaged by staff |
 | `email-log` | One row per mail attempt, with the recipient masked |
@@ -186,7 +186,7 @@ pnpm dev                                         # then, in another shell
 pnpm test:e2e
 ```
 
-Integration tests live in `tests/int` and cover access control, the customer auth flow and endpoints, the enquiry endpoint, plans and orders, the Razorpay webhook, mail rendering, transports, the mail log and money helpers. End to end tests in `tests/e2e` drive the site and the admin in a browser.
+Integration tests live in `tests/int` and cover access control, the customer auth flow and endpoints, the enquiry endpoint, products and orders, the Razorpay webhook, mail rendering, transports, the mail log and money helpers. End to end tests in `tests/e2e` drive the site and the admin in a browser.
 
 ---
 
@@ -194,7 +194,7 @@ Integration tests live in `tests/int` and cover access control, the customer aut
 
 ```
 src/
-  app/(frontend)/(site)/      public pages: home, about, our kitchen, contact, plans, checkout, blog, search
+  app/(frontend)/(site)/      public pages: home, about, our kitchen, contact, products, checkout, blog, search
   app/(frontend)/             customer auth pages and verify-email
   app/(payload)/              admin, API and GraphQL routes
   app/(frontend)/(sitemaps)/  Postgres backed sitemaps
@@ -237,7 +237,7 @@ docs/                         design contract, specs, scope
 
 ## Status
 
-Built and working: content pages and the blog, the kitchen and about pages, the enquiry path, customer accounts, plans with Razorpay checkout, transactional email, and the branded admin.
+Built and working: content pages and the blog, the kitchen and about pages, the enquiry path, customer accounts, products with Razorpay checkout, transactional email, and the branded admin.
 
 Open items:
 

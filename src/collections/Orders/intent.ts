@@ -3,37 +3,37 @@ import type { Order } from '@/payload-types'
 /**
  * The checkout intent, carried on the Razorpay order (spec 0007).
  *
- * No order row is written at checkout any more: a row is born only once a
- * payment is captured, so an abandoned checkout leaves nothing behind. That
- * means everything needed to write the row has to survive the wait between
- * opening the gateway order and the payment landing, including the case where
- * the browser never comes back and only the signed webhook arrives.
+ * No order row is written at checkout: a row is born only once a payment is
+ * captured, so an abandoned checkout leaves nothing behind. That means
+ * everything needed to write the row has to survive the wait between opening
+ * the gateway order and the payment landing, including the case where the
+ * browser never comes back and only the signed webhook arrives.
  *
  * The gateway order's own notes are that store. They survive a closed tab, and
  * they are the record the webhook reads. Razorpay caps notes at 15 pairs of 256
- * characters, so the plan binding travels as one small JSON value and the
- * delivery as flat values, every one of them capped.
+ * characters each (verified against the Orders API docs during this build), so
+ * the basket travels as compact indexed packs (`l0` to `l4`, two lines each) and
+ * the delivery stays as flat capped values. Ten lines plus nine delivery values
+ * is fourteen pairs, one under the cap, and every value stays inside 240
+ * characters, under the gateway's 256.
  */
 
 const NOTE_MAX = 240
-const TITLE_MAX = 80
-const DURATION_MAX = 60
+const TITLE_MAX = 40
+const DURATION_MAX = 40
+/** Two lines per note key keeps every value well under the limit. */
+const LINES_PER_NOTE = 2
+const MAX_NOTES = 5
 
 const cap = (value: null | string | undefined, max = NOTE_MAX): string =>
   (value ?? '').trim().slice(0, max)
 
-type PlanBinding = {
-  /** customer id */
-  c: number | string
-  /** duration label */
-  d: string
+export type OrderIntentItem = {
   days: number
-  /** plan id */
-  p: number | string
-  /** unit price in paise */
-  price: number
-  /** plan title */
-  t: string
+  durationLabel: string
+  productId: number | string
+  productTitle: string
+  unitPrice: number
 }
 
 export type OrderIntent = {
@@ -53,9 +53,11 @@ export type OrderIntent = {
   total: number
 }
 
+/** One line as the gateway stores it: [product id, duration, days, price, title]. */
+type PackedLine = [number | string, string, number, number, string]
+
 export const buildOrderNotes = (input: {
   customerId: number | string
-  days: number
   delivery: {
     city?: string
     foodPreference?: string
@@ -66,22 +68,11 @@ export const buildOrderNotes = (input: {
     pincode?: string
     state?: string
   }
-  durationLabel: string
+  items: OrderIntentItem[]
   note?: string
-  planId: number | string
-  planTitle: string
-  unitPrice: number
 }): Record<string, string> => {
-  const binding: PlanBinding = {
-    c: input.customerId,
-    d: cap(input.durationLabel, DURATION_MAX),
-    days: input.days,
-    p: input.planId,
-    price: input.unitPrice,
-    t: cap(input.planTitle, TITLE_MAX),
-  }
-
-  return {
+  const notes: Record<string, string> = {
+    c: cap(String(input.customerId), 40),
     d_addr1: cap(input.delivery.line1),
     d_addr2: cap(input.delivery.line2),
     d_city: cap(input.delivery.city),
@@ -91,36 +82,91 @@ export const buildOrderNotes = (input: {
     d_phone: cap(input.delivery.phone),
     d_pin: cap(input.delivery.pincode),
     d_state: cap(input.delivery.state),
-    plan: JSON.stringify(binding),
   }
+
+  const packs = new Map<number, PackedLine[]>()
+
+  input.items.slice(0, MAX_NOTES * LINES_PER_NOTE).forEach((item, index) => {
+    const pack = Math.floor(index / LINES_PER_NOTE)
+    const line: PackedLine = [
+      item.productId,
+      cap(item.durationLabel, DURATION_MAX),
+      item.days,
+      item.unitPrice,
+      cap(item.productTitle, TITLE_MAX),
+    ]
+
+    const existing = packs.get(pack)
+
+    if (existing) existing.push(line)
+    else packs.set(pack, [line])
+  })
+
+  for (const [pack, lines] of packs) notes[`l${pack}`] = JSON.stringify(lines)
+
+  return notes
 }
 
-const readPlanBinding = (raw: unknown): PlanBinding | null => {
-  if (typeof raw !== 'string' || raw.length === 0) return null
+const text = (value: unknown): string => (typeof value === 'string' ? value : '')
 
-  let value: Partial<PlanBinding>
+const readPackedLine = (raw: unknown): null | OrderIntentItem => {
+  if (!Array.isArray(raw) || raw.length !== 5) return null
 
-  try {
-    value = JSON.parse(raw) as Partial<PlanBinding>
-  } catch {
-    return null
-  }
+  const [productId, durationLabel, days, unitPrice, productTitle] = raw
 
   if (
-    (typeof value.c !== 'number' && typeof value.c !== 'string') ||
-    (typeof value.p !== 'number' && typeof value.p !== 'string') ||
-    typeof value.days !== 'number' ||
-    typeof value.price !== 'number' ||
-    typeof value.t !== 'string' ||
-    typeof value.d !== 'string'
+    (typeof productId !== 'number' && typeof productId !== 'string') ||
+    typeof durationLabel !== 'string' ||
+    typeof days !== 'number' ||
+    typeof unitPrice !== 'number' ||
+    typeof productTitle !== 'string'
   ) {
     return null
   }
 
-  return value as PlanBinding
+  const product = typeof productId === 'number' ? productId : Number(productId)
+
+  if (!Number.isFinite(product)) return null
+
+  return {
+    days,
+    durationLabel,
+    productId: product,
+    productTitle,
+    unitPrice,
+  }
 }
 
-const text = (value: unknown): string => (typeof value === 'string' ? value : '')
+const readLinePacks = (values: Record<string, unknown>): null | OrderIntentItem[] => {
+  const items: OrderIntentItem[] = []
+
+  for (let index = 0; index < MAX_NOTES; index += 1) {
+    const raw = values[`l${index}`]
+
+    if (raw === undefined) continue
+    if (typeof raw !== 'string') return null
+
+    let parsed: unknown
+
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      return null
+    }
+
+    if (!Array.isArray(parsed)) return null
+
+    for (const entry of parsed) {
+      const line = readPackedLine(entry)
+
+      if (!line) return null
+
+      items.push(line)
+    }
+  }
+
+  return items.length > 0 ? items : null
+}
 
 /**
  * Turn what the gateway hands back into the order to write. Returns null when
@@ -131,14 +177,25 @@ export const readOrderNotes = (notes: unknown): OrderIntent | null => {
   if (!notes || typeof notes !== 'object' || Array.isArray(notes)) return null
 
   const values = notes as Record<string, unknown>
-  const binding = readPlanBinding(values.plan)
+  const packed = readLinePacks(values)
 
-  if (!binding) return null
+  if (!packed) return null
+
+  const customerId = text(values.c)
+
+  if (!customerId) return null
 
   const note = text(values.d_note)
+  const items = packed.map((line) => ({
+    days: line.days,
+    durationLabel: line.durationLabel,
+    product: line.productId as number,
+    productTitle: line.productTitle,
+    unitPrice: line.unitPrice,
+  }))
 
   return {
-    customerId: String(binding.c),
+    customerId,
     delivery: {
       addressLine1: text(values.d_addr1) || undefined,
       addressLine2: text(values.d_addr2) || undefined,
@@ -150,15 +207,7 @@ export const readOrderNotes = (notes: unknown): OrderIntent | null => {
       pincode: text(values.d_pin) || undefined,
       state: text(values.d_state) || undefined,
     },
-    items: [
-      {
-        days: binding.days,
-        durationLabel: binding.d,
-        plan: binding.p as number,
-        planTitle: binding.t,
-        unitPrice: binding.price,
-      },
-    ],
-    total: binding.price,
+    items,
+    total: items.reduce((sum, line) => sum + line.unitPrice, 0),
   }
 }

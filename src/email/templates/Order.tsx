@@ -52,7 +52,7 @@ const COPY: Record<OrderMailVariant, { heading: string; preview: string }> = {
   },
   kitchenNotice: {
     heading: 'New paid order from the website',
-    preview: 'A plan order was paid on the website.',
+    preview: 'An order was paid on the website.',
   },
 }
 

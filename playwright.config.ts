@@ -11,6 +11,11 @@ import 'dotenv/config'
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  /**
+   * The dev server compiles routes on first hit against a remote database, so
+   * the default 30 second ceiling is too tight for a single slow page.
+   */
+  timeout: 90_000,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -34,7 +39,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
+    command: 'node scripts/e2e-web-server.mjs',
     reuseExistingServer: true,
     url: 'http://localhost:3000',
   },

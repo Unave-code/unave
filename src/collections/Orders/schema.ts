@@ -5,11 +5,13 @@ import { customerProfileSchema } from '@/utilities/customerProfile'
 /**
  * What the checkout may send, and nothing more (spec 0007).
  *
- * The browser's numbers are never trusted: the plan slug and duration label
- * arrive as a claim, and the server resolves both against the live plan before
- * any price is used. The delivery rules are the profile rules of spec 0005,
- * reused verbatim, so the checkout form and the account form can never disagree
- * about what an address is. The name is checkout's own requirement, added on top.
+ * The browser sends the delivery details and the optional note. The lines are
+ * never part of the request: the order endpoint reads the cart cookie itself,
+ * so a crafted body cannot order a basket the customer never saw, and no price
+ * or day count ever arrives from the browser. The delivery rules are the
+ * profile rules of spec 0005, reused verbatim, so the checkout form and the
+ * account form can never disagree about what an address is. The name is
+ * checkout's own requirement, added on top.
  */
 
 const required = (message: string) => z.string().trim().min(1, { message })
@@ -20,15 +22,6 @@ export const orderDeliverySchema = customerProfileSchema.extend({
 
 export const orderCreateSchema = z.object({
   delivery: orderDeliverySchema,
-  plan: z
-    .string({ error: 'Choose a plan first.' })
-    .trim()
-    .min(1, { message: 'Choose a plan first.' }),
-  duration: z
-    .string({ error: 'Choose a duration first.' })
-    .trim()
-    .min(1, { message: 'Choose a duration first.' })
-    .max(80),
   note: z
     .string()
     .trim()

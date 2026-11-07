@@ -12,8 +12,9 @@ import { Media } from './collections/Media'
 import { OrderRequests } from './collections/OrderRequests'
 import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
-import { Plans } from './collections/Plans'
+import { Products } from './collections/Products'
 import { Posts } from './collections/Posts'
+import { Subcategories } from './collections/Subcategories'
 import { Users } from './collections/Users'
 import { unaveEmailAdapter } from './email/adapter'
 import { emailTestEndpoint } from './endpoints/emailTest'
@@ -99,7 +100,8 @@ export default buildConfig({
     EmailLog,
     Orders,
     OrderRequests,
-    Plans,
+    Products,
+    Subcategories,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   email: unaveEmailAdapter,

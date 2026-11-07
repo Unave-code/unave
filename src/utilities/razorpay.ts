@@ -59,7 +59,7 @@ export type RazorpayPayment = {
 
 /**
  * Open a gateway order. `receipt` is a plain reference for the dashboard, and
- * `notes` carry the checkout intent: the plan, its duration and the delivery
+ * `notes` carry the checkout intent: the product, its duration and the delivery
  * details, so a captured payment can still be written up as an order after the
  * browser has gone (spec 0007). Razorpay caps notes at 15 pairs of 256
  * characters, so the caller keeps them small.
@@ -100,7 +100,7 @@ export const createRazorpayOrder = async (
 /**
  * Read a gateway order back, which is where the checkout intent lives. The
  * webhook needs this when the browser never returned, and the browser's own
- * return needs it to bind the payment to the plan the customer chose.
+ * return needs it to bind the payment to the product the customer chose.
  */
 export const fetchRazorpayOrder = async (orderId: string): Promise<RazorpayOrder> => {
   const response = await fetch(`${RAZORPAY_API_BASE}/orders/${encodeURIComponent(orderId)}`, {

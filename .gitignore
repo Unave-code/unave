@@ -26,4 +26,5 @@ node_modules/
 
 # Dev server log
 tmp-dev.log
+devserver.log
 tmp-*.png

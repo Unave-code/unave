@@ -1,7 +1,7 @@
 /**
  * Money display for the store.
  *
- * Every amount the site handles — a plan price, an order line, a total, a
+ * Every amount the site handles — a product price, an order line, a total, a
  * gateway amount — is an integer in paise, the unit the database and Razorpay
  * both speak. Formatting is the only place rupees exist, so a rounding or a
  * conversion bug has exactly one home.

@@ -76,10 +76,12 @@ export const safeReturnPath = (value: unknown): string | null => {
  * cross site POST either way, so a mismatch is refused and so is a browser request
  * that carries neither.
  */
-export const isSameOriginPost = (req: PayloadRequest): boolean => {
-  if (req.headers.get('sec-fetch-site') === 'same-origin') return true
+export const isSameOriginRequest = (request: { headers: Headers }): boolean => {
+  const headers = request.headers
 
-  const origin = req.headers.get('origin')
+  if (headers.get('sec-fetch-site') === 'same-origin') return true
+
+  const origin = headers.get('origin')
   if (!origin) return false
 
   let originHost: string
@@ -89,7 +91,7 @@ export const isSameOriginPost = (req: PayloadRequest): boolean => {
     return false
   }
 
-  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
+  const host = headers.get('x-forwarded-host') ?? headers.get('host')
   if (host) return host === originHost
 
   // No Host to compare against. Fall back to the configured public origin.
@@ -99,3 +101,5 @@ export const isSameOriginPost = (req: PayloadRequest): boolean => {
     return false
   }
 }
+
+export const isSameOriginPost = (req: PayloadRequest): boolean => isSameOriginRequest(req)

@@ -8,10 +8,10 @@ import { formatPaise } from '@/utilities/money'
 /**
  * The two emails a paid order sends (spec 0007, AC-7).
  *
- * The customer learns their plan is booked; the kitchen learns who to cook for
- * and where to deliver. Both go through the transport spec 0002 already runs,
- * both log under the `order` key, and neither failure can fail the order — the
- * row is the record, the emails are the knock on the shoulder.
+ * The customer learns their product is booked; the kitchen learns who to cook
+ * for and where to deliver. Both go through the transport spec 0002 already
+ * runs, both log under the `order` key, and neither failure can fail the order —
+ * the row is the record, the emails are the knock on the shoulder.
  *
  * The copy is admin editable in EmailSettings (the `orderCopy` group). Blank
  * fields fall back to these defaults, so a fresh install mails sensible words
@@ -31,7 +31,7 @@ export const ORDER_MAIL_DEFAULTS: OrderMailCopy = {
   confirmationOutro:
     'We will message you about when your deliveries begin. If anything looks wrong, reply to this email.',
   confirmationSubject: 'Your UNAVE order is confirmed',
-  kitchenIntro: 'A plan order was paid on the website. The details are below.',
+  kitchenIntro: 'An order was paid on the website. The details are below.',
   kitchenSubject: 'New paid order from the website',
 }
 
@@ -71,7 +71,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
   const lines = (order.items ?? []).map((item) => ({
     amountLabel: formatPaise(Number(item.unitPrice ?? 0)),
     durationLabel: item.durationLabel ?? '',
-    title: item.planTitle ?? '',
+    title: item.productTitle ?? '',
   }))
 
   const totalLabel = formatPaise(Number(order.total ?? 0))

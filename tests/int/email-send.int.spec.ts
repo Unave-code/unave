@@ -149,7 +149,7 @@ describe('account mail through ZeptoMail', () => {
     expect(message.replyTo).toBe('reply@unave.test')
   })
 
-  it('never files account mail against a plan', async () => {
+  it('never files account mail against a product', async () => {
     mocks.sendZeptoMail.mockResolvedValue(zeptoOk)
     const { payload, rows } = makePayload()
 

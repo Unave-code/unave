@@ -1,6 +1,6 @@
 import type { Access, CollectionConfig } from 'payload'
 
-import { hasStaffRole } from '../../access/isStaff'
+import { hasStaffRole, isStaff } from '../../access/isStaff'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
 
@@ -34,7 +34,7 @@ const staffOrOrderOwner: Access = ({ req: { user } }) => {
  * `overrideAccess` — public REST create stays off, so no browser can mint one
  * or choose its amounts, and it is written only when a payment has been
  * captured, so a row always means one completed order. Every money and delivery
- * value is snapshotted at creation and never edited again: editing a plan's
+ * value is snapshotted at creation and never edited again: editing a product's
  * title or price afterwards must never rewrite history, so the snapshot fields
  * below refuse updates at the field level, for staff too. The one staff writable
  * field is `startsOn`, the day deliveries actually begin.
@@ -49,16 +49,27 @@ export const Orders: CollectionConfig = {
     create: () => false,
     delete: () => false,
     read: staffOrOrderOwner,
-    update: hasStaffRole as Access,
+    update: isStaff,
   },
   admin: {
     defaultColumns: ['customer', 'total', 'createdAt'],
     description:
-      'One row per paid order. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.',
+      'One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.',
     group: 'Store',
     useAsTitle: 'id',
   },
   fields: [
+    {
+      // The Razorpay mode, read from the key id's prefix (AC-13). Presentational
+      // only: a `ui` field stores nothing, so it adds no column and no migration.
+      name: 'paymentMode',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/Admin/PaymentModeNotice#PaymentModeNotice',
+        },
+      },
+    },
     {
       name: 'customer',
       type: 'relationship',
@@ -80,17 +91,17 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
-        description: 'What was bought, copied from the plan at purchase time. Plan edits never change these rows.',
+        description: 'What was bought, copied from the product at purchase time. Product edits never change these rows.',
       },
       fields: [
         {
-          name: 'plan',
+          name: 'product',
           type: 'relationship',
           maxDepth: 0,
-          relationTo: 'plans',
+          relationTo: 'products',
         },
         {
-          name: 'planTitle',
+          name: 'productTitle',
           type: 'text',
         },
         {

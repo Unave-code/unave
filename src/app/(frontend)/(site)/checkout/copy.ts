@@ -5,7 +5,7 @@
 export const CHECKOUT_PAGE_TITLE = 'Check out'
 export const CHECKOUT_PAGE_HEADING = 'Check out'
 export const CHECKOUT_PAGE_INTRO =
-  'Confirm where the meals go, then pay once for the plan. The kitchen takes it from there.'
+  'Confirm where the meals go, then pay once for everything in your cart. The kitchen takes it from there.'
 
 export const CHECKOUT_DELIVERY_HEADING = 'Where the meals go'
 export const CHECKOUT_DELIVERY_INTRO =
@@ -38,14 +38,15 @@ export const CHECKOUT_FAILED_MESSAGE =
 export const CHECKOUT_SCRIPT_FAILED_MESSAGE =
   'The payment window did not open. Check your connection or any content blocker, then try again.'
 
-export const CHECKOUT_REFUSED_HEADING = 'That plan is not on the menu'
-export const CHECKOUT_REFUSED_UNKNOWN =
-  'We could not find that plan. It may have been removed, or the link may be incomplete.'
-export const CHECKOUT_REFUSED_PAUSED =
-  'That plan is paused right now. Message the kitchen if you were hoping to start with it.'
-export const CHECKOUT_REFUSED_DURATION =
-  'That duration is no longer offered on this plan. Pick another duration on the plans page.'
-export const CHECKOUT_REFUSED_CTA = 'Browse the plans'
+export const CHECKOUT_EMPTY_HEADING = 'Your cart is empty'
+export const CHECKOUT_EMPTY_BODY =
+  'There is nothing to pay for yet. Add a product and a duration from the products page, then come back here.'
+export const CHECKOUT_EMPTY_CTA = 'Browse the products'
+
+export const CHECKOUT_STALE_HEADING = 'One line needs a change'
+export const CHECKOUT_STALE_BODY =
+  'A product in your cart has changed or left the menu, so payment is on hold. Review the cart, remove the marked line, and come back.'
+export const CHECKOUT_STALE_CTA = 'Review your cart'
 
 export const CHECKOUT_SUMMARY_HEADING = 'Your order'
 export const CHECKOUT_SUMMARY_TOTAL = 'To pay'

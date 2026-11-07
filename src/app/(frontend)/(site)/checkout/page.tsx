@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import configPromise from '@payload-config'
@@ -6,30 +7,37 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
-import { resolveCheckoutPlan, type CheckoutRefusalReason } from '@/utilities/checkoutPlan'
+import { CART_COOKIE, readCart } from '@/utilities/cart'
+import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { formatPaise } from '@/utilities/money'
 
 import { CheckoutForm } from './CheckoutForm'
 import {
+  CHECKOUT_EMPTY_BODY,
+  CHECKOUT_EMPTY_CTA,
+  CHECKOUT_EMPTY_HEADING,
   CHECKOUT_PAGE_HEADING,
   CHECKOUT_PAGE_INTRO,
   CHECKOUT_PAGE_TITLE,
-  CHECKOUT_REFUSED_CTA,
-  CHECKOUT_REFUSED_DURATION,
-  CHECKOUT_REFUSED_HEADING,
-  CHECKOUT_REFUSED_PAUSED,
-  CHECKOUT_REFUSED_UNKNOWN,
+  CHECKOUT_STALE_BODY,
+  CHECKOUT_STALE_CTA,
+  CHECKOUT_STALE_HEADING,
   CHECKOUT_SUMMARY_HEADING,
   CHECKOUT_SUMMARY_TOTAL,
 } from './copy'
 
 /**
- * The checkout page (spec 0007, AC-2 and AC-3). Signed in customers only,
- * reached from one plan card's Buy now control. The link names a plan slug and
- * a duration label; this page resolves both live, so every price shown is the
- * plan record's price, and a paused or missing plan is refused in words rather
- * than shown as an empty form. The sign in guard carries the whole link through.
+ * The checkout page (spec 0007, AC-4 and AC-5). Signed in customers only.
+ *
+ * The basket comes from the cart cookie, never from the address, and every
+ * line is resolved against the live product records here, so the prices and the
+ * total are the server's. An empty cart, including an old shared link, gets one
+ * plain sentence and a way back to the products. A stale line blocks payment
+ * with a sentence and a way to the cart to fix it.
+ *
+ * The sign in guard carries the checkout address through; the cart cookie is
+ * untouched by sign in, so the basket survives the round trip with no merge.
  */
 export const dynamic = 'force-dynamic'
 
@@ -51,61 +59,44 @@ type CheckoutProfile = {
   phone?: string | null
 }
 
-type CheckoutSearchParams = {
-  duration?: string | string[]
-  plan?: string | string[]
-}
-
-const firstValue = (value?: string | string[]): string =>
-  Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
-
-const checkoutPath = (planSlug: string, durationLabel: string): string => {
-  const params = new URLSearchParams()
-
-  if (planSlug) params.set('plan', planSlug)
-  if (durationLabel) params.set('duration', durationLabel)
-
-  const query = params.toString()
-
-  return query ? `/checkout?${query}` : '/checkout'
-}
-
-const refusalBody = (reason: CheckoutRefusalReason): string => {
-  if (reason === 'paused') return CHECKOUT_REFUSED_PAUSED
-  if (reason === 'missing-duration') return CHECKOUT_REFUSED_DURATION
-
-  return CHECKOUT_REFUSED_UNKNOWN
-}
-
-export default async function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<CheckoutSearchParams>
-}) {
-  const params = await searchParams
-  const planSlug = firstValue(params.plan).trim()
-  const durationLabel = firstValue(params.duration).trim()
-  const here = checkoutPath(planSlug, durationLabel)
-
+export default async function CheckoutPage() {
   const customer = await getSignedInCustomer()
 
-  if (!customer) redirect(`/sign-in?return=${encodeURIComponent(here)}`)
+  if (!customer) redirect(`/sign-in?return=${encodeURIComponent('/checkout')}`)
+
+  const cookieStore = await cookies()
+  const lines = readCart(cookieStore.get(CART_COOKIE)?.value)
 
   const payload = await getPayload({ config: configPromise })
-  const selection = await resolveCheckoutPlan({ durationLabel, payload, planSlug })
+  const cart = await resolveCartLines({ lines, payload })
 
-  if (!selection.ok) {
+  if (cart.all.length === 0) {
     return (
-      <div className="container max-w-3xl py-16 sm:py-20">
-        <h1 className="text-h2">{CHECKOUT_REFUSED_HEADING}</h1>
-        <p className="text-body text-ink-600 mt-3">{refusalBody(selection.reason)}</p>
+      <main className="container max-w-3xl py-16 sm:py-20">
+        <h1 className="text-h2">{CHECKOUT_EMPTY_HEADING}</h1>
+        <p className="text-body text-ink-600 mt-3">{CHECKOUT_EMPTY_BODY}</p>
 
         <div className="mt-6">
-          <Cta href="/plans" variant="primary">
-            {CHECKOUT_REFUSED_CTA}
+          <Cta href="/products" variant="primary">
+            {CHECKOUT_EMPTY_CTA}
           </Cta>
         </div>
-      </div>
+      </main>
+    )
+  }
+
+  if (cart.stale.length > 0) {
+    return (
+      <main className="container max-w-3xl py-16 sm:py-20">
+        <h1 className="text-h2">{CHECKOUT_STALE_HEADING}</h1>
+        <p className="text-body text-ink-600 mt-3">{CHECKOUT_STALE_BODY}</p>
+
+        <div className="mt-6">
+          <Cta href="/cart" variant="primary">
+            {CHECKOUT_STALE_CTA}
+          </Cta>
+        </div>
+      </main>
     )
   }
 
@@ -123,7 +114,7 @@ export default async function CheckoutPage({
   })) as CheckoutProfile | null
 
   return (
-    <div className="container max-w-5xl py-16 sm:py-20">
+    <main className="container max-w-5xl py-16 sm:py-20">
       <header className="flex flex-col gap-2">
         <h1 className="text-h2">{CHECKOUT_PAGE_HEADING}</h1>
         <p className="text-body text-ink-600">{CHECKOUT_PAGE_INTRO}</p>
@@ -142,39 +133,36 @@ export default async function CheckoutPage({
             state: profile?.address?.state ?? '',
           }}
           email={customer.email}
-          selection={{
-            durationLabel: selection.duration.label,
-            planSlug: selection.plan.slug,
-          }}
         />
 
         <aside aria-label={CHECKOUT_SUMMARY_HEADING} className="flex min-w-0 flex-col gap-6">
           <section className="border-line rounded-2xl border bg-white p-6 sm:p-8">
             <h2 className="text-h3">{CHECKOUT_SUMMARY_HEADING}</h2>
 
-            <ul className="border-line mt-4 divide-y divide-line border-t">
-              <li className="flex items-start justify-between gap-4 py-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold">{selection.plan.title}</p>
-                  <p className="text-ink-600 mt-0.5 text-sm">
-                    {selection.duration.label}, {selection.duration.days}{' '}
-                    {selection.duration.days === 1 ? 'day' : 'days'}
-                  </p>
-                </div>
+            <ul className="border-line divide-line mt-4 divide-y border-t">
+              {cart.usable.map((line) => (
+                <li className="flex items-start justify-between gap-4 py-4" key={line.key}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold">{line.productTitle}</p>
+                    <p className="text-ink-600 mt-0.5 text-sm">
+                      {line.duration}, {line.days} {line.days === 1 ? 'day' : 'days'}
+                    </p>
+                  </div>
 
-                <p className="shrink-0 text-sm font-bold">
-                  {formatPaise(selection.duration.price)}
-                </p>
-              </li>
+                  <p className="shrink-0 text-sm font-bold">
+                    {formatPaise(line.price ?? 0)}
+                  </p>
+                </li>
+              ))}
             </ul>
 
             <div className="border-line mt-2 flex items-center justify-between border-t pt-4">
               <p className="font-bold">{CHECKOUT_SUMMARY_TOTAL}</p>
-              <p className="text-green-700 text-lg font-bold">{formatPaise(selection.total)}</p>
+              <p className="text-green-700 text-lg font-bold">{formatPaise(cart.total)}</p>
             </div>
 
             <p className="text-ink-600 mt-4 text-sm leading-6">
-              One payment for the plan. Paid orders show on your{' '}
+              One payment covers every line above. Paid orders show on your{' '}
               <Link
                 className="text-green-700 hover:opacity-75 font-semibold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
                 href="/account?tab=orders"
@@ -186,6 +174,6 @@ export default async function CheckoutPage({
           </section>
         </aside>
       </div>
-    </div>
+    </main>
   )
 }

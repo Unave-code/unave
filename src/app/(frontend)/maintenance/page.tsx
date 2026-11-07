@@ -42,7 +42,7 @@ export default function Maintenance() {
       </h1>
 
       <p className="mt-4 max-w-[46ch] text-base leading-relaxed text-cream/85 sm:text-lg">
-        We&rsquo;re tidying up behind the counter and will be back shortly. Your plans and orders
+        We&rsquo;re tidying up behind the counter and will be back shortly. Your products and orders
         are safe.
       </p>
 

@@ -31,7 +31,7 @@ import {
  * Only the owner may read it: the row is fetched and then compared against the
  * session, and anything else is a plain not found, so the page never confirms
  * that somebody else's order exists. The page shows the snapshot the order
- * stores, never the live plan, because a past order must not follow later
+ * stores, never the live product, because a past order must not follow later
  * price edits.
  *
  * Every row here is a completed payment. There is no pending state to show,
@@ -99,7 +99,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
           {(order.items ?? []).map((item, index) => (
             <li className="flex items-start justify-between gap-4 py-4" key={index}>
               <div className="min-w-0">
-                <p className="text-sm font-bold">{item.planTitle}</p>
+                <p className="text-sm font-bold">{item.productTitle}</p>
                 <p className="text-ink-600 mt-0.5 text-sm">
                   {item.durationLabel}, {Number(item.days)}{' '}
                   {Number(item.days) === 1 ? 'day' : 'days'} of meals
@@ -130,7 +130,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
           {ORDER_BACK_TO_ACCOUNT}
         </Link>
 
-        <Cta href="/plans" variant="primary">
+        <Cta href="/products" variant="primary">
           {ORDER_BROWSE_CTA}
         </Cta>
       </div>

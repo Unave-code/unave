@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
-import { PLAN_CATEGORY_VALUES } from '@/utilities/plansCategoryCopy'
+import { PRODUCT_CATEGORY_VALUES } from '@/utilities/productsCategoryCopy'
 
 const getPagesSitemap = unstable_cache(
   async () => {
@@ -31,6 +31,18 @@ const getPagesSitemap = unstable_cache(
       },
     })
 
+    const products = await payload.find({
+      collection: 'products',
+      overrideAccess: false,
+      depth: 0,
+      limit: 1000,
+      pagination: false,
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    })
+
     const dateFallback = new Date().toISOString()
 
     const defaultSitemap = [
@@ -43,12 +55,12 @@ const getPagesSitemap = unstable_cache(
         lastmod: dateFallback,
       },
       {
-        loc: `${SITE_URL}/plans`,
+        loc: `${SITE_URL}/products`,
         lastmod: dateFallback,
       },
-      // Spec 0008, AC-6: one entry per plan category page.
-      ...PLAN_CATEGORY_VALUES.map((category) => ({
-        loc: `${SITE_URL}/plans/${category}`,
+      // Spec 0008, AC-6: one entry per product category page.
+      ...PRODUCT_CATEGORY_VALUES.map((category) => ({
+        loc: `${SITE_URL}/products/${category}`,
         lastmod: dateFallback,
       })),
     ]
@@ -64,7 +76,15 @@ const getPagesSitemap = unstable_cache(
           })
       : []
 
-    return [...defaultSitemap, ...sitemap]
+    // Every product has a page of its own under /products (design.md §6.15).
+    const productSitemap = products.docs
+      .filter((product) => Boolean(product?.slug))
+      .map((product) => ({
+        loc: `${SITE_URL}/products/${product.slug}`,
+        lastmod: product.updatedAt || dateFallback,
+      }))
+
+    return [...defaultSitemap, ...productSitemap, ...sitemap]
   },
   ['pages-sitemap'],
   {

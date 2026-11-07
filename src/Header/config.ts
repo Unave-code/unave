@@ -109,9 +109,9 @@ export const Header: GlobalConfig = {
       name: 'navItems',
       type: 'array',
       label: 'Menu links',
-      maxRows: 6,
+      maxRows: 7,
       admin: {
-        description: 'Shown in the desktop bar and in the mobile drawer. Six at most.',
+        description: 'Shown in the desktop bar and in the mobile drawer. Seven at most.',
         initCollapsed: true,
         components: {
           RowLabel: '@/Header/RowLabel#RowLabel',

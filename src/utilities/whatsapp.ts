@@ -9,7 +9,7 @@
 
 export const WHATSAPP_CTA_LABEL = 'Message us on WhatsApp'
 
-export const WHATSAPP_MESSAGE = 'Hi UNAVE, I have a question about your meals and plans.'
+export const WHATSAPP_MESSAGE = 'Hi UNAVE, I have a question about your meals and products.'
 
 /**
  * Shown when the footer has no WhatsApp number yet, so a "message" button still

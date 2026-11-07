@@ -10,7 +10,7 @@ import React from 'react'
  * The chrome is a database read, so a build with no database reachable (a Docker
  * image build, for example) cannot prerender these pages; forcing dynamic
  * rendering keeps the build free of any database while the site keeps the
- * payload caches (globals, plans) that keep the per request work small.
+ * payload caches (globals, products) that keep the per request work small.
  */
 export const dynamic = 'force-dynamic'
 

@@ -5,9 +5,9 @@ import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from '../../src/collections/Orders/endpoints'
-import { buildOrderNotes } from '../../src/collections/Orders/intent'
+import { buildOrderNotes, type OrderIntentItem } from '../../src/collections/Orders/intent'
 import config from '@/payload.config'
-import type { Customer, Order, Plan } from '@/payload-types'
+import type { Customer, Order, Product } from '@/payload-types'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -18,10 +18,10 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
  *
  * The gateway is mocked at the module boundary: the browser half of Razorpay
  * cannot run here, and the point of these tests is what the *site* does with
- * the claims a browser makes. No order row is written at checkout any more, so
- * these tests hold two rules above all: creating opens a gateway order and
- * writes nothing, and verifying writes one paid row from what the gateway order
- * carries.
+ * the basket and the claims a browser makes. No order row is written at
+ * checkout any more, so these tests hold two rules above all: creating opens a
+ * gateway order and writes nothing, and verifying writes one paid row from what
+ * the gateway order carries.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -55,19 +55,36 @@ vi.mock('../../src/collections/Orders/mail', () => ({
 let payload: Payload
 
 const run = `it-order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-const planIDs: (number | string)[] = []
+const productIDs: (number | string)[] = []
+const subcategoryIDs: (number | string)[] = []
 const customerIDs: (number | string)[] = []
 const orderIDs: (number | string)[] = []
+
+let readyToEatSubcategoryId: number | string
 
 const PASSWORD = 'correct-horse-battery'
 
 let ipCounter = 0
 
-const headers = (options: { cookies?: string; crossSite?: boolean } = {}) => {
+const CART_COOKIE = 'unave-cart'
+const CUSTOMER_COOKIE = 'unave-customer'
+
+type CartEntry = { duration: string; product: string }
+
+const cartValue = (lines: CartEntry[]): string => encodeURIComponent(JSON.stringify(lines))
+
+const headers = (options: { cart?: CartEntry[]; cookies?: string; crossSite?: boolean } = {}) => {
   const built = new Headers()
   built.set('x-forwarded-for', `203.0.113.${(ipCounter += 1)}`)
 
   if (options.cookies) built.set('cookie', options.cookies)
+  if (options.cart) {
+    const existing = built.get('cookie')
+    built.set(
+      'cookie',
+      `${existing ? `${existing}; ` : ''}${CART_COOKIE}=${cartValue(options.cart)}`,
+    )
+  }
 
   if (options.crossSite) {
     built.set('origin', 'https://evil.example')
@@ -80,7 +97,7 @@ const headers = (options: { cookies?: string; crossSite?: boolean } = {}) => {
 
 const createRequest = (
   body: unknown,
-  options: { cookies?: string; crossSite?: boolean } = {},
+  options: { cart?: CartEntry[]; cookies?: string; crossSite?: boolean } = {},
 ) =>
   ({
     headers: headers(options),
@@ -88,6 +105,11 @@ const createRequest = (
     logger: payload.logger,
     payload,
   }) as never
+
+const cartFor = (product: Product, index = 0): CartEntry => ({
+  duration: product.durations?.[index]?.label ?? '',
+  product: product.slug,
+})
 
 const createCustomer = async (): Promise<{ email: string; id: number | string; token: string }> => {
   const email = `${run}-${Math.random().toString(36).slice(2, 8)}@unave.test`
@@ -116,9 +138,9 @@ const createCustomer = async (): Promise<{ email: string; id: number | string; t
   return { email, id: created.id, token: login.token ?? '' }
 }
 
-const createPlan = async (overrides: Partial<{ available: boolean; title: string }> = {}) => {
+const createProduct = async (overrides: Partial<{ available: boolean; title: string }> = {}) => {
   const created = (await payload.create({
-    collection: 'plans',
+    collection: 'products',
     data: {
       available: true,
       description: undefined,
@@ -126,29 +148,23 @@ const createPlan = async (overrides: Partial<{ available: boolean; title: string
         { days: 5, label: 'One week', price: 150000 },
         { days: 22, label: 'One month', price: 660000 },
       ],
-      slug: `${run}-${planIDs.length}-${Math.random().toString(36).slice(2, 8)}`,
+      slug: `${run}-${productIDs.length}-${Math.random().toString(36).slice(2, 8)}`,
       title: 'Lunch plan',
       category: 'ready-to-eat',
+      subcategory: readyToEatSubcategoryId as number,
       audience: 'adults',
       ...overrides,
     },
     depth: 0,
-    // The revalidatePlans hook calls Next's revalidateTag, which only exists
+    // The revalidateProducts hook calls Next's revalidateTag, which only exists
     // inside the Next runtime these specs do not run in.
     context: { disableRevalidate: true },
     overrideAccess: true,
-  })) as Plan
+  })) as Product
 
-  planIDs.push(created.id)
+  productIDs.push(created.id)
   return created
 }
-
-const COOKIE = 'unave-customer'
-
-const selectionFor = (plan: Plan, index: number) => ({
-  duration: plan.durations?.[index]?.label ?? '',
-  plan: plan.slug,
-})
 
 const delivery = {
   city: 'Pune',
@@ -186,29 +202,35 @@ const findOrderByGateway = async (gatewayOrderId: string): Promise<Order | null>
   return (found.docs[0] as Order | undefined) ?? null
 }
 
+const itemFor = (product: Product, index = 0): OrderIntentItem => {
+  const duration = product.durations?.[index]
+
+  return {
+    days: Number(duration?.days),
+    durationLabel: duration?.label ?? '',
+    productId: product.id,
+    productTitle: product.title,
+    unitPrice: Number(duration?.price),
+  }
+}
+
 /**
  * Put a checkout intent on the gateway order the verify tests read back, and
  * make the payment look captured, so the endpoint only has to decide whether to
  * write the row.
  */
 const stageGatewayOrder = (
-  plan: Plan,
+  items: OrderIntentItem[],
   customer: { id: number | string },
   gatewayOrderId: string,
-  index = 0,
 ) => {
-  const duration = plan.durations?.[index]
-  const total = Number(duration?.price)
+  const total = items.reduce((sum, item) => sum + item.unitPrice, 0)
 
   const notes = buildOrderNotes({
     customerId: customer.id,
-    days: Number(duration?.days),
     delivery,
-    durationLabel: duration?.label ?? '',
+    items,
     note: 'Ring the bell twice',
-    planId: plan.id,
-    planTitle: plan.title,
-    unitPrice: total,
   })
 
   mocks.fetchRazorpayOrder.mockResolvedValue({
@@ -233,6 +255,16 @@ const stageGatewayOrder = (
 
 beforeAll(async () => {
   payload = await getPayload({ config })
+
+  // Every product carries a subcategory from its own category (spec 0008, AC-9).
+  const subcategory = await payload.create({
+    collection: 'subcategories',
+    data: { category: 'ready-to-eat', title: `${run} tiffin` },
+    overrideAccess: true,
+  })
+
+  readyToEatSubcategoryId = subcategory.id
+  subcategoryIDs.push(subcategory.id)
 })
 
 beforeEach(() => {
@@ -256,9 +288,17 @@ afterAll(async () => {
     }
   }
 
-  for (const id of planIDs) {
+  for (const id of productIDs) {
     try {
-      await payload.delete({ collection: 'plans', id, overrideAccess: true, context: { disableRevalidate: true } })
+      await payload.delete({ collection: 'products', id, overrideAccess: true, context: { disableRevalidate: true } })
+    } catch {
+      // Best effort cleanup.
+    }
+  }
+
+  for (const id of subcategoryIDs) {
+    try {
+      await payload.delete({ collection: 'subcategories', id, overrideAccess: true })
     } catch {
       // Best effort cleanup.
     }
@@ -274,20 +314,24 @@ afterAll(async () => {
 })
 
 describe('POST /api/orders/create', () => {
-  it('opens a gateway order with the plan and delivery on its notes and writes no row', async () => {
+  it('opens one gateway order for the whole basket and writes no row', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const lunch = await createProduct()
+    const dinner = await createProduct({ title: 'Dinner plan' })
 
     mocks.createRazorpayOrder.mockResolvedValue({
-      amount: 150000,
+      amount: 300000,
       currency: 'INR',
       id: `order_${run}_1`,
     })
 
     const response = (await createOrderEndpoint.handler(
       createRequest(
-        { delivery, ...selectionFor(plan, 0), note: 'Ring the bell twice' },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { delivery, note: 'Ring the bell twice' },
+        {
+          cart: [cartFor(lunch, 0), cartFor(dinner, 0)],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
       ),
     )) as Response
 
@@ -299,7 +343,7 @@ describe('POST /api/orders/create', () => {
       orderId?: unknown
     }
 
-    expect(body.amount).toBe(150000)
+    expect(body.amount).toBe(300000)
     expect(body.gatewayOrderId).toBe(`order_${run}_1`)
     // No local row is written, so no order id comes back.
     expect(body.orderId).toBeUndefined()
@@ -308,19 +352,44 @@ describe('POST /api/orders/create', () => {
     expect(notes.d_name).toBe('Asha Kale')
     expect(notes.d_city).toBe('Pune')
     expect(notes.d_note).toBe('Ring the bell twice')
-    expect(JSON.parse(notes.plan)).toMatchObject({
-      days: 5,
-      price: 150000,
-      t: 'Lunch plan',
-    })
+
+    const pack = JSON.parse(notes.l0) as unknown[]
+    expect(pack).toHaveLength(2)
 
     // Nothing reached the orders table.
     expect(await findOrderByGateway(`order_${run}_1`)).toBeNull()
   })
 
-  it('trusts the plan records, not the browser, for every rupee', async () => {
+  it('packs two lines into one note', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
+
+    mocks.createRazorpayOrder.mockResolvedValue({
+      amount: 960000,
+      currency: 'INR',
+      id: `order_${run}_packed`,
+    })
+
+    const response = (await createOrderEndpoint.handler(
+      createRequest(
+        { delivery },
+        {
+          cart: [cartFor(product, 0), cartFor(product, 1)],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(200)
+
+    const notes = mocks.createRazorpayOrder.mock.calls[0]?.[2] as Record<string, string>
+    expect(JSON.parse(notes.l0)).toHaveLength(2)
+    expect(notes.l1).toBeUndefined()
+  })
+
+  it('trusts the product records, not the browser, for every rupee', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
 
     mocks.createRazorpayOrder.mockResolvedValue({
       amount: 150000,
@@ -328,18 +397,22 @@ describe('POST /api/orders/create', () => {
       id: `order_${run}_claims`,
     })
 
-    // A hand built body can carry any numbers it likes; the endpoint must read
-    // the plan and duration from the record and ignore the rest.
+    // A hand built body can carry any numbers it likes; the endpoint never
+    // reads a line or an amount from it, only the delivery.
     const response = (await createOrderEndpoint.handler(
       createRequest(
         {
-          ...selectionFor(plan, 0),
           days: 1,
           delivery,
+          duration: 'One week',
+          product: product.slug,
           price: 1,
           total: 1,
         },
-        { cookies: `${COOKIE}=${customer.token}` },
+        {
+          cart: [cartFor(product, 0)],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
       ),
     )) as Response
 
@@ -349,25 +422,24 @@ describe('POST /api/orders/create', () => {
     expect(body.amount).toBe(150000)
 
     const notes = mocks.createRazorpayOrder.mock.calls[0]?.[2] as Record<string, string>
-    expect(JSON.parse(notes.plan)).toMatchObject({ days: 5, price: 150000 })
+    expect(JSON.parse(notes.l0)[0].slice(0, 4)).toEqual([product.id, 'One week', 5, 150000])
   })
 
   it('opens a fresh gateway order on every attempt instead of reusing one', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
 
     mocks.createRazorpayOrder
       .mockResolvedValueOnce({ amount: 150000, currency: 'INR', id: `order_${run}_retry_a` })
       .mockResolvedValueOnce({ amount: 150000, currency: 'INR', id: `order_${run}_retry_b` })
 
-    const body = { delivery, ...selectionFor(plan, 0), note: '' }
+    const options = {
+      cart: [cartFor(product, 0)],
+      cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+    }
 
-    await createOrderEndpoint.handler(
-      createRequest(body, { cookies: `${COOKIE}=${customer.token}` }),
-    )
-    await createOrderEndpoint.handler(
-      createRequest(body, { cookies: `${COOKIE}=${customer.token}` }),
-    )
+    await createOrderEndpoint.handler(createRequest({ delivery }, options))
+    await createOrderEndpoint.handler(createRequest({ delivery }, options))
 
     expect(mocks.createRazorpayOrder).toHaveBeenCalledTimes(2)
     expect(await findOrderByGateway(`order_${run}_retry_a`)).toBeNull()
@@ -375,9 +447,7 @@ describe('POST /api/orders/create', () => {
   })
 
   it('refuses a signed out visitor with 401 and writes nothing', async () => {
-    const response = (await createOrderEndpoint.handler(
-      createRequest({ delivery, duration: 'One week', plan: 'lunch-plan' }),
-    )) as Response
+    const response = (await createOrderEndpoint.handler(createRequest({ delivery }))) as Response
 
     expect(response.status).toBe(401)
     expect((await response.json()) as { message: string }).toHaveProperty('message')
@@ -388,75 +458,129 @@ describe('POST /api/orders/create', () => {
 
     const response = (await createOrderEndpoint.handler(
       createRequest(
-        { delivery, duration: 'One week', plan: 'lunch-plan' },
-        { cookies: `${COOKIE}=${customer.token}`, crossSite: true },
+        { delivery },
+        {
+          cart: [{ duration: 'One week', product: 'lunch-plan' }],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+          crossSite: true,
+        },
       ),
     )) as Response
 
     expect(response.status).toBe(403)
   })
 
-  it('refuses a body with no plan or duration', async () => {
+  it('refuses an empty cart with a plain sentence', async () => {
     const customer = await createCustomer()
 
     const response = (await createOrderEndpoint.handler(
-      createRequest({ delivery }, { cookies: `${COOKIE}=${customer.token}` }),
+      createRequest({ delivery }, { cookies: `${CUSTOMER_COOKIE}=${customer.token}` }),
     )) as Response
 
     expect(response.status).toBe(422)
 
     const body = (await response.json()) as { message: string }
-    expect(body.message).toBe('Choose a plan first.')
+    expect(body.message).toBe('Your cart is empty. Add a product before checking out.')
   })
 
-  it('refuses a plan slug that is not on the menu', async () => {
+  it('refuses more than ten lines', async () => {
     const customer = await createCustomer()
+    const product = await createProduct()
+    const lines = Array.from({ length: 11 }, (_, index) => ({
+      duration: `Duration ${index}`,
+      product: product.slug,
+    }))
 
     const response = (await createOrderEndpoint.handler(
       createRequest(
-        { delivery, duration: 'One week', plan: `${run}-missing` },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { delivery },
+        { cart: lines, cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
       ),
     )) as Response
 
     expect(response.status).toBe(422)
 
     const body = (await response.json()) as { message: string }
-    expect(body.message).toContain('not on the menu')
+    expect(body.message).toContain('at most ten products')
   })
 
-  it('refuses a paused plan', async () => {
+  it('refuses the same line twice', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan({ available: false })
+    const product = await createProduct()
 
     const response = (await createOrderEndpoint.handler(
       createRequest(
-        { delivery, ...selectionFor(plan, 0) },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { delivery },
+        {
+          cart: [cartFor(product, 0), cartFor(product, 0)],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
       ),
     )) as Response
 
     expect(response.status).toBe(422)
 
     const body = (await response.json()) as { message: string }
-    expect(body.message).toContain('paused')
+    expect(body.message).toContain('twice')
   })
 
-  it('refuses a duration that is no longer on the live plan', async () => {
+  it('refuses a product that is not on the menu', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
 
     const response = (await createOrderEndpoint.handler(
       createRequest(
-        { delivery, duration: 'Two weeks', plan: plan.slug },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { delivery },
+        {
+          cart: [{ duration: 'One week', product: `${run}-missing` }],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
       ),
     )) as Response
 
     expect(response.status).toBe(422)
 
     const body = (await response.json()) as { message: string }
-    expect(body.message).toContain('duration has changed')
+    expect(body.message).toContain('changed or left the menu')
+  })
+
+  it('refuses a paused product', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct({ available: false })
+
+    const response = (await createOrderEndpoint.handler(
+      createRequest(
+        { delivery },
+        {
+          cart: [cartFor(product, 0)],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(422)
+
+    const body = (await response.json()) as { message: string }
+    expect(body.message).toContain('changed or left the menu')
+  })
+
+  it('refuses a duration that is no longer on the live product', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+
+    const response = (await createOrderEndpoint.handler(
+      createRequest(
+        { delivery },
+        {
+          cart: [{ duration: 'Two weeks', product: product.slug }],
+          cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+        },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(422)
+
+    const body = (await response.json()) as { message: string }
+    expect(body.message).toContain('changed or left the menu')
   })
 
   it('answers 503 with a plain sentence when the gateway is not configured', async () => {
@@ -464,11 +588,15 @@ describe('POST /api/orders/create', () => {
 
     try {
       const customer = await createCustomer()
+      const product = await createProduct()
 
       const response = (await createOrderEndpoint.handler(
         createRequest(
-          { delivery, duration: 'One week', plan: 'lunch-plan' },
-          { cookies: `${COOKIE}=${customer.token}` },
+          { delivery },
+          {
+            cart: [cartFor(product, 0)],
+            cookies: `${CUSTOMER_COOKIE}=${customer.token}`,
+          },
         ),
       )) as Response
 
@@ -483,12 +611,13 @@ describe('POST /api/orders/create', () => {
 })
 
 describe('POST /api/orders/verify', () => {
-  it('writes the paid order from the gateway notes on a verified return', async () => {
+  it('writes one paid order with every line and clears the cart', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const lunch = await createProduct()
+    const dinner = await createProduct({ title: 'Dinner plan' })
     const gatewayOrderId = `order_${run}_v1`
 
-    stageGatewayOrder(plan, customer, gatewayOrderId)
+    stageGatewayOrder([itemFor(lunch, 0), itemFor(dinner, 0)], customer, gatewayOrderId)
 
     const response = (await verifyOrderEndpoint.handler(
       createRequest(
@@ -497,11 +626,13 @@ describe('POST /api/orders/verify', () => {
           razorpay_payment_id: `pay_${gatewayOrderId}`,
           razorpay_signature: 'sig',
         },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
       ),
     )) as Response
 
     expect(response.status).toBe(200)
+    expect(response.headers.get('set-cookie')).toContain(`${CART_COOKIE}=`)
+    expect(response.headers.get('set-cookie')).toContain('Max-Age=0')
 
     const body = (await response.json()) as { orderId: number; status: string }
     expect(body.status).toBe('paid')
@@ -511,9 +642,11 @@ describe('POST /api/orders/verify', () => {
 
     const row = await findOrder(body.orderId)
     expect(row).not.toBeNull()
-    expect(row!.total).toBe(150000)
+    expect(row!.total).toBe(300000)
     expect(String(row!.customer)).toBe(String(customer.id))
-    expect(row!.items?.[0]?.planTitle).toBe('Lunch plan')
+    expect(row!.items).toHaveLength(2)
+    expect(row!.items?.[0]?.productTitle).toBe('Lunch plan')
+    expect(row!.items?.[1]?.productTitle).toBe('Dinner plan')
     expect(row!.items?.[0]?.unitPrice).toBe(150000)
     expect(row!.delivery?.name).toBe('Asha Kale')
     expect(row!.delivery?.note).toBe('Ring the bell twice')
@@ -524,10 +657,10 @@ describe('POST /api/orders/verify', () => {
 
   it('refuses a return whose signature does not verify and writes nothing', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
     const gatewayOrderId = `order_${run}_v2`
 
-    stageGatewayOrder(plan, customer, gatewayOrderId)
+    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
     mocks.verifyPaymentSignature.mockReturnValue(false)
 
     const response = (await verifyOrderEndpoint.handler(
@@ -537,7 +670,7 @@ describe('POST /api/orders/verify', () => {
           razorpay_payment_id: `pay_${gatewayOrderId}`,
           razorpay_signature: 'forged',
         },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
       ),
     )) as Response
 
@@ -548,10 +681,10 @@ describe('POST /api/orders/verify', () => {
 
   it('refuses a payment that does not match the gateway order and writes nothing', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
     const gatewayOrderId = `order_${run}_v3`
 
-    stageGatewayOrder(plan, customer, gatewayOrderId)
+    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
     mocks.fetchRazorpayPayment.mockResolvedValue({
       amount: 999, // The browser paid a different amount.
       currency: 'INR',
@@ -567,7 +700,7 @@ describe('POST /api/orders/verify', () => {
           razorpay_payment_id: `pay_${gatewayOrderId}`,
           razorpay_signature: 'sig',
         },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
       ),
     )) as Response
 
@@ -578,10 +711,10 @@ describe('POST /api/orders/verify', () => {
   it('answers 404 for somebody else\u2019s gateway order rather than confirming it exists', async () => {
     const owner = await createCustomer()
     const stranger = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
     const gatewayOrderId = `order_${run}_v4`
 
-    stageGatewayOrder(plan, owner, gatewayOrderId)
+    stageGatewayOrder([itemFor(product, 0)], owner, gatewayOrderId)
 
     const response = (await verifyOrderEndpoint.handler(
       createRequest(
@@ -590,7 +723,7 @@ describe('POST /api/orders/verify', () => {
           razorpay_payment_id: `pay_${gatewayOrderId}`,
           razorpay_signature: 'sig',
         },
-        { cookies: `${COOKIE}=${stranger.token}` },
+        { cookies: `${CUSTOMER_COOKIE}=${stranger.token}` },
       ),
     )) as Response
 
@@ -617,7 +750,7 @@ describe('POST /api/orders/verify', () => {
           razorpay_payment_id: `pay_${gatewayOrderId}`,
           razorpay_signature: 'sig',
         },
-        { cookies: `${COOKIE}=${customer.token}` },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
       ),
     )) as Response
 
@@ -625,12 +758,12 @@ describe('POST /api/orders/verify', () => {
     expect(await findOrderByGateway(gatewayOrderId)).toBeNull()
   })
 
-  it('records a repeated return once and does not mail twice', async () => {
+  it('records a repeated return once, does not mail twice, and still clears the cart', async () => {
     const customer = await createCustomer()
-    const plan = await createPlan()
+    const product = await createProduct()
     const gatewayOrderId = `order_${run}_v6`
 
-    stageGatewayOrder(plan, customer, gatewayOrderId)
+    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
 
     const body = {
       razorpay_order_id: gatewayOrderId,
@@ -638,11 +771,13 @@ describe('POST /api/orders/verify', () => {
       razorpay_signature: 'sig',
     }
 
+    const options = { cookies: `${CUSTOMER_COOKIE}=${customer.token}` }
+
     const first = (await verifyOrderEndpoint.handler(
-      createRequest(body, { cookies: `${COOKIE}=${customer.token}` }),
+      createRequest(body, options),
     )) as Response
     const second = (await verifyOrderEndpoint.handler(
-      createRequest(body, { cookies: `${COOKIE}=${customer.token}` }),
+      createRequest(body, options),
     )) as Response
 
     const firstBody = (await first.json()) as { orderId: number }
@@ -652,6 +787,7 @@ describe('POST /api/orders/verify', () => {
 
     expect(second.status).toBe(200)
     expect(secondBody.orderId).toBe(firstBody.orderId)
+    expect(second.headers.get('set-cookie')).toContain('Max-Age=0')
     expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 
@@ -683,7 +819,7 @@ describe('the orders collection', () => {
           state: 'Maharashtra',
         },
         gatewayOrderId,
-        items: [{ days: 5, durationLabel: 'One week', planTitle: 'Lunch plan', unitPrice: 150000 }],
+        items: [{ days: 5, durationLabel: 'One week', productTitle: 'Lunch plan', unitPrice: 150000 }],
         subtotal: 150000,
         total: 150000,
       },

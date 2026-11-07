@@ -189,7 +189,7 @@ No migration is needed: the `orders.items` array already holds multiple items, a
 - [ ] Fulfilment states, staff actions and auto renewing subscriptions stay deferred (scope)
 - [x] If customers ask for mixed plan orders, design a basket in a later spec; the `items` array already allows more than one item (done: the 2026-11-06 revision restores the cart in this spec)
 - [ ] Re run `/check verify` against the renumbered acceptance criteria after the build
-- [ ] Verify Razorpay's actual note size limits during the build against the 10 line intent; if the real limit is smaller, lower the cap and record it here
+- [x] Verify Razorpay's actual note size limits during the build against the 10 line intent; if the real limit is smaller, lower the cap and record it here (done: the Orders API docs cap notes at 15 pairs of 256 characters each; the intent uses at most 14 pairs and caps every value at 240 characters, with two lines per indexed note)
 
 ## Rationale
 

@@ -13,7 +13,7 @@ import './RupeeField.scss'
  *
  * The database and Razorpay still speak paise, so the field stores paise and
  * this component is the only place the kitchen sees or types rupees. Loading a
- * plan shows `499`, not `49900`. While the input has focus the text is left
+ * field shows `499`, not `49900`. While the input has focus the text is left
  * exactly as typed, so a decimal point is not fought; on blur it snaps back to
  * the value the field actually holds.
  */

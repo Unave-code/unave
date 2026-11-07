@@ -18,7 +18,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 export type OrderRequestNotice = {
   customer: { email: string; name: string | null }
   orderId: number | string
-  /** The plans on the order, so the kitchen knows what to stop. */
+  /** The products on the order, so the kitchen knows what to stop. */
   orderSummary: string
   pauseFrom?: null | string
   pauseTo?: null | string

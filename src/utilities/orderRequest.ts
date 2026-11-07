@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * What a customer can ask the kitchen to do with a paid order (design.md §6.15).
  *
- * A paid order is never edited again — its amounts and its plan snapshot are the
+ * A paid order is never edited again — its amounts and its product snapshot are the
  * receipt — so stopping or skipping one is a request rather than a change. Each
  * request is its own row for the kitchen to answer, and this schema is the rule
  * both sides of the network share: the dialog checks it in the browser, the

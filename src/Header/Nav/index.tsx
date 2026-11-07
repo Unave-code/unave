@@ -6,6 +6,9 @@ import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { cn } from '@/utilities/ui'
+import { CART_LINK_LABEL } from '@/utilities/cartCopy'
+
+import { CartNavLink } from './CartNavLink'
 
 type NavItem = NonNullable<HeaderType['navItems']>[number]
 
@@ -34,16 +37,24 @@ export const HeaderNav: React.FC<Props> = ({ items, onNavigate, variant = 'deskt
           key={link?.label ?? index}
           onClick={onNavigate}
         >
-          <CMSLink
-            {...link}
-            appearance="inline"
-            className={cn(
-              'rounded-sm font-semibold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none',
-              variant === 'desktop'
-                ? 'text-primary hover:opacity-75 inline-flex min-h-11 items-center px-3 text-sm'
-                : 'text-gold-400 hover:text-cream focus-visible:ring-gold-400 flex min-h-14 items-center px-1',
-            )}
-          />
+          {link?.url === '/cart' ? (
+            <CartNavLink
+              label={link.label ?? CART_LINK_LABEL}
+              onNavigate={onNavigate}
+              variant={variant}
+            />
+          ) : (
+            <CMSLink
+              {...link}
+              appearance="inline"
+              className={cn(
+                'rounded-sm font-semibold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none',
+                variant === 'desktop'
+                  ? 'text-primary hover:opacity-75 inline-flex min-h-11 items-center px-3 text-sm'
+                  : 'text-gold-400 hover:text-cream focus-visible:ring-gold-400 flex min-h-14 items-center px-1',
+              )}
+            />
+          )}
         </li>
       ))}
     </ul>
