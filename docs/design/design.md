@@ -360,6 +360,10 @@ The admin is a staff tool rather than a customer surface, and it wears the brand
 
 The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group, so it draws its own header and footer — an unmatched URL must never land somewhere with no way back. It wears the shared opening band (§6.3): deep green with the swoosh, a gold uppercase eyebrow (*Error 404*), a Playfair headline with the gold italic phrase (*This page is not on the menu*), and one lead line that says what happened and that the kitchen is still open. One primary pill (*Browse the products*) sits beside one quiet secondary (*Back to the home page*); no account is needed anywhere on it, and every link leads somewhere that sells.
 
+### 6.18 Trust strip
+
+The band that sits directly under the home hero (§10.1 item 2), carrying the five claims the kitchen can stand behind — delivery, cooking, FSSAI, home-style cooking, one focus. It is drawn as one promise rail, not a badge row: `bg-green-50` with `--line` hairlines top and bottom, and inside it the claims flow in a single line on a wide screen, separated by vertical `--line` hairlines (one column on mobile, two on tablet, three on small desktop). Each claim is a small green icon (2px stroke, `--green-700`) set inline with its bold caption label, and beneath it, when one exists, a specific note in `--ink-600`. A note is rendered only when it says something real — "Small batches, every day", "Oil, salt and portions we control" — so a claim awaiting its detail (the FSSAI licence number) stands on its label alone and the strip never shows a stub. Delivery promises no areas, zones or timings; the note commits only to the schedule agreed by message, matching the FAQ and the policy pages. The copy lives in `src/utilities/homeCopy.ts` (`TRUST`), rendered by `src/components/home/TrustStrip.tsx`.
+
 ## 7. Iconography and Illustration
 
 - **Style:** Rounded line icons, 2px stroke, round caps and joins (Lucide or Phosphor "regular").
@@ -398,7 +402,7 @@ The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group
 ### 10.1 Home
 
 1. Hero carousel (§6.3): the seeded first slide reads "Good food, cooked in our own kitchen." + Message us on WhatsApp / How It Works, with four icon chips under the buttons; the kitchen edits and adds slides in the admin under Home page → Home hero
-2. Trust strip (five claims: delivery, kitchen, FSSAI, home-style cooking, one focus)
+2. Trust strip (§6.18): five claims — delivery, kitchen, FSSAI, home-style cooking, one focus — as one promise rail on the tint band, hairline-divided on a wide screen
 3. Welcome to UNAVE (two short paragraphs + kitchen photo)
 4. What makes us different (six reasons, numbered cards on the white band)
 5. Choose your product: the four newest open products from the products collection, shown with the same cards `/products` uses — photo, name, the first duration's price in small type, and one small Add to cart control — so a price is never typed twice and someone who knows what they want buys from the front page. One row of four on a wide screen, two on tablet and small phones, with a secondary *"See every product"* link to the full shelf. Cream, so the page keeps its cream and white rhythm. A kitchen with nothing open shows no shelf at all

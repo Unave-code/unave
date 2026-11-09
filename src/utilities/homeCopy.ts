@@ -57,12 +57,14 @@ export const HERO_CHIPS = [
   { label: 'Home-style cooking', icon: 'utensils' },
 ] as const
 
-/** 3. Trust strip. Every claim here has to survive a question. */
+/** 3. Trust strip. Every claim here has to survive a question, and a note is
+ * rendered only when it says something specific — an empty note leaves the
+ * label standing on its own rather than showing a stub. */
 export const TRUST = [
   {
     label: 'Delivered to your door',
-    /** Placeholder: list the areas we actually reach. */
-    note: 'Areas: —',
+    /** Deliberately area-less: zones are confirmed by message (see the FAQ), never promised. */
+    note: 'On the schedule we agree with you',
     icon: 'truck',
   },
   {
@@ -72,8 +74,8 @@ export const TRUST = [
   },
   {
     label: 'FSSAI licensed',
-    /** Placeholder: the licence number. */
-    note: 'No. —',
+    /** The licence number is still owed by the business; until it lands the label carries the claim alone. */
+    note: '',
     icon: 'badge',
   },
   {
