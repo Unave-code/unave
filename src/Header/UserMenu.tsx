@@ -8,7 +8,7 @@ import React, { useEffect, useId, useRef, useState } from 'react'
 import { cn } from '@/utilities/ui'
 
 const TRIGGER =
-  'text-primary rounded-sm text-sm font-semibold hover:opacity-75 inline-flex min-h-11 items-center gap-2 px-3 transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none'
+  'text-primary hover:bg-current/10 rounded-pill text-sm font-semibold inline-flex min-h-11 items-center gap-2 px-3 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none'
 
 const ITEM =
   'text-foreground hover:bg-accent focus-visible:bg-accent rounded-sm flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm font-semibold transition-colors focus-visible:outline-none motion-reduce:transition-none'
@@ -157,7 +157,7 @@ export const UserMenu: React.FC<Props> = ({ name }) => {
       {open ? (
         <div
           aria-label="Account"
-          className="border-border bg-popover text-popover-foreground shadow-md absolute top-full right-0 z-30 mt-2 w-60 rounded-md border p-1"
+          className="border-border bg-popover text-popover-foreground shadow-md animate-in fade-in zoom-in-95 slide-in-from-top-1 absolute top-full right-0 z-30 mt-2 w-60 rounded-md border p-1 duration-150 ease-out motion-reduce:animate-none"
           id={menuId}
           onKeyDown={onMenuKeyDown}
           ref={menuRef}

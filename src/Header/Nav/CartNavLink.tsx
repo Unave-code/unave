@@ -17,14 +17,22 @@ import { cn } from '@/utilities/ui'
  * cookie is readable by JavaScript on purpose, and it carries nothing private,
  * so the count needs no request of its own.
  *
+ * Three settings: `bar` renders it as an icon control in the desktop bar's
+ * right-hand action group, beside the search control; `desktop` is the inline
+ * nav presentation; `drawer` is the mobile drawer's row. In every one the
+ * visible form is the icon with the live count badge — the label and count are
+ * read by screen readers.
+ *
  * Without JavaScript the label still links to the cart; only the number waits
- * for the page to hydrate.
+ * for the page to hydrate. The count badge zooms in whenever it changes, so an
+ * added line is felt as well as seen.
  */
 export const CartNavLink: React.FC<{
+  active?: boolean
   label: string
   onNavigate?: () => void
-  variant: 'desktop' | 'drawer'
-}> = ({ label, onNavigate, variant }) => {
+  variant: 'bar' | 'desktop' | 'drawer'
+}> = ({ active = false, label, onNavigate, variant }) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -42,11 +50,18 @@ export const CartNavLink: React.FC<{
 
   return (
     <Link
+      aria-current={active ? 'page' : undefined}
       className={cn(
-        'rounded-sm font-semibold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none',
+        'rounded-sm font-semibold focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none',
+        variant === 'bar' &&
+          'text-primary hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill transition-colors motion-reduce:transition-none',
         variant === 'desktop'
-          ? 'text-primary hover:opacity-75 inline-flex min-h-11 items-center px-3 text-sm'
-          : 'text-gold-400 hover:text-cream focus-visible:ring-gold-400 flex min-h-14 items-center px-1',
+          ? 'header-link text-primary inline-flex min-h-11 items-center px-3 text-sm'
+          : variant === 'drawer' &&
+              cn(
+                'flex min-h-14 items-center px-1 transition-colors focus-visible:ring-current motion-reduce:transition-none',
+                active ? 'bg-cream/10 text-cream' : 'text-gold-400 hover:text-cream',
+              ),
       )}
       href="/cart"
       onClick={onNavigate}
@@ -65,7 +80,9 @@ export const CartNavLink: React.FC<{
             className={cn(
               'absolute -right-2 -top-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold leading-4',
               'bg-gold-400 text-green-900',
+              'animate-in zoom-in-50 fill-mode-backwards duration-200 ease-out motion-reduce:animate-none',
             )}
+            key={count}
           >
             {count}
           </span>

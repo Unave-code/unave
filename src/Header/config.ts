@@ -111,7 +111,8 @@ export const Header: GlobalConfig = {
       label: 'Menu links',
       maxRows: 7,
       admin: {
-        description: 'Shown in the desktop bar and in the mobile drawer. Seven at most.',
+        description:
+          'Shown in the desktop bar and in the mobile drawer. Seven at most. A link to /cart renders as the cart control on the right of the desktop bar.',
         initCollapsed: true,
         components: {
           RowLabel: '@/Header/RowLabel#RowLabel',

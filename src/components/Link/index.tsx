@@ -7,6 +7,7 @@ import React from 'react'
 import type { Page, Post } from '@/payload-types'
 
 type CMSLinkType = {
+  ariaCurrent?: boolean
   appearance?: 'inline' | ButtonProps['variant']
   children?: React.ReactNode
   className?: string
@@ -23,6 +24,7 @@ type CMSLinkType = {
 
 export const CMSLink: React.FC<CMSLinkType> = (props) => {
   const {
+    ariaCurrent,
     type,
     appearance = 'inline',
     children,
@@ -43,11 +45,14 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   const size = appearance === 'link' ? 'clear' : sizeFromProps
   const newTabProps = newTab ? { rel: 'noopener noreferrer', target: '_blank' } : {}
+  /* Set on the header nav's link for the page you are on, so screen readers and
+     the `.header-link` underline share one source of truth. */
+  const ariaCurrentProps = ariaCurrent ? { 'aria-current': 'page' as const } : {}
 
   /* Ensure we don't break any styles set by richText */
   if (appearance === 'inline') {
     return (
-      <Link className={cn(className)} href={href || url || ''} {...newTabProps}>
+      <Link className={cn(className)} href={href || url || ''} {...newTabProps} {...ariaCurrentProps}>
         {label && label}
         {children && children}
       </Link>
@@ -56,7 +61,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   return (
     <Button asChild className={className} size={size} variant={appearance}>
-      <Link className={cn(className)} href={href || url || ''} {...newTabProps}>
+      <Link className={cn(className)} href={href || url || ''} {...newTabProps} {...ariaCurrentProps}>
         {label && label}
         {children && children}
       </Link>

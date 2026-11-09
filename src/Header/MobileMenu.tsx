@@ -10,7 +10,7 @@ import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { Logo } from '@/components/Logo/Logo'
 import { cn } from '@/utilities/ui'
 import { AccountLinks } from './AccountLinks'
-import { HeaderNav } from './Nav'
+import { DRAWER_STAGGER_START_MS, DRAWER_STAGGER_STEP_MS, HeaderNav } from './Nav'
 
 interface Props {
   items: NonNullable<HeaderType['navItems']>
@@ -24,6 +24,11 @@ interface Props {
 /**
  * The full-height green drawer behind the hamburger (design.md §6.2): gold links
  * at 56px, the primary button pinned at the bottom, and the logo in gold.
+ *
+ * It slides in from the right once, and the rows join a short stagger behind it —
+ * menu links first, then the account rows, then the button — so the drawer feels
+ * assembled rather than dumped. `prefers-reduced-motion` receives the drawer
+ * instantly, with no cascade.
  */
 export const MobileMenu: React.FC<Props> = ({
   closeRef,
@@ -37,11 +42,14 @@ export const MobileMenu: React.FC<Props> = ({
     ? { rel: 'noopener noreferrer', target: '_blank' as const }
     : {}
 
+  const accountDelayMs = DRAWER_STAGGER_START_MS + items.length * DRAWER_STAGGER_STEP_MS + 60
+  const ctaDelayMs = accountDelayMs + 90
+
   return (
     <div
       aria-label="Menu"
       aria-modal="true"
-      className="bg-green-900 fixed inset-0 z-50 flex flex-col lg:hidden"
+      className="bg-green-900 animate-in fade-in slide-in-from-right fixed inset-0 z-50 flex flex-col duration-300 ease-out lg:hidden motion-reduce:animate-none"
       id="mobile-menu"
       ref={drawerRef}
       role="dialog"
@@ -70,12 +78,15 @@ export const MobileMenu: React.FC<Props> = ({
             !items.length && 'mt-0 border-t-0 pt-0',
           )}
         >
-          <AccountLinks onNavigate={onClose} signedIn={signedIn} variant="drawer" />
+          <AccountLinks delayMs={accountDelayMs} onNavigate={onClose} signedIn={signedIn} variant="drawer" />
         </div>
       </nav>
 
       {cta?.label && cta?.url ? (
-        <div className="border-cream/15 container border-t py-6">
+        <div
+          className="border-cream/15 container animate-in fade-in slide-in-from-bottom-3 fill-mode-backwards border-t py-6 duration-300 ease-out motion-reduce:animate-none"
+          style={{ animationDelay: `${ctaDelayMs}ms` }}
+        >
           <Link
             className={cn(CTA_BASE, CTA_VARIANTS.onDark, 'w-full')}
             href={cta.url}

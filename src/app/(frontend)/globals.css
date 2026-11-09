@@ -435,12 +435,70 @@ body:has(.opening-band) .site-header:not([data-scrolled='true']) {
   background-color: color-mix(in oklab, var(--green-900) 55%, transparent);
 }
 
-/* Scrolled header: solid green bar with a gold logo and gold links (design.md §6.2) */
+/* Scrolled header: solid green bar with a gold logo and gold links (design.md §6.2).
+   The elevation is green-tinted, so the bar reads as lifted rather than outlined. */
 .site-header[data-scrolled='true'] {
   --primary: var(--gold-400);
   background-color: var(--green-700);
   border-bottom-color: var(--green-800);
+  box-shadow: 0 12px 32px -16px rgb(15 46 33 / 0.45);
   color: var(--cream);
+}
+
+/* The bar cross-fades between the transparent state it wears over an opening band
+   and the solid green one (design.md §9). Unlayered on purpose, so it wins over
+   the utility classes on the element. */
+.site-header {
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition-property: none;
+  }
+}
+
+/* The menu links' underline (design.md §6.2). Drawn from currentColor, so it is
+   green on the cream bar and gold on the green one. It wipes in from the left on
+   hover or focus and stays on the link for the page you are on. */
+.header-link {
+  position: relative;
+}
+
+.header-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 0.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease-out;
+}
+
+.header-link:hover::after,
+.header-link:focus-visible::after,
+.header-link[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-link::after {
+    transition: none;
+  }
+}
+
+/* Press feedback: the header's controls yield a little while held (design.md §9). */
+@media (prefers-reduced-motion: no-preference) {
+  .site-header :is(a, button):active,
+  #mobile-menu :is(a, button):active,
+  .whatsapp-fab:active {
+    transform: scale(0.97);
+  }
 }
 
 /* The announcement strip collapses to zero height when it hides. Without this the

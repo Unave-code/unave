@@ -2189,7 +2189,7 @@ export interface Header {
     newTab?: boolean | null;
   };
   /**
-   * Shown in the desktop bar and in the mobile drawer. Seven at most.
+   * Shown in the desktop bar and in the mobile drawer. Seven at most. A link to /cart renders as the cart control on the right of the desktop bar.
    */
   navItems?:
     | {

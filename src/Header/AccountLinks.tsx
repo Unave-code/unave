@@ -6,10 +6,13 @@ import { cn } from '@/utilities/ui'
 import { UserMenu } from './UserMenu'
 
 const BAR_LINK =
-  'text-primary rounded-sm text-sm font-semibold hover:opacity-75 inline-flex min-h-11 items-center gap-2 px-3 transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none'
+  'text-primary hover:bg-current/10 rounded-pill text-sm font-semibold inline-flex min-h-11 items-center gap-2 px-3 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none'
 
 const DRAWER_LINK =
   'text-gold-400 hover:text-cream focus-visible:ring-gold-400 rounded-sm flex min-h-14 items-center px-1 font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none'
+
+const DRAWER_ROW =
+  'text-h3 animate-in fade-in slide-in-from-right-4 fill-mode-backwards duration-300 ease-out motion-reduce:animate-none'
 
 interface Props {
   /** The signed in customer's name, for the bar's account menu. */
@@ -19,6 +22,8 @@ interface Props {
   /** Closes the mobile drawer when a link is followed. */
   onNavigate?: () => void
   variant?: 'bar' | 'drawer'
+  /** How far into the drawer's stagger these rows wait, in milliseconds. */
+  delayMs?: number
 }
 
 /**
@@ -40,6 +45,7 @@ interface Props {
  * no cookie, which is what keeps the marketing pages statically rendered.
  */
 export const AccountLinks: React.FC<Props> = ({
+  delayMs = 0,
   name,
   onNavigate,
   signedIn,
@@ -48,15 +54,17 @@ export const AccountLinks: React.FC<Props> = ({
   const showAccount = signedIn === true
 
   if (variant === 'drawer') {
+    const delayStyle = { animationDelay: `${delayMs}ms` }
+
     if (showAccount) {
       return (
         <ul className="flex flex-col gap-1">
-          <li className="text-h3" onClick={onNavigate}>
+          <li className={DRAWER_ROW} onClick={onNavigate} style={delayStyle}>
             <Link className={DRAWER_LINK} href="/account">
               Your account
             </Link>
           </li>
-          <li className="text-h3">
+          <li className={DRAWER_ROW} style={delayStyle}>
             <form action="/api/customers/logout" method="post">
               <button className={cn(DRAWER_LINK, 'w-full text-left')} type="submit">
                 Sign out
@@ -75,7 +83,7 @@ export const AccountLinks: React.FC<Props> = ({
     return (
       <ul className="flex flex-col gap-1">
         {links.map(({ href, label }) => (
-          <li className="text-h3" key={href} onClick={onNavigate}>
+          <li className={DRAWER_ROW} key={href} onClick={onNavigate} style={delayStyle}>
             <Link className={DRAWER_LINK} href={href}>
               {label}
             </Link>

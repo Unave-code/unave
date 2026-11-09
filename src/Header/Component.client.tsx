@@ -12,10 +12,12 @@ import { Logo } from '@/components/Logo/Logo'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
 import { cn } from '@/utilities/ui'
+import { CART_LINK_LABEL } from '@/utilities/cartCopy'
 import { whatsappHref } from '@/utilities/whatsapp'
 import { AccountLinks } from './AccountLinks'
 import { MobileMenu } from './MobileMenu'
 import { HeaderNav } from './Nav'
+import { CartNavLink } from './Nav/CartNavLink'
 import { AnnouncementBar } from './AnnouncementBar'
 
 interface HeaderClientProps {
@@ -42,6 +44,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const navItems = data?.navItems || []
+  /* The cart is a Site chrome item like any menu link, but on the desktop bar it
+     is presented in the right-hand action group beside the search control rather
+     than in the middle of the menu (design.md §6.15). The drawer keeps it as a
+     row of its own, so the full list still goes to MobileMenu. */
+  const cartItem = navItems.find(({ link }) => link?.url === '/cart')
+  const menuItems = navItems.filter(({ link }) => link?.url !== '/cart')
   const announcement = data?.announcement
   const cta = data?.cta
   const whatsappNumber = data?.whatsapp?.number
@@ -197,7 +205,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         </div>
 
         <header
-          className="site-header border-b border-border bg-background transition-colors duration-200 motion-reduce:transition-none"
+          className="site-header border-b border-border bg-background"
           data-scrolled={scrolled ? 'true' : 'false'}
           ref={barRef}
           {...(theme ? { 'data-theme': theme } : {})}
@@ -208,7 +216,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
             </Link>
 
             <nav aria-label="Main" className="hidden lg:block">
-              <HeaderNav items={navItems} />
+              <HeaderNav items={menuItems} />
             </nav>
 
             <div className="flex items-center gap-2">
@@ -216,11 +224,19 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
 
               <Link
                 aria-label="Search"
-                className="text-primary hover:opacity-75 inline-flex size-11 items-center justify-center rounded-pill transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
+                className="text-primary hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
                 href="/search"
               >
                 <Search aria-hidden="true" className="size-5" strokeWidth={2} />
               </Link>
+
+              {cartItem ? (
+                <CartNavLink
+                  active={pathname === '/cart'}
+                  label={cartItem.link?.label ?? CART_LINK_LABEL}
+                  variant="bar"
+                />
+              ) : null}
 
               {cta?.label && cta?.url ? (
                 <Link
@@ -240,7 +256,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
                 aria-controls="mobile-menu"
                 aria-expanded={menuOpen}
                 aria-label="Open menu"
-                className="border-line hover:bg-green-50 inline-flex size-11 items-center justify-center rounded-pill border transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none lg:hidden motion-reduce:transition-none"
+                className="border-current/25 hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill border transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none lg:hidden motion-reduce:transition-none"
                 onClick={() => setMenuOpen(true)}
                 ref={triggerRef}
                 type="button"
@@ -266,7 +282,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
       {whatsappNumber ? (
         <a
           aria-label="Message UNAVE on WhatsApp"
-          className="bg-green-600 text-cream hover:bg-green-700 rounded-pill focus-visible:ring-gold-400 fixed right-4 bottom-4 z-30 inline-flex size-13 items-center justify-center shadow-md transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none"
+          className="whatsapp-fab bg-green-600 text-cream hover:bg-green-700 rounded-pill focus-visible:ring-gold-400 fixed right-4 bottom-4 z-30 inline-flex size-13 items-center justify-center shadow-md transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none"
           href={whatsappHref(whatsappNumber, whatsappMessage || null)}
           rel="noopener noreferrer"
           target="_blank"
