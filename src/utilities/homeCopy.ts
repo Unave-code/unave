@@ -38,7 +38,9 @@ export const IMAGES = {
 
 /** 1. Announcement bar now lives in the site chrome (Header global), above the navbar. */
 
-/** 2. Hero */
+/** 2. Hero. These strings seed the Home hero global's default slide (§6.3) and
+ * stand in again if the global ever renders without slides. Editing the live hero
+ * happens in the admin; editing here changes what a fresh global starts from. */
 export const HERO_EYEBROW = 'Cloud kitchen · Cooked fresh'
 export const HERO_HEADLINE = 'Good food, cooked in'
 export const HERO_HEADLINE_ACCENT = 'our own kitchen.'
@@ -47,7 +49,7 @@ export const HERO_SUB =
 export const HERO_PRIMARY = WHATSAPP_CTA_LABEL
 export const HERO_SECONDARY = 'How It Works'
 
-/** Feature chips under the hero buttons. `icon` is resolved in Hero.tsx. */
+/** Feature chips under the hero buttons, shared by every slide. `icon` is resolved in HeroCarousel.tsx. */
 export const HERO_CHIPS = [
   { label: 'Fresh daily', icon: 'leaf' },
   { label: 'Small batches', icon: 'flask' },

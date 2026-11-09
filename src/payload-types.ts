@@ -127,12 +127,14 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    hero: Hero;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    hero: HeroSelect<false> | HeroSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -2297,6 +2299,63 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
+ * The carousel at the top of the home page. One slide shows at a time; leave a photograph empty to keep the built-in kitchen photo.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero".
+ */
+export interface Hero {
+  id: number;
+  /**
+   * Shown one at a time across the top of the home page. The first slide is the page headline; the carousel turns by itself every few seconds unless a visitor pauses it.
+   */
+  slides?:
+    | {
+        /**
+         * The small gold line above the headline, for example "Cloud kitchen · Cooked fresh". Leave empty for none.
+         */
+        eyebrow?: string | null;
+        /**
+         * The big Playfair line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.
+         */
+        headline: string;
+        /**
+         * One or two quiet sentences under the headline. Leave empty for none.
+         */
+        subLine?: string | null;
+        /**
+         * Runs full-bleed behind this slide under a green scrim. Leave empty to keep the built-in kitchen photograph.
+         */
+        image?: (number | null) | Media;
+        /**
+         * The gold pill. Leave empty for "Message us on WhatsApp".
+         */
+        primaryLabel?: string | null;
+        /**
+         * On: the button opens WhatsApp on the footer's number with the opening line written. Off: it follows the Primary link below instead.
+         */
+        primaryWhatsapp?: boolean | null;
+        /**
+         * Used only when "opens WhatsApp" is off. A path such as /products, or a full URL.
+         */
+        primaryUrl?: string | null;
+        primaryNewTab?: boolean | null;
+        /**
+         * The quiet outlined pill beside the primary. Leave empty for no secondary button.
+         */
+        secondaryLabel?: string | null;
+        /**
+         * A path such as #how-it-works, or a full URL.
+         */
+        secondaryUrl?: string | null;
+        secondaryNewTab?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2429,6 +2488,31 @@ export interface FooterSelect<T extends boolean = true> {
       };
   notice?: T;
   copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero_select".
+ */
+export interface HeroSelect<T extends boolean = true> {
+  slides?:
+    | T
+    | {
+        eyebrow?: T;
+        headline?: T;
+        subLine?: T;
+        image?: T;
+        primaryLabel?: T;
+        primaryWhatsapp?: T;
+        primaryUrl?: T;
+        primaryNewTab?: T;
+        secondaryLabel?: T;
+        secondaryUrl?: T;
+        secondaryNewTab?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

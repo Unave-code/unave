@@ -20,6 +20,7 @@ import { unaveEmailAdapter } from './email/adapter'
 import { emailTestEndpoint } from './endpoints/emailTest'
 import { Footer } from './Footer/config'
 import { EmailSettings } from './globals/EmailSettings'
+import { Hero } from './globals/Hero/config'
 import { Header } from './Header/config'
 import { pruneEmailLogTask } from './jobs/pruneEmailLog'
 import { plugins } from './plugins'
@@ -106,7 +107,7 @@ export default buildConfig({
   cors: [getServerSideURL()].filter(Boolean),
   email: unaveEmailAdapter,
   endpoints: [emailTestEndpoint],
-  globals: [Header, Footer, EmailSettings],
+  globals: [Header, Footer, Hero, EmailSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

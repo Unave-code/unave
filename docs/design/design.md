@@ -210,11 +210,16 @@ Load via Google Fonts with `display=swap`. Include real fallback stacks.
 
 ### 6.3 Hero
 
+The home hero is a carousel (§10.1). Its slides live in the *Home hero* global (admin, **Home page → Home hero**), five at most. Each slide carries an eyebrow, a headline, an optional sub-line, an optional photograph and both buttons; saving the global revalidates the home page. The global seeds the slide the page shipped with, and if it ever holds none the code stands that same slide in — the home page is never without its opening.
+
 - Deep green background, subtle large faint swoosh from the logo mark as a decorative element (8% opacity gold).
-- Left: H1 (cream, key phrase in gold), sub-line (cream at 85%), two buttons.
-- Right: rounded (24px) food photo, plate shot from above, natural light.
-- Page-specific hero imagery: Home (a full-day meal set), Gym (training bag + meal box), Healthy (colorful balanced plate), Children (tiffin box, friendly and bright).
-- Four icon chips under the buttons, not a bare text row: *Fresh daily · Small batches · No account needed · Home-style cooking* (see `HERO_CHIPS` in `src/utilities/homeCopy.ts`).
+- Left: headline (cream, key phrase in gold), sub-line (cream at 85%), primary and secondary buttons. The first slide's headline is the page's one `h1`; the other slides' headlines are paragraphs styled identically (§12).
+- In the admin, wrap the phrase to set in gold italics in asterisks: `Good food, cooked in *our own kitchen*`.
+- The photograph runs full-bleed behind the copy under a green scrim that fades from nearly solid on the left, so the headline keeps its contrast without a hard card edge. A slide with no photograph keeps the built-in kitchen photograph; the first slide's photograph loads with the document (it is the LCP element), the rest wait their turn.
+- The primary button opens WhatsApp on the footer's number with the opening line already written — one number to edit (§6.12). A slide can opt out and link anywhere instead. If the footer has no number yet, the button falls back to the contact page rather than leading nowhere.
+- Four icon chips under the buttons, shared by every slide, not a bare text row: *Fresh daily · Small batches · No account needed · Home-style cooking* (see `HERO_CHIPS` in `src/utilities/homeCopy.ts`, which also supplies the seeded slide's copy).
+- Carousel controls sit below the chips: gold dots left (44px hit areas around an 8px visible dot); pause/play and previous/next right. A single slide shows no controls. Without JavaScript every slide reads in order and the controls are out of the way.
+- Rotation and every way it stops are specified in §9.
 
 ### 6.4 Category cards (four food types)
 
@@ -383,6 +388,7 @@ The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group
 - Section reveal: fade up 12px on scroll, once.
 - Hero swoosh: slow 12s gentle float (optional).
 - The header adds: the menu underline's 200ms wipe, a 300ms drawer slide whose rows cascade in at 45ms steps (menu, then account rows, then the button), a 150ms zoom on the account menu, a 200ms pop on the cart badge, one 300ms settle on the announcement strip with the link arrow's 2px nudge on hover, and a press yield (`scale(.97)`) on the header's controls. Every one of them is switched off under `prefers-reduced-motion`.
+- The hero carousel cross-fades its photographs over 700ms while the copy fades up 8px over 500ms, and turns by itself every 7 seconds — but only while the visitor is idle. It pauses on hover, while focus is anywhere inside it, when the tab is hidden, and at the press of its pause button; under `prefers-reduced-motion` it never auto-rotates at all, and the transitions collapse to a plain swap while the buttons and dots keep working. The slides stack in one grid cell so the section always keeps its tallest slide's height and nothing below is pushed around.
 - Respect `prefers-reduced-motion`: disable all non-essential animation.
 
 ---
@@ -391,7 +397,7 @@ The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group
 
 ### 10.1 Home
 
-1. Hero: "Good food, cooked in our own kitchen." + Message us on WhatsApp / How It Works, with four icon chips under the buttons
+1. Hero carousel (§6.3): the seeded first slide reads "Good food, cooked in our own kitchen." + Message us on WhatsApp / How It Works, with four icon chips under the buttons; the kitchen edits and adds slides in the admin under Home page → Home hero
 2. Trust strip (five claims: delivery, kitchen, FSSAI, home-style cooking, one focus)
 3. Welcome to UNAVE (two short paragraphs + kitchen photo)
 4. What makes us different (six reasons, numbered cards on the white band)
