@@ -16,6 +16,7 @@ import * as migration_20261102_200000_order_requests from './20261102_200000_ord
 import * as migration_20261105_170000_plan_category_audience from './20261105_170000_plan_category_audience';
 import * as migration_20261106_120000_plan_subcategories from './20261106_120000_plan_subcategories';
 import * as migration_20261107_100000_rename_plans_to_products from './20261107_100000_rename_plans_to_products';
+import * as migration_20261109_100000_hero_global from './20261109_100000_hero_global';
 
 
 export const migrations = [
@@ -108,5 +109,10 @@ export const migrations = [
     up: migration_20261107_100000_rename_plans_to_products.up,
     down: migration_20261107_100000_rename_plans_to_products.down,
     name: '20261107_100000_rename_plans_to_products',
+  },
+  {
+    up: migration_20261109_100000_hero_global.up,
+    down: migration_20261109_100000_hero_global.down,
+    name: '20261109_100000_hero_global',
   },
 ];
