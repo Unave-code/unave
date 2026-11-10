@@ -29,10 +29,15 @@ import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
 import { RowLabel as RowLabel_1a851488169f8e97ecd9e24680b54632 } from '@/globals/Hero/RowLabel'
 import { EmailTestPanel as EmailTestPanel_f35b6a58b5dff6e458ffbffad983b6d7 } from '@/components/EmailTestPanel'
+import { default as default_3b9e6534fc1e00439f903b363c16056c } from '@/components/Admin/UserMenu'
+import { default as default_95dd06517ddf44b6ffebcc0a5feac4ca } from '@/components/Admin/NoSidebarLogout'
 import { default as default_c1363893506d7ed29a71d1a4da01ddb5 } from '@/components/AdminIcon'
 import { default as default_aa0a2d19d38a4839dbd373417e210b89 } from '@/components/AdminLogo'
 import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/components/BeforeDashboard'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
+import { default as default_d0389295b019118111ab6d64c9074102 } from '@/components/Admin/Widgets/OrdersToday'
+import { default as default_cdbe4e10a295c9adf65d55ecd509887b } from '@/components/Admin/Widgets/OpenRequests'
+import { default as default_77dc216e238ca52c43df16992d268357 } from '@/components/Admin/Widgets/UnhandledEnquiries'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -68,9 +73,14 @@ export const importMap = {
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
   "@/globals/Hero/RowLabel#RowLabel": RowLabel_1a851488169f8e97ecd9e24680b54632,
   "@/components/EmailTestPanel#EmailTestPanel": EmailTestPanel_f35b6a58b5dff6e458ffbffad983b6d7,
+  "@/components/Admin/UserMenu#default": default_3b9e6534fc1e00439f903b363c16056c,
+  "@/components/Admin/NoSidebarLogout#default": default_95dd06517ddf44b6ffebcc0a5feac4ca,
   "@/components/AdminIcon#default": default_c1363893506d7ed29a71d1a4da01ddb5,
   "@/components/AdminLogo#default": default_aa0a2d19d38a4839dbd373417e210b89,
   "@/components/BeforeDashboard#default": default_1a7510af427896d367a49dbf838d2de6,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
+  "@/components/Admin/Widgets/OrdersToday#default": default_d0389295b019118111ab6d64c9074102,
+  "@/components/Admin/Widgets/OpenRequests#default": default_cdbe4e10a295c9adf65d55ecd509887b,
+  "@/components/Admin/Widgets/UnhandledEnquiries#default": default_77dc216e238ca52c43df16992d268357,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

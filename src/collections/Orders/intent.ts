@@ -34,6 +34,12 @@ export type OrderIntentItem = {
   productId: number | string
   productTitle: string
   unitPrice: number
+  /**
+   * How many of the product the line holds. A meal plan line is always one —
+   * the plan is the line — so the field stays optional and anything absent
+   * reads as one, on the wire and off it.
+   */
+  qty?: number
 }
 
 export type OrderIntent = {
@@ -53,8 +59,15 @@ export type OrderIntent = {
   total: number
 }
 
-/** One line as the gateway stores it: [product id, duration, days, price, title]. */
-type PackedLine = [number | string, string, number, number, string]
+/**
+ * One line as the gateway stores it: [product id, duration, days, price, title,
+ * quantity]. The sixth element is what quantities added to the store; older
+ * intents written as five element lines still read, as quantity one.
+ */
+type PackedLine = [number | string, string, number, number, string, number]
+
+const qtyOf = (item: OrderIntentItem): number =>
+  typeof item.qty === 'number' && Number.isInteger(item.qty) && item.qty >= 1 ? item.qty : 1
 
 export const buildOrderNotes = (input: {
   customerId: number | string
@@ -92,6 +105,7 @@ export const buildOrderNotes = (input: {
       item.days,
       item.unitPrice,
       cap(item.productTitle, TITLE_MAX),
+      qtyOf(item),
     ]
 
     const existing = packs.get(pack)
@@ -108,9 +122,9 @@ export const buildOrderNotes = (input: {
 const text = (value: unknown): string => (typeof value === 'string' ? value : '')
 
 const readPackedLine = (raw: unknown): null | OrderIntentItem => {
-  if (!Array.isArray(raw) || raw.length !== 5) return null
+  if (!Array.isArray(raw) || (raw.length !== 5 && raw.length !== 6)) return null
 
-  const [productId, durationLabel, days, unitPrice, productTitle] = raw
+  const [productId, durationLabel, days, unitPrice, productTitle, packedQty] = raw
 
   if (
     (typeof productId !== 'number' && typeof productId !== 'string') ||
@@ -126,11 +140,25 @@ const readPackedLine = (raw: unknown): null | OrderIntentItem => {
 
   if (!Number.isFinite(product)) return null
 
+  // A five element line predates quantities and reads as one. A six element
+  // line must carry a sane whole number, or the intent is not the one the
+  // checkout wrote — refusing the whole pack is the honest answer.
+  let qty = 1
+
+  if (raw.length === 6) {
+    if (typeof packedQty !== 'number' || !Number.isInteger(packedQty) || packedQty < 1) {
+      return null
+    }
+
+    qty = packedQty
+  }
+
   return {
     days,
     durationLabel,
     productId: product,
     productTitle,
+    qty,
     unitPrice,
   }
 }
@@ -189,6 +217,7 @@ export const readOrderNotes = (notes: unknown): OrderIntent | null => {
     durationLabel: line.durationLabel,
     product: line.productId as number,
     productTitle: line.productTitle,
+    qty: line.qty ?? 1,
     unitPrice: line.unitPrice,
   }))
 
@@ -206,6 +235,6 @@ export const readOrderNotes = (notes: unknown): OrderIntent | null => {
       state: text(values.d_state) || undefined,
     },
     items,
-    total: items.reduce((sum, line) => sum + line.unitPrice, 0),
+    total: items.reduce((sum, line) => sum + line.unitPrice * (line.qty ?? 1), 0),
   }
 }

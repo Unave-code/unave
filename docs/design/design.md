@@ -128,11 +128,13 @@ Load via Google Fonts with `display=swap`. Include real fallback stacks.
 
 ### Type scale
 
-Sizes are fixed, not fluid: one small size per role, identical on every viewport, so no page or section ever reads bigger than another (`globals.css`). Heading hierarchy is weight-led — the display size, H1, H2 and H3 all sit at 22px, and hierarchy comes from weight, colour and the italic gold phrase, never from size jumps between screens.
+Sizes are fixed, not fluid: one small size per role, identical on every viewport, so no page or section ever reads bigger than another (`globals.css`). Heading hierarchy is weight-led — the display size, H1, H2 and H3 all sit at 22px, and hierarchy comes from weight, colour and the italic gold phrase, never from size jumps between screens. The one exception is the home hero's own display line and sub-line (`--text-hero`, `--text-hero-lead`), which lead the whole site and read larger than every page heading.
 
 | Style | Size | Line height | Weight | Notes |
 | --- | --- | --- | --- | --- |
-| Display (hero H1) | 22px | 1.3 | 700 | Same size as every heading; one phrase may be italic gold |
+| Hero display (home hero H1) | 34px mobile / 52px desktop | 1.1 | 700 | The one size above the scale; one phrase may be italic gold |
+| Hero sub-line | 17px mobile / 19px desktop | 1.5 | 400 | Cream at 85% over the hero photograph |
+| Display (page hero H1) | 22px | 1.3 | 700 | Same size as every heading; one phrase may be italic gold |
 | H1 | 22px | 1.3 | 700 | |
 | H2 | 22px | 1.3 | 700 | Section titles |
 | H3 | 22px | 1.35 | 600 | Card titles, semibold |
@@ -149,7 +151,7 @@ Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) ar
 - Sentence case everywhere. Reserve ALL CAPS for the wordmark and eyebrow labels.
 - Hero headlines can emphasize one phrase in gold (e.g. "planned for your *whole month*").
 - Keep line length 45 to 75 characters.
-- Hierarchy is weight-led: never make a heading outrank another by size — use weight (700 vs 600) or colour.
+- Hierarchy is weight-led: never make a heading outrank another by size — use weight (700 vs 600) or colour. The home hero's display line is the single exception, sized above every page heading on purpose.
 
 ---
 
@@ -218,7 +220,8 @@ Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) ar
 The home hero is a carousel (§10.1). Its slides live in the *Home hero* global (admin, **Home page → Home hero**), five at most. Each slide carries an eyebrow, a headline, an optional sub-line, an optional photograph and both buttons; saving the global revalidates the home page. The global seeds the slide the page shipped with, and if it ever holds none the code stands that same slide in — the home page is never without its opening.
 
 - Deep green background, subtle large faint swoosh from the logo mark as a decorative element (8% opacity gold).
-- Left: headline (cream, key phrase in gold), sub-line (cream at 85%), primary and secondary buttons. The first slide's headline is the page's one `h1`; the other slides' headlines are paragraphs styled identically (§12).
+- The band opens taller than the other page bands: more room above the headline and a deeper bottom edge than the shared opening band (`.opening-band-tall` in `globals.css`).
+- Left: headline (cream, key phrase in gold), sub-line (cream at 85%), primary and secondary buttons. The headline reads at the hero display size — the one size in the scale that leads the site (§4). The first slide's headline is the page's one `h1`; the other slides' headlines are paragraphs styled identically (§12).
 - In the admin, wrap the phrase to set in gold italics in asterisks: `Good food, cooked in *our own kitchen*`.
 - The photograph runs full-bleed behind the copy. A slide can switch on a green scrim in the admin (**Show overlay**), which fades from nearly solid on the left so the headline keeps its contrast over a busy photograph; with it off the photograph runs untouched. A slide with no photograph keeps the built-in kitchen photograph; the first slide's photograph loads with the document (it is the LCP element), the rest wait their turn.
 - The primary button opens WhatsApp on the footer's number with the opening line already written — one number to edit (§6.12). A slide can opt out and link anywhere instead. If the footer has no number yet, the button falls back to the contact page rather than leading nowhere.
@@ -360,8 +363,9 @@ The admin is a staff tool rather than a customer surface, and it wears the brand
 - **Colour** — Payload's neutral `--color-base-*` scale becomes the UNAVE warm greys, from cream white at `0` to green black at `1000`. Payload reverses that one scale for dark mode, so light and dark are branded by the same definition. Green carries `success`, gold carries `warning`, and errors stay a warm brick that reads on white and on deep green.
 - **Type** — Plus Jakarta Sans and Lora load from Google Fonts in `custom.scss`, which points Payload's `--font-body` and `--font-serif` at the site's two typefaces. (A provider component registered under `admin.components.providers` cannot reliably resolve through the dev import map, so the stylesheet route is the one the admin actually wears.)
 - **Shape** — `--style-radius-s/m/l` are 6/10/16px, tighter than the site's pills, because the admin is a working tool.
-- **Brand moments** — sign in is the deep green band with a gold-edged card and the Lora wordmark, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions.
+- **Brand moments** — sign in is the deep green band with a gold-edged card and the Lora wordmark, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions, and three desk widgets sit above the collection cards: orders paid today (with the rupee total), open customer requests (cancellations and pauses), and messages still to answer. The widgets are Payload's experimental modular dashboard (`admin.dashboard` in `src/payload.config.ts`) — server components in `src/components/Admin/Widgets` that query through the local API and wear Payload's `card` class, so the `custom.scss` theme colours them for free. Staff can rearrange or resize them; the configured layout is only the first visit. "Today" is measured from midnight IST, the kitchen's day, not the server's own timezone. The header's top-right slot holds the staff chip (`src/components/Admin/UserMenu`) — `admin.avatar` points at it — with a menu offering *Account* and *Sign out*; Payload's stock default there is a gravatar image with no fallback, which renders as an empty box whenever gravatar.com is unreachable. The sidebar's bottom controls carry no user control (`logout.Button` is the empty `src/components/Admin/NoSidebarLogout`, replacing Payload's bare log-out icon) — one user control, top-right, is the rule. Payload UI components imported inside admin customs come from the `@payloadcms/ui` root, never subpaths — the root barrel inlines its own providers, so subpath imports hold different context objects and hooks like `useConfig` come back empty.
 - **Money** — staff read and type rupees. `RupeeField` (with `RupeeCell` for list columns) shows rupees and still stores paise, so the database and the gateway are never touched.
+- **Agent access (MCP)** — `@payloadcms/plugin-mcp` adds an *MCP → API Keys* group in the sidebar, where a staff member mints a key for an AI client talking to `/api/mcp`. A key acts as its owning user, starts with nothing allowed, and each collection or global operation is a checkbox on the row; `users` and the mail-credential global are never exposed, and delete is off everywhere. `src/scripts/create-mcp-key.ts` mints a key from the CLI, printing the plaintext exactly once.
 
 ### 6.17 The 404 page
 

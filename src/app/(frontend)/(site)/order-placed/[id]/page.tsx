@@ -9,6 +9,7 @@ import React from 'react'
 import { Cta } from '@/components/Cta'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 
 import {
@@ -96,19 +97,40 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
         </h2>
 
         <ul className="border-line mt-4 divide-y divide-line border-t">
-          {(order.items ?? []).map((item, index) => (
-            <li className="flex items-start justify-between gap-4 py-4" key={index}>
-              <div className="min-w-0">
-                <p className="text-sm font-bold">{item.productTitle}</p>
-                <p className="text-ink-600 mt-0.5 text-sm">
-                  {item.durationLabel}, {Number(item.days)}{' '}
-                  {Number(item.days) === 1 ? 'day' : 'days'} of meals
-                </p>
-              </div>
+          {(order.items ?? []).map((item, index) => {
+            const qty =
+              typeof item.qty === 'number' && Number.isInteger(item.qty) && item.qty >= 1
+                ? item.qty
+                : 1
+            const isOneTime = item.durationLabel === 'one-time'
+            const unitPrice = Number(item.unitPrice)
 
-              <p className="shrink-0 text-sm font-bold">{formatPaise(Number(item.unitPrice))}</p>
-            </li>
-          ))}
+            return (
+              <li className="flex items-start justify-between gap-4 py-4" key={index}>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold">
+                    {qty > 1 ? `${qty} × ${item.productTitle}` : item.productTitle}
+                  </p>
+                  <p className="text-ink-600 mt-0.5 text-sm">
+                    {isOneTime
+                      ? PRODUCT_ONE_TIME_LABEL
+                      : `${item.durationLabel}, ${Number(item.days)} ${
+                          Number(item.days) === 1 ? 'day' : 'days'
+                        } of meals`}
+                  </p>
+                </div>
+
+                <p className="shrink-0 text-right text-sm font-bold">
+                  {formatPaise(unitPrice * qty)}
+                  {qty > 1 ? (
+                    <span className="text-ink-600 mt-0.5 block text-xs font-medium">
+                      {qty} &times; {formatPaise(unitPrice)}
+                    </span>
+                  ) : null}
+                </p>
+              </li>
+            )
+          })}
         </ul>
 
         <dl className="border-line mt-2 grid gap-6 border-t pt-6 sm:grid-cols-2">

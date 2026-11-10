@@ -1,0 +1,80 @@
+@import '@payloadcms/ui/scss';
+
+/**
+ * The staff chip and its menu in the admin header's top-right corner. The chip
+ * inherits the header's text colour; the popup surface is Payload's, themed by
+ * custom.scss like every other surface.
+ */
+.unave-user-menu {
+  width: auto;
+
+  &__chip {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    max-width: 220px;
+    padding: 4px 6px;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  &__initials {
+    align-items: center;
+    background: var(--theme-elevation-650);
+    border-radius: 50%;
+    color: var(--theme-elevation-0);
+    display: flex;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    height: 25px;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    width: 25px;
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__content {
+    padding: base(0.25);
+  }
+
+  &__identity {
+    padding: base(0.5) base(0.75);
+  }
+
+  &__heading {
+    color: var(--theme-text);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__subheading {
+    color: var(--theme-elevation-400);
+    font-size: 12px;
+    margin: 2px 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__item {
+    border-radius: 6px;
+    color: var(--theme-text);
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+
+    &:hover {
+      background: var(--theme-elevation-150);
+      opacity: 1;
+    }
+  }
+}

@@ -30,6 +30,14 @@ export const PRODUCTS_CTA_MESSAGE = WHATSAPP_CTA_LABEL
 export const PRODUCTS_CARD_FROM = 'From'
 export const PRODUCTS_CARD_A_DAY = 'a day'
 
+/**
+ * The label a one-time purchase carries wherever a plan shows a duration: on
+ * the buy panel under the price, on a cart line, in an order row and in the
+ * mails. It is display copy for the reserved `one-time` value, which no staff
+ * member ever types.
+ */
+export const PRODUCT_ONE_TIME_LABEL = 'One-time purchase'
+
 export const PRODUCTS_FINAL_HEADING = 'Ready when you are'
 export const PRODUCTS_FINAL_BODY =
   'Add the products and durations you want to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'

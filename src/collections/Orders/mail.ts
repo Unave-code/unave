@@ -3,7 +3,9 @@ import type { Payload } from 'payload'
 import type { Customer, Footer, Order } from '@/payload-types'
 import { renderOrder } from '@/email/templates/render'
 import { sendOrderMail } from '@/email/send'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 
 /**
  * The two emails a paid order sends (spec 0007, AC-7).
@@ -68,11 +70,20 @@ const addressLabel = (order: Order): string => {
 export const sendOrderMails = async (payload: Payload, order: Order): Promise<void> => {
   const copy = await loadOrderMailCopy(payload)
 
-  const lines = (order.items ?? []).map((item) => ({
-    amountLabel: formatPaise(Number(item.unitPrice ?? 0)),
-    durationLabel: item.durationLabel ?? '',
-    title: item.productTitle ?? '',
-  }))
+  // The line reads "2 × Phulka box · One-time purchase · ₹198": a quantity
+  // more than one prefixes the title, and a one-time line names itself instead
+  // of printing the reserved duration value.
+  const lines = (order.items ?? []).map((item) => {
+    const qty = typeof item.qty === 'number' && Number.isInteger(item.qty) && item.qty >= 1 ? item.qty : 1
+    const unitPrice = Number(item.unitPrice ?? 0)
+
+    return {
+      amountLabel: formatPaise(unitPrice * qty),
+      durationLabel:
+        item.durationLabel === ONE_TIME_DURATION ? PRODUCT_ONE_TIME_LABEL : (item.durationLabel ?? ''),
+      title: qty > 1 ? `${qty} × ${item.productTitle ?? ''}` : (item.productTitle ?? ''),
+    }
+  })
 
   const totalLabel = formatPaise(Number(order.total ?? 0))
   const paymentId = order.gatewayPaymentId ?? ''

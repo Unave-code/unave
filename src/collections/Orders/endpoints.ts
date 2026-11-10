@@ -6,8 +6,10 @@ import { authenticateCustomerToken } from '@/auth/customerSession'
 import {
   CART_COOKIE,
   CART_MAX_LINES,
+  CART_MAX_QTY,
   clearCartCookie,
   hasDuplicateCartLines,
+  isValidCartQuantity,
   normalizeCartLines,
   parseCartEntries,
 } from '@/utilities/cart'
@@ -76,6 +78,8 @@ const EMPTY_BASKET = 'Your cart is empty. Add a product before checking out.'
 const TOO_MANY = 'A cart holds at most ten products. Remove one before checking out.'
 const DUPLICATE_LINES =
   'Your cart has the same product and duration twice. Remove one before checking out.'
+const BAD_QUANTITY =
+  'One of the products in your cart has a quantity we cannot deliver. Please review your cart and try again.'
 const BASKET_CHANGED =
   'One of the products in your cart has changed or left the menu. Please review your cart and try again.'
 const PAYMENT_UNCONFIRMED =
@@ -124,6 +128,11 @@ export const createOrderEndpoint: Endpoint = {
     if (entries.length === 0) return json(EMPTY_BASKET, 422)
     if (entries.length > CART_MAX_LINES) return json(TOO_MANY, 422)
     if (hasDuplicateCartLines(entries)) return json(DUPLICATE_LINES, 422)
+    // Quantities ride the cookie raw, so a tampered one is refused outright
+    // rather than clamped into an order the customer never saw.
+    if (entries.some((entry) => !isValidCartQuantity(entry.qty))) {
+      return json(BAD_QUANTITY, 422)
+    }
 
     const cart = await resolveCartLines({ lines: normalizeCartLines(entries), payload })
 
@@ -136,6 +145,7 @@ export const createOrderEndpoint: Endpoint = {
       durationLabel: line.duration,
       productId: line.productId ?? 0,
       productTitle: line.productTitle,
+      qty: line.qty,
       unitPrice: line.price ?? 0,
     }))
 

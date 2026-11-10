@@ -5,14 +5,19 @@ import { isStaff } from '../../access/isStaff'
 import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
+import { autoProductSlug } from './hooks/autoProductSlug'
 
 /**
  * A product the kitchen sells on the site (spec 0007).
  *
- * A product is a duration of meals — a week, a month — paid once, upfront. Staff
- * own the catalogue: titles, images, prices and availability are all edited in
- * the admin, never in code. Anyone can read a product, because browsing is open
- * to everybody; only staff can change one.
+ * A product is either a meal plan — a duration of meals, a week or a month,
+ * paid once, upfront — or a one-time purchase: a single food item with one
+ * price, bought in a quantity of one to ten. The `type` field decides which,
+ * and it decides the shape below it: a plan carries durations, a one-time
+ * purchase carries a single price, and each hides the other in the admin.
+ * Staff own the catalogue: titles, images, prices and availability are all
+ * edited in the admin, never in code. Anyone can read a product, because
+ * browsing is open to everybody; only staff can change one.
  *
  * Prices are stored as integers in paise, the same unit the order rows and the
  * gateway speak, so no conversion ever happens on the way to a payment. The
@@ -49,6 +54,13 @@ export const Products: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
+      // The slug fills itself from the title when left empty, so the kitchen
+      // never has to invent one. The validate below still guards the rule the
+      // hook obeys too: a generated slug that would land on a category page
+      // gains a suffix instead of saving.
+      hooks: {
+        beforeValidate: [autoProductSlug],
+      },
       validate: (value: null | string | undefined) => {
         // Spec 0008, AC-7: the three category slugs are reserved, because
         // /products/<category> is a category page. A lowercase comparison so
@@ -63,8 +75,23 @@ export const Products: CollectionConfig = {
       },
       admin: {
         description:
-          'Lowercase, with dashes instead of spaces. Anchors the product on /products and travels in checkout links.',
+          'Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.',
       },
+    },
+    {
+      name: 'type',
+      type: 'select',
+      label: 'Type',
+      required: true,
+      defaultValue: 'plan',
+      admin: {
+        description:
+          'A meal plan is bought as a duration — a week, a month — chosen at checkout. A one-time purchase is a single item with one price and no durations, bought in a quantity of one to ten.',
+      },
+      options: [
+        { label: 'Meal plan', value: 'plan' },
+        { label: 'One-time purchase', value: 'one-time' },
+      ],
     },
     {
       name: 'description',
@@ -103,10 +130,10 @@ export const Products: CollectionConfig = {
       name: 'durations',
       type: 'array',
       label: 'Durations',
-      required: true,
       admin: {
+        condition: (data) => (data as { type?: null | string } | undefined)?.type !== 'one-time',
         description:
-          'What a customer chooses: a label, how many days of meals it covers, and the price in rupees.',
+          'What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.',
       },
       fields: [
         {
@@ -139,6 +166,51 @@ export const Products: CollectionConfig = {
           },
         },
       ],
+      // Required for a meal plan, absent for a one-time purchase — which is
+      // exactly the split the validate holds, since a static `required` would
+      // block a one-time product from saving without rows it must not have.
+      validate: (
+        value: unknown,
+        { siblingData }: { siblingData: { type?: null | string } },
+      ) => {
+        const type = siblingData.type
+
+        if (type === 'one-time') return true
+
+        if (!Array.isArray(value) || value.length === 0) {
+          return 'Add at least one duration — a label, days and a price.'
+        }
+
+        return true
+      },
+    },
+    {
+      name: 'price',
+      label: 'Price (₹)',
+      type: 'number',
+      min: 1,
+      admin: {
+        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'one-time',
+        components: {
+          Field: '@/components/Admin/RupeeField#RupeeField',
+        },
+        description:
+          'What one item costs, in rupees. 499 means ₹499. Shown on a one-time purchase only.',
+      },
+      validate: (
+        value: unknown,
+        { siblingData }: { siblingData: { type?: null | string } },
+      ) => {
+        const type = siblingData.type
+
+        if (type !== 'one-time') return true
+
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) {
+          return 'Enter the price for one item, in rupees.'
+        }
+
+        return true
+      },
     },
     {
       name: 'category',

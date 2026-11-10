@@ -5,6 +5,7 @@ import React from 'react'
 
 import { CTA_BASE, CTA_SIZES, CTA_VARIANTS } from '@/components/Cta'
 import { CART_ADD_CTA, CART_ADDING } from '@/utilities/cartCopy'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { cn } from '@/utilities/ui'
 
 import { useAddToCart } from './useAddToCart'
@@ -13,12 +14,14 @@ import { useAddToCart } from './useAddToCart'
  * The buy control on a photo-first product card (design.md §6.15).
  *
  * The card carries no duration menu — it adds the kitchen's default duration,
- * the first one on the record, and the product's own page holds the choice.
- * The control is one gold pill sitting in the photo's gradient band beside the
- * lead price, revealed on hover or focus on a fine pointer (`.card-reveal`)
- * and simply visible on touch, so a resting shelf stays quiet without ever
- * hiding the way to buy. It is a plain POST form, so it adds without
- * JavaScript; with JavaScript it adds in place and answers in one polite line.
+ * the first one on the record, and the product's own page holds the choice. A
+ * one-time product has no durations at all: it posts the reserved one-time
+ * duration and the endpoint does the quantity work. The control is one gold
+ * pill sitting in the photo's gradient band beside the lead price, revealed on
+ * hover or focus on a fine pointer (`.card-reveal`) and simply visible on
+ * touch, so a resting shelf stays quiet without ever hiding the way to buy. It
+ * is a plain POST form, so it adds without JavaScript; with JavaScript it adds
+ * in place and answers in one polite line.
  *
  * That answer and the lead price share one live line: the price rests there,
  * and a confirmation or refusal replaces it for a moment. The band is a
@@ -30,15 +33,17 @@ import { useAddToCart } from './useAddToCart'
  */
 export const AddToCartButton: React.FC<{
   durationLabel: string
-  /** The resting text of the shared line — the card's per-day lead price. */
+  /** A one-time purchase: the line is the reserved duration and adds bump the quantity. */
+  oneTime?: boolean
+  /** The resting text of the shared line — the card's lead price. */
   priceLine?: string
   productSlug: string
   returnPath: string
-}> = ({ durationLabel, priceLine, productSlug, returnPath }) => {
-  const { message, onSubmit, pending } = useAddToCart({
-    duration: durationLabel,
-    product: productSlug,
-  })
+}> = ({ durationLabel, oneTime, priceLine, productSlug, returnPath }) => {
+  const { message, onSubmit, pending } = useAddToCart(
+    { duration: oneTime ? ONE_TIME_DURATION : durationLabel, product: productSlug },
+    { oneTime },
+  )
 
   return (
     <div className="pointer-events-none flex items-end justify-between gap-3">
@@ -53,7 +58,11 @@ export const AddToCartButton: React.FC<{
         onSubmit={onSubmit}
       >
         <input name="product" type="hidden" value={productSlug} />
-        <input name="duration" type="hidden" value={durationLabel} />
+        <input
+          name="duration"
+          type="hidden"
+          value={oneTime ? ONE_TIME_DURATION : durationLabel}
+        />
         <input name="return" type="hidden" value={returnPath} />
 
         <button

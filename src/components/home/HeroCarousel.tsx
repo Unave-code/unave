@@ -137,7 +137,7 @@ export const HeroCarousel: React.FC<Props> = ({ chips, slides }) => {
     <section
       aria-label="Highlights from the kitchen"
       aria-roledescription="carousel"
-      className="hero-carousel opening-band opening-band-tall relative overflow-hidden py-14 text-cream md:py-28"
+      className="hero-carousel opening-band opening-band-tall relative overflow-hidden pb-20 text-cream md:pb-44"
       onBlur={() => setFocusPause(false)}
       onFocus={() => setFocusPause(true)}
       onKeyDown={onKeyDown}
@@ -217,21 +217,23 @@ export const HeroCarousel: React.FC<Props> = ({ chips, slides }) => {
                 key={index}
                 role="group"
               >
-                <div className="max-w-[46rem]">
+                <div className="max-w-[50rem]">
                   {slide.eyebrow ? (
                     <p className="text-eyebrow text-gold-400 uppercase">{slide.eyebrow}</p>
                   ) : null}
 
                   {/* The first slide carries the page's one h1; the rest read as
-                      paragraphs, visually identical (design.md §12). */}
+                      paragraphs, visually identical (design.md §12). The hero
+                      display size is the one size in the scale that leads the
+                      site, larger than the page headings (design.md §4). */}
                   {index === 0 ? (
-                    <h1 className="text-display text-balance mt-4">{renderHeadline(slide.headline)}</h1>
+                    <h1 className="text-hero text-balance mt-4">{renderHeadline(slide.headline)}</h1>
                   ) : (
-                    <p className="text-display text-balance mt-4">{renderHeadline(slide.headline)}</p>
+                    <p className="text-hero text-balance mt-4">{renderHeadline(slide.headline)}</p>
                   )}
 
                   {slide.subLine ? (
-                    <p className="text-lead text-cream/85 mt-6 max-w-[52ch]">{slide.subLine}</p>
+                    <p className="text-hero-lead text-cream/85 mt-6 max-w-[52ch]">{slide.subLine}</p>
                   ) : null}
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">

@@ -6,7 +6,9 @@ import React, { useState } from 'react'
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { CART_ADD_CTA, CART_ADDING } from '@/utilities/cartCopy'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 import { cn } from '@/utilities/ui'
 import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
@@ -23,6 +25,11 @@ import { useAddToCart } from './useAddToCart'
  * form post that redirects back. The add behaviour itself lives in
  * useAddToCart, shared with the card's button.
  *
+ * A one-time purchase (a `oneTimePrice` on the props) renders the same bare
+ * panel with one price and no chips: no duration is chosen, the reserved
+ * duration travels in a hidden input, and adding what is already in the cart
+ * raises the quantity rather than being refused.
+ *
  * The browser never sends a price or a day count: the endpoint resolves the
  * product slug and duration label against the live record.
  */
@@ -34,7 +41,14 @@ export type ProductDuration = {
 }
 
 export type ProductPurchaseProps = {
+  /** The plan's durations. Empty by construction on a one-time purchase. */
   durations: ProductDuration[]
+  /**
+   * A one-time purchase's single price, in paise. Its presence switches the
+   * whole panel: flat price, no duration chips, and the reserved duration
+   * posted so adding what is already there bumps the quantity.
+   */
+  oneTimePrice?: number
   productSlug: string
   productTitle: string
   /** Where a plain form post returns to, so the shelf stays put. */
@@ -44,6 +58,7 @@ export type ProductPurchaseProps = {
 
 export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   durations,
+  oneTimePrice,
   productSlug,
   productTitle,
   returnPath = '/products',
@@ -52,13 +67,61 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   const [selected, setSelected] = useState(0)
 
   const duration = durations[selected] ?? durations[0]
+  const isOneTime = typeof oneTimePrice === 'number' && oneTimePrice >= 1
 
   // Hooks run before the early return below, so the panel's shape never
   // changes the hook order between renders.
-  const { message, onSubmit, pending } = useAddToCart({
-    duration: duration?.label ?? '',
-    product: productSlug,
-  })
+  const { message, onSubmit, pending } = useAddToCart(
+    { duration: isOneTime ? ONE_TIME_DURATION : (duration?.label ?? ''), product: productSlug },
+    { oneTime: isOneTime },
+  )
+
+  if (isOneTime) {
+    return (
+      <div>
+        <div aria-live="polite">
+          <p className="text-h2 text-green-700">{formatPaise(oneTimePrice)}</p>
+          <p className="text-ink-600 mt-2 text-sm">
+            {PRODUCT_ONE_TIME_LABEL} — cooked fresh and delivered once. Adding it again raises the
+            quantity, up to ten.
+          </p>
+        </div>
+
+        <form action="/api/cart/add" className="mt-5" method="post" onSubmit={onSubmit}>
+          <input name="product" type="hidden" value={productSlug} />
+          <input name="duration" type="hidden" value={ONE_TIME_DURATION} />
+          <input name="return" type="hidden" value={returnPath} />
+
+          <div className="border-line mt-5 flex flex-col gap-2 border-t pt-5">
+            <button
+              className={cn(CTA_BASE, CTA_VARIANTS.primary, 'w-full')}
+              disabled={pending}
+              type="submit"
+            >
+              <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
+              {pending ? CART_ADDING : CART_ADD_CTA}
+            </button>
+
+            {whatsapp ? (
+              <a
+                className={cn(CTA_BASE, CTA_VARIANTS.secondary, 'w-full')}
+                href={whatsappHref(whatsapp)}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <WhatsAppIcon className="size-4" />
+                {WHATSAPP_CTA_LABEL}
+              </a>
+            ) : null}
+          </div>
+
+          <p aria-live="polite" className="text-ink-600 mt-3 min-h-5 text-sm">
+            {message}
+          </p>
+        </form>
+      </div>
+    )
+  }
 
   if (!duration) return null
 

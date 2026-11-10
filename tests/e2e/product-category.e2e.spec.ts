@@ -25,6 +25,7 @@ const OPEN_PRODUCT = {
   durations: [{ days: 7, label: 'One week', price: 49900 }],
   slug: 'e2e-ready-to-cook-plan',
   title: 'Category E2E cook',
+  type: 'plan' as const,
 }
 const PAUSED_PRODUCT = {
   available: false,
@@ -32,6 +33,7 @@ const PAUSED_PRODUCT = {
   durations: [{ days: 7, label: 'One week', price: 29900 }],
   slug: 'e2e-ready-to-cook-paused',
   title: 'Category E2E paused',
+  type: 'plan' as const,
 }
 
 let openId: number | string

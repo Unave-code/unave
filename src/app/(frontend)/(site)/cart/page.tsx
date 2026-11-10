@@ -6,7 +6,12 @@ import Link from 'next/link'
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
-import { CART_COOKIE, encodeCartLine, readCart } from '@/utilities/cart'
+import {
+  CART_COOKIE,
+  CART_MAX_QTY,
+  encodeCartLine,
+  readCart,
+} from '@/utilities/cart'
 import { resolveCartLines } from '@/utilities/cartLines'
 import {
   CART_CHECKOUT_CTA,
@@ -18,6 +23,9 @@ import {
   CART_PAGE_HEADING,
   CART_PAGE_INTRO,
   CART_PAGE_TITLE,
+  CART_QUANTITY_ADD_ONE,
+  CART_QUANTITY_LABEL,
+  CART_QUANTITY_REMOVE_ONE,
   CART_REMOVE,
   CART_STALE_LABEL,
   CART_STALE_NOTE,
@@ -27,6 +35,7 @@ import {
   cartNotice,
 } from '@/utilities/cartCopy'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 
 /**
  * The cart page (spec 0007, AC-3).
@@ -106,7 +115,7 @@ export default async function CartPage({
                   <div className="min-w-0">
                     <p className="text-base font-bold">{line.productTitle}</p>
                     <p className="text-ink-600 mt-1 text-sm">
-                      {line.duration}
+                      {line.type === 'one-time' ? PRODUCT_ONE_TIME_LABEL : line.duration}
                       {line.days !== null
                         ? `, ${line.days} ${line.days === 1 ? 'day' : 'days'}`
                         : ''}
@@ -119,9 +128,58 @@ export default async function CartPage({
                     ) : null}
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <p className="text-sm font-bold">
-                      {line.price !== null ? formatPaise(line.price) : '—'}
+                  <div className="flex flex-wrap items-center gap-4">
+                    {/* The quantity control lives here and only here (the
+                        steppers build): plain form posts with two submit
+                        buttons, so it works without JavaScript. Minus rests
+                        at one, plus at the cap, and a stale line — one the
+                        menu no longer prices — shows no stepper at all. */}
+                    {!line.stale && line.type === 'one-time' ? (
+                      <form action="/api/cart/qty" className="flex items-center gap-2" method="post">
+                        <input
+                          name="line"
+                          type="hidden"
+                          value={encodeCartLine({ duration: line.duration, product: line.slug })}
+                        />
+                        <input name="return" type="hidden" value="/cart" />
+
+                        <button
+                          aria-label={`${CART_QUANTITY_REMOVE_ONE} ${line.productTitle}`}
+                          className="rounded-pill border-line text-green-700 hover:border-green-700 hover:bg-green-50 focus-visible:ring-green-500 inline-flex min-h-11 min-w-11 items-center justify-center border px-3 text-base font-bold transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none"
+                          disabled={line.qty <= 1}
+                          name="delta"
+                          type="submit"
+                          value="-1"
+                        >
+                          &minus;
+                        </button>
+
+                        <p className="min-w-6 text-center text-sm font-bold">
+                          <span className="sr-only">{CART_QUANTITY_LABEL}: </span>
+                          {line.qty}
+                        </p>
+
+                        <button
+                          aria-label={`${CART_QUANTITY_ADD_ONE} ${line.productTitle}`}
+                          className="rounded-pill border-line text-green-700 hover:border-green-700 hover:bg-green-50 focus-visible:ring-green-500 inline-flex min-h-11 min-w-11 items-center justify-center border px-3 text-base font-bold transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none"
+                          disabled={line.qty >= CART_MAX_QTY}
+                          name="delta"
+                          type="submit"
+                          value="1"
+                        >
+                          +
+                        </button>
+                      </form>
+                    ) : null}
+
+                    <p className="text-right text-sm font-bold">
+                      {line.price !== null ? formatPaise(line.lineTotal) : '—'}
+
+                      {!line.stale && line.type === 'one-time' && line.qty > 1 && line.price !== null ? (
+                        <span className="text-ink-600 mt-0.5 block text-xs font-medium">
+                          {line.qty} &times; {formatPaise(line.price)}
+                        </span>
+                      ) : null}
                     </p>
 
                     <form action="/api/cart/remove" className="contents" method="post">
@@ -129,7 +187,11 @@ export default async function CartPage({
                       <input name="return" type="hidden" value="/cart" />
 
                       <button
-                        aria-label={`Remove ${line.duration} of ${line.productTitle} from the cart`}
+                        aria-label={
+                          line.type === 'one-time'
+                            ? `Remove ${line.productTitle} from the cart`
+                            : `Remove ${line.duration} of ${line.productTitle} from the cart`
+                        }
                         className="rounded-pill border-line text-green-700 hover:border-green-700 hover:bg-green-50 focus-visible:ring-green-500 inline-flex min-h-11 items-center border px-4 text-sm font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none"
                         type="submit"
                       >

@@ -61,10 +61,16 @@
   /* Type scale — one small, fixed size per role (design.md §4). No fluid
      interpolation and no stepped hierarchy: every heading on every page reads
      at the same 22px and hierarchy comes from weight and colour, so sections
-     and pages never jump in size. */
+     and pages never jump in size. The one deliberate exception is the home
+     hero's display line below, which leads the whole site. */
   --text-display: 22px;
   --text-display--line-height: 1.3;
   --text-display--font-weight: 700;
+  --text-hero: 34px;
+  --text-hero--line-height: 1.1;
+  --text-hero--font-weight: 700;
+  --text-hero-lead: 17px;
+  --text-hero-lead--line-height: 1.5;
   --text-h1: 22px;
   --text-h1--line-height: 1.3;
   --text-h1--font-weight: 700;
@@ -427,14 +433,25 @@
   padding-top: calc(3.5rem + var(--navbar-height));
 }
 
+/* The home hero starts taller than the other opening bands, on every viewport. */
+.opening-band-tall {
+  padding-top: calc(5.5rem + var(--navbar-height));
+}
+
 @media (width >= 48rem) {
+  /* The home hero's display line leads the site, so it reads larger there. */
+  :root {
+    --text-hero: 52px;
+    --text-hero-lead: 19px;
+  }
+
   .opening-band {
     padding-top: calc(5rem + var(--navbar-height));
   }
 
   /* The home hero opens taller than the content bands. */
   .opening-band-tall {
-    padding-top: calc(7rem + var(--navbar-height));
+    padding-top: calc(11rem + var(--navbar-height));
   }
 }
 

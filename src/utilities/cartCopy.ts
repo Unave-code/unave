@@ -9,6 +9,9 @@ export const CART_ADDED = 'Added to your cart.'
 export const CART_ALREADY_IN = 'That product and duration is already in your cart.'
 export const CART_FULL =
   'Your cart holds ten products. Remove one from the cart before adding another.'
+/** A one-time product already sits at the quantity cap. */
+export const CART_QUANTITY_FULL =
+  'That product is already at the most we can send in one order — ten.'
 export const CART_ADD_FAILED = 'That could not be added to your cart. Please try again.'
 
 export const CART_LINK_LABEL = 'Cart'
@@ -27,6 +30,11 @@ export const CART_STALE_NOTE =
   'The marked products have changed or left the menu. Remove them to keep checking out; they are not included in the total.'
 export const CART_REMOVE = 'Remove'
 export const CART_TOTAL = 'Total'
+
+/** The words around the − / + quantity control on a one-time cart line. */
+export const CART_QUANTITY_LABEL = 'Quantity'
+export const CART_QUANTITY_REMOVE_ONE = 'Remove one'
+export const CART_QUANTITY_ADD_ONE = 'Add one'
 export const CART_SUMMARY_HEADING = 'One payment'
 export const CART_SUMMARY_BODY =
   'Prices are read from the kitchen\u2019s current menu, so what you see is what you pay. One payment covers the whole cart at checkout.'
@@ -40,6 +48,7 @@ export const CART_EMPTY_CTA = 'Browse the products'
 
 export const CART_NOTICE_DUPLICATE = CART_ALREADY_IN
 export const CART_NOTICE_FULL = CART_FULL
+export const CART_NOTICE_QUANTITY = CART_QUANTITY_FULL
 export const CART_NOTICE_PAUSED =
   'That product is paused right now, so it cannot be added. Message the kitchen if you were hoping to start with it.'
 export const CART_NOTICE_UNKNOWN =
@@ -54,6 +63,7 @@ export const CART_NOTICES: Record<string, string> = {
   duplicate: CART_NOTICE_DUPLICATE,
   full: CART_NOTICE_FULL,
   paused: CART_NOTICE_PAUSED,
+  quantity: CART_NOTICE_QUANTITY,
   unknown: CART_NOTICE_UNKNOWN,
 }
 

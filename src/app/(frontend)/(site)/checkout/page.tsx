@@ -11,6 +11,7 @@ import { CART_COOKIE, readCart } from '@/utilities/cart'
 import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 
 import { CheckoutForm } from './CheckoutForm'
 import {
@@ -142,12 +143,19 @@ export default async function CheckoutPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-bold">{line.productTitle}</p>
                     <p className="text-ink-600 mt-0.5 text-sm">
-                      {line.duration}, {line.days} {line.days === 1 ? 'day' : 'days'}
+                      {line.type === 'one-time'
+                        ? PRODUCT_ONE_TIME_LABEL
+                        : `${line.duration}, ${line.days} ${line.days === 1 ? 'day' : 'days'}`}
                     </p>
                   </div>
 
-                  <p className="shrink-0 text-sm font-bold">
-                    {formatPaise(line.price ?? 0)}
+                  <p className="shrink-0 text-right text-sm font-bold">
+                    {formatPaise(line.lineTotal)}
+                    {line.type === 'one-time' && line.qty > 1 ? (
+                      <span className="text-ink-600 mt-0.5 block text-xs font-medium">
+                        {line.qty} &times; {formatPaise(line.price ?? 0)}
+                      </span>
+                    ) : null}
                   </p>
                 </li>
               ))}

@@ -113,6 +113,17 @@ export const Orders: CollectionConfig = {
           type: 'number',
         },
         {
+          name: 'qty',
+          type: 'number',
+          defaultValue: 1,
+          label: 'Quantity',
+          min: 1,
+          admin: {
+            description:
+              'How many of the product the line holds. A meal plan line is one; a one-time purchase can be up to ten.',
+          },
+        },
+        {
           name: 'unitPrice',
           type: 'number',
           admin: {

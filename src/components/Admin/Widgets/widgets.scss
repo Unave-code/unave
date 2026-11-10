@@ -1,0 +1,38 @@
+@import '@payloadcms/ui/scss';
+
+/**
+ * The three UNAVE desk widgets on the admin dashboard. Payload's `card` class
+ * supplies the surface, so everything here is just type: an uppercase eyebrow,
+ * a serif figure, a quiet meta line and one link.
+ */
+.unave-widget {
+  display: flex;
+  flex-direction: column;
+  gap: base(0.25);
+  min-height: 100%;
+
+  &__eyebrow {
+    color: var(--theme-elevation-400);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  &__figure {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  &__meta {
+    color: var(--theme-elevation-400);
+    margin: 0;
+  }
+
+  &__link {
+    margin-top: auto;
+    padding-top: base(0.5);
+  }
+}

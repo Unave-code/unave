@@ -43,6 +43,55 @@ export default buildConfig({
         Icon: '@/components/AdminIcon',
         Logo: '@/components/AdminLogo',
       },
+      // The nav's bottom controls hold no user control any more — the staff
+      // chip lives in the header's top-right corner instead (admin.avatar).
+      logout: {
+        Button: '@/components/Admin/NoSidebarLogout',
+      },
+    },
+    /**
+     * The header's top-right slot renders the staff user menu — initials,
+     * name, and a menu with the account page and sign out
+     * (`src/components/Admin/UserMenu`). Payload's default here is a
+     * gravatar.com image with no fallback, which renders as an empty box
+     * whenever the network cannot reach it.
+     */
+    avatar: {
+      Component: '@/components/Admin/UserMenu',
+    },
+    /**
+     * The modular dashboard (experimental upstream): three desk widgets above
+     * the collection cards, so the day's numbers are the first thing staff
+     * see. Users can rearrange their own dashboard; defaultLayout is only the
+     * first-visit arrangement.
+     */
+    dashboard: {
+      defaultLayout: [
+        { widgetSlug: 'unave-orders-today', width: 'small' },
+        { widgetSlug: 'unave-open-requests', width: 'small' },
+        { widgetSlug: 'unave-enquiries', width: 'small' },
+        { widgetSlug: 'collections', width: 'full' },
+      ],
+      widgets: [
+        {
+          Component: '@/components/Admin/Widgets/OrdersToday',
+          maxWidth: 'medium',
+          minWidth: 'x-small',
+          slug: 'unave-orders-today',
+        },
+        {
+          Component: '@/components/Admin/Widgets/OpenRequests',
+          maxWidth: 'medium',
+          minWidth: 'x-small',
+          slug: 'unave-open-requests',
+        },
+        {
+          Component: '@/components/Admin/Widgets/UnhandledEnquiries',
+          maxWidth: 'medium',
+          minWidth: 'x-small',
+          slug: 'unave-enquiries',
+        },
+      ],
     },
     theme: 'dark',
     meta: {

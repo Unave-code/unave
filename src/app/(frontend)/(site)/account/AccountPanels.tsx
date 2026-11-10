@@ -2,8 +2,10 @@ import Link from 'next/link'
 import React from 'react'
 
 import { AUTH_INLINE_LINK } from '@/components/CustomerAuth/styles'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
+import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 import { ORDER_REQUEST_TYPES, type OrderRequestType } from '@/utilities/orderRequest'
 import { cn } from '@/utilities/ui'
 
@@ -138,10 +140,19 @@ export const OrdersPanel: React.FC<{
 
               <p className="text-ink-600 mt-1 text-sm">
                 {(order.items ?? [])
-                  .map(
-                    (item) =>
-                      `${item.productTitle}, ${item.durationLabel} (${Number(item.days)} days)`,
-                  )
+                  .map((item) => {
+                    const qty =
+                      typeof item.qty === 'number' && Number.isInteger(item.qty) && item.qty >= 1
+                        ? item.qty
+                        : 1
+                    const name = qty > 1 ? `${qty} × ${item.productTitle}` : (item.productTitle ?? '')
+                    const detail =
+                      item.durationLabel === ONE_TIME_DURATION
+                        ? PRODUCT_ONE_TIME_LABEL
+                        : `${item.durationLabel} (${Number(item.days)} days)`
+
+                    return `${name}, ${detail}`
+                  })
                   .join(' + ')}
               </p>
 

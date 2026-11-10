@@ -13,7 +13,7 @@ import {
   CART_MAX_LINES,
   readCartFromHeaders,
   sameCartLine,
-  type CartLine,
+  type CartLineIdentity,
 } from '@/utilities/cart'
 
 /**
@@ -26,10 +26,15 @@ import {
  * cart that is full in words, posts with fetch, dispatches the browser event the
  * header count listens for, and confirms in one polite line.
  *
+ * A one-time product (`options.oneTime`) plays by the quantity rules: adding
+ * what is already in the cart is not a duplicate — the endpoint bumps the
+ * quantity — so the pre-checks stand aside and let the post through. The
+ * header count sums quantities, so the number rises with every bump.
+ *
  * The browser never sends a price or a day count: the endpoint resolves the
  * product slug and the duration label against the live record.
  */
-export const useAddToCart = (line: CartLine) => {
+export const useAddToCart = (line: CartLineIdentity, options?: { oneTime?: boolean }) => {
   const [message, setMessage] = useState<null | string>(null)
   const [pending, setPending] = useState(false)
 
@@ -39,15 +44,20 @@ export const useAddToCart = (line: CartLine) => {
     event.preventDefault()
 
     const cart = readCartFromHeaders(document.cookie)
+    const alreadyIn = cart.some((existing) => sameCartLine(existing, line))
 
-    if (cart.some((existing) => sameCartLine(existing, line))) {
-      setMessage(CART_ALREADY_IN)
-      return
-    }
+    // A one-time product already in the cart is a quantity bump, not a
+    // refusal — and a bump adds no line, so the full-cart check waits too.
+    if (!(options?.oneTime && alreadyIn)) {
+      if (alreadyIn) {
+        setMessage(CART_ALREADY_IN)
+        return
+      }
 
-    if (cart.length >= CART_MAX_LINES) {
-      setMessage(CART_FULL)
-      return
+      if (cart.length >= CART_MAX_LINES) {
+        setMessage(CART_FULL)
+        return
+      }
     }
 
     setPending(true)

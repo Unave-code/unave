@@ -67,6 +67,10 @@ export const ProductDetail: React.FC<{
     price: Number(duration.price),
   }))
 
+  const isOneTime = product.type === 'one-time'
+  const oneTimePrice = Number(product.price)
+  const buyableOneTime = isOneTime && oneTimePrice >= 1
+
   const points = (product.points ?? [])
     .map((entry) => entry.point?.trim() ?? '')
     .filter((point) => point.length > 0)
@@ -163,7 +167,16 @@ export const ProductDetail: React.FC<{
           </div>
 
           <div className="lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
-            {product.available && durations.length > 0 ? (
+            {product.available && buyableOneTime ? (
+              <ProductPurchase
+                durations={[]}
+                oneTimePrice={oneTimePrice}
+                productSlug={product.slug}
+                productTitle={product.title}
+                returnPath={productHref(product.slug)}
+                whatsapp={whatsapp}
+              />
+            ) : product.available && !isOneTime && durations.length > 0 ? (
               <ProductPurchase
                 durations={durations}
                 productSlug={product.slug}
@@ -173,25 +186,29 @@ export const ProductDetail: React.FC<{
               />
             ) : (
               <div>
-                <ul className="divide-line divide-y">
-                  {durations.map((duration, index) => (
-                    <li
-                      className="flex items-center justify-between gap-4 py-3"
-                      key={`${duration.label}-${index}`}
-                    >
-                      <div>
-                        <p className="text-sm leading-tight font-bold">{duration.label}</p>
-                        <p className="text-caption text-ink-600 mt-0.5">
-                          {duration.days} {duration.days === 1 ? 'day' : 'days'} of meals
-                        </p>
-                      </div>
+                {buyableOneTime ? (
+                  <p className="text-green-700 text-lg font-bold">{formatPaise(oneTimePrice)}</p>
+                ) : (
+                  <ul className="divide-line divide-y">
+                    {durations.map((duration, index) => (
+                      <li
+                        className="flex items-center justify-between gap-4 py-3"
+                        key={`${duration.label}-${index}`}
+                      >
+                        <div>
+                          <p className="text-sm leading-tight font-bold">{duration.label}</p>
+                          <p className="text-caption text-ink-600 mt-0.5">
+                            {duration.days} {duration.days === 1 ? 'day' : 'days'} of meals
+                          </p>
+                        </div>
 
-                      <p className="text-green-700 text-sm font-bold">
-                        {formatPaise(duration.price)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                        <p className="text-green-700 text-sm font-bold">
+                          {formatPaise(duration.price)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <p className="text-ink-600 text-caption mt-3 leading-6">{PRODUCT_PAUSED_INLINE}</p>
               </div>

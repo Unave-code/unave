@@ -1,70 +1,39 @@
-import { Banner } from '@payloadcms/ui/elements/Banner'
+import { Link } from '@payloadcms/ui/elements/Link'
 import React from 'react'
 
 import { PaymentModeNotice } from '@/components/Admin/PaymentModeNotice'
 
-import { SeedButton } from './SeedButton'
 import './index.scss'
 
 const baseClass = 'before-dashboard'
+
+/**
+ * The opening block of the admin dashboard: a short welcome and the four desks
+ * staff walk to most. The live numbers sit below in the dashboard widgets.
+ */
+const DESKS = [
+  { href: '/admin/collections/orders', label: 'Orders' },
+  { href: '/admin/collections/enquiries', label: 'Enquiries' },
+  { href: '/admin/collections/products', label: 'Products' },
+  { href: '/admin/collections/customers', label: 'Customers' },
+]
 
 const BeforeDashboard: React.FC = () => {
   return (
     <div className={baseClass}>
       <PaymentModeNotice />
-      <Banner className={`${baseClass}__banner`} type="success">
-        <h4>Welcome to your dashboard!</h4>
-      </Banner>
-      Here&apos;s what to do next:
-      <ul className={`${baseClass}__instructions`}>
-        <li>
-          <SeedButton />
-          {' with a few pages, posts, and projects to jump-start your new site, then '}
-          <a href="/" target="_blank">
-            visit your website
-          </a>
-          {' to see the results.'}
-        </li>
-        <li>
-          {'Modify your '}
-          <a
-            href="https://payloadcms.com/docs/configuration/collections"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            collections
-          </a>
-          {' and add more '}
-          <a
-            href="https://payloadcms.com/docs/fields/overview"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            fields
-          </a>
-          {' as needed. If you are new to Payload, we also recommend you check out the '}
-          <a
-            href="https://payloadcms.com/docs/getting-started/what-is-payload"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Getting Started
-          </a>
-          {' docs.'}
-        </li>
-        <li>
-          Commit and push your changes to the repository to trigger a redeployment of your project.
-        </li>
-      </ul>
-      {'Pro Tip: This block is a '}
-      <a
-        href="https://payloadcms.com/docs/custom-components/overview"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        custom component
-      </a>
-      , you can remove it at any time by updating your <strong>payload.config</strong>.
+      <p className={`${baseClass}__eyebrow`}>UNAVE</p>
+      <h2 className={`${baseClass}__title`}>The kitchen desk</h2>
+      <p className={`${baseClass}__lede`}>
+        Orders, messages and the catalogue — everything the counter needs, in one place.
+      </p>
+      <nav className={`${baseClass}__desks`}>
+        {DESKS.map((desk) => (
+          <Link className={`${baseClass}__desk`} href={desk.href} key={desk.href}>
+            {desk.label}
+          </Link>
+        ))}
+      </nav>
     </div>
   )
 }

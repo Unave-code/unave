@@ -4,6 +4,7 @@ import React from 'react'
 
 import { Media } from '@/components/Media'
 import type { Product } from '@/payload-types'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { formatPaise } from '@/utilities/money'
 import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
@@ -26,7 +27,9 @@ const PHOTO_PILL =
  * buy control opts out of that.
  *
  * That buy control is one gold pill adding the kitchen's default duration — the
- * first one on the record — revealed on hover or focus on a fine pointer
+ * first one on the record, or the reserved one-time line for a one-time
+ * purchase, whose lead is the flat price instead of a per-day rate — revealed
+ * on hover or focus on a fine pointer
  * (`.card-reveal`) and simply visible on touch, so a resting shelf stays quiet
  * without ever hiding the way to buy. A paused product renders with no control
  * and a gold Paused pill; its lead price stays readable.
@@ -48,6 +51,11 @@ export const ProductCard: React.FC<{
   }))
   const first = durations[0]
 
+  // A one-time purchase sells one item at one price: its lead is the flat
+  // price, not a per-day rate, and its cart line carries the reserved duration.
+  const isOneTime = product.type === 'one-time'
+  const oneTimePrice = Number(product.price)
+
   /* The lead price is the cheapest per-day rate across the durations, floored
      to whole rupees: "From ₹59 a day" leads a shopper to the running cost
      without promising more precision than it carries, and the exact totals sit
@@ -58,7 +66,10 @@ export const ProductCard: React.FC<{
     .map((duration) => Math.floor(duration.price / duration.days / 100) * 100)
     .filter((rate) => rate > 0)
   const perDay = perDayRates.length > 0 ? Math.min(...perDayRates) : null
-  const priceLine = perDay !== null ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}` : undefined
+  const planPriceLine = perDay !== null ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}` : undefined
+  const priceLine = isOneTime
+    ? (oneTimePrice >= 1 ? formatPaise(oneTimePrice) : undefined)
+    : planPriceLine
 
   const image = product.image && typeof product.image === 'object' ? product.image : null
   const imageAlt = image?.alt?.trim() || product.title
@@ -104,7 +115,15 @@ export const ProductCard: React.FC<{
       <div className="from-green-900/95 via-green-900/50 pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t px-4 pt-16 pb-4 to-transparent sm:px-5 sm:pb-5">
         <h3 className="text-h3 text-cream text-balance">{product.title}</h3>
 
-        {product.available && first ? (
+        {product.available && isOneTime ? (
+          <AddToCartButton
+            durationLabel={ONE_TIME_DURATION}
+            oneTime
+            priceLine={priceLine}
+            productSlug={product.slug}
+            returnPath={returnPath}
+          />
+        ) : product.available && first ? (
           <AddToCartButton
             durationLabel={first.label}
             priceLine={priceLine}
