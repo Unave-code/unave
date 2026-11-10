@@ -1,4 +1,5 @@
 import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
@@ -16,10 +17,14 @@ const LINK_CLASS =
 
 const CONTACT_ICON = 'text-gold-400 size-4 shrink-0'
 
+/** The photograph behind the footer: a field at first light (design.md §6.12). */
+const FOOTER_BACKGROUND = '/images/footer-field.jpg'
+
 /**
- * The footer (design.md §6.15): the brand and its one-line promise on the left, then
+ * The footer (design.md §6.12): the brand and its one-line promise on the left, then
  * Explore, Policies and Contact as equal columns on the right, then the small print.
- * The swoosh sits behind it at low opacity so the page closes the way it opens.
+ * The field photograph sits behind it under a green scrim so the words stay readable,
+ * and the swoosh rides over it at low opacity, so the page closes the way it opens.
  */
 export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const columns = data?.columns || []
@@ -31,6 +36,17 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
 
   return (
     <footer className="bg-green-900 text-cream text-body relative mt-auto overflow-hidden border-t border-gold-400/25">
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="object-cover object-bottom"
+        fill
+        quality={75}
+        sizes="100vw"
+        src={FOOTER_BACKGROUND}
+      />
+      <div aria-hidden="true" className="bg-green-900/85 absolute inset-0" />
+
       <Swoosh className="-right-40 -bottom-56 w-[32rem] text-gold-400/[0.035]" />
 
       <div className="container relative">
