@@ -23,8 +23,8 @@ const FOOTER_BACKGROUND = '/images/footer-field.jpg'
 /**
  * The footer (design.md §6.12): the brand and its one-line promise on the left, then
  * Explore, Policies and Contact as equal columns on the right, then the small print.
- * The field photograph sits behind it under a green scrim so the words stay readable,
- * and the swoosh rides over it at low opacity, so the page closes the way it opens.
+ * The field photograph sits behind it untouched, and the swoosh rides over it at low
+ * opacity, so the page closes the way it opens.
  */
 export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const columns = data?.columns || []
@@ -45,7 +45,6 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
         sizes="100vw"
         src={FOOTER_BACKGROUND}
       />
-      <div aria-hidden="true" className="bg-green-900/85 absolute inset-0" />
 
       <Swoosh className="-right-40 -bottom-56 w-[32rem] text-gold-400/[0.035]" />
 

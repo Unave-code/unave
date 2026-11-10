@@ -7,7 +7,6 @@ import {
   FINAL_SECONDARY,
   HOME_HREF_CONTACT,
   HOME_HREF_FAQ,
-  IMAGES,
 } from '@/utilities/homeCopy'
 import { WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
@@ -18,12 +17,7 @@ import { Swoosh } from '@/components/Swoosh'
 
 /** The closing band. Its primary action opens WhatsApp, like the hero's. */
 export const FinalCta: React.FC<{ whatsapp?: null | string }> = ({ whatsapp }) => (
-  <Section
-    className="relative overflow-hidden text-center"
-    image={{ src: IMAGES.ctaBg }}
-    overlay="bg-green-900/85"
-    tone="green"
-  >
+  <Section className="relative overflow-hidden text-center" tone="green">
     <Swoosh className="-top-32 left-1/2 w-[40rem] -translate-x-1/2 text-gold-400/[0.08]" />
 
     <div className="relative mx-auto max-w-[46rem]">

@@ -276,7 +276,7 @@ Fields: Name, Phone, Email (+ message for enquiries); address lines 1 and 2, cit
 ### 6.12 Footer
 
 - `--green-900`, logo in gold, short tagline, columns: Explore (About us, How it works, Common questions), Policies (Delivery, Refunds, Cancellation, Terms, Privacy), Contact (phone, email, WhatsApp, address).
-- The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer under a `green-900/85` scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun; the words sit on the scrim, not on the sky.
+- The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer with no scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun.
 - Small line: *"Our meals are food options and are not a substitute for medical or nutritional advice."*
 - Policies must be a visible footer group (the copy promises published terms).
 
@@ -327,7 +327,7 @@ These screens are `noindex, nofollow` and are never cached.
 
 **Contact (`/contact`)** — `force-dynamic` (it reads the query string for the form's answer), copy in `src/utilities/contactCopy.ts`:
 
-- Hero: the same green band; when the footer global holds a WhatsApp number, the hero carries one gold **Message us on WhatsApp** button — the page's connect action. The CTA-band photograph (`/images/band-cta.jpg`, the home closing band's image) sits behind it, `priority` loaded.
+- Hero: the same green band; when the footer global holds a WhatsApp number, the hero carries one gold **Message us on WhatsApp** button — the page's connect action. The CTA-band photograph (`/images/band-cta.jpg`) sits behind it, `priority` loaded.
 - **Ways to reach us**: up to three cards (WhatsApp, Call the kitchen, Email) built from the footer global's contact group — the same place the footer's contact column reads, so the kitchen edits the details once. Each card is one large link showing the raw number or address, a plain note, and a verb CTA line (`Message us on WhatsApp`, `Call the kitchen`, `Write to us`). Only configured ways render; with none the whole section disappears and the form is the way. The address, if set, is a quiet line under the cards.
 - **Send a message**: the enquiry form (§6.10 fields: name, phone optional, email, message), a plain HTML `method="post"` form that works without JavaScript. Labels above inputs; the auth screens' field styles. One primary action (`Send message`). Under it: *"We use these details only to answer you, and never pass them on."*
 - The form's honeypot is visually hidden and skipped by keyboard and screen readers; a script that fills it gets the success redirect and sends nothing.

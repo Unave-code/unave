@@ -30,8 +30,6 @@ export const IMAGES = {
   heroBg: '/images/hero-table.jpg',
   /** Our kitchen, mid-service. */
   kitchen: '/images/kitchen.jpg',
-  /** A plated meal on a dark surface. Sits behind the closing band. */
-  ctaBg: '/images/band-cta.jpg',
   /** The same laid-out table, reused beside the common questions. */
   faq: '/images/hero-table.jpg',
 } as const
