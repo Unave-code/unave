@@ -1,10 +1,8 @@
 import { z } from 'zod'
 
-import { FOOD_PREFERENCE_VALUES } from './foodPreference'
-
 /**
- * The rules for the delivery details and food preference a customer saves on their
- * profile (design.md §6.13).
+ * The rules for the delivery details a customer saves on their profile
+ * (design.md §6.13).
  *
  * Client-safe like the auth schemas, and for the same reason: the account form
  * checks the same rules in the browser before it submits, and the server action
@@ -13,8 +11,7 @@ import { FOOD_PREFERENCE_VALUES } from './foodPreference'
  *
  * The profile as a whole is optional — an account can exist with no address on it —
  * but a customer who saves it gives us the whole delivery set. The form requires
- * the delivery fields rather than storing half an address, and the food preference
- * alone stays optional.
+ * the delivery fields rather than storing half an address.
  */
 
 /** The phone shape the kitchen uses, shared by the profile form and the enquiry form. */
@@ -26,8 +23,6 @@ const required = (message: string) => z.string().trim().min(1, { message })
 
 export const customerProfileSchema = z.object({
   city: required('Enter your city.'),
-  /** An unknown or missing value falls back to the default rather than failing. */
-  foodPreference: z.enum(FOOD_PREFERENCE_VALUES).optional().catch('none'),
   line1: required('Enter your address.'),
   line2: z
     .string()

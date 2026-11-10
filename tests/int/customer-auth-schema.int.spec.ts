@@ -32,21 +32,47 @@ describe('email schema', () => {
 })
 
 describe('password rules', () => {
+  const signUp = (password: string) =>
+    signUpSchema.safeParse({ email: 'a@b.co', name: 'Priya', password, phone: '9876543210' })
+
   it('accepts a password at the minimum and refuses one under it', () => {
-    expect(signUpSchema.safeParse({ email: 'a@b.co', password: 'a'.repeat(MIN_PASSWORD_LENGTH) }).success).toBe(true)
-    expect(signUpSchema.safeParse({ email: 'a@b.co', password: 'a'.repeat(MIN_PASSWORD_LENGTH - 1) }).success).toBe(false)
+    expect(signUp('a'.repeat(MIN_PASSWORD_LENGTH)).success).toBe(true)
+    expect(signUp('a'.repeat(MIN_PASSWORD_LENGTH - 1)).success).toBe(false)
   })
 
   it('refuses a password past the ceiling an unauthenticated route can be asked for', () => {
-    const result = signUpSchema.safeParse({ email: 'a@b.co', password: 'a'.repeat(MAX_PASSWORD_LENGTH + 1) })
-
-    expect(result.success).toBe(false)
+    expect(signUp('a'.repeat(MAX_PASSWORD_LENGTH + 1)).success).toBe(false)
   })
 
   it('lets sign in accept a short password, because old accounts must still get in', () => {
     const result = signInSchema.safeParse({ email: 'a@b.co', password: 'short' })
 
     expect(result.success).toBe(true)
+  })
+})
+
+describe('the sign-up details', () => {
+  const details = (overrides: Record<string, string>) =>
+    signUpSchema.safeParse({
+      email: 'a@b.co',
+      name: 'Priya',
+      password: 'longenough1',
+      phone: '9876543210',
+      ...overrides,
+    })
+
+  it('needs a name and a phone number, because the kitchen needs both on every order', () => {
+    expect(details({ name: '' }).success).toBe(false)
+    expect(details({ phone: '' }).success).toBe(false)
+  })
+
+  it('checks the phone against the shape the kitchen uses', () => {
+    const result = details({ phone: 'call me maybe' })
+
+    expect(result.success).toBe(false)
+    const errors = result.success ? {} : toFieldErrors(result.error)
+
+    expect(errors.phone).toBe('Enter a valid phone number.')
   })
 })
 
@@ -63,7 +89,7 @@ describe('reset schema', () => {
 
 describe('toFieldErrors', () => {
   it('reports the first message per field, keyed by the field name', () => {
-    const result = signUpSchema.safeParse({ email: 'nope', password: 'short' })
+    const result = signUpSchema.safeParse({ email: 'nope', name: '', password: 'short', phone: '' })
 
     expect(result.success).toBe(false)
 

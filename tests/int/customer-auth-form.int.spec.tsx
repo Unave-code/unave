@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { CustomerAuth } from '@/components/CustomerAuth'
 import { PasswordForm } from '@/components/CustomerAuth/PasswordForm'
 
 /**
@@ -12,6 +13,10 @@ import { PasswordForm } from '@/components/CustomerAuth/PasswordForm'
  * `noValidate`, and the first test pins it — without that attribute the browser's
  * `required` and `type="email"` checks swallow the submit event and Zod's messages
  * never render.
+ *
+ * The last block renders `CustomerAuth` itself rather than the bare form, because
+ * the screens choose their own endpoint: a sign-up card posting to the login route
+ * would fail every account silently, and only the wired component can say so.
  */
 
 afterEach(cleanup)
@@ -31,8 +36,26 @@ const signIn = () =>
 const signUp = () =>
   render(
     <PasswordForm
-      action="/api/customers/login"
+      action="/api/customers/register"
       emailField
+      fields={[
+        {
+          autoComplete: 'name',
+          id: 'signup-name',
+          label: 'Your name',
+          name: 'name',
+          required: true,
+        },
+        {
+          autoComplete: 'tel',
+          id: 'signup-phone',
+          inputMode: 'tel',
+          label: 'Phone number',
+          name: 'phone',
+          required: true,
+          type: 'tel',
+        },
+      ]}
       idPrefix="signup"
       intent="sign-up"
       submit="Sign up"
@@ -84,15 +107,16 @@ describe('the form defers validation to Zod', () => {
     expect(screen.queryByText('Please enter a valid email address.')).toBeNull()
   })
 
-  it('accepts a sign up that meets both rules', () => {
+  it('accepts a sign up that meets every rule the card asks for', () => {
     const { container } = signUp()
 
     type('Email address', 'priya@example.com')
+    type('Your name', 'Priya Kale')
+    type('Phone number', '9876543210')
     type('Password', 'longenough1')
     fireEvent.submit(formOf(container))
 
-    expect(screen.queryByText('Use at least 10 characters.')).toBeNull()
-    expect(screen.queryByText('Please enter a valid email address.')).toBeNull()
+    expect(container.querySelectorAll('[role="alert"]')).toHaveLength(0)
   })
 
   it('leaves the address alone on the forgot card, which asks for no password', () => {
@@ -125,5 +149,36 @@ describe('the field checks itself on blur', () => {
     fireEvent.input(email, { target: { value: 'priya@example.com' } })
 
     expect(screen.queryByText('Please enter a valid email address.')).toBeNull()
+  })
+})
+
+describe('the account screen posts each card to its own endpoint', () => {
+  it('sends the sign-in card to the login route', () => {
+    const { container } = render(<CustomerAuth mode="sign-in" />)
+
+    expect(formOf(container).getAttribute('action')).toBe('/api/customers/login')
+  })
+
+  it('sends the sign-up card to the register route, which is the one that creates an account', () => {
+    const { container } = render(<CustomerAuth mode="sign-up" />)
+
+    expect(formOf(container).getAttribute('action')).toBe('/api/customers/register')
+  })
+})
+
+describe('the sign-up card asks for who the customer is, and leaves the address to onboarding', () => {
+  it('asks for the name and the phone, and never for the address', () => {
+    render(<CustomerAuth mode="sign-up" />)
+
+    expect(screen.getByLabelText('Your name')).toBeTruthy()
+    expect(screen.getByLabelText('Phone number')).toBeTruthy()
+    expect(screen.queryByLabelText('Address line 1')).toBeNull()
+  })
+
+  it('asks only for the credentials on sign in', () => {
+    render(<CustomerAuth mode="sign-in" />)
+
+    expect(screen.queryByLabelText('Your name')).toBeNull()
+    expect(screen.queryByLabelText('Phone number')).toBeNull()
   })
 })

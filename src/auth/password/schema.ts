@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { FOOD_PREFERENCE_VALUES } from '@/utilities/foodPreference'
+import { PHONE_PATTERN } from '@/utilities/customerProfile'
 
 /**
  * The one set of rules for a customer's credentials.
@@ -60,11 +60,25 @@ export const signInSchema = z.object({
     .max(MAX_PASSWORD_LENGTH, { message: 'That password is too long.' }),
 })
 
+/**
+ * Signing up asks for who the customer is and how the kitchen reaches them. The
+ * delivery address is deliberately not here: it is the one thing a new customer
+ * cannot always type from memory, so the account page asks for it first thing
+ * after the account exists.
+ */
 export const signUpSchema = z.object({
   email: emailSchema,
-  /** Optional. An unknown or missing value falls back to the default rather than failing. */
-  foodPreference: z.enum(FOOD_PREFERENCE_VALUES).optional().catch('none'),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: 'Enter your name.' })
+    .max(80, { message: 'Keep your name to 80 characters or fewer.' }),
   password: passwordSchema,
+  phone: z
+    .string()
+    .trim()
+    .min(1, { message: 'Enter a phone number.' })
+    .regex(PHONE_PATTERN, { message: 'Enter a valid phone number.' }),
 })
 
 export const forgotPasswordSchema = z.object({

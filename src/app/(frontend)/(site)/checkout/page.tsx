@@ -54,7 +54,6 @@ type CheckoutProfile = {
     pincode?: string | null
     state?: string | null
   } | null
-  foodPreference?: string | null
   name?: string | null
   phone?: string | null
 }
@@ -107,7 +106,6 @@ export default async function CheckoutPage() {
     overrideAccess: true,
     select: {
       address: { city: true, line1: true, line2: true, pincode: true, state: true },
-      foodPreference: true,
       name: true,
       phone: true,
     },
@@ -124,7 +122,6 @@ export default async function CheckoutPage() {
         <CheckoutForm
           defaults={{
             city: profile?.address?.city ?? '',
-            foodPreference: profile?.foodPreference ?? 'none',
             line1: profile?.address?.line1 ?? '',
             line2: profile?.address?.line2 ?? '',
             name: profile?.name?.trim() || customer.name || '',

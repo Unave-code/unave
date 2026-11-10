@@ -11,6 +11,69 @@ import {
   AUTH_LABEL,
 } from './styles'
 
+export interface TextFieldProps {
+  autoComplete?: string
+  /** Set by the client form's Zod pass. Announced, and it repaints the field. */
+  error?: string
+  hint?: string
+  id: string
+  inputMode?: 'numeric' | 'tel'
+  label: string
+  name: string
+  /** The `required` attribute is semantics and autofill only; Zod is the check. */
+  required?: boolean
+  type?: 'tel' | 'text'
+}
+
+/**
+ * A plain text input in the auth screens' style — the name, phone and address
+ * fields of the sign-up card. No leading icon, because only the email field has
+ * one, and everything else reads as the same quiet column of labelled inputs.
+ */
+export const AuthTextField: React.FC<TextFieldProps> = ({
+  autoComplete,
+  error,
+  hint,
+  id,
+  inputMode,
+  label,
+  name,
+  required = false,
+  type = 'text',
+}) => {
+  const describedBy =
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') || undefined
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className={AUTH_LABEL} htmlFor={id}>
+        {label}
+      </label>
+      <input
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
+        autoComplete={autoComplete}
+        className={cn(AUTH_INPUT, error && AUTH_INPUT_INVALID)}
+        id={id}
+        inputMode={inputMode}
+        name={name}
+        required={required}
+        type={type}
+      />
+      {hint ? (
+        <p className="text-ink-600 text-sm leading-6" id={`${id}-hint`}>
+          {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p className={AUTH_FIELD_ERROR} id={`${id}-error`} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 interface Props {
   autoComplete: 'email'
   /** Set by the client form's Zod pass. Announced, and it repaints the field. */

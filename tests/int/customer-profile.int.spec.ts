@@ -38,7 +38,6 @@ let customerId: number | string
 
 const VALID = {
   city: 'Pune',
-  foodPreference: 'vegetarian',
   line1: '12 Test Road',
   line2: '',
   phone: '9876543210',
@@ -97,7 +96,7 @@ afterAll(async () => {
   }
 })
 
-describe('saving the delivery details and food preference', () => {
+describe('saving the delivery details', () => {
   it('writes the profile onto the signed in customer only', async () => {
     const result = await submit(VALID)
 
@@ -110,7 +109,6 @@ describe('saving the delivery details and food preference', () => {
     expect(row?.address?.city).toBe('Pune')
     expect(row?.address?.state).toBe('Maharashtra')
     expect(row?.address?.pincode).toBe('411001')
-    expect(row?.foodPreference).toBe('vegetarian')
     // An empty optional line is stored as nothing, not as an empty string.
     expect(row?.address?.line2 ?? null).toBeNull()
   })
@@ -132,17 +130,6 @@ describe('saving the delivery details and food preference', () => {
 
     expect(result.status).toBe('error')
     expect(result.status === 'error' ? result.fieldErrors?.phone : undefined).toBeTruthy()
-  })
-
-  it('keeps an unknown preference value from failing the save', async () => {
-    const result = await submit({ ...VALID, foodPreference: 'meat' })
-
-    expect(result.status).toBe('done')
-
-    const row = await readRow()
-
-    // A tampered or stale select reads as the default, never as a failure.
-    expect(row?.foodPreference).toBe('none')
   })
 
   it('tells a signed-out visitor to sign in again rather than writing anything', async () => {

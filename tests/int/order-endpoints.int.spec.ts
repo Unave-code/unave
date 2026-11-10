@@ -168,7 +168,6 @@ const createProduct = async (overrides: Partial<{ available: boolean; title: str
 
 const delivery = {
   city: 'Pune',
-  foodPreference: 'vegetarian',
   line1: '12 Test Road',
   line2: '',
   name: 'Asha Kale',

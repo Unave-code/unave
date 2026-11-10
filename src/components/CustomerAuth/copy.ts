@@ -17,7 +17,7 @@ interface CustomerAuthCopy {
   switchPrompt: string
   switchLabel: string
   switchHref: '/sign-in' | '/sign-up'
-  /** The last button in the card. Both screens sign in, so both say sign in. */
+  /** The card's one primary action. Sign-up says Create account, because it is one. */
   submit: string
 }
 
@@ -32,7 +32,7 @@ export const CUSTOMER_AUTH_COPY: Record<CustomerAuthMode, CustomerAuthCopy> = {
   },
   'sign-up': {
     intro:
-      'Create your account with a password or with Google. It saves your delivery details and food preference for next time.',
+      'Create your account with a password or with Google. Your delivery address comes right after.',
     submit: 'Create account',
     switchHref: '/sign-in',
     switchLabel: 'Sign in',
@@ -42,9 +42,8 @@ export const CUSTOMER_AUTH_COPY: Record<CustomerAuthMode, CustomerAuthCopy> = {
 }
 
 export const CUSTOMER_AUTH_EMAIL_LABEL = 'Email address'
-export const CUSTOMER_AUTH_FOOD_PREFERENCE_LABEL = 'Food preference (optional)'
-export const CUSTOMER_AUTH_FOOD_PREFERENCE_HINT =
-  'The kitchen reads this, and you can change it later.'
+export const CUSTOMER_AUTH_NAME_LABEL = 'Your name'
+export const CUSTOMER_AUTH_PHONE_LABEL = 'Phone number'
 export const CUSTOMER_AUTH_PASSWORD_LABEL = 'Password'
 export const CUSTOMER_AUTH_NEW_PASSWORD_LABEL = 'New password'
 export const CUSTOMER_AUTH_CHOOSE_PASSWORD = 'Choose a password'
@@ -66,10 +65,10 @@ export const AUTH_BRAND = {
   backLink: 'Back home',
   eyebrow: 'Your account',
   intro:
-    'Keep your delivery details and food preference with us, and reach the kitchen without typing it all again. One account covers every order.',
+    'Keep your delivery details with us, and reach the kitchen without typing it all again. One account covers every order.',
   points: [
     'Your delivery details, saved once',
-    'A food preference the kitchen remembers',
+    'Your name and number, so the kitchen can reach you',
     'Sign in once, on any device',
   ],
   title: 'Your details, always in reach',
@@ -109,7 +108,9 @@ export const CUSTOMER_AUTH_ERRORS: Record<string, string> = {
   exchange: 'That sign-in did not finish. Please try again.',
   locked: 'Too many attempts on that account. Please wait a few minutes and try again.',
   mail: 'We could not send that email just now. Please try again in a moment.',
+  name: 'Please enter your name.',
   password: 'Please use at least 10 characters for your password.',
+  phone: 'Please enter a valid phone number.',
   profile: 'We could not confirm your Google account. Please try again or use another one.',
   session: 'That did not finish. Please try again.',
   slow: 'Too many attempts just now. Please wait a minute and try again.',

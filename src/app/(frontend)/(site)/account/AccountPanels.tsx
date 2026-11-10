@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { AUTH_INLINE_LINK } from '@/components/CustomerAuth/styles'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
 import { ORDER_REQUEST_TYPES, type OrderRequestType } from '@/utilities/orderRequest'
@@ -17,6 +18,9 @@ import {
   ACCOUNT_MEMBER_SINCE_LABEL,
   ACCOUNT_NAME_LABEL,
   ACCOUNT_NOT_GIVEN,
+  ACCOUNT_ONBOARDING_HEADING,
+  ACCOUNT_ONBOARDING_INTRO,
+  ACCOUNT_ONBOARDING_SKIP,
   ACCOUNT_SET_PASSWORD_HINT,
   ACCOUNT_SIGN_IN_GOOGLE,
   ACCOUNT_SIGN_IN_LABEL,
@@ -163,7 +167,7 @@ export const OrdersPanel: React.FC<{
   </Card>
 )
 
-/** The one editable view: address, phone and the food preference. */
+/** The one editable view: the delivery address and the phone number. */
 export const DeliveryPanel: React.FC<{ defaults: ProfileDefaults }> = ({ defaults }) => (
   <Card aria-labelledby="account-delivery-heading">
     <h2 className="text-h3" id="account-delivery-heading">
@@ -174,5 +178,29 @@ export const DeliveryPanel: React.FC<{ defaults: ProfileDefaults }> = ({ default
     <div className="mt-6">
       <ProfileForm defaults={defaults} />
     </div>
+  </Card>
+)
+
+/**
+ * The view a customer without an address sees first. It is the same form the
+ * delivery tab holds — one place that edits these details — with the one line of
+ * context a new account needs and one quiet way past it.
+ */
+export const OnboardingPanel: React.FC<{ defaults: ProfileDefaults }> = ({ defaults }) => (
+  <Card aria-labelledby="account-onboarding-heading">
+    <h2 className="text-h3" id="account-onboarding-heading">
+      {ACCOUNT_ONBOARDING_HEADING}
+    </h2>
+    <p className="text-ink-600 mt-2 text-sm leading-6">{ACCOUNT_ONBOARDING_INTRO}</p>
+
+    <div className="mt-6">
+      <ProfileForm defaults={defaults} />
+    </div>
+
+    <p className="text-ink-600 mt-6 text-sm leading-6">
+      <Link className={AUTH_INLINE_LINK} href="/account?tab=details">
+        {ACCOUNT_ONBOARDING_SKIP}
+      </Link>
+    </p>
   </Card>
 )

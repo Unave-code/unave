@@ -184,12 +184,14 @@ export const customerRegisterEndpoint: Endpoint = {
       return backWithError(SIGN_UP_PATH, 'session')
     }
 
-    const { email, foodPreference, password } = await readFields(req)
-    const parsed = signUpSchema.safeParse({ email, foodPreference, password })
+    const fields = await readFields(req)
+    const parsed = signUpSchema.safeParse(fields)
 
     if (!parsed.success) {
       const field = parsed.error.issues[0]?.path[0]
-      return backWithError(SIGN_UP_PATH, field === 'email' ? 'email' : 'password')
+      const code =
+        field === 'email' ? 'email' : field === 'name' ? 'name' : field === 'phone' ? 'phone' : 'password'
+      return backWithError(SIGN_UP_PATH, code)
     }
 
     const address = parsed.data.email
@@ -206,9 +208,10 @@ export const customerRegisterEndpoint: Endpoint = {
         collection: 'customers',
         data: {
           email: address,
-          foodPreference: parsed.data.foodPreference ?? 'none',
           hasPassword: true,
+          name: parsed.data.name,
           password: secret,
+          phone: parsed.data.phone,
         },
         depth: 0,
         // The branded email below carries the token instead.

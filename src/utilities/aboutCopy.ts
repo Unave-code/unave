@@ -61,7 +61,7 @@ export const ABOUT_WORK = [
     title: 'Choose what fits',
   },
   {
-    text: 'Tell us your food preference — vegetarian, vegan, or anything else — and the kitchen plans your week around it.',
+    text: 'Vegetarian, vegan, allergies, anything else — tell us once, by message, and the kitchen plans your week around it.',
     title: 'Tell us how you eat',
   },
   {

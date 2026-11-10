@@ -91,7 +91,6 @@ const stagedNotes = (customer: Customer): Record<string, string> =>
     customerId: customer.id,
     delivery: {
       city: 'Pune',
-      foodPreference: 'vegetarian',
       line1: '12 Test Road',
       name: 'Asha Kale',
       phone: '9876543210',

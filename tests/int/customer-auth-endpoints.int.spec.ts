@@ -226,11 +226,14 @@ describe('the sign-in form posting to /api/customers/login', () => {
 })
 
 describe('the sign-up form posting to /api/customers/register', () => {
-  it('creates an unverified account and sends the person to sign in', async () => {
+  const NAME = 'Asha Kale'
+  const PHONE = '9876543210'
+
+  it('creates an unverified account with the name and phone it was given', async () => {
     const email = uniqueEmail()
 
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email, foodPreference: 'vegan', password: PASSWORD }) as never,
+      makeRequest({ email, name: NAME, password: PASSWORD, phone: PHONE }) as never,
     )
 
     expect(response.status).toBe(303)
@@ -247,35 +250,39 @@ describe('the sign-up form posting to /api/customers/register', () => {
     expect(found!._verified).toBe(false)
     // The account card reads this to say the customer can sign in with a password.
     expect(found!.hasPassword).toBe(true)
-    // The preference the sign-up form offered came through with the account.
-    expect(found!.foodPreference).toBe('vegan')
+    // Who the customer is and how the kitchen reaches them came through with the account.
+    expect(found!.name).toBe(NAME)
+    expect(found!.phone).toBe(PHONE)
+    // The address is the onboarding form's job, asked for on the account page.
+    expect(found!.address?.line1 ?? null).toBeNull()
   })
 
-  it('keeps an unknown preference from blocking sign-up', async () => {
-    const email = uniqueEmail()
-
+  it('reports a missing name against the name field', async () => {
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email, foodPreference: 'meat', password: PASSWORD }) as never,
+      makeRequest({ email: uniqueEmail(), password: PASSWORD, phone: PHONE }) as never,
     )
 
-    expect(response.status).toBe(303)
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=name')
+  })
 
-    const found = await payload.db.findOne<Customer>({
-      collection: 'customers',
-      where: { email: { equals: email } },
-    })
+  it('reports a malformed phone against the phone field', async () => {
+    const response = await customerRegisterEndpoint.handler(
+      makeRequest({ email: uniqueEmail(), name: NAME, password: PASSWORD, phone: 'call me maybe' }) as never,
+    )
 
-    expect(found).not.toBeNull()
-    customerIDs.push(found!.id)
-    // A tampered or stale select value reads as the default, never as a failure.
-    expect(found!.foodPreference).toBe('none')
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=phone')
   })
 
   it('sends a duplicate address to sign in rather than taking the account over', async () => {
     const account = await createCustomer(true)
 
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email: account.email.toUpperCase(), password: PASSWORD }) as never,
+      makeRequest({
+        email: account.email.toUpperCase(),
+        name: NAME,
+        password: PASSWORD,
+        phone: PHONE,
+      }) as never,
     )
 
     expect(locationOf(response)).toBe('http://localhost:3000/sign-in?error=exists')
@@ -284,7 +291,7 @@ describe('the sign-up form posting to /api/customers/register', () => {
 
   it('reports a short password against the password field', async () => {
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email: uniqueEmail(), password: 'short' }) as never,
+      makeRequest({ email: uniqueEmail(), name: NAME, password: 'short', phone: PHONE }) as never,
     )
 
     expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=password')
@@ -292,7 +299,7 @@ describe('the sign-up form posting to /api/customers/register', () => {
 
   it('reports a malformed address against the email field', async () => {
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email: 'not-an-address', password: PASSWORD }) as never,
+      makeRequest({ email: 'not-an-address', name: NAME, password: PASSWORD, phone: PHONE }) as never,
     )
 
     expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=email')
@@ -302,7 +309,7 @@ describe('the sign-up form posting to /api/customers/register', () => {
     const email = uniqueEmail()
 
     const response = await customerRegisterEndpoint.handler(
-      makeRequest({ email, password: PASSWORD }, { crossSite: true }) as never,
+      makeRequest({ email, name: NAME, password: PASSWORD, phone: PHONE }, { crossSite: true }) as never,
     )
 
     expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=session')

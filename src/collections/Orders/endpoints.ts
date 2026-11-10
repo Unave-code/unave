@@ -145,7 +145,6 @@ export const createOrderEndpoint: Endpoint = {
       customerId: customer.id,
       delivery: {
         city: delivery.city,
-        foodPreference: delivery.foodPreference,
         line1: delivery.line1,
         line2: delivery.line2,
         name: delivery.name,

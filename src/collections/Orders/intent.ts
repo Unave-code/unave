@@ -13,8 +13,8 @@ import type { Order } from '@/payload-types'
  * they are the record the webhook reads. Razorpay caps notes at 15 pairs of 256
  * characters each (verified against the Orders API docs during this build), so
  * the basket travels as compact indexed packs (`l0` to `l4`, two lines each) and
- * the delivery stays as flat capped values. Ten lines plus nine delivery values
- * is fourteen pairs, one under the cap, and every value stays inside 240
+ * the delivery stays as flat capped values. Ten lines plus eight delivery values
+ * is thirteen pairs, one under the cap, and every value stays inside 240
  * characters, under the gateway's 256.
  */
 
@@ -60,7 +60,6 @@ export const buildOrderNotes = (input: {
   customerId: number | string
   delivery: {
     city?: string
-    foodPreference?: string
     line1?: string
     line2?: string
     name?: string
@@ -76,7 +75,6 @@ export const buildOrderNotes = (input: {
     d_addr1: cap(input.delivery.line1),
     d_addr2: cap(input.delivery.line2),
     d_city: cap(input.delivery.city),
-    d_food: cap(input.delivery.foodPreference),
     d_name: cap(input.delivery.name),
     d_note: cap(input.note),
     d_phone: cap(input.delivery.phone),

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
-import { FoodPreferenceSelect } from '@/components/CustomerAuth/FoodPreferenceSelect'
 import { orderDeliverySchema } from '@/collections/Orders/schema'
 import { readCreatedOrder } from '@/utilities/orderCreate'
 import { toFieldErrors, type FieldErrors } from '@/auth/password/schema'
@@ -20,7 +19,6 @@ import {
   CHECKOUT_DELIVERY_HEADING,
   CHECKOUT_DELIVERY_INTRO,
   CHECKOUT_FAILED_MESSAGE,
-  CHECKOUT_FOOD_LABEL,
   CHECKOUT_NAME_LABEL,
   CHECKOUT_NOTE_LABEL,
   CHECKOUT_NOTE_PLACEHOLDER,
@@ -85,7 +83,6 @@ type Status = 'idle' | 'starting' | 'paying'
 export const CheckoutForm: React.FC<{
   defaults: {
     city: string
-    foodPreference: string
     line1: string
     line2: string
     name: string
@@ -102,10 +99,6 @@ export const CheckoutForm: React.FC<{
 
   const readValue = (field: string): string =>
     (document.getElementById(`checkout-${field}`) as HTMLInputElement | null)?.value?.trim() ?? ''
-
-  const readFoodPreference = (): string =>
-    (document.getElementById('checkout-food-preference') as HTMLSelectElement | null)?.value ??
-    'none'
 
   const readNote = (): string =>
     (document.getElementById('checkout-note') as HTMLTextAreaElement | null)?.value?.trim() ?? ''
@@ -150,7 +143,6 @@ export const CheckoutForm: React.FC<{
   const startPayment = async () => {
     const delivery = {
       city: readValue('city'),
-      foodPreference: readFoodPreference(),
       line1: readValue('line1'),
       line2: readValue('line2'),
       name: readValue('name'),
@@ -398,12 +390,6 @@ export const CheckoutForm: React.FC<{
             {errors.state ? <p className={FIELD_ERROR}>{errors.state}</p> : null}
           </div>
         </div>
-
-        <FoodPreferenceSelect
-          defaultValue={defaults.foodPreference}
-          id="checkout-food-preference"
-          label={CHECKOUT_FOOD_LABEL}
-        />
 
         <div>
           <label className={FIELD_LABEL} htmlFor="checkout-note">

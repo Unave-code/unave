@@ -12,7 +12,14 @@ import type { OrderRequestType } from '@/utilities/orderRequest'
 import type { Order } from '@/payload-types'
 
 import { AccountTabs, readAccountTab } from './AccountTabs'
-import { Card, DeliveryPanel, DetailsPanel, OrdersPanel, formatDate } from './AccountPanels'
+import {
+  Card,
+  DeliveryPanel,
+  DetailsPanel,
+  OnboardingPanel,
+  OrdersPanel,
+  formatDate,
+} from './AccountPanels'
 import {
   ACCOUNT_HELP_ABOUT,
   ACCOUNT_HELP_CONTACT,
@@ -44,7 +51,6 @@ type AccountProfile = {
     state?: string | null
   } | null
   createdAt?: string | null
-  foodPreference?: string | null
   hasPassword?: boolean | null
   phone?: string | null
 }
@@ -68,14 +74,17 @@ type Args = {
  *
  * The orders are read only when that view is open, and always for the customer the
  * session names, never an id from the browser.
+ *
+ * A customer whose row carries no address yet has just signed up, and the one
+ * thing the kitchen still needs from them is the delivery address — so the page
+ * opens on the address form instead of the details card. It is the delivery tab
+ * wearing onboarding words, never a gate: every view stays one tab away, and an
+ * explicit `?tab=` always wins over the default.
  */
 export default async function AccountPage({ searchParams }: Args) {
   const customer = await getSignedInCustomer()
 
   if (!customer) redirect('/sign-in')
-
-  const { tab: tabParam } = await searchParams
-  const tab = readAccountTab(tabParam)
 
   const payload = await getPayload({ config: configPromise })
 
@@ -90,12 +99,17 @@ export default async function AccountPage({ searchParams }: Args) {
     select: {
       address: { city: true, line1: true, line2: true, pincode: true, state: true },
       createdAt: true,
-      foodPreference: true,
       hasPassword: true,
       phone: true,
     },
     showHiddenFields: true,
   })) as AccountProfile | null
+
+  const { tab: tabParam } = await searchParams
+  const asked = readAccountTab(tabParam)
+  const onboarding = !profile?.address?.line1
+  const tab =
+    tabParam === undefined && onboarding && asked === 'details' ? ('delivery' as const) : asked
 
   const email = customer.email
   const memberSince = formatDate(profile?.createdAt) ?? ACCOUNT_NOT_GIVEN
@@ -165,17 +179,29 @@ export default async function AccountPage({ searchParams }: Args) {
           ) : null}
 
           {tab === 'delivery' ? (
-            <DeliveryPanel
-              defaults={{
-                city: profile?.address?.city ?? '',
-                foodPreference: profile?.foodPreference ?? 'none',
-                line1: profile?.address?.line1 ?? '',
-                line2: profile?.address?.line2 ?? '',
-                phone: profile?.phone ?? '',
-                pincode: profile?.address?.pincode ?? '',
-                state: profile?.address?.state ?? '',
-              }}
-            />
+            onboarding ? (
+              <OnboardingPanel
+                defaults={{
+                  city: profile?.address?.city ?? '',
+                  line1: profile?.address?.line1 ?? '',
+                  line2: profile?.address?.line2 ?? '',
+                  phone: profile?.phone ?? '',
+                  pincode: profile?.address?.pincode ?? '',
+                  state: profile?.address?.state ?? '',
+                }}
+              />
+            ) : (
+              <DeliveryPanel
+                defaults={{
+                  city: profile?.address?.city ?? '',
+                  line1: profile?.address?.line1 ?? '',
+                  line2: profile?.address?.line2 ?? '',
+                  phone: profile?.phone ?? '',
+                  pincode: profile?.address?.pincode ?? '',
+                  state: profile?.address?.state ?? '',
+                }}
+              />
+            )
           ) : null}
 
           {tab === 'orders' ? (

@@ -18,7 +18,6 @@ export const CHECKOUT_ADDRESS_OPTIONAL_LABEL = 'Address line 2 (optional)'
 export const CHECKOUT_CITY_LABEL = 'City'
 export const CHECKOUT_STATE_LABEL = 'State'
 export const CHECKOUT_PINCODE_LABEL = 'Pincode'
-export const CHECKOUT_FOOD_LABEL = 'Food preference'
 export const CHECKOUT_NOTE_LABEL = 'Note for the kitchen (optional)'
 export const CHECKOUT_NOTE_PLACEHOLDER =
   'Anything the kitchen should know: a gate code, a delivery day that does not suit, anything at all.'

@@ -29,11 +29,11 @@ export type SaveCustomerProfileState =
   | { status: 'done' }
 
 /**
- * Save the signed in customer's delivery details and food preference.
+ * Save the signed in customer's delivery details.
  *
  * The collection refuses REST writes from a customer (`update: isAdmin`), so the
  * save goes through here with `overrideAccess` — and only ever targets the row the
- * session names, writing the four profile fields and nothing else. Email, name,
+ * session names, writing the delivery fields and nothing else. Email, name,
  * password and `hasPassword` have no path from this form.
  */
 export const saveCustomerProfile = async (
@@ -47,7 +47,6 @@ export const saveCustomerProfile = async (
 
   const parsed = customerProfileSchema.safeParse({
     city: read('city'),
-    foodPreference: read('foodPreference'),
     line1: read('line1'),
     line2: read('line2'),
     phone: read('phone'),
@@ -76,7 +75,6 @@ export const saveCustomerProfile = async (
           pincode: parsed.data.pincode,
           state: parsed.data.state,
         },
-        foodPreference: parsed.data.foodPreference ?? 'none',
         phone: parsed.data.phone,
       },
       depth: 0,

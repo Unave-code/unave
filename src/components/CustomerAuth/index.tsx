@@ -6,7 +6,6 @@ import { cn } from '@/utilities/ui'
 import { isCustomerSignInConfigured } from '@/utilities/customerSession'
 
 import { AuthShell } from './AuthShell'
-import { FoodPreferenceSelect } from './FoodPreferenceSelect'
 import { PasswordForm } from './PasswordForm'
 import { AuthField } from './fields'
 import { GoogleIcon } from './icons'
@@ -17,10 +16,10 @@ import {
   CUSTOMER_AUTH_CTA,
   CUSTOMER_AUTH_DIVIDER,
   CUSTOMER_AUTH_EMAIL_LABEL,
-  CUSTOMER_AUTH_FOOD_PREFERENCE_HINT,
-  CUSTOMER_AUTH_FOOD_PREFERENCE_LABEL,
   CUSTOMER_AUTH_FORGOT,
+  CUSTOMER_AUTH_NAME_LABEL,
   CUSTOMER_AUTH_PASSWORD_LABEL,
+  CUSTOMER_AUTH_PHONE_LABEL,
   CUSTOMER_AUTH_PRIVACY,
   CUSTOMER_AUTH_RESEND,
   CUSTOMER_AUTH_UNAVAILABLE,
@@ -47,9 +46,35 @@ interface Props {
  * button is a shortcut that needs an account they may not have. Two primary buttons
  * in one card would leave neither of them meaning much.
  *
- * Sign in and sign up differ only in copy: the same card, the same fields, the same
- * one primary action.
+ * Sign in and sign up share the card and the one primary action; they differ in
+ * copy, in fields and in where the form posts: sign-in posts to Payload's login,
+ * sign-up posts to the register route that creates the account first.
  */
+/**
+ * The sign-up card's extra fields, in reading order: who the customer is and how
+ * the kitchen reaches them. Both are required, because they are the two things
+ * the kitchen needs on every order. The delivery address is not here — it is the
+ * account page's onboarding form, asked for right after the account exists.
+ */
+const SIGN_UP_FIELDS = [
+  {
+    autoComplete: 'name',
+    id: 'signup-name',
+    label: CUSTOMER_AUTH_NAME_LABEL,
+    name: 'name',
+    required: true,
+  },
+  {
+    autoComplete: 'tel',
+    id: 'signup-phone',
+    inputMode: 'tel' as const,
+    label: CUSTOMER_AUTH_PHONE_LABEL,
+    name: 'phone',
+    required: true,
+    type: 'tel' as const,
+  },
+]
+
 export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo }) => {
   const copy = CUSTOMER_AUTH_COPY[mode]
   const message = customerAuthError(error)
@@ -93,8 +118,9 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
 
       <div className="my-8 short:my-3">
         <PasswordForm
-          action="/api/customers/login"
+          action={mode === 'sign-up' ? '/api/customers/register' : '/api/customers/login'}
           emailField
+          fields={mode === 'sign-up' ? SIGN_UP_FIELDS : undefined}
           idPrefix={mode === 'sign-up' ? 'signup' : 'signin'}
           intent={mode}
           password={{
@@ -111,13 +137,6 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
           }}
           submit={copy.submit}
         >
-          {mode === 'sign-up' ? (
-            <FoodPreferenceSelect
-              hint={CUSTOMER_AUTH_FOOD_PREFERENCE_HINT}
-              id="signup-food-preference"
-              label={CUSTOMER_AUTH_FOOD_PREFERENCE_LABEL}
-            />
-          ) : null}
           {mode === 'sign-in' && returnTo ? (
             <input name="return" type="hidden" value={returnTo} />
           ) : null}

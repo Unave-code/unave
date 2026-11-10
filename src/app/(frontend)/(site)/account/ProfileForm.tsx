@@ -3,7 +3,6 @@
 import { Loader2 } from 'lucide-react'
 import React, { useActionState, useRef, useState } from 'react'
 
-import { FoodPreferenceSelect } from '@/components/CustomerAuth/FoodPreferenceSelect'
 import {
   AUTH_FIELD_ERROR,
   AUTH_INPUT,
@@ -20,8 +19,6 @@ import {
   ACCOUNT_ADDRESS_LINE1_LABEL,
   ACCOUNT_ADDRESS_LINE2_LABEL,
   ACCOUNT_CITY_LABEL,
-  ACCOUNT_FOOD_PREFERENCE_HINT,
-  ACCOUNT_FOOD_PREFERENCE_LABEL,
   ACCOUNT_PHONE_LABEL,
   ACCOUNT_PINCODE_LABEL,
   ACCOUNT_PROFILE_INVALID,
@@ -80,7 +77,6 @@ const Field: React.FC<FieldProps> = ({
 
 export interface ProfileDefaults {
   city: string
-  foodPreference: string
   line1: string
   line2: string
   phone: string
@@ -93,7 +89,7 @@ interface Props {
 }
 
 /**
- * The form that saves the customer's delivery details and food preference.
+ * The form that saves the customer's delivery details.
  *
  * The same Zod schema (`customerProfileSchema`) runs here in the browser and again
  * in the server action, so a rule cannot be looser on one side than the other. The
@@ -182,14 +178,6 @@ export const ProfileForm: React.FC<Props> = ({ defaults }) => {
           label={ACCOUNT_PHONE_LABEL}
           name="phone"
           type="tel"
-        />
-
-        <FoodPreferenceSelect
-          defaultValue={defaults.foodPreference}
-          error={errorFor('foodPreference')}
-          hint={ACCOUNT_FOOD_PREFERENCE_HINT}
-          id="profile-food-preference"
-          label={ACCOUNT_FOOD_PREFERENCE_LABEL}
         />
 
         <Field

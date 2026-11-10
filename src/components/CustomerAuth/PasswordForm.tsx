@@ -12,7 +12,7 @@ import {
 import { cn } from '@/utilities/ui'
 
 import { PasswordField } from './PasswordField'
-import { AuthField } from './fields'
+import { AuthField, AuthTextField, type TextFieldProps } from './fields'
 import { CUSTOMER_AUTH_EMAIL_LABEL, CUSTOMER_AUTH_PASSWORD_HINT } from './copy'
 
 interface PasswordSpec {
@@ -41,6 +41,12 @@ interface Props {
   idPrefix: string
   /** Which rule set the browser applies before it lets the form post. */
   intent: CustomerAuthIntent
+  /**
+   * Extra labelled inputs between the email and the password, as the sign-up card
+   * needs. Their rules live in the same schema the `intent` names, so their
+   * messages come from the one Zod pass the form already runs.
+   */
+  fields?: TextFieldProps[]
   /** `false` for the forgot-password card, which asks only for an address. */
   password?: PasswordSpec | false
   submit: string
@@ -65,6 +71,7 @@ export const PasswordForm: React.FC<Props> = ({
   action,
   children,
   emailField = false,
+  fields,
   idPrefix,
   intent,
   password = {
@@ -144,6 +151,21 @@ export const PasswordForm: React.FC<Props> = ({
           name="email"
         />
       ) : null}
+
+      {(fields ?? []).map((field) => (
+        <AuthTextField
+          autoComplete={field.autoComplete}
+          error={errors[field.name]}
+          hint={field.hint}
+          id={field.id}
+          inputMode={field.inputMode}
+          key={field.name}
+          label={field.label}
+          name={field.name}
+          required={field.required}
+          type={field.type}
+        />
+      ))}
 
       {password ? (
         <PasswordField

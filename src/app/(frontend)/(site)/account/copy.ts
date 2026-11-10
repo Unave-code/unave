@@ -49,16 +49,29 @@ export const ACCOUNT_HELP_ABOUT = 'About the kitchen'
 export const ACCOUNT_HELP_CONTACT = 'Message us'
 
 /**
- * The delivery details and food preference the customer saves on this page.
+ * The delivery details the customer saves on this page.
  *
  * Address and phone are required here even though the profile as a whole is
  * optional: a customer who saves gives us the whole delivery set, never half an
- * address. The food preference alone stays optional.
+ * address.
  */
 export const ACCOUNT_DELIVERY_HEADING = 'Delivery details'
 
 export const ACCOUNT_DELIVERY_INTRO =
-  'Where we bring your meals, and how to reach you. The kitchen also reads your food preference.'
+  'Where we bring your meals, and how to reach you when the kitchen is in touch.'
+
+/**
+ * The onboarding view. A customer who has just signed up has given the kitchen a
+ * name and a phone number but no address yet, so the account page opens on the
+ * address form before it opens on anything else. It is a prompt, not a gate:
+ * every other view stays one tab away.
+ */
+export const ACCOUNT_ONBOARDING_HEADING = 'Where should the meals go?'
+
+export const ACCOUNT_ONBOARDING_INTRO =
+  'One thing left: the address we should bring your meals to. The kitchen reads it from here on every order.'
+
+export const ACCOUNT_ONBOARDING_SKIP = 'I will add this later'
 
 export const ACCOUNT_PHONE_LABEL = 'Phone number'
 
@@ -71,11 +84,6 @@ export const ACCOUNT_CITY_LABEL = 'City'
 export const ACCOUNT_STATE_LABEL = 'State'
 
 export const ACCOUNT_PINCODE_LABEL = 'Pincode'
-
-export const ACCOUNT_FOOD_PREFERENCE_LABEL = 'Food preference'
-
-export const ACCOUNT_FOOD_PREFERENCE_HINT =
-  'Veg, vegan and similar. Optional, and you can change it any time.'
 
 export const ACCOUNT_PROFILE_SAVE = 'Save details'
 
