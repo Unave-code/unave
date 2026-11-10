@@ -10,12 +10,12 @@ import { Logo } from '@/components/Logo/Logo'
 import { Swoosh } from '@/components/Swoosh'
 import { cn } from '@/utilities/ui'
 
-const COLUMN_HEADING = 'text-eyebrow text-gold-400 uppercase'
+const COLUMN_HEADING = 'text-eyebrow text-gold-600 uppercase'
 
 const LINK_CLASS =
-  'text-cream/75 hover:text-gold-400 inline-flex min-h-11 items-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-gold-400 focus-visible:outline-none motion-reduce:transition-none'
+  'text-green-700 hover:text-gold-600 inline-flex min-h-11 items-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-gold-400 focus-visible:outline-none motion-reduce:transition-none'
 
-const CONTACT_ICON = 'text-gold-400 size-4 shrink-0'
+const CONTACT_ICON = 'text-gold-600 size-4 shrink-0'
 
 /** The photograph behind the footer: a field at first light (design.md §6.12). */
 const FOOTER_BACKGROUND = '/images/footer-field.jpg'
@@ -23,8 +23,9 @@ const FOOTER_BACKGROUND = '/images/footer-field.jpg'
 /**
  * The footer (design.md §6.12): the brand and its one-line promise on the left, then
  * Explore, Policies and Contact as equal columns on the right, then the small print.
- * The field photograph sits behind it untouched, and the swoosh rides over it at low
- * opacity, so the page closes the way it opens.
+ * The field photograph sits behind it untouched, the words set in green and gold-600
+ * so they read on the light sky, and the swoosh rides over it at low opacity, so the
+ * page closes the way it opens.
  */
 export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const columns = data?.columns || []
@@ -35,7 +36,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const totalColumns = columns.length + (hasContact ? 1 : 0)
 
   return (
-    <footer className="bg-green-900 text-cream text-body relative mt-auto overflow-hidden border-t border-gold-400/25">
+    <footer className="bg-green-900 text-green-700 text-body relative mt-auto overflow-hidden border-t border-gold-600/25">
       <Image
         alt=""
         aria-hidden="true"
@@ -53,12 +54,12 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
           <div className="max-w-sm">
             <Link
               aria-label="UNAVE home"
-              className="text-gold-400 [--logo-height:42px] inline-flex"
+              className="text-gold-600 [--logo-height:42px] inline-flex"
               href="/"
             >
               <Logo />
             </Link>
-            {data?.tagline ? <p className="text-cream/70 mt-6">{data.tagline}</p> : null}
+            {data?.tagline ? <p className="text-green-900/80 mt-6">{data.tagline}</p> : null}
           </div>
 
           <div
@@ -125,7 +126,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
                         className={cn(CONTACT_ICON, 'mt-3')}
                         strokeWidth={2}
                       />
-                      <span className="text-cream/70">{contact.address}</span>
+                      <span className="text-green-900/80">{contact.address}</span>
                     </li>
                   ) : null}
                 </ul>
@@ -134,14 +135,14 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-cream/10 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex flex-col gap-4 border-t border-green-900/15 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
           {data?.notice ? (
-            <p className="text-caption text-cream/60 max-w-[70ch]">{data.notice}</p>
+            <p className="text-caption text-cream font-bold max-w-[70ch]">{data.notice}</p>
           ) : (
             <span />
           )}
           {data?.copyright ? (
-            <p className="text-caption text-cream/50 shrink-0 sm:pr-16">{data.copyright}</p>
+            <p className="text-caption text-cream font-bold shrink-0 sm:pr-16">{data.copyright}</p>
           ) : null}
         </div>
       </div>

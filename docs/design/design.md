@@ -276,7 +276,7 @@ Fields: Name, Phone, Email (+ message for enquiries); address lines 1 and 2, cit
 ### 6.12 Footer
 
 - `--green-900`, logo in gold, short tagline, columns: Explore (About us, How it works, Common questions), Policies (Delivery, Refunds, Cancellation, Terms, Privacy), Contact (phone, email, WhatsApp, address).
-- The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer with no scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun.
+- The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer with no scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun. The footer's words flip to the light-surface palette to read on it: type in `--green-700`, the logo, icons and column headings in `--gold-600` (never `--gold-400` on a light surface), and the two small-print lines at the very bottom bold in cream so they sit on the green field, not on the sky.
 - Small line: *"Our meals are food options and are not a substitute for medical or nutritional advice."*
 - Policies must be a visible footer group (the copy promises published terms).
 
