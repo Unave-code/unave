@@ -126,8 +126,8 @@ test.describe('the products shelf', () => {
     // Browsing needs no account anywhere on the page.
     await expect(page.getByText(/No account needed to look around/i)).toBeVisible()
 
-    // The card shows the first duration's price and adds exactly that line; the
-    // product's own page carries every duration.
+    // The card shows the cheapest per-day rate and adds the kitchen's default
+    // duration; the product's own page carries every duration.
     const card = cardFor(page, 'Lunch plan')
     await expect(card.getByRole('link')).toHaveAttribute('href', /\/products\/.+/)
     await expect(card.getByRole('button', { name: 'Add to cart' })).toBeVisible()

@@ -64,7 +64,10 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   const perDay = duration.days > 0 ? Math.round(duration.price / duration.days) : null
 
   return (
-    <div>
+    /* The panel is a quiet card of its own: a hairline box that reads as the
+       one object to act on while it stays pinned beside the scrolling photo
+       and description. */
+    <div className="border-line bg-card rounded-2xl border p-6 sm:p-8">
       <div aria-live="polite">
         <p className="flex items-baseline gap-1.5">
           <span className="text-green-700 text-4xl leading-none font-bold tracking-tight sm:text-5xl">

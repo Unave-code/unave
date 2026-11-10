@@ -23,11 +23,13 @@ vi.mock('next/image', () => ({
 }))
 
 /**
- * A product's own page (design.md §6.15), the room the simplified card opens.
+ * A product's own page (design.md §6.15), the room the card opens.
  *
- * The page carries what the card gave up: the category and audience badges, the
- * description, the points and the price panel where the durations lead into the
- * cart. A paused product renders in full with nothing to add.
+ * A wide spread on desktop: photo and reading on the left, the name, badges and
+ * the price panel on the right, pinned there while the left scrolls. The page
+ * carries what the card gave up: the subcategory eyebrow, the category and
+ * audience badges, the description and the points. A paused product renders in
+ * full with nothing to add.
  */
 
 afterEach(cleanup)
@@ -41,17 +43,21 @@ const openProduct = {
   id: 1,
   points: [{ point: 'Prepped and ready' }],
   slug: 'lunch-plan',
+  subcategory: { id: 5, title: 'Weekly plans', category: 'ready-to-cook' },
   title: 'Lunch plan',
 } as unknown as Product
 
 describe('a product page', () => {
-  it('leads with the name, the badges, the price panel and its points', () => {
+  it('leads with the name, the eyebrow, the badges, the price panel and its points', () => {
     render(<ProductDetail product={openProduct} whatsapp="+919000000000" />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Lunch plan' })).toBeTruthy()
+    expect(screen.getByText('Weekly plans')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Browse Ready to cook products' })).toBeTruthy()
     expect(screen.getByText('Kids')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Add to cart' })).toBeTruthy()
+    expect(screen.getByTestId('rich-text')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'What you get' })).toBeTruthy()
     expect(screen.getByText('Prepped and ready')).toBeTruthy()
   })
 

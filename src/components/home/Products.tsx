@@ -19,11 +19,12 @@ import { Section } from './Section'
 /**
  * The products shelf, four at most (design.md §10.1).
  *
- * The cards are the ones `/products` uses, not a summary of them: photo, name,
- * the first duration's price and one Add to cart control, so someone who already
- * knows what they want buys from the front page and someone still comparing
- * follows the card to the product's own page. Prices come from the product
- * records through the same card, so there is no second place to keep them right.
+ * The cards are the ones `/products` uses, not a summary of them: photo-first,
+ * the name and the cheapest per-day rate on a gradient band, and one Add to
+ * cart control for the kitchen's default duration, so someone who already knows
+ * what they want buys from the front page and someone still comparing follows
+ * the card to the product's own page. Prices come from the product records
+ * through the same card, so there is no second place to keep them right.
  *
  * A kitchen with nothing open shows a quiet empty card with a WhatsApp action
  * instead of disappearing: the shelf sits high on the page, right under the

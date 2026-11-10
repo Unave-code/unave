@@ -22,6 +22,14 @@ export const PRODUCTS_HERO_SUB =
 export const PRODUCTS_CTA_BROWSE = 'Browse the products'
 export const PRODUCTS_CTA_MESSAGE = WHATSAPP_CTA_LABEL
 
+/**
+ * The lead price line on a product card: the cheapest per-day rate across the
+ * product's durations, so a shopper comparing plans sees the running cost
+ * before any duration is chosen. Composed as `From ₹60 a day`.
+ */
+export const PRODUCTS_CARD_FROM = 'From'
+export const PRODUCTS_CARD_A_DAY = 'a day'
+
 export const PRODUCTS_FINAL_HEADING = 'Ready when you are'
 export const PRODUCTS_FINAL_BODY =
   'Add the products and durations you want to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'

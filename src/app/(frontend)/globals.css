@@ -105,7 +105,30 @@
 }
 
 @layer utilities {
-  /* The UNAVE lockup, recoloured from currentColor (design.md §2) */
+  /* The product card's buy control waits for the pointer (design.md §6.15). On
+     a device with a fine, hovering pointer the control fades in once the card
+     is hovered or any control inside it holds focus, and everywhere else —
+     touch, keyboard-only until focus lands — it is simply visible. A card is
+     quieter at rest without ever hiding the one way to buy. */
+  @media (hover: hover) and (pointer: fine) {
+    .card-reveal {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    article:hover .card-reveal,
+    article:focus-within .card-reveal {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-reveal {
+      transition: none;
+    }
+  }
+
+  /* The logo lockup, recoloured from currentColor (design.md §2) */
   .logo-lockup {
     display: block;
     height: var(--logo-height, 34px);

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import { Check } from 'lucide-react'
 
 import { Media } from '@/components/Media'
 import { Notice } from '@/components/Notice'
@@ -27,10 +28,13 @@ const BADGE =
 /**
  * One product's own page (design.md §6.15).
  *
- * The card is a door and this is the room: the same photo at full width, the
- * name, the category and audience badges and the length of the product, then the
- * price panel where the durations lead into the cart. The description and the
- * product's points follow underneath.
+ * The card is a door and this is the room: a wide two-column spread on desktop
+ * where the photo fills the left half and the name, badges and the price panel
+ * fill the right — and the right column is pinned while the left scrolls, so
+ * the way to buy stays in view through the description and the points. The
+ * description and the points follow the photo in the same column, the points
+ * check-marked in a two-column list, like a magazine spread with the order
+ * form kept to one side.
  *
  * A paused product still renders in full — the kitchen can pause a product
  * without hiding it — with its durations and prices readable, a gold label and
@@ -50,6 +54,11 @@ export const ProductDetail: React.FC<{ product: Product; whatsapp?: null | strin
   const points = (product.points ?? [])
     .map((entry) => entry.point?.trim() ?? '')
     .filter((point) => point.length > 0)
+
+  const subcategory =
+    product.subcategory && typeof product.subcategory === 'object'
+      ? product.subcategory.title
+      : null
 
   const image = product.image && typeof product.image === 'object' ? product.image : null
   const imageAlt = image?.alt?.trim() || product.title
@@ -75,30 +84,36 @@ export const ProductDetail: React.FC<{ product: Product; whatsapp?: null | strin
           ) : null}
         </nav>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-line bg-green-50">
-            {image?.url ? (
-              <Media
-                alt={imageAlt}
-                fill
-                imgClassName="object-cover"
-                resource={image}
-                size="(max-width: 1024px) 100vw, 50vw"
-              />
-            ) : (
-              <Image
-                alt=""
-                aria-hidden="true"
-                className="object-cover"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                src={PRODUCT_PLACEHOLDER}
-              />
-            )}
+        {/* Two columns on desktop: the photo and the reading flow on the left,
+            the buy panel on the right, pinned there. The middle block sits
+            second in the markup so on a phone the buy panel follows the photo
+            before any reading, and the third block flows under the photo. */}
+        <div className="mt-8 grid items-start gap-10 lg:grid-cols-12 lg:gap-x-16 lg:gap-y-12">
+          <div className="lg:col-span-7 lg:row-start-1">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-line bg-green-50">
+              {image?.url ? (
+                <Media
+                  alt={imageAlt}
+                  fill
+                  imgClassName="object-cover"
+                  resource={image}
+                  size="(max-width: 1024px) 100vw, 58vw"
+                />
+              ) : (
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className="object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                  src={PRODUCT_PLACEHOLDER}
+                />
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex flex-col lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24">
             <div className="flex flex-wrap items-center gap-2">
               {product.category ? (
                 <Link
@@ -121,7 +136,13 @@ export const ProductDetail: React.FC<{ product: Product; whatsapp?: null | strin
               ) : null}
             </div>
 
-            <h1 className="text-h1 mt-5 text-balance">{product.title}</h1>
+            {subcategory ? (
+              <p className="text-eyebrow text-gold-600 mt-6 uppercase">{subcategory}</p>
+            ) : null}
+
+            <h1 className={subcategory ? 'text-h1 mt-2 text-balance' : 'text-h1 mt-5 text-balance'}>
+              {product.title}
+            </h1>
 
             <div className="mt-8">
               {product.available && durations.length > 0 ? (
@@ -133,7 +154,7 @@ export const ProductDetail: React.FC<{ product: Product; whatsapp?: null | strin
                   whatsapp={whatsapp}
                 />
               ) : (
-                <div className="bg-green-50 rounded-md p-4">
+                <div className="border-line rounded-2xl border bg-green-50 p-6">
                   <ul className="divide-line flex flex-col divide-y">
                     {durations.map((duration, index) => (
                       <li
@@ -159,35 +180,35 @@ export const ProductDetail: React.FC<{ product: Product; whatsapp?: null | strin
               )}
             </div>
           </div>
+
+          {product.description || points.length > 0 ? (
+            <div className="max-w-[62ch] lg:col-span-7 lg:row-start-2">
+              {product.description ? (
+                <RichText className="text-body text-ink-600 leading-7" data={product.description} enableGutter={false} />
+              ) : null}
+
+              {points.length > 0 ? (
+                <>
+                  <h2 className="text-h3 mt-10">{PRODUCT_POINTS_HEADING}</h2>
+
+                  <ul className="mt-5 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                    {points.map((point, index) => (
+                      <li className="flex items-start gap-3" key={`${point}-${index}`}>
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"
+                        >
+                          <Check className="size-3" strokeWidth={2.5} />
+                        </span>
+                        <span className="text-ink-600 text-sm leading-6">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-
-        {product.description || points.length > 0 ? (
-          <div className="border-line mt-14 max-w-[62ch] border-t pt-10">
-            {product.description ? (
-              <RichText className="text-ink-600 text-body leading-7" data={product.description} enableGutter={false} />
-            ) : null}
-
-            {points.length > 0 ? (
-              <>
-                <h2 className="text-h3 mt-8">{PRODUCT_POINTS_HEADING}</h2>
-
-                <ul className="mt-4 flex flex-col gap-2">
-                  {points.map((point, index) => (
-                    <li
-                      className="text-ink-600 flex items-start gap-2 text-sm leading-6"
-                      key={`${point}-${index}`}
-                    >
-                      <span aria-hidden="true" className="text-green-700 mt-1">
-                        •
-                      </span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-          </div>
-        ) : null}
 
         {!product.available ? (
           <Notice className="mt-10 max-w-[70ch]" title={PRODUCTS_PAUSED_NOTE_TITLE}>

@@ -17,14 +17,15 @@ vi.mock('next/image', () => ({
 }))
 
 /**
- * The product card (design.md §6.15).
+ * The product card (design.md §6.15) — photo-first and almost chromeless.
  *
- * Photo, name and the first duration's price, then one Add to cart control for
- * exactly that duration. Flat by design: a 1px line, no shadow. Open and buy are
- * two separate controls — the photo, name and price are one link to the
- * product's own page, and the button posts the shown line to the cart. A paused
- * product renders the card with no button at all, and the photo falls back to a
- * branded placeholder so a record without one still renders a complete card.
+ * The photo fills the card and carries the audience and pause pills; the name
+ * and the cheapest per-day rate sit on a gradient band along its bottom edge.
+ * The whole card is one stretched link to the product's own page, where the
+ * durations and totals live, and one hover-revealed gold pill adds the kitchen's
+ * default duration. A paused product renders with no control and its lead price
+ * readable, and a record without a photo still renders a complete card on the
+ * branded placeholder.
  */
 
 afterEach(cleanup)
@@ -39,21 +40,28 @@ const product = {
   ],
   id: 1,
   slug: 'lunch-plan',
+  subcategory: { id: 5, title: 'Weekly plans', category: 'ready-to-cook' },
   title: 'Lunch plan',
 } as unknown as Product
 
 describe('the product card', () => {
-  it('shows the name and the first duration price, and links to the product page', () => {
+  it('is one stretched link carrying the name, the audience pill and the per-day lead', () => {
     render(<ProductCard product={product} />)
 
-    const link = screen.getByRole('link', { name: /Lunch plan/ })
+    const link = screen.getByRole('link', { name: 'Lunch plan' })
     expect(link.getAttribute('href')).toBe('/products/lunch-plan')
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
-    expect(screen.getByText('₹499')).toBeTruthy()
-    expect(screen.getByText('One week')).toBeTruthy()
+    expect(screen.getByText('Kids')).toBeTruthy()
 
-    // Only the first duration is represented on the card.
+    // The lead price is the cheapest per-day rate floored to whole rupees:
+    // ₹499 over 7 days floors to ₹71, ₹1,799 over 30 to ₹59, so ₹59 leads.
+    expect(screen.getByText('From ₹59 a day')).toBeTruthy()
+
+    // The durations and their totals live on the product page, not the card.
+    expect(screen.queryByText('₹499')).toBeNull()
     expect(screen.queryByText('₹1,799')).toBeNull()
+    expect(screen.queryByText('Weekly plans')).toBeNull()
+    expect(screen.queryByText('One week')).toBeNull()
   })
 
   it('renders the placeholder image when the record has no photo', () => {
@@ -65,7 +73,7 @@ describe('the product card', () => {
     expect(image?.getAttribute('src')).toContain('product-placeholder.jpg')
   })
 
-  it('offers one Add to cart control that posts the shown line', () => {
+  it('offers one Add to cart control that posts the default duration', () => {
     render(<ProductCard product={product} returnPath="/" />)
 
     const form = screen.getByRole('button', { name: 'Add to cart' }).closest('form')
@@ -76,17 +84,20 @@ describe('the product card', () => {
     expect(form?.querySelector('input[name="return"]')?.getAttribute('value')).toBe('/')
   })
 
-  it('offers no Add to cart control on a paused product', () => {
+  it('offers no Add to cart control on a paused product, but keeps its lead price', () => {
     render(<ProductCard product={{ ...product, available: false } as unknown as Product} />)
 
     expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
-    expect(screen.getByRole('link', { name: /Lunch plan/ })).toBeTruthy()
+    expect(screen.getByText('Paused')).toBeTruthy()
+    expect(screen.getByText('From ₹59 a day')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Lunch plan' })).toBeTruthy()
   })
 
-  it('shows no price when the product has no durations', () => {
+  it('shows no price and no buy control when the product has no durations', () => {
     render(<ProductCard product={{ ...product, durations: [] } as unknown as Product} />)
 
-    expect(screen.queryByText('₹499')).toBeNull()
+    expect(screen.queryByText(/a day/)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
   })
 })
