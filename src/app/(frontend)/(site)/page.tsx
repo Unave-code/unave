@@ -70,9 +70,9 @@ export default async function HomePage() {
 
       <Hero whatsapp={whatsapp} />
       <TrustStrip />
+      <ProductShelf whatsapp={whatsapp} />
       <Welcome />
       <Benefits />
-      <ProductShelf />
       <Categories />
       <HowItWorks />
       <Gallery />

@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import type { Header as HeaderType } from '@/payload-types'
 
-import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { Logo } from '@/components/Logo/Logo'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
@@ -29,13 +28,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const [theme, setTheme] = useState<string | null>(null)
   /* Past the top of the page the bar turns green and the logo gold (design.md §6.2) */
   const [scrolled, setScrolled] = useState(false)
-  /* The announcement strip tucks away on the way down and returns on the way up */
+  /* The announcement strip only shows at the very top of the page */
   const [stripHidden, setStripHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   /* `null` until the session check answers, so nothing is guessed and nothing flickers. */
   const [session, setSession] = useState<{ name: string | null; signedIn: boolean } | null>(null)
   const signedIn = session?.signedIn ?? null
-  const lastScrollY = useRef(0)
   const barRef = useRef<HTMLElement>(null)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
   const pathname = usePathname()
@@ -51,7 +49,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const cartItem = navItems.find(({ link }) => link?.url === '/cart')
   const menuItems = navItems.filter(({ link }) => link?.url !== '/cart')
   const announcement = data?.announcement
-  const cta = data?.cta
   const whatsappNumber = data?.whatsapp?.number
   const whatsappMessage = data?.whatsapp?.message
 
@@ -90,10 +87,10 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     const onScroll = () => {
       const y = window.scrollY
       setScrolled(y > 8)
-      /* Hide only once past the top and moving down, so a small scroll back up
-         brings the strip straight back. */
-      setStripHidden(y > 8 && y > lastScrollY.current)
-      lastScrollY.current = y
+      /* The strip belongs to the top of the page only: once the visitor has
+         scrolled away it stays tucked, whichever direction they move, and only
+         coming back to the top brings it out again. */
+      setStripHidden(y > 8)
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -182,15 +179,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     }
   }, [menuOpen])
 
-  const ctaNewTabProps = cta?.newTab
-    ? { rel: 'noopener noreferrer', target: '_blank' as const }
-    : {}
-
   return (
     <>
       {/* The announcement strip and the bar pin together, strip on top (design.md §6.2).
-          The strip stays put at the top of the page but tucks away while scrolling
-          down, so the navbar gets the whole screen; scrolling up brings it back. */}
+          The strip stays put at the top of the page but tucks away as soon as the
+          visitor scrolls, so the navbar gets the whole screen; scrolling back to
+          the top brings it out again. */}
       <div className="sticky top-0 z-20">
         <div
           className={cn(
@@ -238,20 +232,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
                 />
               ) : null}
 
-              {cta?.label && cta?.url ? (
-                <Link
-                  className={cn(
-                    CTA_BASE,
-                    CTA_VARIANTS.primary,
-                    'hidden h-11 px-5 text-sm sm:inline-flex',
-                  )}
-                  href={cta.url}
-                  {...ctaNewTabProps}
-                >
-                  {cta.label}
-                </Link>
-              ) : null}
-
               <button
                 aria-controls="mobile-menu"
                 aria-expanded={menuOpen}
@@ -271,7 +251,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
       {menuOpen ? (
         <MobileMenu
           closeRef={closeRef}
-          cta={cta}
           drawerRef={drawerRef}
           items={navItems}
           onClose={closeMenu}

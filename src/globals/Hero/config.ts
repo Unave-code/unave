@@ -20,6 +20,7 @@ const DEFAULT_SLIDE = {
   eyebrow: HERO_EYEBROW,
   headline: `${HERO_HEADLINE} *${HERO_HEADLINE_ACCENT}*`,
   subLine: HERO_SUB,
+  overlay: false,
   primaryLabel: '',
   primaryWhatsapp: true,
   primaryUrl: '',
@@ -81,7 +82,7 @@ export const Hero: GlobalConfig = {
           required: true,
           admin: {
             description:
-              'The big Playfair line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.',
+              'The big Lora line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.',
           },
         },
         {
@@ -99,7 +100,17 @@ export const Hero: GlobalConfig = {
           relationTo: 'media',
           admin: {
             description:
-              'Runs full-bleed behind this slide under a green scrim. Leave empty to keep the built-in kitchen photograph.',
+              'Runs full-bleed behind this slide. Leave empty to keep the built-in kitchen photograph.',
+          },
+        },
+        {
+          name: 'overlay',
+          type: 'checkbox',
+          defaultValue: false,
+          label: 'Show overlay',
+          admin: {
+            description:
+              'Adds a dark green scrim behind the words so they stay readable on a busy photograph. Off leaves the photograph untouched.',
           },
         },
         {

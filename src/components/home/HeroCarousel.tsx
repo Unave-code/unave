@@ -16,6 +16,8 @@ export interface HeroCarouselSlide {
   headline: string
   subLine: string | null
   imageSrc: string
+  /** Draw the dark green scrim behind the copy. Chosen per slide in the admin. */
+  overlay: boolean
   primary: { label: string; href: string; external: boolean; whatsapp: boolean }
   secondary: { label: string; href: string; newTab: boolean } | null
 }
@@ -180,7 +182,9 @@ export const HeroCarousel: React.FC<Props> = ({ chips, slides }) => {
               sizes="100vw"
               src={slide.imageSrc}
             />
-            <div className="bg-green-900/85 lg:bg-transparent lg:bg-linear-to-r lg:from-green-900 lg:via-green-900/90 lg:to-green-900/45 absolute inset-0" />
+            {slide.overlay ? (
+              <div className="bg-green-900/85 lg:bg-transparent lg:bg-linear-to-r lg:from-green-900 lg:via-green-900/90 lg:to-green-900/45 absolute inset-0" />
+            ) : null}
           </div>
         ))}
       </div>

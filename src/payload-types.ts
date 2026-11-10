@@ -1046,6 +1046,10 @@ export interface Product {
    * Off means the product shows a paused label and cannot be bought.
    */
   available?: boolean | null;
+  /**
+   * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
+   */
+  featured?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1870,6 +1874,7 @@ export interface ProductsSelect<T extends boolean = true> {
   subcategory?: T;
   audience?: T;
   available?: T;
+  featured?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2160,7 +2165,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * The top of every page: the announcement strip, menu links, the primary button, WhatsApp.
+ * The top of every page: the announcement strip, menu links, WhatsApp.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
@@ -2213,17 +2218,6 @@ export interface Header {
         id?: string | null;
       }[]
     | null;
-  /**
-   * The pill on the right of the bar, repeated at the foot of the mobile menu.
-   */
-  cta: {
-    label: string;
-    /**
-     * A path such as /contact, or a full URL.
-     */
-    url: string;
-    newTab?: boolean | null;
-  };
   /**
    * The floating button at the bottom right. Leave the number empty and it stays hidden.
    */
@@ -2316,7 +2310,7 @@ export interface Hero {
          */
         eyebrow?: string | null;
         /**
-         * The big Playfair line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.
+         * The big Lora line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.
          */
         headline: string;
         /**
@@ -2324,9 +2318,13 @@ export interface Hero {
          */
         subLine?: string | null;
         /**
-         * Runs full-bleed behind this slide under a green scrim. Leave empty to keep the built-in kitchen photograph.
+         * Runs full-bleed behind this slide. Leave empty to keep the built-in kitchen photograph.
          */
         image?: (number | null) | Media;
+        /**
+         * Adds a dark green scrim behind the words so they stay readable on a busy photograph. Off leaves the photograph untouched.
+         */
+        overlay?: boolean | null;
         /**
          * The gold pill. Leave empty for "Message us on WhatsApp".
          */
@@ -2435,13 +2433,6 @@ export interface HeaderSelect<T extends boolean = true> {
             };
         id?: T;
       };
-  cta?:
-    | T
-    | {
-        label?: T;
-        url?: T;
-        newTab?: T;
-      };
   whatsapp?:
     | T
     | {
@@ -2504,6 +2495,7 @@ export interface HeroSelect<T extends boolean = true> {
         headline?: T;
         subLine?: T;
         image?: T;
+        overlay?: T;
         primaryLabel?: T;
         primaryWhatsapp?: T;
         primaryUrl?: T;

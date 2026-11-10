@@ -52,31 +52,33 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
 
-  /* Type — Playfair Display for headings, Inter for body and UI (design.md §4) */
-  --font-sans: var(--font-inter);
-  --font-body: var(--font-inter);
-  --font-heading: var(--font-playfair);
+  /* Type — Lora for headings, DM Sans for body and UI (design.md §4) */
+  --font-sans: var(--font-dm-sans);
+  --font-body: var(--font-dm-sans);
+  --font-heading: var(--font-lora);
   --font-mono: var(--font-geist-mono);
 
-  /* Type scale, desktop sizes; mobile overrides at the end of this file (design.md §4) */
-  --text-display: 3.75rem;
+  /* Type scale, fluid between the mobile and desktop sizes (design.md §4). Each
+     step interpolates with the viewport, so headings ease down on smaller screens
+     instead of jumping at one breakpoint. */
+  --text-display: clamp(2.25rem, 1.69rem + 2.286vw, 3.75rem);
   --text-display--line-height: 1.08;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 700;
-  --text-h1: 2.75rem;
+  --text-h1: clamp(2rem, 1.72rem + 1.143vw, 2.75rem);
   --text-h1--line-height: 1.15;
   --text-h1--letter-spacing: -0.015em;
   --text-h1--font-weight: 700;
-  --text-h2: 2.125rem;
+  --text-h2: clamp(1.625rem, 1.44rem + 0.762vw, 2.125rem);
   --text-h2--line-height: 1.2;
   --text-h2--letter-spacing: -0.01em;
   --text-h2--font-weight: 700;
-  --text-h3: 1.375rem;
+  --text-h3: clamp(1.25rem, 1.2rem + 0.19vw, 1.375rem);
   --text-h3--line-height: 1.35;
   --text-h3--font-weight: 600;
-  --text-lead: 1.25rem;
+  --text-lead: clamp(1.0625rem, 0.99rem + 0.286vw, 1.25rem);
   --text-lead--line-height: 1.55;
-  --text-body: 1.0625rem;
+  --text-body: clamp(1rem, 0.98rem + 0.095vw, 1.0625rem);
   --text-body--line-height: 1.65;
   --text-caption: 0.875rem;
   --text-caption--line-height: 1.5;
@@ -377,28 +379,15 @@
   }
 }
 
-/* Mobile sizes from the type scale (design.md §4) */
-@media (width < 48rem) {
-  :root {
-    --text-display: 2.25rem;
-    --text-h1: 2rem;
-    --text-h2: 1.625rem;
-    --text-h3: 1.25rem;
-    --text-lead: 1.0625rem;
-    --text-body: 1rem;
-  }
-}
+/* Type sizes are fluid now: each scale step clamps between its mobile and desktop
+   value at the top of this file, so there is no mobile override block to keep in
+   step. */
 
 /* The navbar floats over the band that opens a page, so it has no fill of its own
    until the page scrolls (design.md §6.2). HeaderClient keeps --navbar-height in
    step with the real bar; this value is what the first paint and a no-JS visit use. */
 :root {
   --navbar-height: 4.5rem;
-}
-
-.site-header:not([data-scrolled='true']) {
-  background-color: transparent;
-  border-bottom-color: transparent;
 }
 
 /* A page whose first band is a photograph or a green field marks it
@@ -421,13 +410,6 @@
   }
 }
 
-/* Over that band the words turn cream and gold, the colours the solid green bar
-   uses, because the band behind them is dark. */
-body:has(.opening-band) .site-header:not([data-scrolled='true']) {
-  --primary: var(--gold-400);
-  color: var(--cream);
-}
-
 /* The account's request dialogs (design.md §6.15). A native <dialog>, so the
    browser owns the focus trap, the Escape key and the inert page behind it; only
    the scrim and the centring are ours. */
@@ -435,18 +417,31 @@ body:has(.opening-band) .site-header:not([data-scrolled='true']) {
   background-color: color-mix(in oklab, var(--green-900) 55%, transparent);
 }
 
-/* Scrolled header: solid green bar with a gold logo and gold links (design.md §6.2).
-   The elevation is green-tinted, so the bar reads as lifted rather than outlined. */
+.site-header:not([data-scrolled='true']) {
+  background-color: transparent;
+  border-bottom-color: transparent;
+}
+
+/* Over that band the words turn cream and gold, the colours the solid green bar
+   uses, because the band behind them is dark. */
+body:has(.opening-band) .site-header:not([data-scrolled='true']) {
+  --primary: var(--gold-400);
+  color: var(--cream);
+}
+
+/* Scrolled header: a solid deep green bar with a gold logo and gold links
+   (design.md §6.2). The elevation is green-tinted, so the bar reads as lifted
+   rather than outlined. */
 .site-header[data-scrolled='true'] {
   --primary: var(--gold-400);
-  background-color: var(--green-700);
+  background-color: var(--green-900);
   border-bottom-color: var(--green-800);
   box-shadow: 0 12px 32px -16px rgb(15 46 33 / 0.45);
   color: var(--cream);
 }
 
-/* The bar cross-fades between the transparent state it wears over an opening band
-   and the solid green one (design.md §9). Unlayered on purpose, so it wins over
+/* The bar eases between the transparent state it wears over an opening band and
+   the solid deep green one (design.md §9). Unlayered on purpose, so it wins over
    the utility classes on the element. */
 .site-header {
   transition-property: background-color, border-color, box-shadow;

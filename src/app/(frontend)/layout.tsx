@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
-import { Inter, Playfair_Display } from 'next/font/google'
+import { DM_Sans, Lora } from 'next/font/google'
 import React from 'react'
 
 import { Providers } from '@/providers'
@@ -12,26 +12,26 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
-// design.md §4: Playfair Display for headings, Inter for body and UI. Only the weights used.
-const playfair = Playfair_Display({
+// design.md §4: Lora for headings, DM Sans for body and UI. Only the weights used.
+const lora = Lora({
   subsets: ['latin'],
   weight: ['600', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-playfair',
+  variable: '--font-lora',
   display: 'swap',
 })
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-dm-sans',
   display: 'swap',
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      className={cn(playfair.variable, inter.variable, GeistMono.variable)}
+      className={cn(lora.variable, dmSans.variable, GeistMono.variable)}
       data-theme="light"
       lang="en"
       suppressHydrationWarning

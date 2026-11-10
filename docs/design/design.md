@@ -38,7 +38,7 @@ Design guide for the UNAVE Cloud Kitchen website. Derived from the brand logo (d
 | Favicon / app icon | Mark only, gold on green rounded square |
 | On light backgrounds | Deep green (`--green-700`) mark and wordmark |
 | On dark backgrounds | Gold (`--gold-400`) mark and wordmark |
-| Don't | Stretch, recolor outside the palette, add shadows or outlines, place on busy photos without a green overlay |
+| Don't | Stretch, recolor outside the palette, add shadows or outlines, or place where the mark cannot be read |
 
 ---
 
@@ -116,17 +116,19 @@ Alternate sections to keep pages calm and scannable:
 
 ## 4. Typography
 
-The logo uses a rounded geometric sans. Headings deliberately contrast with it: an editorial serif reads richer and more considered than a rounded sans at display sizes.
+The logo uses a rounded geometric sans. Headings deliberately contrast with it: a warm editorial serif reads richer and more considered than a rounded sans at display sizes.
 
 | Role | Font | Fallback |
 | --- | --- | --- |
-| Headings | **Playfair Display** (600, 700, italic), high-contrast serif | `"Playfair Display", Georgia, serif` |
-| Body / UI | **Inter** (400, 500, 600) or Nunito Sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| Headings | **Lora** (600, 700, italic), warm editorial serif | `"Lora", Georgia, serif` |
+| Body / UI | **DM Sans** (400, 500, 600, 700), clean geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Wordmark | Use supplied logo artwork only, never retype | n/a |
 
 Load via Google Fonts with `display=swap`. Include real fallback stacks.
 
 ### Type scale (desktop / mobile)
+
+Sizes are fluid: every step below is a `clamp()` between the mobile and desktop values, keyed to the viewport (`globals.css`), so headings ease down on a small screen instead of jumping at one breakpoint.
 
 | Style | Size | Line height | Weight | Notes |
 | --- | --- | --- | --- | --- |
@@ -199,13 +201,13 @@ Load via Google Fonts with `display=swap`. Include real fallback stacks.
 
 ### 6.2 Header / Navigation
 
-- Sticky, and transparent while the page sits at the top: the band that opens a page runs up behind it, so the bar has no fill of its own there and its words turn cream and gold over a dark band, or stay green over cream. Once the page scrolls it becomes a solid `--green-700` bar with a gold wordmark, gold links, cream text and a 1px `--green-800` bottom edge. A page that opens on a photograph or a green field marks that band `.opening-band` (`src/app/(frontend)/globals.css`), which pulls the band up behind the bar and hands the bar's own height back as padding, so nothing inside the band moves.
+- Sticky, and transparent while the page sits at the top: the band that opens a page runs up behind it, so the bar has no fill of its own there and its words turn cream and gold over a dark band, or stay green over cream. Once the page scrolls it becomes a solid `--green-900` bar with a gold wordmark, gold links, cream text and a 1px `--green-800` bottom edge. A page that opens on a photograph or a green field marks that band `.opening-band` (`src/app/(frontend)/globals.css`), which pulls the band up behind the bar and hands the bar's own height back as padding, so nothing inside the band moves.
 - Above it, a slim `--green-900` announcement strip: gold headline, cream supporting line, underlined gold link. A small gold leaf leads the headline and the link's arrow nudges forward on hover. The whole strip is one link — its focus ring is drawn inside the strip, because the wrapper that collapses it clips anything outside — and it pins together with the bar so the bar sits directly under it. On load the strip settles in with one short fade.
 - Left: horizontal logo. Center/right: the menu links from the **Site chrome** header global — today Home · About · Contact, seven at most (the seventh is the cart link staff add in Site chrome; on the desktop bar it is presented in the right-hand action group beside the search control, with the live count rendered by code, and in the drawer it stays a row of the list). **About** also sits in the footer's Explore column; the header and footer are Payload globals, so the live list is whatever they hold. Desktop links carry the animated `.header-link` underline (a 2px pill in `currentColor`, wiping in from the left over 200ms on hover or focus) which stays on the link for the page you are on (`aria-current="page"`); in the drawer the current page's row turns cream over a soft wash. The cart's count badge zooms in whenever it changes.
-- The bar's controls hovers use a soft wash of the text colour itself (`hover:bg-current/10`), so the same class reads green on the cream bar and gold on the green one; the scrolled bar lifts on a green-tinted shadow, and every control yields a little while pressed (design.md §9). All of it is switched off under `prefers-reduced-motion`.
-- Right: primary pill button from the header global (its label and link are CMS copy), plus the account links: signed out, a quiet **Sign in** (icon only on the narrowest screens) and a **Sign up** beside it from the `sm` breakpoint up. Signed in, that control becomes an account menu — the customer's first name (or **Your account** when Payload holds no name) plus a chevron that turns when the menu is open, opening a small panel that names who is signed in and carries **Your account** and **Sign out**. These are code, never CMS copy, because they reflect session state; the primary pill stays the only primary action. Sign out is a quiet form post to `/api/customers/logout`, so it also works without JavaScript and revokes the session row.
+- The bar's controls hovers use a soft wash of the text colour itself (`hover:bg-current/10`), so the same class reads green on the cream bar and gold on the dark one; the scrolled bar lifts on a green-tinted shadow, and every control yields a little while pressed (design.md §9). All of it is switched off under `prefers-reduced-motion`.
+- Right: no primary pill — the page's own calls to action carry the primary weight, so the bar never competes with them. It holds the account links: signed out, a quiet **Sign in** (icon only on the narrowest screens) and a **Sign up** beside it from the `sm` breakpoint up. Signed in, that control becomes an account menu — the customer's first name (or **Your account** when Payload holds no name) plus a chevron that turns when the menu is open, opening a small panel that names who is signed in and carries **Your account** and **Sign out**. These are code, never CMS copy, because they reflect session state. Sign out is a quiet form post to `/api/customers/logout`, so it also works without JavaScript and revokes the session row.
 - The menu is keyboard complete: ArrowDown/ArrowUp move between items, Home and End jump, Escape closes and returns focus to the trigger, Tab leaves, and a pointer down outside closes it.
-- Mobile: hamburger opens a full-height green drawer, gold links, large tap targets (56px). Keep the CTA pinned at the bottom. The account links repeat at the end of the drawer: **Sign in** and **Sign up** signed out, **Your account** and **Sign out** signed in, one 56px row each.
+- Mobile: hamburger opens a full-height green drawer, gold links, large tap targets (56px). The account links close the drawer: **Sign in** and **Sign up** signed out, **Your account** and **Sign out** signed in, one 56px row each.
 - Add a floating **WhatsApp** button (bottom-right) for "send us a message and we'll help you choose".
 
 ### 6.3 Hero
@@ -215,7 +217,7 @@ The home hero is a carousel (§10.1). Its slides live in the *Home hero* global 
 - Deep green background, subtle large faint swoosh from the logo mark as a decorative element (8% opacity gold).
 - Left: headline (cream, key phrase in gold), sub-line (cream at 85%), primary and secondary buttons. The first slide's headline is the page's one `h1`; the other slides' headlines are paragraphs styled identically (§12).
 - In the admin, wrap the phrase to set in gold italics in asterisks: `Good food, cooked in *our own kitchen*`.
-- The photograph runs full-bleed behind the copy under a green scrim that fades from nearly solid on the left, so the headline keeps its contrast without a hard card edge. A slide with no photograph keeps the built-in kitchen photograph; the first slide's photograph loads with the document (it is the LCP element), the rest wait their turn.
+- The photograph runs full-bleed behind the copy. A slide can switch on a green scrim in the admin (**Show overlay**), which fades from nearly solid on the left so the headline keeps its contrast over a busy photograph; with it off the photograph runs untouched. A slide with no photograph keeps the built-in kitchen photograph; the first slide's photograph loads with the document (it is the LCP element), the rest wait their turn.
 - The primary button opens WhatsApp on the footer's number with the opening line already written — one number to edit (§6.12). A slide can opt out and link anywhere instead. If the footer has no number yet, the button falls back to the contact page rather than leading nowhere.
 - Four icon chips under the buttons, shared by every slide, not a bare text row: *Fresh daily · Small batches · No account needed · Home-style cooking* (see `HERO_CHIPS` in `src/utilities/homeCopy.ts`, which also supplies the seeded slide's copy).
 - Carousel controls sit below the chips: gold dots left (44px hit areas around an 8px visible dot); pause/play and previous/next right. A single slide shows no controls. Without JavaScript every slide reads in order and the controls are out of the way.
@@ -283,7 +285,7 @@ Utility screens, not campaign pages. The four account screens drop the site head
 
 **Sign in (`/sign-in`), Sign up (`/sign-up`), Forgot password (`/forgot-password`), Reset password (`/reset-password`)**
 
-All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Playfair line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
+All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Lora line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
 
 
 - The shrink rules: two height variants, `short` (under 66rem tall) and `shorter` (under 44rem), drop the fields from 52px to 44px, tighten the gaps, the divider and the half's padding, and shrink the intro. The threshold is set by the tallest form: sign-up with Google switched off needs about 1040px of viewport before the roomy spacing fits without a scroll. The form column centres itself while there is room and starts from the top once there is not, so a scroll never hides the heading; if even that cannot fit, a phone in landscape say, the column scrolls on its own rather than the page, so nothing becomes unreachable.
@@ -316,7 +318,7 @@ These screens are `noindex, nofollow` and are never cached.
 
 **About (`/about`)** — static content in a server component, copy in `src/utilities/aboutCopy.ts`:
 
-- Hero: the deep green band with swoosh, gold-accented headline, one CTA to `/contact`, three trust chips. The kitchen photograph (`/images/kitchen.jpg`) runs full-bleed behind it under a `green-900/85` scrim — the same treatment as the home CTA band — and loads with `priority` as the page's one above-the-fold image.
+- Hero: the deep green band with swoosh, gold-accented headline, one CTA to `/contact`, three trust chips. The kitchen photograph (`/images/kitchen.jpg`) runs full-bleed behind it and loads with `priority` as the page's one above-the-fold image.
 - Story: `Why we started UNAVE`, three short paragraphs on a cream band, with the morning-prep photograph beside them from `lg` up (rounded 16px, real alt text — it is content, not decoration; the hero band photos stay decorative with empty alts because the words carry the meaning). Because the story mentions cooking around diabetes, the gold notice block (§6.9, shared `Notice` component) sits directly below it.
 - Values: `What we stand for`, four icon cards on the tint band.
 - How we work: three numbered steps on white, ending on the promise that a person who cooks here answers.
@@ -324,7 +326,7 @@ These screens are `noindex, nofollow` and are never cached.
 
 **Contact (`/contact`)** — `force-dynamic` (it reads the query string for the form's answer), copy in `src/utilities/contactCopy.ts`:
 
-- Hero: the same green band; when the footer global holds a WhatsApp number, the hero carries one gold **Message us on WhatsApp** button — the page's connect action. The CTA-band photograph (`/images/band-cta.jpg`, the home closing band's image) sits behind it under the same `green-900/85` scrim, `priority` loaded.
+- Hero: the same green band; when the footer global holds a WhatsApp number, the hero carries one gold **Message us on WhatsApp** button — the page's connect action. The CTA-band photograph (`/images/band-cta.jpg`, the home closing band's image) sits behind it, `priority` loaded.
 - **Ways to reach us**: up to three cards (WhatsApp, Call the kitchen, Email) built from the footer global's contact group — the same place the footer's contact column reads, so the kitchen edits the details once. Each card is one large link showing the raw number or address, a plain note, and a verb CTA line (`Message us on WhatsApp`, `Call the kitchen`, `Write to us`). Only configured ways render; with none the whole section disappears and the form is the way. The address, if set, is a quiet line under the cards.
 - **Send a message**: the enquiry form (§6.10 fields: name, phone optional, email, message), a plain HTML `method="post"` form that works without JavaScript. Labels above inputs; the auth screens' field styles. One primary action (`Send message`). Under it: *"We use these details only to answer you, and never pass them on."*
 - The form's honeypot is visually hidden and skipped by keyboard and screen readers; a script that fills it gets the success redirect and sends nothing.
@@ -337,7 +339,7 @@ Enquiries are stored in the `enquiries` collection (staff read in the admin, one
 Added with the products and payments feature (spec 0007). Copy lives beside each page (`productsCopy.ts`, `productsCategoryCopy.ts`, `cartCopy.ts`, `checkout/copy.ts`, `order-placed/copy.ts`); money is always shown through the shared `formatPaise` paise formatter, never hand formatted. The store pages read live data on every request, so nothing in this section is ever cached.
 
 - **Products (`/products`)** — the deep green hero band with swoosh, gold-accented headline, and one primary pill (*Browse the products*, anchored to the grid). The grid is white retail cards, flat by design: 24px radius, a 1px `--line` border and **no shadow**, lifting 4px on hover and nothing more. Each card is deliberately plain: a 4:3 photo fills the top, then the product's name and the first duration's total price in small type, then one full width **Add to cart** pill in the small size (44px tall, the smallest pill allowed), which adds exactly the shown line — the product slug and the first duration's label, resolved against the live record — through the same POST `/api/cart/add` flow and the same polite confirmation line as the product page. The photo is the product record's `image`; when the kitchen has not uploaded one, the card falls back to a branded placeholder (`/images/product-placeholder.jpg`, the gold wordmark on deep green), so a card is never a blank box and every card keeps the same height. Open and buy are two separate controls: the photo, name and price are one link to the product's own page (`/products/<slug>`), where every duration can be chosen, and the button never sits inside the link. A paused product renders its card with no button at all. The gold notice block (§6.9) sits under the grid explaining what *paused* means. The empty state is one quiet card with a **Message us on WhatsApp** secondary action, never a dead end. A three-step *How a product works* list sits on the tint band, and the closing band carries the final CTA.
-- **Product page (`/products/<slug>`)** — the room the card opens. The same photo, the name as the page heading with its own canonical address, and the badges the card gave up: the category badge (a link back to that category's page), the audience badge and, on a paused product, a gold **Paused** badge. Under them the price panel: the chosen duration's per day price leads in Inter bold with a quiet *a day* beside it and the total in one line under it, one native radio chip per duration follows, each carrying its label and total price so every duration and price renders without JavaScript, then one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill in the footer's number. Inter rather than Playfair here because Playfair's rupee glyph collides with the digits at display size. The product's description and up to five check-marked points follow under a rule. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
+- **Product page (`/products/<slug>`)** — the room the card opens. The same photo, the name as the page heading with its own canonical address, and the badges the card gave up: the category badge (a link back to that category's page), the audience badge and, on a paused product, a gold **Paused** badge. Under them the price panel: the chosen duration's per day price leads in DM Sans bold with a quiet *a day* beside it and the total in one line under it, one native radio chip per duration follows, each carrying its label and total price so every duration and price renders without JavaScript, then one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill in the footer's number. Prices stay in DM Sans rather than the heading serif, where the rupee sign reads most clearly at display size. The product's description and up to five check-marked points follow under a rule. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
 - **Product category pages (`/products/[category]`)** — one page per category (ready to cook, ready to eat, fresh from produce), served by one dynamic route, reusing the products page's green band and card grid. One centered row of icon pills (All, Kids, Adults, Special) sits above the grid: a 44px pill carrying a lucide icon beside its label, the chosen pill filling `--green-700` with cream text and the rest keeping the line border that goes green on hover. The art is code, one icon per audience. Both empty states (an empty category, or a filter that matches nothing) are centered cards under the pills. Every pill stays 44px minimum, animates colour only, keeps the visible label as its accessible name (the icon is decorative), and filters the server rendered cards in the browser with no reload and no change to the address (spec 0008).
 - **Header cart control** — not hardcoded: staff add a link to `/cart` in Site chrome like any menu link, and the header recognises that address and renders the live line count beside the label. On the desktop bar it is presented in the right-hand action group, beside the search control, rather than in the middle of the menu; the mobile drawer keeps it as a row of its own. The count reads the cart cookie, which is readable by JavaScript on purpose and carries nothing private, so adding a line updates it instantly with no request. Without JavaScript the label still links to the cart; only the number waits for hydration.
 - **Cart (`/cart`)** — `noindex, nofollow`, and no account needed to look. The cookie names a product and a duration per line; every title, day count and price is read from the live product records here. Each line is a row with the product title, duration and days, its price, and a quiet **Remove** pill that posts to `/api/cart/remove`, so the page works without JavaScript. The total sums the usable lines under a rule, and one primary **Go to checkout** pill sits beside a quiet *Keep browsing products* link. An empty cart is one card with a **Browse the products** pill, never a dead end. A line whose product left the menu, is paused or lost its duration is marked **No longer available**, excluded from the total, and blocks checkout until it is removed; the sentence above the list says so.
@@ -351,18 +353,18 @@ Added with the products and payments feature (spec 0007). Copy lives beside each
 The admin is a staff tool rather than a customer surface, and it wears the brand without pretending to be the site. It is themed in one file, `src/app/(payload)/custom.scss`, by overriding Payload's own variables instead of rewriting its components:
 
 - **Colour** — Payload's neutral `--color-base-*` scale becomes the UNAVE warm greys, from cream white at `0` to green black at `1000`. Payload reverses that one scale for dark mode, so light and dark are branded by the same definition. Green carries `success`, gold carries `warning`, and errors stay a warm brick that reads on white and on deep green.
-- **Type** — Inter and Playfair Display load through `next/font` in `AdminFonts` (an `admin.components.providers` entry) and point Payload's `--font-body` and `--font-serif` at the site's two typefaces.
+- **Type** — DM Sans and Lora load through `next/font` in `AdminFonts` (an `admin.components.providers` entry) and point Payload's `--font-body` and `--font-serif` at the site's two typefaces.
 - **Shape** — `--style-radius-s/m/l` are 6/10/16px, tighter than the site's pills, because the admin is a working tool.
-- **Brand moments** — sign in is the deep green band with a gold-edged card and the Playfair wordmark, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions.
+- **Brand moments** — sign in is the deep green band with a gold-edged card and the Lora wordmark, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions.
 - **Money** — staff read and type rupees. `RupeeField` (with `RupeeCell` for list columns) shows rupees and still stores paise, so the database and the gateway are never touched.
 
 ### 6.17 The 404 page
 
-The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group, so it draws its own header and footer — an unmatched URL must never land somewhere with no way back. It wears the shared opening band (§6.3): deep green with the swoosh, a gold uppercase eyebrow (*Error 404*), a Playfair headline with the gold italic phrase (*This page is not on the menu*), and one lead line that says what happened and that the kitchen is still open. One primary pill (*Browse the products*) sits beside one quiet secondary (*Back to the home page*); no account is needed anywhere on it, and every link leads somewhere that sells.
+The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group, so it draws its own header and footer — an unmatched URL must never land somewhere with no way back. It wears the shared opening band (§6.3): deep green with the swoosh, a gold uppercase eyebrow (*Error 404*), a Lora headline with the gold italic phrase (*This page is not on the menu*), and one lead line that says what happened and that the kitchen is still open. One primary pill (*Browse the products*) sits beside one quiet secondary (*Back to the home page*); no account is needed anywhere on it, and every link leads somewhere that sells.
 
 ### 6.18 Trust strip
 
-The band that sits directly under the home hero (§10.1 item 2), carrying the five claims the kitchen can stand behind — delivery, cooking, FSSAI, home-style cooking, one focus. It is drawn as one promise rail, not a badge row: `bg-green-50` with `--line` hairlines top and bottom, and inside it the claims flow in a single line on a wide screen, separated by vertical `--line` hairlines (one column on mobile, two on tablet, three on small desktop). Each claim is a small green icon (2px stroke, `--green-700`) set inline with its bold caption label, and beneath it, when one exists, a specific note in `--ink-600`. A note is rendered only when it says something real — "Small batches, every day", "Oil, salt and portions we control" — so a claim awaiting its detail (the FSSAI licence number) stands on its label alone and the strip never shows a stub. Delivery promises no areas, zones or timings; the note commits only to the schedule agreed by message, matching the FAQ and the policy pages. The copy lives in `src/utilities/homeCopy.ts` (`TRUST`), rendered by `src/components/home/TrustStrip.tsx`.
+The band that sits directly under the home hero (§10.1 item 2), carrying the five claims the kitchen can stand behind — delivery, cooking, FSSAI, home-style cooking, one focus. It is drawn as one promise rail, not a badge row: `bg-green-50` with `--line` hairlines top and bottom, and inside it the claims flow in a single line on a wide screen, separated by vertical `--line` hairlines (one column on mobile, two on tablet, three on small desktop). Each claim opens with a 40px `--green-100` chip carrying its icon (2px stroke, `--green-700`), and the bold caption label sits centred beside the chip with its specific note directly beneath: the note indents to start under its label until the widest rail, where it takes the column's full width so a long note never breaks mid-phrase. A note is rendered only when it says something real — "Small batches, every day", "Oil, salt and portions we control" — so a claim awaiting its detail (the FSSAI licence number) stands on its label alone and the strip never shows a stub. Delivery promises no areas, zones or timings; the note commits only to the schedule agreed by message, matching the FAQ and the policy pages. The copy lives in `src/utilities/homeCopy.ts` (`TRUST`), rendered by `src/components/home/TrustStrip.tsx`.
 
 ## 7. Iconography and Illustration
 
@@ -402,10 +404,10 @@ The band that sits directly under the home hero (§10.1 item 2), carrying the fi
 ### 10.1 Home
 
 1. Hero carousel (§6.3): the seeded first slide reads "Good food, cooked in our own kitchen." + Message us on WhatsApp / How It Works, with four icon chips under the buttons; the kitchen edits and adds slides in the admin under Home page → Home hero
-2. Trust strip (§6.18): five claims — delivery, kitchen, FSSAI, home-style cooking, one focus — as one promise rail on the tint band, hairline-divided on a wide screen
-3. Welcome to UNAVE (two short paragraphs + kitchen photo)
-4. What makes us different (six reasons, numbered cards on the white band)
-5. Choose your product: the four newest open products from the products collection, shown with the same cards `/products` uses — photo, name, the first duration's price in small type, and one small Add to cart control — so a price is never typed twice and someone who knows what they want buys from the front page. One row of four on a wide screen, two on tablet and small phones, with a secondary *"See every product"* link to the full shelf. Cream, so the page keeps its cream and white rhythm. A kitchen with nothing open shows no shelf at all
+2. Trust strip (§6.18): five claims — delivery, kitchen, FSSAI, home-style cooking, one focus — as one promise rail on the tint band, each claim an icon chip beside its label and note, hairline-divided on a wide screen
+3. Choose your product: four open products from the products collection, featured ones first and the newest open products filling any gap, shown with the same cards `/products` uses — photo, name, the first duration's price in small type, and one small Add to cart control — so a price is never typed twice and someone who knows what they want buys from the front page. Staff choose the lead with the **Featured** toggle in the admin; with nothing featured the shelf falls back to newest-first. One row of four on a wide screen, two on tablet and small phones, with a secondary *"See every product"* link to the full shelf. Cream, so the page keeps its cream and white rhythm. A kitchen with nothing open keeps the section and shows one quiet card in place of the grid, with a **Message us on WhatsApp** secondary action and no *See every product* link, so the shelf never leaves a blank gap or a dead end
+4. Welcome to UNAVE (two short paragraphs + kitchen photo)
+5. What makes us different (six reasons, numbered cards on the white band)
 6. What we cook (4 category cards + the goals notice)
 7. How it works (4 steps)
 8. From our kitchen (3 photos with captions)
@@ -426,13 +428,13 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
 ### 10.4 Blog
 
 1. Index (`/blog`) and its paged URLs: the shared green band hero, then the range line (*Showing 1 to 12 of 15 blog posts*), the Grid / List switch whose choice is a query string (`?view=list`) so it can be shared and survives without JavaScript, then the cards three-up, two-up, one-up, or one per row in list view, then the numbered pager: first, last, the current page and one either side, each a 44px target, the current page set as text rather than a link.
-2. Article (`/blog/[slug]`): the green band hero, carrying the post's categories as the eyebrow, the title in Playfair and the byline, on the post's own photograph under a green-900 scrim, and running up behind the transparent navbar. Below it the post's photograph again, this time as the article's picture, 3:2 at 48rem with real alt text, then the body and the related posts. A post with no photograph still gets the band, just without the picture.
+2. Article (`/blog/[slug]`): the green band hero, carrying the post's categories as the eyebrow, the title in Lora and the byline, on the post's own photograph, and running up behind the dark green navbar. Below it the post's photograph again, this time as the article's picture, 3:2 at 48rem with real alt text, then the body and the related posts. A post with no photograph still gets the band, just without the picture.
 
 ### 10.5 Our kitchen
 
 `/our-kitchen`, a static content page in the same voice as the about page, with every string in `src/utilities/ourKitchenCopy.ts`:
 
-1. The shared green band (§6.3): eyebrow "Inside our kitchen", a Playfair headline with the gold accent phrase, one lead line, then Message us on WhatsApp with Browse the plans as the quiet second action, and three small icon chips under them.
+1. The shared green band (§6.3): eyebrow "Inside our kitchen", a Lora headline with the gold accent phrase, one lead line, then Message us on WhatsApp with Browse the plans as the quiet second action, and three small icon chips under them.
 2. What happens before your meal reaches you: five numbered steps in the How-it-works rail (§6.6), fresh produce in, washed and cut, cooked in batches, portioned and packed, checked and dispatched.
 3. Clean ingredients, careful preparation: three photographs at 4:3, each with real alt text and its caption set under the picture rather than on it.
 4. How we plan a plate: four points in two columns, each with a hairline `--line` rule above it, followed by the gold goals notice (§6.9), because the copy names diabetes, allergies and food preferences.
@@ -509,8 +511,8 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
   --warning: #8A5A00;
 
   /* Type */
-  --font-heading: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Lora", Georgia, serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Shape */
   --r-sm: 8px;
@@ -543,8 +545,8 @@ theme: {
       ink:   { 900:'#1B2620',600:'#4A5A52',400:'#7C8A83' },
     },
     fontFamily: {
-      heading: ['Playfair Display','Georgia','serif'],
-      body: ['Inter','system-ui','sans-serif'],
+      heading: ['Lora','Georgia','serif'],
+      body: ['DM Sans','system-ui','sans-serif'],
     },
     borderRadius: { sm:'8px', md:'16px', lg:'24px' },
   },
@@ -575,7 +577,7 @@ theme: {
 
 ## 16. Open Items to Confirm with the Client
 
-1. Exact brand fonts, if any (the logo wordmark is rounded sans; Playfair Display is the current heading choice, chosen for contrast against it).
+1. Exact brand fonts, if any (the logo wordmark is rounded sans; Lora is the current heading choice, chosen for contrast against it).
 2. Delivery areas and timings.
 3. Photography source (shoot vs. licensed) and menu dish list.
 4. Whether to include a Hindi/Tamil language toggle.

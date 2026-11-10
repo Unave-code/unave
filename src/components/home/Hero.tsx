@@ -51,6 +51,7 @@ const toSlide = (slide: NonNullable<HeroGlobal['slides']>[number], whatsapp: nul
     imageSrc:
       getMediaUrl(slide.image && typeof slide.image === 'object' ? slide.image.url : null) ||
       IMAGES.heroBg,
+    overlay: Boolean(slide.overlay),
     primary,
     secondary:
       secondaryLabel && secondaryUrl
@@ -76,6 +77,7 @@ export const Hero: React.FC<{ whatsapp?: null | string }> = async ({ whatsapp })
             headline: `${HERO_HEADLINE} *${HERO_HEADLINE_ACCENT}*`,
             subLine: HERO_SUB,
             imageSrc: IMAGES.heroBg,
+            overlay: false,
             primary: {
               label: whatsapp ? WHATSAPP_CTA_LABEL : WHATSAPP_FALLBACK_LABEL,
               href: whatsapp ? whatsappHref(whatsapp) : HOME_HREF_CONTACT,

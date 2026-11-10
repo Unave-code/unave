@@ -59,7 +59,7 @@ export default async function Post({ params: paramsPromise }: Args) {
   if (!post) return <PayloadRedirects url={url} />
 
   /* The post's own photograph again, this time as the article's picture: the band
-     above carries it behind the title under a scrim, so the reader sees it clearly
+     above carries it behind the title, so the reader sees it clearly
      here before the words start (design.md §10.4). */
   const media = post.heroImage && typeof post.heroImage === 'object' ? post.heroImage : null
   const image = media?.url ? getMediaUrl(media.url, media.updatedAt) : null

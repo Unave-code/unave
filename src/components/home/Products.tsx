@@ -1,13 +1,18 @@
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
+import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { ProductCard } from '@/components/Store/ProductCard'
 import {
+  HOME_HREF_CONTACT,
   PRODUCTS_SECTION_CTA,
+  PRODUCTS_SECTION_EMPTY_BODY,
+  PRODUCTS_SECTION_EMPTY_HEADING,
   PRODUCTS_SECTION_HEADING,
   PRODUCTS_SECTION_INTRO,
 } from '@/utilities/homeCopy'
 import { getHomeProducts } from '@/utilities/products'
+import { WHATSAPP_CTA_LABEL, WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
 import { Section } from './Section'
 
@@ -20,13 +25,15 @@ import { Section } from './Section'
  * follows the card to the product's own page. Prices come from the product
  * records through the same card, so there is no second place to keep them right.
  *
- * A kitchen with nothing open shows no shelf at all rather than an empty
- * heading.
+ * A kitchen with nothing open shows a quiet empty card with a WhatsApp action
+ * instead of disappearing: the shelf sits high on the page, right under the
+ * trust strip, so a blank gap there would read as a broken site rather than a
+ * kitchen between menus. The *See every product* link is dropped in that state,
+ * because it would lead to a catalogue with nothing in it.
  */
-export const ProductShelf: React.FC = async () => {
+export const ProductShelf: React.FC<{ whatsapp?: null | string }> = async ({ whatsapp }) => {
   const products = await getHomeProducts()()
-
-  if (products.length === 0) return null
+  const hasProducts = products.length > 0
 
   return (
     <Section id="products">
@@ -36,16 +43,45 @@ export const ProductShelf: React.FC = async () => {
           <p className="text-body text-ink-600 mt-4">{PRODUCTS_SECTION_INTRO}</p>
         </div>
 
-        <Cta className="shrink-0" href="/products" variant="secondary">
-          {PRODUCTS_SECTION_CTA}
-        </Cta>
+        {hasProducts ? (
+          <Cta className="shrink-0" href="/products" variant="secondary">
+            {PRODUCTS_SECTION_CTA}
+          </Cta>
+        ) : null}
       </div>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} returnPath="/" />
-        ))}
-      </div>
+      {hasProducts ? (
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} returnPath="/" />
+          ))}
+        </div>
+      ) : (
+        <div className="border-line bg-card mt-10 max-w-[52ch] rounded-2xl border p-8">
+          <h3 className="text-h3">{PRODUCTS_SECTION_EMPTY_HEADING}</h3>
+          <p className="text-body text-ink-600 mt-3">{PRODUCTS_SECTION_EMPTY_BODY}</p>
+
+          {whatsapp ? (
+            <div className="mt-6">
+              <Cta
+                href={whatsappHref(whatsapp)}
+                rel="noopener noreferrer"
+                target="_blank"
+                variant="secondary"
+              >
+                <WhatsAppIcon className="size-4" />
+                {WHATSAPP_CTA_LABEL}
+              </Cta>
+            </div>
+          ) : (
+            <div className="mt-6">
+              <Cta href={HOME_HREF_CONTACT} variant="secondary">
+                {WHATSAPP_FALLBACK_LABEL}
+              </Cta>
+            </div>
+          )}
+        </div>
+      )}
     </Section>
   )
 }

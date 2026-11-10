@@ -19,7 +19,9 @@ import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidate
  * admin shows and accepts rupees through the shared money field, which is the
  * only place the two units meet. Turning `available` off pauses a product: it
  * still renders on `/products` with a paused label, but it cannot enter a new
- * order.
+ * order. Turning `featured` on puts a product at the front of the homepage
+ * shelf, so staff choose what the front page leads with instead of relying on
+ * whatever was added last.
  */
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -30,7 +32,7 @@ export const Products: CollectionConfig = {
     update: isStaff,
   },
   admin: {
-    defaultColumns: ['title', 'category', 'available', 'updatedAt'],
+    defaultColumns: ['title', 'category', 'available', 'featured', 'updatedAt'],
     description:
       'The meal products sold on the site. Turn `available` off to pause a product without deleting it; prices are entered and shown in rupees.',
     group: 'Store',
@@ -221,6 +223,17 @@ export const Products: CollectionConfig = {
       defaultValue: true,
       admin: {
         description: 'Off means the product shows a paused label and cannot be bought.',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'featured',
+      label: 'Featured',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.',
         position: 'sidebar',
       },
     },

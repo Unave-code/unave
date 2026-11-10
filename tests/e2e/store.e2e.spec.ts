@@ -246,8 +246,7 @@ test.describe('checkout', () => {
     await expect(page.getByRole('heading', { name: 'Your cart is empty' })).toBeVisible()
     await expect(page.getByText(/There is nothing to pay for yet/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Pay for the order' })).toHaveCount(0)
-    // Scoped to main: the header pill carries the same words since the Site
-    // chrome rename to "Browse the products".
+    // Scoped to main: the header no longer carries a products pill.
     await expect(page.getByRole('main').getByRole('link', { name: 'Browse the products' })).toBeVisible()
   })
 

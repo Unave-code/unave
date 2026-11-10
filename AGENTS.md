@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Design system
 
-`docs/design/design.md` is the UNAVE brand and UI contract: brand green + gold tokens, Playfair Display/Inter type, spacing, radii, shadows, component specs, page blueprints and copy rules. Read it before building or restyling any frontend surface.
+`docs/design/design.md` is the UNAVE brand and UI contract: brand green + gold tokens, Lora/DM Sans type, spacing, radii, shadows, component specs, page blueprints and copy rules. Read it before building or restyling any frontend surface.
 
 Hard constraints from it that override defaults:
 
@@ -24,7 +24,7 @@ Hard constraints from it that override defaults:
 
 ## Site chrome
 
-The navbar and footer are Payload globals, not code: edit them in the admin under **Site chrome** (`/admin/globals/header`, `/admin/globals/footer`). The header owns the menu links, the primary pill and the WhatsApp button; the footer owns the tagline, link columns, contact details, disclaimer and copyright. `src/Header/*` and `src/Footer/*` only render what the CMS returns, so changing copy never means touching a component.
+The navbar and footer are Payload globals, not code: edit them in the admin under **Site chrome** (`/admin/globals/header`, `/admin/globals/footer`). The header owns the menu links, the announcement strip and the WhatsApp button; the footer owns the tagline, link columns, contact details, disclaimer and copyright. `src/Header/*` and `src/Footer/*` only render what the CMS returns, so changing copy never means touching a component.
 
 ## Admin panel
 

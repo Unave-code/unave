@@ -81,7 +81,6 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       <Section
         className="opening-band overflow-hidden bg-green-900 md:py-20"
         image={{ priority: true, src: CONTACT_IMAGES.hero }}
-        overlay="bg-green-900/85"
         tone="green"
       >
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />

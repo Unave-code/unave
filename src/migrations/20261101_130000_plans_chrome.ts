@@ -9,17 +9,15 @@ import type { Footer } from '@/payload-types'
  * and footer render from. Two things move:
  *
  * - the header gains a Plans menu link, so the shelf is one click from
- *   anywhere, and the primary button stops speaking for the removed
- *   subscription store;
+ *   anywhere;
  * - the footer's Explore column gains the same link on a database that has not
  *   been edited by hand yet.
  *
  * Every step is guarded because chrome data is editorial and staff owned. A
- * link is only added when it is missing, and the primary button is only
- * rewritten when it still carries the stale subscription wording, so anything
- * staff have already chosen by hand stays as they left it. On a database with
- * no header row yet, Payload's field defaults apply on read, and the upsert
- * below writes the store aware values in their place.
+ * link is only added when it is missing, so anything staff have already chosen
+ * by hand stays as they left it. On a database with no header row yet, Payload's
+ * field defaults apply on read, and the upsert below writes the store aware
+ * values in their place.
  */
 
 type NavItem = {
@@ -43,14 +41,6 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
     headerData.navItems = [{ link: { ...PLANS_LINK, label: 'Plans' } }]
   } else if (!navItems.some(isPlansLink) && navItems.length < 6) {
     headerData.navItems = [...navItems, { link: { ...PLANS_LINK, label: 'Plans' } }]
-  }
-
-  const cta = header.cta as { label?: string | null; url?: string | null } | null | undefined
-  const staleCta =
-    !cta?.label || cta.label === 'Start My Subscription' || cta.label === 'Message the kitchen'
-
-  if (staleCta) {
-    headerData.cta = { label: 'Order a plan', newTab: false, url: '/plans' }
   }
 
   if (Object.keys(headerData).length > 0) {

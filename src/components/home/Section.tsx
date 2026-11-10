@@ -32,7 +32,7 @@ interface Props {
     /** Set on the one image above the fold so it loads with the document. */
     priority?: boolean
   }
-  /** Scrim laid over `image` so the text keeps its contrast. */
+  /** Scrim laid over `image` so the text keeps its contrast. Omit for none. */
   overlay?: string
 }
 
@@ -41,7 +41,7 @@ export const Section: React.FC<Props> = ({
   className,
   id,
   image,
-  overlay = 'bg-green-900/80',
+  overlay,
   tone = 'cream',
 }) => (
   <section
@@ -59,7 +59,7 @@ export const Section: React.FC<Props> = ({
           sizes="100vw"
           src={image.src}
         />
-        <div aria-hidden="true" className={cn('absolute inset-0', overlay)} />
+        {overlay ? <div aria-hidden="true" className={cn('absolute inset-0', overlay)} /> : null}
       </>
     ) : null}
 

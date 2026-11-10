@@ -277,11 +277,6 @@ export const seed = async ({
             },
           },
         ],
-        cta: {
-          label: 'Browse the products',
-          newTab: false,
-          url: '/products',
-        },
         // Left empty until the business supplies a number, which hides the
         // floating WhatsApp button (design.md §6.2).
         whatsapp: {

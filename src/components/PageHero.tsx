@@ -12,7 +12,7 @@ interface Props {
   accent?: string
   /** One line under the headline. */
   sub: string
-  /** Decorative band photograph, laid under a green-900 scrim. */
+  /** Decorative band photograph. */
   image?: string
   /** Content under the lead line, such as a call to action. */
   children?: React.ReactNode
@@ -20,8 +20,8 @@ interface Props {
 
 /**
  * The green band that opens a content page (design.md §10.1, §10.3): eyebrow, a
- * Playfair headline with a gold accent phrase, one lead line, on a photograph
- * under a green-900 scrim, with the logo swoosh faint behind it.
+ * Lora headline with a gold accent phrase, one lead line, on a photograph, with
+ * the logo swoosh faint behind it.
  *
  * About, Contact and Products each carry their own copy of this band, because each
  * adds something of its own. This is the shared one, so a page added later does
@@ -31,7 +31,6 @@ export const PageHero: React.FC<Props> = ({ accent, children, eyebrow, headline,
   <Section
     className="opening-band overflow-hidden bg-green-900 md:py-20"
     image={image ? { priority: true, src: image } : undefined}
-    overlay="bg-green-900/85"
     tone="green"
   >
     <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />

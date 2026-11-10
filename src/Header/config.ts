@@ -26,9 +26,9 @@ const fillDefault =
 /**
  * The sticky bar at the top of every page (design.md §6.2).
  *
- * Everything here is editorial: the announcement strip above the bar, the links,
- * the primary button and the floating WhatsApp button all come from the CMS, so
- * nothing in the chrome has to be touched in code to change it.
+ * Everything here is editorial: the announcement strip above the bar, the links
+ * and the floating WhatsApp button all come from the CMS, so nothing in the
+ * chrome has to be touched in code to change it.
  */
 export const Header: GlobalConfig = {
   slug: 'header',
@@ -36,8 +36,7 @@ export const Header: GlobalConfig = {
     read: () => true,
   },
   admin: {
-    description:
-      'The top of every page: the announcement strip, menu links, the primary button, WhatsApp.',
+    description: 'The top of every page: the announcement strip, menu links, WhatsApp.',
     group: 'Site chrome',
   },
   fields: [
@@ -122,41 +121,6 @@ export const Header: GlobalConfig = {
         link({
           appearances: false,
         }),
-      ],
-    },
-    {
-      name: 'cta',
-      type: 'group',
-      label: 'Primary button',
-      admin: {
-        description: 'The pill on the right of the bar, repeated at the foot of the mobile menu.',
-      },
-      defaultValue: {
-        label: 'Message the kitchen',
-        url: '/contact',
-      },
-      fields: [
-        {
-          name: 'label',
-          type: 'text',
-          label: 'Label',
-          required: true,
-        },
-        {
-          name: 'url',
-          type: 'text',
-          label: 'Link',
-          required: true,
-          admin: {
-            description: 'A path such as /contact, or a full URL.',
-          },
-        },
-        {
-          name: 'newTab',
-          type: 'checkbox',
-          defaultValue: false,
-          label: 'Open in a new tab',
-        },
       ],
     },
     {

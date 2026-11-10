@@ -17,6 +17,8 @@ import * as migration_20261105_170000_plan_category_audience from './20261105_17
 import * as migration_20261106_120000_plan_subcategories from './20261106_120000_plan_subcategories';
 import * as migration_20261107_100000_rename_plans_to_products from './20261107_100000_rename_plans_to_products';
 import * as migration_20261109_100000_hero_global from './20261109_100000_hero_global';
+import * as migration_20261110_120000_product_featured from './20261110_120000_product_featured';
+import * as migration_20261110_130000_hero_slide_overlay from './20261110_130000_hero_slide_overlay';
 
 
 export const migrations = [
@@ -114,5 +116,15 @@ export const migrations = [
     up: migration_20261109_100000_hero_global.up,
     down: migration_20261109_100000_hero_global.down,
     name: '20261109_100000_hero_global',
+  },
+  {
+    up: migration_20261110_120000_product_featured.up,
+    down: migration_20261110_120000_product_featured.down,
+    name: '20261110_120000_product_featured',
+  },
+  {
+    up: migration_20261110_130000_hero_slide_overlay.up,
+    down: migration_20261110_130000_hero_slide_overlay.down,
+    name: '20261110_130000_hero_slide_overlay',
   },
 ];

@@ -12,7 +12,8 @@ interface Props {
 
 /**
  * The strip above the navbar (design.md §6.2). It pins to the top of the viewport
- * together with the bar beneath it, so the news stays visible while scrolling.
+ * together with the bar beneath it, and shows only while the page sits at the
+ * top; the header tucks it away as soon as the visitor scrolls.
  *
  * The whole bar is one link, so the tap target is the full strip rather than a
  * small word inside it (design.md §12). The focus ring is drawn inside the strip

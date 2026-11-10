@@ -163,11 +163,14 @@ export const CATEGORIES = [
   },
 ] as const
 
-/** 6b. Products. The newest open products from the products collection, three at most. */
+/** 6b. Products. Featured open products first, then the newest open ones, four at most. */
 export const PRODUCTS_SECTION_HEADING = 'Choose your product'
 export const PRODUCTS_SECTION_INTRO =
   'A product is a length of meals cooked from this kitchen, paid once. Pick the length that suits your week and we cook from it.'
 export const PRODUCTS_SECTION_CTA = 'See every product'
+export const PRODUCTS_SECTION_EMPTY_HEADING = 'The menu is being set'
+export const PRODUCTS_SECTION_EMPTY_BODY =
+  'No products are open right now. Message the kitchen and we will tell you what we can cook for you this week.'
 
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */
 export const NOTICE_TITLE = 'A note on your goals'

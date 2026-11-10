@@ -10,8 +10,8 @@ import { getMediaUrl } from '@/utilities/getMediaUrl'
 
 /**
  * The band that opens one blog post (design.md §10.4): the post's categories as
- * the eyebrow, the title in Playfair, then the byline, on the post's own
- * photograph under a green-900 scrim. The band is marked `.opening-band`, so it
+ * the eyebrow, the title in Lora, then the byline, on the post's own
+ * photograph. The band is marked `.opening-band`, so it
  * runs up behind the transparent navbar. A post without a hero image still gets
  * the band, just without the photograph.
  */
@@ -34,7 +34,6 @@ export const BlogPostHeader: React.FC<{ post: Post }> = ({ post }) => {
     <Section
       className="opening-band overflow-hidden bg-green-900 md:py-20"
       image={image ? { priority: true, src: image } : undefined}
-      overlay="bg-green-900/85"
       tone="green"
     >
       <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
