@@ -36,7 +36,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const totalColumns = columns.length + (hasContact ? 1 : 0)
 
   return (
-    <footer className="bg-green-900 text-green-700 text-body relative mt-auto overflow-hidden border-t border-gold-600/25">
+    <footer className="bg-green-900 text-green-700 text-body relative mt-auto overflow-hidden">
       <Image
         alt=""
         aria-hidden="true"
