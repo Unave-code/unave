@@ -50,7 +50,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
       <Swoosh className="-right-40 -bottom-56 w-[32rem] text-gold-400/[0.035]" />
 
       <div className="container relative">
-        <div className="grid gap-12 py-14 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
+        <div className="grid gap-12 py-20 md:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
           <div className="max-w-sm">
             <Link
               aria-label="UNAVE home"
@@ -135,7 +135,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-green-900/15 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex flex-col gap-4 border-t border-green-900/15 py-8 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
           {data?.notice ? (
             <p className="text-caption text-cream font-bold max-w-[70ch]">{data.notice}</p>
           ) : (
