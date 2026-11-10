@@ -116,37 +116,40 @@ Alternate sections to keep pages calm and scannable:
 
 ## 4. Typography
 
-The logo uses a rounded geometric sans. Headings deliberately contrast with it: a warm editorial serif reads richer and more considered than a rounded sans at display sizes.
+The logo uses a rounded geometric sans. Body text continues that character in Plus Jakarta Sans, and headings deliberately contrast with it: a warm editorial serif reads richer and more considered than a rounded sans.
 
 | Role | Font | Fallback |
 | --- | --- | --- |
 | Headings | **Lora** (600, 700, italic), warm editorial serif | `"Lora", Georgia, serif` |
-| Body / UI | **DM Sans** (400, 500, 600, 700), clean geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| Body / UI | **Plus Jakarta Sans** (400, 500, 600, 700, italic), warm geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Wordmark | Use supplied logo artwork only, never retype | n/a |
 
 Load via Google Fonts with `display=swap`. Include real fallback stacks.
 
-### Type scale (desktop / mobile)
+### Type scale
 
-Sizes are fluid: every step below is a `clamp()` between the mobile and desktop values, keyed to the viewport (`globals.css`), so headings ease down on a small screen instead of jumping at one breakpoint.
+Sizes are fixed, not fluid: one small size per role, identical on every viewport, so no page or section ever reads bigger than another (`globals.css`). Heading hierarchy is weight-led — the display size, H1, H2 and H3 all sit at 22px, and hierarchy comes from weight, colour and the italic gold phrase, never from size jumps between screens.
 
 | Style | Size | Line height | Weight | Notes |
 | --- | --- | --- | --- | --- |
-| Display (hero H1) | 60px / 36px | 1.08 | 700 | Letter-spacing -0.02em. One phrase may be italic |
-| H1 | 44px / 32px | 1.15 | 700 | Letter-spacing -0.015em |
-| H2 | 34px / 26px | 1.2 | 700 | Section titles, letter-spacing -0.01em |
-| H3 | 22px / 20px | 1.35 | 600 | Card titles |
-| Lead / hero sub-line | 20px / 17px | 1.55 | 400 | `--ink-600` or cream on green |
-| Body | 17px / 16px | 1.65 | 400 | Max width 65ch |
-| Small / caption | 14px | 1.5 | 500 | |
-| Button | 16px | 1 | 700 | Not uppercase |
-| Eyebrow / label | 13px | 1.2 | 700 | Uppercase, 0.12em tracking, gold-600 |
+| Display (hero H1) | 22px | 1.3 | 700 | Same size as every heading; one phrase may be italic gold |
+| H1 | 22px | 1.3 | 700 | |
+| H2 | 22px | 1.3 | 700 | Section titles |
+| H3 | 22px | 1.35 | 600 | Card titles, semibold |
+| Lead / hero sub-line | 16px | 1.55 | 400 | `--ink-600` or cream on green |
+| Body | 15px | 1.65 | 400 | Max width 65ch |
+| Small / caption | 13px | 1.5 | 500 | |
+| Button | 15px | 1 | 700 | Not uppercase |
+| Eyebrow / label | 11px | 1.2 | 700 | Uppercase, 0.12em tracking, gold-600 |
+
+Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) are remapped onto the same scale in `globals.css`, so a stray default utility never reintroduces a size the contract doesn't have.
 
 **Rules**
 
 - Sentence case everywhere. Reserve ALL CAPS for the wordmark and eyebrow labels.
 - Hero headlines can emphasize one phrase in gold (e.g. "planned for your *whole month*").
 - Keep line length 45 to 75 characters.
+- Hierarchy is weight-led: never make a heading outrank another by size — use weight (700 vs 600) or colour.
 
 ---
 
@@ -249,7 +252,7 @@ Four steps: Tell us what you need → We plan the week → We cook and deliver �
 
 ### 6.8 FAQ accordion
 
-- Question in H3 style, chevron icon right. Open state: green-50 background. First item open by default.
+- Question in bold body type (15px, weight-led per §4 — never the 22px heading size), chevron icon right. Open state: green-50 background. First item open by default.
 - Smooth 200ms height transition. Keyboard accessible (`button` with `aria-expanded`).
 
 ### 6.9 Notice / disclaimer block
@@ -341,7 +344,7 @@ Enquiries are stored in the `enquiries` collection (staff read in the admin, one
 Added with the products and payments feature (spec 0007). Copy lives beside each page (`productsCopy.ts`, `productsCategoryCopy.ts`, `cartCopy.ts`, `checkout/copy.ts`, `order-placed/copy.ts`); money is always shown through the shared `formatPaise` paise formatter, never hand formatted. The store pages read live data on every request, so nothing in this section is ever cached.
 
 - **Products (`/products`)** — the deep green hero band with swoosh, gold-accented headline, and one primary pill (*Browse the products*, anchored to the grid). The grid is photo-first cards, almost chromeless: the photo fills the whole card edge-to-edge at 4:3 in a soft rounded frame with no border, and the name — in the heading serif, cream — and the cheapest per-day rate (*From ₹59 a day*, floored to whole rupees so the lead never promises more precision than the totals carry) sit on a deep green gradient band along the photo's bottom edge. The audience (Kids, Adults, Special) rides as a cream pill on the photo's top-left, and a paused product gains a gold **Paused** pill beside it, its lead price still readable and nothing to add. The whole card is one stretched link to the product's own page — the band's words let clicks fall through to it, and the card's focus ring is drawn by the card itself — so open and buy stay two separate controls: one gold **Add to cart** pill (44px, the on-dark variant) sits in the band adding the record's first duration through the same POST `/api/cart/add` flow and the same polite confirmation line as the product page, revealed on hover or focus on a fine pointer (the `.card-reveal` utility in `globals.css`) and always visible on touch, the confirmation sharing the price's line so nothing shifts. The photo is the product record's `image`; when the kitchen has not uploaded one, the card falls back to a branded placeholder (`/images/product-placeholder.jpg`, the gold wordmark on deep green), so a card is never a blank box. The gold notice block (§6.9) sits under the grid explaining what *paused* means. The empty state is one quiet card with a **Message us on WhatsApp** secondary action, never a dead end. A three-step *How a product works* list sits on the tint band, and the closing band carries the final CTA.
-- **Product page (`/products/<slug>`)** — the room the card opens: a wide two-column spread on desktop. The photo fills the left column at 4:3, and under it the description follows, then the product's points as a two-column list, each point check-marked in a small green chip. The right column carries the badges — the category badge (a link back to that category's page), the audience badge and, on a paused product, a gold **Paused** badge — then a gold subcategory eyebrow above the name, the page heading with its own canonical address, and the price panel, a hairline card pinned beside the scrolling left column (`lg:sticky`): the chosen duration's per day price leads in DM Sans bold with a quiet *a day* beside it and the total in one line under it, one native radio chip per duration follows, each carrying its label and total price so every duration and price renders without JavaScript, then one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill in the footer's number. Prices stay in DM Sans rather than the heading serif, where the rupee sign reads most clearly at display size. On a phone the buy panel follows the photo before any reading, and the description flows after. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
+- **Product page (`/products/<slug>`)** — the room the card opens, and it keeps the card's language in two columns on desktop. The photo fills the left column at 4:3, and the name rides the card's gradient band along its bottom edge with the badges beside it — the category chip (a link back to that category's page), the audience chip and, on a paused product, a gold **Paused** chip — above a gold subcategory eyebrow; the page heading with its own canonical address is the band's last line. Under the photo the product's points read as a two-column list, each point check-marked in a small green chip. The right column is the buy column, pinned beside the scrolling left (`lg:sticky`): the bare buy panel, no box, hairline-divided, leads it — the chosen duration's per day price leads in Plus Jakarta Sans bold with a quiet *a day* beside it and the total in one line under it, a hairline, then one native radio chip per duration, each carrying its label and total price so every duration and price renders without JavaScript, another hairline, then one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill in the footer's number — and the description sits under the panel. Prices stay in the body sans rather than the heading serif, where the rupee sign reads most clearly. On a phone the buy column — panel then description — follows the photo before the points. Below the two columns the rest of the same shelf appears as cards under a **More from the kitchen** heading: up to three related products from the product's own category, newest first, this one left out, each a full card opening its own page. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
 - **Product category pages (`/products/[category]`)** — one page per category (ready to cook, ready to eat, fresh from produce), served by one dynamic route, reusing the products page's green band and card grid. One centered row of icon pills (All, Kids, Adults, Special) sits above the grid: a 44px pill carrying a lucide icon beside its label, the chosen pill filling `--green-700` with cream text and the rest keeping the line border that goes green on hover. The art is code, one icon per audience. Both empty states (an empty category, or a filter that matches nothing) are centered cards under the pills. Every pill stays 44px minimum, animates colour only, keeps the visible label as its accessible name (the icon is decorative), and filters the server rendered cards in the browser with no reload and no change to the address (spec 0008).
 - **Header cart control** — not hardcoded: staff add a link to `/cart` in Site chrome like any menu link, and the header recognises that address and renders the live line count beside the label. On the desktop bar it is presented in the right-hand action group, beside the search control, rather than in the middle of the menu; the mobile drawer keeps it as a row of its own. The count reads the cart cookie, which is readable by JavaScript on purpose and carries nothing private, so adding a line updates it instantly with no request. Without JavaScript the label still links to the cart; only the number waits for hydration.
 - **Cart (`/cart`)** — `noindex, nofollow`, and no account needed to look. The cookie names a product and a duration per line; every title, day count and price is read from the live product records here. Each line is a row with the product title, duration and days, its price, and a quiet **Remove** pill that posts to `/api/cart/remove`, so the page works without JavaScript. The total sums the usable lines under a rule, and one primary **Go to checkout** pill sits beside a quiet *Keep browsing products* link. An empty cart is one card with a **Browse the products** pill, never a dead end. A line whose product left the menu, is paused or lost its duration is marked **No longer available**, excluded from the total, and blocks checkout until it is removed; the sentence above the list says so.
@@ -355,7 +358,7 @@ Added with the products and payments feature (spec 0007). Copy lives beside each
 The admin is a staff tool rather than a customer surface, and it wears the brand without pretending to be the site. It is themed in one file, `src/app/(payload)/custom.scss`, by overriding Payload's own variables instead of rewriting its components:
 
 - **Colour** — Payload's neutral `--color-base-*` scale becomes the UNAVE warm greys, from cream white at `0` to green black at `1000`. Payload reverses that one scale for dark mode, so light and dark are branded by the same definition. Green carries `success`, gold carries `warning`, and errors stay a warm brick that reads on white and on deep green.
-- **Type** — DM Sans and Lora load through `next/font` in `AdminFonts` (an `admin.components.providers` entry) and point Payload's `--font-body` and `--font-serif` at the site's two typefaces.
+- **Type** — Plus Jakarta Sans and Lora load from Google Fonts in `custom.scss`, which points Payload's `--font-body` and `--font-serif` at the site's two typefaces. (A provider component registered under `admin.components.providers` cannot reliably resolve through the dev import map, so the stylesheet route is the one the admin actually wears.)
 - **Shape** — `--style-radius-s/m/l` are 6/10/16px, tighter than the site's pills, because the admin is a working tool.
 - **Brand moments** — sign in is the deep green band with a gold-edged card and the Lora wordmark, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions.
 - **Money** — staff read and type rupees. `RupeeField` (with `RupeeCell` for list columns) shows rupees and still stores paise, so the database and the gateway are never touched.
@@ -514,7 +517,7 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
 
   /* Type */
   --font-heading: "Lora", Georgia, serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Shape */
   --r-sm: 8px;
@@ -548,7 +551,7 @@ theme: {
     },
     fontFamily: {
       heading: ['Lora','Georgia','serif'],
-      body: ['DM Sans','system-ui','sans-serif'],
+      body: ['Plus Jakarta Sans','system-ui','sans-serif'],
     },
     borderRadius: { sm:'8px', md:'16px', lg:'24px' },
   },

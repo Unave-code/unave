@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
-import { DM_Sans, Lora } from 'next/font/google'
+import { Lora, Plus_Jakarta_Sans } from 'next/font/google'
 import React from 'react'
 
 import { Providers } from '@/providers'
@@ -12,7 +12,7 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
-// design.md §4: Lora for headings, DM Sans for body and UI. Only the weights used.
+// design.md §4: Lora for headings, Plus Jakarta Sans for body and UI. Only the weights used.
 const lora = Lora({
   subsets: ['latin'],
   weight: ['600', '700'],
@@ -21,17 +21,18 @@ const lora = Lora({
   display: 'swap',
 })
 
-const dmSans = DM_Sans({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
+  style: ['normal', 'italic'],
+  variable: '--font-jakarta',
   display: 'swap',
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      className={cn(lora.variable, dmSans.variable, GeistMono.variable)}
+      className={cn(lora.variable, jakarta.variable, GeistMono.variable)}
       data-theme="light"
       lang="en"
       suppressHydrationWarning

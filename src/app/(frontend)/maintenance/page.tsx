@@ -37,11 +37,11 @@ export default function Maintenance() {
 
       <div className="logo-lockup text-gold-400" style={{ '--logo-height': '44px' } as React.CSSProperties} />
 
-      <h1 className="mt-10 font-heading text-4xl leading-tight font-bold text-cream sm:text-5xl">
+      <h1 className="text-display mt-10 font-heading text-cream">
         The kitchen is having a <em className="text-gold-400 italic">short break</em>
       </h1>
 
-      <p className="mt-4 max-w-[46ch] text-base leading-relaxed text-cream/85 sm:text-lg">
+      <p className="text-lead text-cream/85 mt-4 max-w-[46ch]">
         We&rsquo;re tidying up behind the counter and will be back shortly. Your products and orders
         are safe.
       </p>

@@ -45,11 +45,11 @@ export const Faq: React.FC<Props> = ({
               key={item.question}
               open={index === 0}
             >
-              <summary className="text-h3 flex cursor-pointer list-none items-center justify-between gap-4 py-5 [&::-webkit-details-marker]:hidden">
+              <summary className="text-body flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-bold [&::-webkit-details-marker]:hidden">
                 {item.question}
                 <ChevronDown
                   aria-hidden="true"
-                  className="text-green-700 size-5 shrink-0 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+                  className="text-green-700 size-4 shrink-0 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
                   strokeWidth={2}
                 />
               </summary>

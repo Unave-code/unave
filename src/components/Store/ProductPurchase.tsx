@@ -13,13 +13,14 @@ import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
 import { useAddToCart } from './useAddToCart'
 
 /**
- * The price panel on one product's own page (spec 0007, AC-1 and AC-2).
+ * The buy panel on one product's own page (spec 0007, AC-1 and AC-2).
  *
- * Laid out like a pricing card: the chosen duration's per day price leads, the
- * duration chips carry every total at once, and one full width control adds the
- * chosen line to the cart. The chips are native radios inside a POST form, so
- * every duration and price renders without JavaScript and adding a line is a
- * plain form post that redirects back. The add behaviour itself lives in
+ * Bare and hairline-divided: the chosen duration's per day price leads, a
+ * hairline, the duration chips carrying every total at once, a hairline, and
+ * one full width control that adds the chosen line to the cart — nothing
+ * boxed around them. The chips are native radios inside a POST form, so every
+ * duration and price renders without JavaScript and adding a line is a plain
+ * form post that redirects back. The add behaviour itself lives in
  * useAddToCart, shared with the card's button.
  *
  * The browser never sends a price or a day count: the endpoint resolves the
@@ -64,13 +65,13 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   const perDay = duration.days > 0 ? Math.round(duration.price / duration.days) : null
 
   return (
-    /* The panel is a quiet card of its own: a hairline box that reads as the
-       one object to act on while it stays pinned beside the scrolling photo
-       and description. */
-    <div className="border-line bg-card rounded-2xl border p-6 sm:p-8">
+    /* The panel is bare: the price, the chips and the control sit directly on
+       the page, divided by hairlines, while the column stays pinned beside the
+       reading. */
+    <div>
       <div aria-live="polite">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-green-700 text-4xl leading-none font-bold tracking-tight sm:text-5xl">
+          <span className="text-h2 text-green-700">
             {formatPaise(perDay ?? duration.price)}
           </span>
           {perDay !== null ? <span className="text-ink-600 text-sm">a day</span> : null}
@@ -82,11 +83,11 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
         </p>
       </div>
 
-      <form action="/api/cart/add" className="mt-6" method="post" onSubmit={onSubmit}>
+      <form action="/api/cart/add" className="mt-5" method="post" onSubmit={onSubmit}>
         <input name="product" type="hidden" value={productSlug} />
         <input name="return" type="hidden" value={returnPath} />
 
-        <fieldset>
+        <fieldset className="border-line border-t pt-5">
           <legend className="sr-only">Choose a duration for {productTitle}</legend>
 
           <div className="flex flex-wrap gap-2">
@@ -118,7 +119,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
           </div>
         </fieldset>
 
-        <div className="mt-6 flex flex-col gap-2">
+        <div className="border-line mt-5 flex flex-col gap-2 border-t pt-5">
           <button
             className={cn(CTA_BASE, CTA_VARIANTS.primary, 'w-full')}
             disabled={pending}

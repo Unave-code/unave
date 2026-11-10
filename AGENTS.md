@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Design system
 
-`docs/design/design.md` is the UNAVE brand and UI contract: brand green + gold tokens, Lora/DM Sans type, spacing, radii, shadows, component specs, page blueprints and copy rules. Read it before building or restyling any frontend surface.
+`docs/design/design.md` is the UNAVE brand and UI contract: brand green + gold tokens, Lora/Plus Jakarta Sans type, spacing, radii, shadows, component specs, page blueprints and copy rules. Read it before building or restyling any frontend surface.
 
 Hard constraints from it that override defaults:
 
@@ -28,4 +28,4 @@ The navbar and footer are Payload globals, not code: edit them in the admin unde
 
 ## Admin panel
 
-The Payload admin is branded, never plain. `src/app/(payload)/custom.scss` overrides Payload's theme variables (`--color-base-*`, the success/warning/error scales, `--style-radius-*`) so one definition colours both light and dark. Restyle by overriding variables and adding unlayered rules against Payload's own class names, never by rewriting its components. The site typefaces load through `next/font` in `src/components/Admin/AdminFonts.tsx`, registered under `admin.components.providers`. `BeforeLogin`, `BeforeDashboard`, `AdminLogo` and `AdminIcon` carry the brand; money fields read and write rupees through `RupeeField` and `RupeeCell` while the database keeps paise.
+The Payload admin is branded, never plain. `src/app/(payload)/custom.scss` overrides Payload's theme variables (`--color-base-*`, the success/warning/error scales, `--style-radius-*`) so one definition colours both light and dark. Restyle by overriding variables and adding unlayered rules against Payload's own class names, never by rewriting its components. The site typefaces load through `next/font` in `src/app/(frontend)/layout.tsx`; the admin loads the same two families from Google Fonts via `src/app/(payload)/custom.scss`, which points Payload's `--font-body` and `--font-serif` at them. `BeforeLogin`, `BeforeDashboard`, `AdminLogo` and `AdminIcon` carry the brand; money fields read and write rupees through `RupeeField` and `RupeeCell` while the database keeps paise.

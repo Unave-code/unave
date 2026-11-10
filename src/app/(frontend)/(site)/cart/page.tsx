@@ -169,7 +169,7 @@ export default async function CartPage({
           <aside className="border-line rounded-2xl border bg-white p-6 sm:p-8">
             <h2 className="text-h3">{CART_SUMMARY_HEADING}</h2>
 
-            <p className="text-green-700 mt-3 text-2xl font-bold">{formatPaise(cart.total)}</p>
+            <p className="text-h2 text-green-700 mt-3">{formatPaise(cart.total)}</p>
 
             <p className="text-ink-600 mt-3 text-sm leading-6">{CART_SUMMARY_BODY}</p>
           </aside>

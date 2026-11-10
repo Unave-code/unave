@@ -52,44 +52,49 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
 
-  /* Type — Lora for headings, DM Sans for body and UI (design.md §4) */
-  --font-sans: var(--font-dm-sans);
-  --font-body: var(--font-dm-sans);
+  /* Type — Lora for headings, Plus Jakarta Sans for body and UI (design.md §4) */
+  --font-sans: var(--font-jakarta);
+  --font-body: var(--font-jakarta);
   --font-heading: var(--font-lora);
   --font-mono: var(--font-geist-mono);
 
-  /* Type scale, fluid between the mobile and desktop sizes (design.md §4). Each
-     step interpolates with the viewport, so headings ease down on smaller screens
-     instead of jumping at one breakpoint. */
-  --text-display: clamp(2.25rem, 1.69rem + 2.286vw, 3.75rem);
-  --text-display--line-height: 1.08;
-  --text-display--letter-spacing: -0.02em;
+  /* Type scale — one small, fixed size per role (design.md §4). No fluid
+     interpolation and no stepped hierarchy: every heading on every page reads
+     at the same 22px and hierarchy comes from weight and colour, so sections
+     and pages never jump in size. */
+  --text-display: 22px;
+  --text-display--line-height: 1.3;
   --text-display--font-weight: 700;
-  --text-h1: clamp(2rem, 1.72rem + 1.143vw, 2.75rem);
-  --text-h1--line-height: 1.15;
-  --text-h1--letter-spacing: -0.015em;
+  --text-h1: 22px;
+  --text-h1--line-height: 1.3;
   --text-h1--font-weight: 700;
-  --text-h2: clamp(1.625rem, 1.44rem + 0.762vw, 2.125rem);
-  --text-h2--line-height: 1.2;
-  --text-h2--letter-spacing: -0.01em;
+  --text-h2: 22px;
+  --text-h2--line-height: 1.3;
   --text-h2--font-weight: 700;
-  --text-h3: clamp(1.25rem, 1.2rem + 0.19vw, 1.375rem);
+  --text-h3: 22px;
   --text-h3--line-height: 1.35;
   --text-h3--font-weight: 600;
-  --text-lead: clamp(1.0625rem, 0.99rem + 0.286vw, 1.25rem);
+  --text-lead: 16px;
   --text-lead--line-height: 1.55;
-  --text-body: clamp(1rem, 0.98rem + 0.095vw, 1.0625rem);
+  --text-body: 15px;
   --text-body--line-height: 1.65;
-  --text-caption: 0.875rem;
+  --text-caption: 13px;
   --text-caption--line-height: 1.5;
   --text-caption--font-weight: 500;
-  --text-button: 1rem;
+  --text-button: 15px;
   --text-button--line-height: 1;
   --text-button--font-weight: 700;
-  --text-eyebrow: 0.8125rem;
+  --text-eyebrow: 11px;
   --text-eyebrow--line-height: 1.2;
   --text-eyebrow--letter-spacing: 0.12em;
   --text-eyebrow--font-weight: 700;
+
+  /* Tailwind's built-in steps are remapped onto the same scale, so a stray
+     text-sm, text-base or text-lg anywhere never reintroduces a size the
+     contract doesn't have. */
+  --text-base: 15px;
+  --text-sm: 13px;
+  --text-lg: 16px;
 
   /* Radius — soft and rounded, echoing the logo (design.md §5) */
   --radius-sm: 8px;

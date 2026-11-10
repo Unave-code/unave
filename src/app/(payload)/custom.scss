@@ -1,0 +1,11 @@
+/* The admin wears the site's typefaces (design.md §4). The two brand families
+   load from Google Fonts here — the admin is a staff surface, so the handful
+   of extra bytes over next/font's self-hosting are not worth the plumbing —
+   and Payload's own font tokens are pointed at them, so one definition
+   styles both the site and the admin. */
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+}

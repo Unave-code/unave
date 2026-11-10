@@ -10,6 +10,7 @@ import type { Footer, Product } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { productPageDescription } from '@/utilities/productPageCopy'
+import { fetchRelatedProducts } from '@/utilities/products'
 import {
   isProductCategory,
   PRODUCT_CATEGORY_COPY,
@@ -99,6 +100,7 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null
+  const related = await fetchRelatedProducts(product)
 
-  return <ProductDetail product={product} whatsapp={whatsapp} />
+  return <ProductDetail product={product} related={related} whatsapp={whatsapp} />
 }

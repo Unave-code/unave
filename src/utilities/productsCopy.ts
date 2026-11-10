@@ -46,6 +46,8 @@ export const PRODUCTS_PAUSED_NOTE_TITLE = 'What "paused" means'
 export const PRODUCTS_PAUSED_NOTE_BODY =
   'A paused product is still shown because it may come back, but it cannot be bought today. Message us if you were hoping to start with one of them.'
 
+export const PRODUCTS_RELATED_HEADING = 'More from the kitchen'
+
 export const PRODUCTS_HOW_HEADING = 'How a product works'
 export const PRODUCTS_HOW_STEPS = [
   {

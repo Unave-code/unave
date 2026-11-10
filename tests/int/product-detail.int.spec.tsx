@@ -22,12 +22,21 @@ vi.mock('next/image', () => ({
     React.createElement('img', rest),
 }))
 
+// The related shelf renders real cards; what the page holds is that the cards
+// it is given appear under the points, so the card is a stub here.
+vi.mock('@/components/Store/ProductCard', () => ({
+  ProductCard: ({ product }: { product: Product }) =>
+    React.createElement('div', { 'data-testid': 'related-card' }, product.title),
+}))
+
 /**
  * A product's own page (design.md §6.15), the room the card opens.
  *
- * A wide spread on desktop: photo and reading on the left, the name, badges and
- * the price panel on the right, pinned there while the left scrolls. The page
- * carries what the card gave up: the subcategory eyebrow, the category and
+ * Two columns on desktop: the photo on the left with the name riding its
+ * gradient band, the points flowing under it, and the buy column pinned
+ * sticky on the right — the bare hairline-divided panel first, the
+ * description under it. Related products from the same shelf sit below the
+ * points. The page carries what the card gave up: the subcategory eyebrow, the category and
  * audience badges, the description and the points. A paused product renders in
  * full with nothing to add.
  */
@@ -77,5 +86,32 @@ describe('a product page', () => {
     expect(screen.getByText(/This product is paused right now/)).toBeTruthy()
     expect(screen.getByText('₹499')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
+  })
+
+  it('reads the description below the price and the related shelf below the points', () => {
+    const related = [
+      openProduct,
+      { ...openProduct, id: 2, title: 'Weekly thali' },
+    ] as unknown as Product[]
+
+    render(<ProductDetail product={openProduct} related={related} />)
+
+    // The description trails the buy panel: the price control precedes it.
+    const description = screen.getByTestId('rich-text')
+    const add = screen.getByRole('button', { name: 'Add to cart' })
+    expect(
+      add.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+
+    expect(screen.getByRole('heading', { name: 'More from the kitchen' })).toBeTruthy()
+    expect(screen.getAllByTestId('related-card')).toHaveLength(2)
+    expect(screen.getByText('Weekly thali')).toBeTruthy()
+  })
+
+  it('offers no related shelf when none is passed', () => {
+    render(<ProductDetail product={openProduct} />)
+
+    expect(screen.queryByRole('heading', { name: 'More from the kitchen' })).toBeNull()
+    expect(screen.queryAllByTestId('related-card')).toHaveLength(0)
   })
 })
