@@ -17,7 +17,8 @@ import { WHATSAPP_CTA_LABEL, WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/uti
 import { Section } from './Section'
 
 /**
- * The products shelf, four at most (design.md §10.1).
+ * The products shelf, twelve at most (design.md §10.1): three rows of four on a
+ * wide screen, two columns on tablet and phones.
  *
  * The cards are the ones `/products` uses, not a summary of them: photo-first,
  * the name and the cheapest per-day rate on a gradient band, and one Add to

@@ -10,10 +10,12 @@ import type { Product } from '@/payload-types'
  *
  * The shelf is a window onto the same collection `/products` reads, so a price
  * can never be typed twice. Featured open products come first, in the order
- * `/products` lists them, and the newest open products fill the rest up to four:
- * a homepage is a shelf, not a catalogue. Marking a product featured in the
- * admin is how staff choose what the front page leads with, and a kitchen that
- * has not featured anything still gets a shelf of its newest work.
+ * `/products` lists them, and the newest open products fill the rest up to
+ * twelve: three rows of four on a wide screen, which is as much as the front
+ * page should hold before it stops being a shelf and starts being the catalogue.
+ * Marking a product featured in the admin is how staff choose what the front
+ * page leads with, and a kitchen that has not featured anything still gets a
+ * shelf of its newest work.
  *
  * A paused product is never advertised, featured or not: its label belongs on
  * `/products`, where the customer is already comparing them, not on the front
@@ -24,8 +26,8 @@ import type { Product } from '@/payload-types'
  * price edited in the admin shows on the homepage without a rebuild.
  */
 
-/** How many products the homepage shows. */
-export const HOME_PRODUCT_COUNT = 4
+/** How many products the homepage shows: three rows of four on a wide screen. */
+export const HOME_PRODUCT_COUNT = 12
 
 const findOpenProducts = async (limit: number): Promise<Product[]> => {
   const payload = await getPayload({ config: configPromise })
