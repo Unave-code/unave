@@ -31,7 +31,7 @@ import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
  * One chip on the photo's gradient band. The category chip is the only one
  * that is a link — it leads back to the shelf the product belongs to.
  */
-const HERO_CHIP = 'rounded-pill inline-flex px-3 py-1 text-xs font-bold tracking-wide uppercase shadow-sm'
+const HERO_CHIP = 'rounded-pill inline-flex px-3 py-1 text-xs font-bold tracking-wide uppercase shadow-sm ring-1 backdrop-blur-sm'
 
 /**
  * One product's own page (design.md §6.15).
@@ -111,7 +111,7 @@ export const ProductDetail: React.FC<{
             reading, and the reading flows under the photo. */}
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10">
           <div className="lg:col-span-7 lg:row-start-1">
-            <div className="border-line bg-green-50 relative aspect-[4/3] w-full overflow-hidden rounded-lg border">
+            <div className="border-line bg-green-50 relative isolate aspect-[4/3] w-full overflow-hidden rounded-lg border">
               {image?.url ? (
                 <Media
                   alt={imageAlt}
@@ -137,7 +137,7 @@ export const ProductDetail: React.FC<{
                   {product.category ? (
                     <Link
                       aria-label={categoryBadgeAriaLabel(product.category)}
-                      className={`${HERO_CHIP} bg-green-100 text-green-800 transition-colors hover:bg-green-200 focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none`}
+                      className={`${HERO_CHIP} bg-green-100 text-green-800 ring-green-200/60 transition-colors hover:bg-green-200 focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none`}
                       href={productCategoryHref(product.category)}
                     >
                       {CATEGORY_LABEL[product.category]}
@@ -145,13 +145,13 @@ export const ProductDetail: React.FC<{
                   ) : null}
 
                   {product.audience ? (
-                    <span className={`${HERO_CHIP} bg-cream text-green-900`}>
+                    <span className={`${HERO_CHIP} bg-green-900/70 text-cream ring-cream/25`}>
                       {AUDIENCE_LABEL[product.audience]}
                     </span>
                   ) : null}
 
                   {!product.available ? (
-                    <span className={`${HERO_CHIP} bg-gold-400 text-green-900`}>Paused</span>
+                    <span className={`${HERO_CHIP} bg-gold-400 text-green-900 ring-gold-300/70`}>Paused</span>
                   ) : null}
                 </div>
 

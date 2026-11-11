@@ -14,7 +14,7 @@ import { AddToCartButton } from './AddToCartButton'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
 const PHOTO_PILL =
-  'rounded-pill inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide uppercase shadow-sm'
+  'rounded-pill inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide uppercase shadow-sm ring-1 backdrop-blur-sm'
 
 /**
  * One product on a shelf (design.md §6.15).
@@ -75,7 +75,7 @@ export const ProductCard: React.FC<{
   const imageAlt = image?.alt?.trim() || product.title
 
   return (
-    <article className="group bg-green-50 relative aspect-[4/3] overflow-hidden rounded-lg has-[:focus-visible]:ring-green-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-[3px]">
+    <article className="group bg-green-50 relative isolate aspect-[4/3] overflow-hidden rounded-lg has-[:focus-visible]:ring-green-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-[3px]">
       {image?.url ? (
         <Media
           alt={imageAlt}
@@ -98,13 +98,13 @@ export const ProductCard: React.FC<{
       {product.audience || !product.available ? (
         <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-wrap gap-2">
           {product.audience ? (
-            <span className={`${PHOTO_PILL} bg-cream text-green-900`}>
+            <span className={`${PHOTO_PILL} bg-green-900/70 text-cream ring-cream/25`}>
               {AUDIENCE_LABEL[product.audience]}
             </span>
           ) : null}
 
           {!product.available ? (
-            <span className={`${PHOTO_PILL} bg-gold-400 text-green-900`}>Paused</span>
+            <span className={`${PHOTO_PILL} bg-gold-400 text-green-900 ring-gold-300/70`}>Paused</span>
           ) : null}
         </div>
       ) : null}
