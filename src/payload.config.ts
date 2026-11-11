@@ -132,6 +132,15 @@ export default buildConfig({
       ],
     },
   },
+  /**
+   * The canonical site URL. Payload uses it for the admin's own metadata — the
+   * `og:image` and absolute links — and for anything it has to name in full.
+   * Without it the admin falls back to `http://localhost:3000` in production,
+   * which is where the admin's social preview pointed before this. The same
+   * value already drives CORS below and the sitemaps, so there is one source:
+   * `NEXT_PUBLIC_SERVER_URL`, baked at build time (design.md §6.16).
+   */
+  serverURL: getServerSideURL(),
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: postgresAdapter({
