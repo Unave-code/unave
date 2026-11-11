@@ -3,6 +3,7 @@
 **Date**: 2026-10-31
 **Revised**: 2026-11-01, the cart was removed; one plan per order. Later the same day, only completed payments are recorded: an order row is written when a payment is captured, so no pending rows exist.
 **Revised**: 2026-11-06, the cart returns: Add to cart on every open plan card, a cart page, one payment for the whole basket, and the direct Buy now checkout link is retired. Acceptance criteria were renumbered in this revision; the mapping is recorded in the rationale.
+**Revised**: 2026-11-11, the header cart control no longer depends on a `/cart` menu row existing. Staff can still add one in Site chrome to choose its label and place, but a header with no such row now renders the control with the default label and appends a drawer row, so a database built from migrations alone cannot ship without a way to the basket (AC-12).
 **Status**: In Progress
 
 ## Summary
@@ -36,7 +37,7 @@ The kitchen sells meal plans on the site and now wants a basket: more products a
 - **AC-9**: The account page lists the customer's own orders, newest first, with the order's lines, the total and the payment id. GraphQL is disabled on the `orders` collection outright, so a customer cannot read another customer's order over REST or GraphQL, and no customer can reach the CMS; a test proves each denial.
 - **AC-10**: Staff create and edit plans, prices, durations and availability in the Payload admin and see every order with all of its items, the delivery snapshot, note, payment details and when deliveries begin (`startsOn`); every row is one completed payment that may hold up to ten line snapshots, and the admin description says so.
 - **AC-11**: Every order's lines, prices and total shown anywhere match the server computed snapshot written when the payment was confirmed; editing a plan's title or price after a purchase never rewrites a past order, line by line.
-- **AC-12**: The cart link in the header is added by staff in the admin (Site chrome, no code and no migration); the count on it is rendered by code, because it reflects each visitor's cookie. The chrome copy is updated so the site no longer implies one plan per order.
+- **AC-12**: The header always carries a cart control. Staff may add a link to `/cart` in the admin (Site chrome) to choose its label and its place in the drawer, but the control and its live count are rendered by code, so a header with no `/cart` row still shows it with the default label and the drawer appends one. The count reflects each visitor's cookie. The chrome copy is updated so the site no longer implies one plan per order.
 - **AC-13**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are documented in `.env.example`; without them the site still browses and messages normally, and the pay action reports a plain configuration error instead of breaking the page. The active mode (test or live, read from the key id's prefix) is logged at order creation and shown in the admin, so a test key pointed at a live dashboard is visible before it costs money.
 
 ## Decision

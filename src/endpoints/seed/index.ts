@@ -276,6 +276,13 @@ export const seed = async ({
               },
             },
           },
+          {
+            link: {
+              type: 'custom',
+              label: 'Cart',
+              url: '/cart',
+            },
+          },
         ],
         // Left empty until the business supplies a number, which hides the
         // floating WhatsApp button (design.md §6.2).

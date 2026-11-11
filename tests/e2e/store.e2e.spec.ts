@@ -126,6 +126,12 @@ test.describe('the products shelf', () => {
     // Browsing needs no account anywhere on the page.
     await expect(page.getByText(/No account needed to look around/i)).toBeVisible()
 
+    // The header offers the cart to a signed out visitor even when Site chrome
+    // has no `/cart` menu row: the control is rendered by code (spec 0007, AC-12).
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: /cart/i }).first(),
+    ).toHaveAttribute('href', '/cart')
+
     // The card shows the cheapest per-day rate and adds the kitchen's default
     // duration; the product's own page carries every duration.
     const card = cardFor(page, 'Lunch plan')

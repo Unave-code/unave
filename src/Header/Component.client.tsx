@@ -42,12 +42,21 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const navItems = data?.navItems || []
-  /* The cart is a Site chrome item like any menu link, but on the desktop bar it
-     is presented in the right-hand action group beside the search control rather
-     than in the middle of the menu (design.md §6.15). The drawer keeps it as a
-     row of its own, so the full list still goes to MobileMenu. */
+  /* The cart is core commerce, not editorial. When staff add a `/cart` link in
+     Site chrome it is lifted out of the menu and presented in the right-hand
+     action group beside the search control, with its label and its drawer place
+     (design.md §6.15). When no such item exists — a database built from
+     migrations alone, for example — the control still renders with the default
+     label and the drawer appends a row, so the site can never ship a store with
+     no way to reach the basket. */
   const cartItem = navItems.find(({ link }) => link?.url === '/cart')
   const menuItems = navItems.filter(({ link }) => link?.url !== '/cart')
+  const drawerItems: NonNullable<HeaderType['navItems']> = cartItem
+    ? navItems
+    : [
+        ...navItems,
+        { link: { type: 'custom', label: CART_LINK_LABEL, newTab: false, url: '/cart' } },
+      ]
   const announcement = data?.announcement
   const whatsappNumber = data?.whatsapp?.number
   const whatsappMessage = data?.whatsapp?.message
@@ -224,13 +233,11 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
                 <Search aria-hidden="true" className="size-5" strokeWidth={2} />
               </Link>
 
-              {cartItem ? (
-                <CartNavLink
-                  active={pathname === '/cart'}
-                  label={cartItem.link?.label ?? CART_LINK_LABEL}
-                  variant="bar"
-                />
-              ) : null}
+              <CartNavLink
+                active={pathname === '/cart'}
+                label={cartItem?.link?.label ?? CART_LINK_LABEL}
+                variant="bar"
+              />
 
               <button
                 aria-controls="mobile-menu"
@@ -252,7 +259,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         <MobileMenu
           closeRef={closeRef}
           drawerRef={drawerRef}
-          items={navItems}
+          items={drawerItems}
           onClose={closeMenu}
           signedIn={signedIn}
         />
