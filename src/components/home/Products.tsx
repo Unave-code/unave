@@ -17,7 +17,7 @@ import { WHATSAPP_CTA_LABEL, WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/uti
 import { Section } from './Section'
 
 /**
- * The products shelf, twelve at most (design.md §10.1): three rows of four on a
+ * The products shelf, twelve at most (design.md §10.1): four rows of three on a
  * wide screen, two columns on tablet and phones.
  *
  * The cards are the ones `/products` uses, not a summary of them: photo-first,
@@ -53,7 +53,7 @@ export const ProductShelf: React.FC<{ whatsapp?: null | string }> = async ({ wha
       </div>
 
       {hasProducts ? (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} returnPath="/" />
           ))}
