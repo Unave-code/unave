@@ -14,6 +14,7 @@ import React from 'react'
 import { Cta } from '@/components/Cta'
 import { Notice } from '@/components/Notice'
 import { PageHero } from '@/components/PageHero'
+import { StepRail } from '@/components/StepRail'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { Section } from '@/components/home/Section'
@@ -124,23 +125,7 @@ export default async function OurKitchenPage() {
         <h2 className="text-h2">{KITCHEN_PROCESS_HEADING}</h2>
         <p className="text-body text-ink-600 mt-4 max-w-[65ch]">{KITCHEN_PROCESS_INTRO}</p>
 
-        <ol className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-          {KITCHEN_PROCESS.map((step, index) => (
-            <li className="flex gap-4" key={step.title}>
-              <span
-                aria-hidden="true"
-                className="text-h3 text-green-700 bg-gold-400 flex size-11 shrink-0 items-center justify-center rounded-pill font-bold"
-              >
-                {index + 1}
-              </span>
-
-              <div>
-                <h3 className="text-h3">{step.title}</h3>
-                <p className="text-body text-ink-600 mt-1">{step.body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <StepRail steps={KITCHEN_PROCESS} />
       </Section>
 
       <Section tone="white">

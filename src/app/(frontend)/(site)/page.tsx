@@ -4,7 +4,6 @@ import React from 'react'
 import { Benefits } from '@/components/home/Benefits'
 import { Categories } from '@/components/home/Categories'
 import { Faq } from '@/components/home/Faq'
-import { FinalCta } from '@/components/home/FinalCta'
 import { Gallery } from '@/components/home/Gallery'
 import { Hero } from '@/components/home/Hero'
 import { HowItWorks } from '@/components/home/HowItWorks'
@@ -78,7 +77,6 @@ export default async function HomePage() {
       <Gallery />
       <Testimonials />
       <Faq />
-      <FinalCta whatsapp={whatsapp} />
     </main>
   )
 }

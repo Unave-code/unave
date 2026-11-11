@@ -23,9 +23,13 @@ const FOOTER_BACKGROUND = '/images/footer-field.jpg'
 /**
  * The footer (design.md §6.12): the brand and its one-line promise on the left, then
  * Explore, Policies and Contact as equal columns on the right, then the small print.
- * The field photograph sits behind it untouched, the words set in green and gold-600
- * so they read on the light sky, and the swoosh rides over it at low opacity, so the
- * page closes the way it opens.
+ * The field photograph sits behind it untouched, the words set semibold in green and
+ * gold-600 so they hold up on the light sky, and the swoosh rides over it at low
+ * opacity, so the page closes the way it opens.
+ *
+ * The weight lives on the `<footer>` so every line of it inherits: the tagline, the
+ * link labels and the address all read at 600 over the photograph. The column
+ * headings and the small print keep the heavier weights their own type steps set.
  */
 export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const columns = data?.columns || []
@@ -36,7 +40,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const totalColumns = columns.length + (hasContact ? 1 : 0)
 
   return (
-    <footer className="bg-green-900 text-green-700 text-body relative mt-auto overflow-hidden">
+    <footer className="bg-green-900 text-green-700 text-body font-semibold relative mt-auto overflow-hidden">
       <Image
         alt=""
         aria-hidden="true"

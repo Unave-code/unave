@@ -244,14 +244,24 @@ The home hero is a carousel (§10.1). Its slides live in the *Home hero* global 
 
 ### 6.6 How-it-works steps
 
-Four steps: Tell us what you need → We plan the week → We cook and deliver → Say if it changes.
+The sequence pattern, drawn as one infographic rail rather than a grid of cards (`src/components/StepRail.tsx`): the home page's *How it works* (four steps: Tell us what you need → We plan the week → We cook and deliver → Say if it changes) and our-kitchen's *What happens before your meal reaches you* (five steps) both use it.
 
-- Desktop: horizontal numbered timeline (2x2 grid acceptable). Mobile: vertical with a connecting line.
-- Number in a gold circle with green numeral; title bold; one-line description.
+- One `<ol>`; each step a gold circle (`--gold-400`) carrying its number in `--green-900`, bold and `tabular-nums` so the figures line up. The numeral is a reading aid and stays out of the accessibility tree; the list carries the order for a screen reader.
+- A dashed `--green-200` track runs through the circle centres, starting and ending half a column in from the edges, so the rail takes any number of steps without a class per count. The circles are opaque and sit over the track, which is what hides the stub of line behind each one.
+- From `lg` the rail runs horizontally with a chevron in each gap, breaking the track so the eye is carried left to right. Below that it turns vertical: the circles stack down the left and the track runs from one to the next.
+- Under every circle a bold title and its one-line description, centred from `lg` up and capped at 34ch so a line never runs wide.
+- The home page sets the rail on the tint band, so it reads as the order drawn out rather than four more cards between two white sections; our-kitchen keeps it on cream, and the rail takes the band colour so its chevrons break the track cleanly.
 
 ### 6.7 "What makes us different" list
 
-- Six reasons, numbered 01–06. The heading sits above the grid, then one card per reason on the white band: white card, 16px radius, 1px `--line` border, `--shadow-sm`, three across on desktop, two on tablet, one on mobile. Inside, the numeral in a 44px gold chip (`--gold-100`, `--gold-600` numeral), the bold title, then the one-line body. The numeral is a reading aid and stays out of the accessibility tree; the list carries the order. The copy lives in `src/utilities/homeCopy.ts` (`BENEFITS`).
+Six reasons on the white band, drawn as one bento rather than a grid of equal cards (`src/components/home/Benefits.tsx`). The section is bracketed by the four food-type cards above it and the product shelf below, so a third grid of identical boxes would read as filler.
+
+- A three-column grid from `lg` up, in the copy's order: wide, tall, small, small, wide, small (held in `TILES`). The tall tile is one column wide and two rows deep, which lets the two small tiles sit underneath the first wide one; every cell of the three rows is filled, so the block interlocks instead of stacking in bands. Two across on a tablet, one on a phone, where the tiles simply stack.
+- Three of the six carry a photograph, and they take the wide and the tall tiles — a photograph is what makes a big tile worth being big. Each is a `next/image` with `fill` under a bottom-dark scrim (`from-green-900/95 via-green-900/60 to-green-900/10`, the same scrim the product card uses), rounded 16px, with cream copy sitting in the bottom third where the scrim is heaviest, so the words clear AA over any part of the picture. Each tile passes its own `sizes`, so a narrow tile never pulls the pixels a wide one needs.
+- The other three are plain cards: `--card`, 1px `--line`, 16px radius, `--shadow-sm`, ink copy.
+- Every tile leads with its icon in a 44px chip — `--gold-400` with a `--green-900` glyph on the photographed tiles, `--green-100` with a `--green-700` glyph on the plain ones — instead of a number, because the reasons are not a sequence and numbering them implied an order that does not exist.
+- Tiles hold a minimum height (14rem, 16rem from `lg`) and pin the icon to the top and the words to the bottom, so the block keeps one rhythm whatever the copy length runs to.
+- The icons and the photographs are decorative — the words carry the claim — and stay out of the accessibility tree. The copy lives in `src/utilities/homeCopy.ts` (`BENEFITS`, `BENEFITS_INTRO`), and the photographed reasons avoid the kitchen photo the welcome section above already shows.
 
 ### 6.8 FAQ accordion
 
@@ -278,11 +288,13 @@ Fields: Name, Phone, Email (+ message for enquiries); address lines 1 and 2, cit
 ### 6.11 Final CTA band
 
 - Deep green, centered H2 (cream), one line of copy, gold primary + outlined secondary button.
+- Closes about, our-kitchen, the products pages and every policy page. **Not on the home page**, which opens with its action in the hero and ends on the FAQ and the footer instead (§10.1).
 
 ### 6.12 Footer
 
 - `--green-900`, logo in gold, short tagline, columns: Explore (About us, How it works, Common questions), Policies (Delivery, Refunds, Cancellation, Terms, Privacy), Contact (phone, email, WhatsApp, address).
 - The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer with no scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun. The footer's words flip to the light-surface palette to read on it: type in `--green-700`, the logo, icons and column headings in `--gold-600` (never `--gold-400` on a light surface), and the two small-print lines at the very bottom bold in cream so they sit on the green field, not on the sky.
+- Every line reads semibold (600): the weight sits on the `<footer>` element, so the tagline, link labels and address inherit it over the photograph. The column headings (`--text-eyebrow`) and the two small-print lines keep their own heavier weights.
 - Small line: *"Our meals are food options and are not a substitute for medical or nutritional advice."*
 - The footer is the page's closing breath, taller than a content section: 80px of clear space above and below the columns on mobile, 112px on desktop, with the small print in its own quieter band below the hairline.
 - Policies must be a visible footer group (the copy promises published terms).
@@ -416,13 +428,13 @@ The band that sits directly under the home hero (§10.1 item 2), carrying the fi
 2. Trust strip (§6.18): five claims — delivery, kitchen, FSSAI, home-style cooking, one focus — as one promise rail on the tint band, each claim an icon chip beside its label and note, hairline-divided on a wide screen
 3. Choose your product: up to twelve open products from the products collection, featured ones first and the newest open products filling any gap, shown with the same cards `/products` uses — photo, name, the first duration's price in small type, and one small Add to cart control — so a price is never typed twice and someone who knows what they want buys from the front page. Staff choose the lead with the **Featured** toggle in the admin; with nothing featured the shelf falls back to newest-first. Three rows of four on a wide screen, two columns on tablet and small phones, with a secondary *"See every product"* link to the full shelf. Cream, so the page keeps its cream and white rhythm. A kitchen with nothing open keeps the section and shows one quiet card in place of the grid, with a **Message us on WhatsApp** secondary action and no *See every product* link, so the shelf never leaves a blank gap or a dead end
 4. Welcome to UNAVE (two short paragraphs + kitchen photo)
-5. What makes us different (six reasons, numbered cards on the white band)
+5. What makes us different: six reasons in a bento on the white band (§6.7), three of them photographed tiles, each led by an icon rather than a number, so the block has a shape of its own instead of being a third card grid in a row
 6. What we cook (4 category cards + the goals notice)
-7. How it works (4 steps)
+7. How it works: four steps in the numbered rail on the tint band (§6.6) — Tell us what you need, We plan the week, We cook and deliver, Say if it changes — each a gold numbered circle on one dashed track with a chevron in every gap, so the route from a message to the door reads left to right and collapses to a vertical rail on a phone
 8. From our kitchen (3 photos with captions)
 9. What customers say (3 quotes; placeholders until real, attributed words exist)
 10. Common questions (5 FAQs)
-11. Final CTA: Message us on WhatsApp / Common Questions
+11. Footer (§6.12). The home page deliberately has no closing CTA band of its own: it already opens its hero and its product shelf with an action, so the page ends on the questions and the footer's own contact column does the closing. The other pages keep the band (§6.11).
 
 ### 10.2 Brand-source pages (Gym & Fitness, Healthy Food, Children)
 
@@ -444,7 +456,7 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
 `/our-kitchen`, a static content page in the same voice as the about page, with every string in `src/utilities/ourKitchenCopy.ts`:
 
 1. The shared green band (§6.3): eyebrow "Inside our kitchen", a Lora headline with the gold accent phrase, one lead line, then Message us on WhatsApp with Browse the plans as the quiet second action, and three small icon chips under them.
-2. What happens before your meal reaches you: five numbered steps in the How-it-works rail (§6.6), fresh produce in, washed and cut, cooked in batches, portioned and packed, checked and dispatched.
+2. What happens before your meal reaches you: five numbered steps in the How-it-works rail (§6.6), fresh produce in, washed and cut, cooked in batches, portioned and packed, checked and dispatched, drawn by the same `StepRail` component the home page uses.
 3. Clean ingredients, careful preparation: three photographs at 4:3, each with real alt text and its caption set under the picture rather than on it.
 4. How we plan a plate: four points in two columns, each with a hairline `--line` rule above it, followed by the gold goals notice (§6.9), because the copy names diabetes, allergies and food preferences.
 5. Hygiene is part of every step: four icon cards in green-100 circles, the same shape as the about page values.

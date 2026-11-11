@@ -96,32 +96,47 @@ export const WELCOME_BODY = [
 ]
 export const WELCOME_PHOTO = 'Our kitchen, mid-service'
 
-/** 5. What makes us different. Numbered 01–06 on the page. */
+/** 5. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
+ * three with an `image` are the ones the bento gives a wide or tall tile to, so the
+ * copy is ordered kitchen first, then how you talk to us, then what we keep. Those
+ * three photographs deliberately skip `/images/kitchen.jpg`, which the welcome
+ * section above already shows, and `/images/hero-table.jpg`, which the hero uses. */
 export const BENEFITS_HEADING = 'What makes us different'
+export const BENEFITS_INTRO =
+  'Six decisions about how the kitchen runs, and what each one means for your week.'
 export const BENEFITS = [
   {
     title: 'One kitchen, one focus',
     body: 'We cook healthy food only. Nothing else competes for the kitchen’s attention.',
-  },
-  {
-    title: 'Message us, we sort it out',
-    body: 'No forms to fight. Tell us what you need on WhatsApp and we will plan the week with you.',
-  },
-  {
-    title: 'Change it whenever you like',
-    body: 'Want to skip a day or stop? One message and it is done. No app, no phone tree.',
+    icon: 'chef',
+    image: '/images/band-cta.jpg',
   },
   {
     title: 'Cooked, not assembled',
     body: 'Meals are cooked in our kitchen, in batches we can actually control.',
+    icon: 'flame',
+    image: '/images/gallery-2.jpg',
+  },
+  {
+    title: 'Message us, we sort it out',
+    body: 'No forms to fight. Tell us what you need on WhatsApp and we will plan the week with you.',
+    icon: 'message',
+  },
+  {
+    title: 'Change it whenever you like',
+    body: 'Want to skip a day or stop? One message and it is done. No app, no phone tree.',
+    icon: 'refresh',
   },
   {
     title: 'Honest about the food',
     body: 'We describe what we cook plainly. No promises about outcomes, no invented claims.',
+    icon: 'badge',
+    image: '/images/gallery-3.jpg',
   },
   {
     title: 'A preference we remember',
     body: 'Vegetarian, vegan or anything else, we keep it with your details so the kitchen knows.',
+    icon: 'preference',
   },
 ] as const
 
@@ -187,6 +202,8 @@ export const GALLERY = [
 
 /** 8. How it works */
 export const STEPS_HEADING = 'How it works'
+export const STEPS_INTRO =
+  'Four steps from your first message to the box at your door, and nothing is cooked until you have agreed it.'
 export const STEPS = [
   { title: 'Tell us what you need', body: 'Message us, or use the form on the contact page.' },
   { title: 'We plan the week', body: 'The kitchen confirms what we can cook and when we can deliver.' },
@@ -234,10 +251,3 @@ export const FAQ = [
       'Tell us when you get in touch and we will tell you honestly what we can and cannot do. Our meals are food options and are not a substitute for medical or nutritional advice.',
   },
 ] as const
-
-/** 12. Final call to action */
-export const FINAL_HEADING = 'Come and eat with us'
-export const FINAL_BODY =
-  'Tell us what you need and the kitchen will come back with what it can cook for you this week.'
-export const FINAL_PRIMARY = WHATSAPP_CTA_LABEL
-export const FINAL_SECONDARY = 'Common Questions'
