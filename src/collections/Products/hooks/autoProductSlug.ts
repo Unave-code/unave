@@ -61,13 +61,28 @@ export const firstFreeSlug = async (
  * create and on update alike: the title is slugified, a slug already taken by
  * another product gains a suffix, and a slug the reserved rule owns is skipped
  * the same way. A slug that arrives with a value is a slug typed on purpose
- * and is kept: the field stays editable for the rare address the kitchen wants
- * to pin, and the field's own validate still guards the reserved category
- * slugs. Because the hook runs before validation, `required: true` remains the
- * server-side guarantee — the hook simply never lets the value reach it empty.
+ * and is kept rather than replaced: the field stays editable for the rare
+ * address the kitchen wants to pin, and the field's own validate still guards
+ * the reserved category slugs. Because the hook runs before validation,
+ * `required: true` remains the server-side guarantee — the hook simply never
+ * lets the value reach it empty.
+ *
+ * A typed slug still passes through the same address rule as a generated one.
+ * A slug has to survive the trip out and back — the page writes it into a link
+ * and the browser then asks the server for that address — and the browser does
+ * not carry a trailing space, so a slug stored with one names a page nothing
+ * can reach. A capital letter ("Gongura-Pachadi") or a slash ("Mixed/Biryani")
+ * is just as bad: the first only resolves when the link keeps the same casing,
+ * the second splits one product's address into two path segments that match no
+ * route. Trimming, lowercasing and dashing the value here is what keeps the
+ * stored slug and the visited address the same string.
  */
 export const autoProductSlug: FieldHook = ({ data, operation, originalDoc, req, value }) => {
-  if (typeof value === 'string' && value.trim().length > 0) return value
+  if (typeof value === 'string') {
+    const typed = slugifyTitle(value)
+
+    if (typed.length > 0) return typed
+  }
 
   const source = (data as { title?: unknown } | undefined)?.title
   const previous = (originalDoc as { title?: unknown } | undefined)?.title

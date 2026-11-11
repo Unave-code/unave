@@ -21,6 +21,7 @@ import * as migration_20261110_120000_product_featured from './20261110_120000_p
 import * as migration_20261110_130000_hero_slide_overlay from './20261110_130000_hero_slide_overlay';
 import * as migration_20261111_090000_one_time_products from './20261111_090000_one_time_products';
 import * as migration_20261111_160000_product_lead_price from './20261111_160000_product_lead_price';
+import * as migration_20261111_170000_normalize_product_slugs from './20261111_170000_normalize_product_slugs';
 
 
 export const migrations = [
@@ -138,5 +139,10 @@ export const migrations = [
     up: migration_20261111_160000_product_lead_price.up,
     down: migration_20261111_160000_product_lead_price.down,
     name: '20261111_160000_product_lead_price',
+  },
+  {
+    up: migration_20261111_170000_normalize_product_slugs.up,
+    down: migration_20261111_170000_normalize_product_slugs.down,
+    name: '20261111_170000_normalize_product_slugs',
   },
 ];

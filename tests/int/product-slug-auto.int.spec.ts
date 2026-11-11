@@ -125,10 +125,19 @@ describe('a product saved without a slug', () => {
 })
 
 describe('a slug typed on purpose', () => {
-  it('is kept exactly as typed', async () => {
+  it('is kept when it is already a clean address', async () => {
     const created = await createProduct({ slug: `${run}-pinned`, title: `${run} pinned plan` })
 
     expect(created.slug).toBe(`${run}-pinned`)
+  })
+
+  it('is trimmed, lowercased and dashed into an address', async () => {
+    const created = await createProduct({
+      slug: `  ${run.toUpperCase()} Trailing `,
+      title: `${run} padded plan`,
+    })
+
+    expect(created.slug).toBe(`${run}-trailing`)
   })
 })
 

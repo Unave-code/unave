@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { slugifyTitle } from '@/collections/Products/hooks/autoProductSlug'
 import { ProductCategoryView } from '@/components/Store/ProductCategoryView'
 import { ProductDetail } from '@/components/Store/ProductDetail'
 import type { Footer, Product } from '@/payload-types'
@@ -33,6 +34,15 @@ import {
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ * The product read by the slug in the address.
+ *
+ * The slug is put through the same address rule the collection's hook uses
+ * before it is looked up, so a link that carries a stray space or an odd
+ * capital — one shared before the slug was normalised, say — still finds its
+ * product instead of reading as not found. Every stored slug is already clean,
+ * so this is a no-op for the links the site writes itself.
+ */
 const findProduct = async (slug: string): Promise<null | Product> => {
   const payload = await getPayload({ config: configPromise })
 
@@ -42,7 +52,7 @@ const findProduct = async (slug: string): Promise<null | Product> => {
     limit: 1,
     where: {
       slug: {
-        equals: slug,
+        equals: slugifyTitle(slug),
       },
     },
   })
