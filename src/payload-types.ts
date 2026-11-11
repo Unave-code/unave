@@ -65,7 +65,6 @@ export interface Config {
   auth: {
     users: UserAuthOperations;
     customers: CustomerAuthOperations;
-    'payload-mcp-api-keys': PayloadMcpApiKeyAuthOperations;
   };
   blocks: {};
   collections: {
@@ -85,7 +84,6 @@ export interface Config {
     forms: Form;
     'form-submissions': FormSubmission;
     search: Search;
-    'payload-mcp-api-keys': PayloadMcpApiKey;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-folders': FolderInterface;
@@ -115,7 +113,6 @@ export interface Config {
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
-    'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
@@ -148,7 +145,7 @@ export interface Config {
     'unave-enquiries': UnaveEnquiriesWidget;
     collections: CollectionsWidget;
   };
-  user: User | Customer | PayloadMcpApiKey;
+  user: User | Customer;
   jobs: {
     tasks: {
       pruneEmailLog: TaskPruneEmailLog;
@@ -180,24 +177,6 @@ export interface UserAuthOperations {
   };
 }
 export interface CustomerAuthOperations {
-  forgotPassword: {
-    email: string;
-    password: string;
-  };
-  login: {
-    email: string;
-    password: string;
-  };
-  registerFirstUser: {
-    email: string;
-    password: string;
-  };
-  unlock: {
-    email: string;
-    password: string;
-  };
-}
-export interface PayloadMcpApiKeyAuthOperations {
   forgotPassword: {
     email: string;
     password: string;
@@ -1211,132 +1190,6 @@ export interface Search {
   createdAt: string;
 }
 /**
- * API keys control which collections, resources, tools, and prompts MCP clients can access
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-mcp-api-keys".
- */
-export interface PayloadMcpApiKey {
-  id: number;
-  /**
-   * The user that the API key is associated with.
-   */
-  user: number | User;
-  /**
-   * A useful label for the API key.
-   */
-  label?: string | null;
-  /**
-   * The purpose of the API key.
-   */
-  description?: string | null;
-  products?: {
-    /**
-     * Allow clients to find products.
-     */
-    find?: boolean | null;
-    /**
-     * Allow clients to create products.
-     */
-    create?: boolean | null;
-    /**
-     * Allow clients to update products.
-     */
-    update?: boolean | null;
-  };
-  subcategories?: {
-    /**
-     * Allow clients to find subcategories.
-     */
-    find?: boolean | null;
-    /**
-     * Allow clients to create subcategories.
-     */
-    create?: boolean | null;
-    /**
-     * Allow clients to update subcategories.
-     */
-    update?: boolean | null;
-  };
-  media?: {
-    /**
-     * Allow clients to find media.
-     */
-    find?: boolean | null;
-    /**
-     * Allow clients to create media.
-     */
-    create?: boolean | null;
-  };
-  categories?: {
-    /**
-     * Allow clients to find categories.
-     */
-    find?: boolean | null;
-  };
-  pages?: {
-    /**
-     * Allow clients to find pages.
-     */
-    find?: boolean | null;
-  };
-  posts?: {
-    /**
-     * Allow clients to find posts.
-     */
-    find?: boolean | null;
-  };
-  orders?: {
-    /**
-     * Allow clients to find orders.
-     */
-    find?: boolean | null;
-  };
-  customers?: {
-    /**
-     * Allow clients to find customers.
-     */
-    find?: boolean | null;
-  };
-  enquiries?: {
-    /**
-     * Allow clients to find enquiries.
-     */
-    find?: boolean | null;
-  };
-  orderRequests?: {
-    /**
-     * Allow clients to find order-requests.
-     */
-    find?: boolean | null;
-  };
-  header?: {
-    /**
-     * Allow clients to find header global.
-     */
-    find?: boolean | null;
-  };
-  footer?: {
-    /**
-     * Allow clients to find footer global.
-     */
-    find?: boolean | null;
-  };
-  hero?: {
-    /**
-     * Allow clients to find hero global.
-     */
-    find?: boolean | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  enableAPIKey?: boolean | null;
-  apiKey?: string | null;
-  apiKeyIndex?: string | null;
-  hasAPIKey?: boolean | null;
-  collection: 'payload-mcp-api-keys';
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1526,10 +1379,6 @@ export interface PayloadLockedDocument {
         value: number | Search;
       } | null)
     | ({
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
-      } | null)
-    | ({
         relationTo: 'payload-folders';
         value: number | FolderInterface;
       } | null);
@@ -1542,10 +1391,6 @@ export interface PayloadLockedDocument {
     | {
         relationTo: 'customers';
         value: number | Customer;
-      }
-    | {
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
       };
   updatedAt: string;
   createdAt: string;
@@ -1564,10 +1409,6 @@ export interface PayloadPreference {
     | {
         relationTo: 'customers';
         value: number | Customer;
-      }
-    | {
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
       };
   key?: string | null;
   value?:
@@ -2266,91 +2107,6 @@ export interface SearchSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-mcp-api-keys_select".
- */
-export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
-  user?: T;
-  label?: T;
-  description?: T;
-  products?:
-    | T
-    | {
-        find?: T;
-        create?: T;
-        update?: T;
-      };
-  subcategories?:
-    | T
-    | {
-        find?: T;
-        create?: T;
-        update?: T;
-      };
-  media?:
-    | T
-    | {
-        find?: T;
-        create?: T;
-      };
-  categories?:
-    | T
-    | {
-        find?: T;
-      };
-  pages?:
-    | T
-    | {
-        find?: T;
-      };
-  posts?:
-    | T
-    | {
-        find?: T;
-      };
-  orders?:
-    | T
-    | {
-        find?: T;
-      };
-  customers?:
-    | T
-    | {
-        find?: T;
-      };
-  enquiries?:
-    | T
-    | {
-        find?: T;
-      };
-  orderRequests?:
-    | T
-    | {
-        find?: T;
-      };
-  header?:
-    | T
-    | {
-        find?: T;
-      };
-  footer?:
-    | T
-    | {
-        find?: T;
-      };
-  hero?:
-    | T
-    | {
-        find?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  enableAPIKey?: T;
-  apiKey?: T;
-  apiKeyIndex?: T;
-  hasAPIKey?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2883,10 +2639,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'customers';
           value: number | Customer;
-        } | null)
-      | ({
-          relationTo: 'payload-mcp-api-keys';
-          value: number | PayloadMcpApiKey;
         } | null);
   };
   output?: unknown;
