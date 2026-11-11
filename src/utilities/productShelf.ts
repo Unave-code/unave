@@ -56,19 +56,6 @@ const SHELF_SORT_QUERY: Record<ShelfSortKey, string[]> = {
   'price-desc': ['-available', '-fromPrice', '-createdAt'],
 }
 
-/* -------------------------------------------------------------------- type */
-
-export type ShelfType = 'one-time' | 'plan'
-
-export const SHELF_TYPE_ORDER: ShelfType[] = ['plan', 'one-time']
-
-export const SHELF_TYPE_LABEL: Record<ShelfType, string> = {
-  'one-time': 'One-time',
-  plan: 'Meal plans',
-}
-
-const isShelfType = (value: string): value is ShelfType => value === 'plan' || value === 'one-time'
-
 /* ------------------------------------------------------------------- state */
 
 export interface ShelfState {
@@ -79,10 +66,8 @@ export interface ShelfState {
   page: number
   q: string
   sort: ShelfSortKey
-  subcategory: null | string
   /** The high end of the price range, in whole rupees a day. */
   to: null | number
-  type: null | ShelfType
 }
 
 /** The shelf with nothing asked of it: the whole catalogue, newest first, page one. */
@@ -93,9 +78,7 @@ export const EMPTY_SHELF: ShelfState = {
   page: 1,
   q: '',
   sort: 'newest',
-  subcategory: null,
   to: null,
-  type: null,
 }
 
 /** The address map Next hands a page, before anything is believed. */
@@ -126,10 +109,6 @@ const wholePage = (raw: undefined | string): number => {
   return Number.isInteger(value) && value >= 1 ? value : 1
 }
 
-/** A subcategory is addressed by its row id, so anything else is not one. */
-const subcategoryId = (raw: undefined | string): null | string =>
-  raw !== undefined && /^\d+$/.test(raw) ? raw : null
-
 /**
  * Reading the address into a shelf. Everything is validated and anything
  * unrecognised is dropped, so a mangled URL shows the whole shelf rather than
@@ -139,7 +118,6 @@ export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
   const audienceRaw = firstValue(raw.audience)
   const categoryRaw = firstValue(raw.category)
   const sortRaw = firstValue(raw.sort)
-  const typeRaw = firstValue(raw.type)
 
   return {
     audience:
@@ -154,9 +132,7 @@ export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
       sortRaw && (SHELF_SORT_ORDER as string[]).includes(sortRaw)
         ? (sortRaw as ShelfSortKey)
         : 'newest',
-    subcategory: subcategoryId(firstValue(raw.subcategory)),
     to: wholeRupees(firstValue(raw.to)),
-    type: typeRaw && isShelfType(typeRaw) ? typeRaw : null,
   }
 }
 
@@ -185,8 +161,6 @@ export const shelfHref = (
   if (next.q) params.set('q', next.q)
   if (next.category) params.set('category', next.category)
   if (next.audience) params.set('audience', next.audience)
-  if (next.type) params.set('type', next.type)
-  if (next.subcategory) params.set('subcategory', next.subcategory)
   if (next.from !== null) params.set('from', String(next.from))
   if (next.to !== null) params.set('to', String(next.to))
   if (next.sort !== 'newest') params.set('sort', next.sort)
@@ -202,8 +176,6 @@ export const hasShelfFilters = (state: ShelfState, fixedCategory?: ProductCatego
   Boolean(
     state.q ||
       state.audience ||
-      state.type ||
-      state.subcategory ||
       state.from !== null ||
       state.to !== null ||
       (state.category && state.category !== fixedCategory),
@@ -225,8 +197,6 @@ export const shelfWhere = (
 
   if (category) and.push({ category: { equals: category } })
   if (state.audience) and.push({ audience: { equals: state.audience } })
-  if (state.type) and.push({ type: { equals: state.type } })
-  if (state.subcategory) and.push({ subcategory: { equals: state.subcategory } })
   if (state.from !== null) and.push({ fromPrice: { greater_than_equal: state.from * 100 } })
   if (state.to !== null) and.push({ fromPrice: { less_than_equal: state.to * 100 } })
 
@@ -278,32 +248,4 @@ export const fetchProductShelf = async (
     totalDocs: result.totalDocs,
     totalPages: result.totalPages,
   }
-}
-
-/* ------------------------------------------------------------------ facets */
-
-export interface ShelfSubcategoryOption {
-  id: string
-  label: string
-}
-
-/**
- * The sections to offer as a filter. On a category page only that category's
- * subcategories are offered, because a product's subcategory always belongs to
- * its category, and the two can never disagree.
- */
-export const fetchShelfSubcategories = async (
-  category?: ProductCategoryValue,
-): Promise<ShelfSubcategoryOption[]> => {
-  const payload = await getPayload({ config: configPromise })
-
-  const found = await payload.find({
-    collection: 'subcategories',
-    depth: 0,
-    limit: 100,
-    sort: 'title',
-    where: category ? { category: { equals: category } } : {},
-  })
-
-  return found.docs.map((doc) => ({ id: String(doc.id), label: doc.title }))
 }

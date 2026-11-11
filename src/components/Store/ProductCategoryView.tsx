@@ -10,7 +10,6 @@ import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
   fetchProductShelf,
-  fetchShelfSubcategories,
   parseShelfState,
   type ShelfSearchParams,
 } from '@/utilities/productShelf'
@@ -45,7 +44,6 @@ export const ProductCategoryView: React.FC<{
   const state = parseShelfState(searchParams)
 
   const result = await fetchProductShelf(state, category)
-  const subcategories = await fetchShelfSubcategories(category)
 
   const copy = PRODUCT_CATEGORY_COPY[category]
   const otherCategories = (Object.keys(CATEGORY_LABEL) as Array<keyof typeof CATEGORY_LABEL>).filter(
@@ -84,7 +82,6 @@ export const ProductCategoryView: React.FC<{
           category={category}
           result={result}
           state={state}
-          subcategories={subcategories}
           whatsapp={whatsapp}
         />
 

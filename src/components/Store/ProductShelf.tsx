@@ -12,7 +12,6 @@ import {
   shelfHref,
   type ShelfResult,
   type ShelfState,
-  type ShelfSubcategoryOption,
 } from '@/utilities/productShelf'
 import {
   PRODUCTS_CTA_MESSAGE,
@@ -46,9 +45,8 @@ export const ProductShelf: React.FC<{
   category?: ProductCategoryValue
   result: ShelfResult
   state: ShelfState
-  subcategories: ShelfSubcategoryOption[]
   whatsapp: null | string
-}> = ({ basePath, category, result, state, subcategories, whatsapp }) => {
+}> = ({ basePath, category, result, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
   const pausedOnPage = result.docs.some((product) => !product.available)
 
@@ -61,7 +59,6 @@ export const ProductShelf: React.FC<{
         basePath={basePath}
         fixedCategory={category}
         state={state}
-        subcategories={subcategories}
       />
 
       {result.docs.length > 0 ? (

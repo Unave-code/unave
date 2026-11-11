@@ -58,8 +58,6 @@ export const PRODUCTS_EMPTY_BODY =
 export const SHELF_FILTER_ALL = 'All'
 export const SHELF_FILTER_CATEGORY = 'Category'
 export const SHELF_FILTER_AUDIENCE = 'Audience'
-export const SHELF_FILTER_TYPE = 'Type'
-export const SHELF_FILTER_SECTION = 'Section'
 
 export const SHELF_SEARCH_LABEL = 'Search the shelf'
 export const SHELF_SEARCH_PLACEHOLDER = 'A name or a point, for example "dal"'

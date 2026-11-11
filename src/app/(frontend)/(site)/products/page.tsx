@@ -10,7 +10,6 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import {
   fetchProductShelf,
-  fetchShelfSubcategories,
   hasShelfFilters,
   parseShelfState,
   type ShelfSearchParams,
@@ -77,7 +76,6 @@ export default async function ProductsPage({
   const state = parseShelfState(await searchParams)
 
   const result = await fetchProductShelf(state)
-  const subcategories = await fetchShelfSubcategories()
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null
@@ -118,7 +116,6 @@ export default async function ProductsPage({
           basePath="/products"
           result={result}
           state={state}
-          subcategories={subcategories}
           whatsapp={whatsapp}
         />
       </Section>

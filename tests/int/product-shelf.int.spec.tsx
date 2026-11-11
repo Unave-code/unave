@@ -31,8 +31,8 @@ vi.mock('next/image', () => ({
  * Search, filters, sort and paging all travel in the address, so the rules are
  * held here: what the address is allowed to mean, what an address is written
  * back as, what the database is asked for, and what the controls render. The
- * facets are links and the rest is one plain `GET` form, which is why the
- * controls can be rendered and read without a browser.
+ * filters are selects inside one plain `GET` form, which is why the controls
+ * can be rendered and read without a browser.
  */
 
 afterEach(cleanup)
@@ -45,7 +45,6 @@ const renderControls = (
     <ProductShelfControls
       basePath="/products"
       state={{ ...EMPTY_SHELF, ...state }}
-      subcategories={[{ id: '12', label: 'Breakfast' }]}
       {...props}
     />,
   )
@@ -64,9 +63,7 @@ describe('reading the address', () => {
         page: '3',
         q: '  dal  ',
         sort: 'price-asc',
-        subcategory: '12',
         to: '150',
-        type: 'plan',
       }),
     ).toEqual({
       audience: 'kids',
@@ -75,9 +72,7 @@ describe('reading the address', () => {
       page: 3,
       q: 'dal',
       sort: 'price-asc',
-      subcategory: '12',
       to: 150,
-      type: 'plan',
     })
   })
 
@@ -89,9 +84,7 @@ describe('reading the address', () => {
         from: 'cheap',
         page: '0',
         sort: 'cheapest',
-        subcategory: 'ready-to-cook',
         to: '-5',
-        type: 'subscription',
       }),
     ).toEqual(EMPTY_SHELF)
   })
@@ -142,8 +135,8 @@ describe('writing the address', () => {
   })
 
   it('clears one facet without clearing the others', () => {
-    expect(shelfHref('/products', { ...EMPTY_SHELF, audience: 'kids', subcategory: '12' }, { audience: null })).toBe(
-      '/products?subcategory=12',
+    expect(shelfHref('/products', { ...EMPTY_SHELF, audience: 'kids', q: 'dal' }, { audience: null })).toBe(
+      '/products?q=dal',
     )
   })
 
@@ -197,63 +190,68 @@ describe('the query the shelf reads by', () => {
     })
   })
 
-  it('reads every facet at once', () => {
-    expect(
-      shelfWhere({ ...EMPTY_SHELF, audience: 'kids', subcategory: '12', type: 'plan' }),
-    ).toEqual({
+  it('reads several facets at once', () => {
+    expect(shelfWhere({ ...EMPTY_SHELF, audience: 'kids', from: 50, to: 150 })).toEqual({
       and: [
         { audience: { equals: 'kids' } },
-        { type: { equals: 'plan' } },
-        { subcategory: { equals: '12' } },
+        { fromPrice: { greater_than_equal: 5000 } },
+        { fromPrice: { less_than_equal: 15000 } },
       ],
     })
   })
 })
 
 describe('the shelf controls', () => {
-  it('labels every facet group and starts each on All', () => {
+  it('offers every facet as a select that starts on All', () => {
     renderControls()
 
-    for (const name of ['Category', 'Audience', 'Type', 'Section']) {
-      const group = screen.getByRole('group', { name })
+    for (const name of ['Category', 'Audience']) {
+      const select = screen.getByRole('combobox', { name }) as HTMLSelectElement
 
-      expect(within(group).getByRole('link', { name: 'All' }).getAttribute('aria-current')).toBe('true')
+      expect(select.value).toBe('')
+      expect(within(select).getByRole('option', { name: 'All' })).toBeTruthy()
     }
 
-    expect(within(screen.getByRole('group', { name: 'Category' })).getByRole('link', { name: 'Ready to eat' })).toBeTruthy()
-    expect(within(screen.getByRole('group', { name: 'Type' })).getByRole('link', { name: 'Meal plans' })).toBeTruthy()
-    expect(within(screen.getByRole('group', { name: 'Section' })).getByRole('link', { name: 'Breakfast' })).toBeTruthy()
+    expect(
+      within(screen.getByRole('combobox', { name: 'Category' })).getByRole('option', {
+        name: 'Ready to eat',
+      }),
+    ).toBeTruthy()
   })
 
-  it('drops the category row on a category page, where the page is the category', () => {
+  it('drops the category select on a category page, where the page is the category', () => {
     renderControls({}, { basePath: '/products/ready-to-cook', fixedCategory: 'ready-to-cook' })
 
-    expect(screen.queryByRole('group', { name: 'Category' })).toBeNull()
-    expect(screen.getByRole('group', { name: 'Audience' })).toBeTruthy()
+    expect(screen.queryByRole('combobox', { name: 'Category' })).toBeNull()
+    expect(screen.getByRole('combobox', { name: 'Audience' })).toBeTruthy()
   })
 
-  it('marks the chosen facet current and keeps the others in the link', () => {
-    renderControls({ audience: 'kids', q: 'dal' })
+  it('starts each select on the choice the address holds', () => {
+    renderControls({ audience: 'kids', category: 'ready-to-eat' })
 
-    const kids = within(screen.getByRole('group', { name: 'Audience' })).getByRole('link', {
-      name: 'Kids',
-    })
-
-    expect(kids.getAttribute('aria-current')).toBe('true')
-    expect(kids.getAttribute('href')).toBe('/products?q=dal&audience=kids')
+    expect((screen.getByRole('combobox', { name: 'Category' }) as HTMLSelectElement).value).toBe(
+      'ready-to-eat',
+    )
+    expect((screen.getByRole('combobox', { name: 'Audience' }) as HTMLSelectElement).value).toBe(
+      'kids',
+    )
   })
 
-  it('applies one plain GET form to the shelf, carrying the chosen facets', () => {
-    const { container } = renderControls({ audience: 'kids', subcategory: '12', type: 'plan' })
+  it('sends the whole bar as one plain GET to the shelf', () => {
+    const { container } = renderControls({ audience: 'kids' })
 
     const form = container.querySelector('form')
     expect(form?.getAttribute('method')).toBe('get')
     expect(form?.getAttribute('action')).toBe('/products')
 
-    const hidden = [...container.querySelectorAll('input[type="hidden"]')].map((input) =>
-      input.getAttribute('name'),
+    /* Every control is a field of this one form, so there is no hidden copy of a
+       facet to fall out of step with the visible choice. */
+    expect(container.querySelectorAll('input[type="hidden"]')).toHaveLength(0)
+
+    const names = [...container.querySelectorAll('select, input[name]')].map((field) =>
+      field.getAttribute('name'),
     )
-    expect(hidden.sort()).toEqual(['audience', 'subcategory', 'type'])
+    expect(names.sort()).toEqual(['audience', 'category', 'from', 'q', 'sort', 'to'])
   })
 
   it('shows the words, the range and the sort that are already in force', () => {
@@ -271,13 +269,6 @@ describe('the shelf controls', () => {
     renderControls({ audience: 'kids', q: 'dal' })
 
     expect(screen.getByRole('link', { name: 'Clear all' }).getAttribute('href')).toBe('/products')
-  })
-
-  it('carries the category through the form on the catalogue', () => {
-    const { container } = renderControls({ category: 'ready-to-eat' })
-
-    const hidden = [...container.querySelectorAll('input[type="hidden"]')]
-    expect(hidden.map((input) => input.getAttribute('value'))).toEqual(['ready-to-eat'])
   })
 })
 
@@ -300,7 +291,6 @@ describe('the shelf', () => {
       basePath="/products"
       result={{ docs: [product], page: 1, totalDocs: 30, totalPages: 3 }}
       state={EMPTY_SHELF}
-      subcategories={[]}
       whatsapp={null}
       {...overrides}
     />
