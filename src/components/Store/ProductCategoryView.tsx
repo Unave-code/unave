@@ -1,17 +1,19 @@
-import configPromise from '@payload-config'
 import Link from 'next/link'
-import { getPayload } from 'payload'
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
-import { Notice } from '@/components/Notice'
-import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { Section } from '@/components/home/Section'
-import { ProductCard } from '@/components/Store/ProductCard'
-import { ProductFilters, type ProductFilterCard } from '@/components/Store/ProductFilters'
+import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
+import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import {
+  fetchProductShelf,
+  fetchShelfSubcategories,
+  parseShelfState,
+  type ShelfSearchParams,
+} from '@/utilities/productShelf'
 import {
   CATEGORY_LABEL,
   PRODUCTS_CATEGORY_CTA_BROWSE,
@@ -21,38 +23,29 @@ import {
   productCategoryHref,
   type ProductCategoryValue,
 } from '@/utilities/productsCategoryCopy'
-import {
-  PRODUCTS_CTA_MESSAGE,
-  PRODUCTS_PAUSED_NOTE_BODY,
-  PRODUCTS_PAUSED_NOTE_TITLE,
-} from '@/utilities/productsCopy'
+import { PRODUCTS_CTA_MESSAGE } from '@/utilities/productsCopy'
 import { whatsappHref } from '@/utilities/whatsapp'
 
 /**
- * A page per product category (spec 0008): /products/ready-to-cook,
- * /products/ready-to-eat and /products/fresh-from-produce, rendered by the one
- * `/products/[slug]` route when the slug is a category.
+ * A page per product category (spec 0008; design.md §6.19):
+ * /products/ready-to-cook, /products/ready-to-eat and /products/fresh-from-produce,
+ * rendered by the one `/products/[slug]` route when the slug is a category.
  *
- * Anyone can look, no account asked for, and the shelf reads live product rows
- * of exactly one category, paused ones included with nothing to buy, so a price
- * the kitchen edits is here the moment it saves. The words come from
- * productsCategoryCopy, the product cards from the Products collection.
+ * The shelf reads live product rows of exactly one category, paused ones
+ * included with nothing to buy, and it carries the same search, filters, sort
+ * and pages `/products` does. The category itself is the page rather than a
+ * filter, so it is pinned here and never offered as a choice; every other
+ * control writes the address, so a filtered category shelf can be linked and
+ * reloaded like any other view.
  */
-export const ProductCategoryView: React.FC<{ category: ProductCategoryValue }> = async ({
-  category,
-}) => {
-  const payload = await getPayload({ config: configPromise })
+export const ProductCategoryView: React.FC<{
+  category: ProductCategoryValue
+  searchParams?: ShelfSearchParams
+}> = async ({ category, searchParams = {} }) => {
+  const state = parseShelfState(searchParams)
 
-  const products = await payload.find({
-    collection: 'products',
-    depth: 1,
-    limit: 100,
-    where: {
-      category: {
-        equals: category,
-      },
-    },
-  })
+  const result = await fetchProductShelf(state, category)
+  const subcategories = await fetchShelfSubcategories(category)
 
   const copy = PRODUCT_CATEGORY_COPY[category]
   const otherCategories = (Object.keys(CATEGORY_LABEL) as Array<keyof typeof CATEGORY_LABEL>).filter(
@@ -61,14 +54,6 @@ export const ProductCategoryView: React.FC<{ category: ProductCategoryValue }> =
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null
-
-  const cards: ProductFilterCard[] = products.docs.map((product) => ({
-    audience: product.audience,
-    id: product.id,
-    node: <ProductCard product={product} returnPath={productCategoryHref(category)} />,
-  }))
-
-  const pausedCount = products.docs.filter((product) => !product.available).length
 
   return (
     <main>
@@ -94,13 +79,14 @@ export const ProductCategoryView: React.FC<{ category: ProductCategoryValue }> =
       </Section>
 
       <Section id="products" tone="white">
-        <ProductFilters cards={cards} whatsapp={whatsapp} />
-
-        {pausedCount > 0 ? (
-          <Notice className="mt-10 max-w-[70ch]" title={PRODUCTS_PAUSED_NOTE_TITLE}>
-            {PRODUCTS_PAUSED_NOTE_BODY}
-          </Notice>
-        ) : null}
+        <ProductShelf
+          basePath={productCategoryHref(category)}
+          category={category}
+          result={result}
+          state={state}
+          subcategories={subcategories}
+          whatsapp={whatsapp}
+        />
 
         <div className="border-line mt-10 border-t pt-6">
           <p className="text-body text-ink-600">

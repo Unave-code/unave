@@ -1,22 +1,22 @@
 import type { Metadata } from 'next'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
-import { Notice } from '@/components/Notice'
-import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { Section } from '@/components/home/Section'
-import { ProductCard } from '@/components/Store/ProductCard'
+import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
-import type { Product } from '@/payload-types'
+import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import {
+  fetchProductShelf,
+  fetchShelfSubcategories,
+  hasShelfFilters,
+  parseShelfState,
+  type ShelfSearchParams,
+} from '@/utilities/productShelf'
+import {
   PRODUCTS_CTA_BROWSE,
-  PRODUCTS_CTA_MESSAGE,
-  PRODUCTS_EMPTY_BODY,
-  PRODUCTS_EMPTY_HEADING,
   PRODUCTS_FINAL_BODY,
   PRODUCTS_FINAL_HEADING,
   PRODUCTS_GRID_HEADING,
@@ -29,46 +29,55 @@ import {
   PRODUCTS_HOW_STEPS,
   PRODUCTS_PAGE_DESCRIPTION,
   PRODUCTS_PAGE_TITLE,
-  PRODUCTS_PAUSED_NOTE_BODY,
-  PRODUCTS_PAUSED_NOTE_TITLE,
 } from '@/utilities/productsCopy'
-import { whatsappHref } from '@/utilities/whatsapp'
-import type { Footer } from '@/payload-types'
 
 /**
- * The products shelf (spec 0007, AC-1 and AC-2). Anyone can look, no account
- * asked for, and every product that is not hidden renders, paused ones included.
- * The list reads live product rows, so a price or a duration the kitchen edits
- * is on this page the moment it saves.
+ * The products shelf (spec 0007, AC-1 and AC-2; design.md §6.19). Anyone can
+ * look, no account asked for, and every product that is not hidden renders,
+ * paused ones included.
+ *
+ * The shelf reads live product rows and its search, filters, sort and page all
+ * live in the address, so any view of it can be linked, bookmarked and reloaded
+ * and the page works with JavaScript off.
  */
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/products' },
-  description: PRODUCTS_PAGE_DESCRIPTION,
-  openGraph: mergeOpenGraph({
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<ShelfSearchParams>
+}): Promise<Metadata> {
+  const state = parseShelfState(await searchParams)
+
+  return {
+    alternates: { canonical: '/products' },
     description: PRODUCTS_PAGE_DESCRIPTION,
+    openGraph: mergeOpenGraph({
+      description: PRODUCTS_PAGE_DESCRIPTION,
+      title: PRODUCTS_PAGE_TITLE,
+      url: '/products',
+    }),
+    /* A filtered shelf is a view of one page, not a page of its own: the
+       canonical points at the shelf, and a filtered view stays out of the
+       index, so the catalogue never becomes dozens of near identical pages.
+       Paging is left alone — those are the same products, linked. */
+    robots: hasShelfFilters(state) ? { follow: true, index: false } : undefined,
     title: PRODUCTS_PAGE_TITLE,
-    url: '/products',
-  }),
-  title: PRODUCTS_PAGE_TITLE,
+  }
 }
 
 const STEP_NUMBER =
   'bg-green-100 text-green-700 grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold'
 
-export default async function ProductsPage() {
-  const payload = await getPayload({ config: configPromise })
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<ShelfSearchParams>
+}) {
+  const state = parseShelfState(await searchParams)
 
-  const products = await payload.find({
-    collection: 'products',
-    depth: 1,
-    limit: 100,
-  })
-
-  const openProducts = products.docs.filter((product: Product) => product.available)
-  const pausedProducts = products.docs.filter((product: Product) => !product.available)
-  const hasAnyProduct = products.docs.length > 0
+  const result = await fetchProductShelf(state)
+  const subcategories = await fetchShelfSubcategories()
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null
@@ -105,38 +114,13 @@ export default async function ProductsPage() {
         <h2 className="text-h2">{PRODUCTS_GRID_HEADING}</h2>
         <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{PRODUCTS_GRID_INTRO}</p>
 
-        {hasAnyProduct ? (
-          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...openProducts, ...pausedProducts].map((product) => (
-              <ProductCard key={product.id} product={product} returnPath="/products" />
-            ))}
-          </div>
-        ) : (
-          <div className="border-line mt-10 max-w-[52ch] rounded-2xl border p-8">
-            <h3 className="text-h3">{PRODUCTS_EMPTY_HEADING}</h3>
-            <p className="text-body text-ink-600 mt-3">{PRODUCTS_EMPTY_BODY}</p>
-
-            {whatsapp ? (
-              <div className="mt-6">
-                <Cta
-                  href={whatsappHref(whatsapp)}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  variant="secondary"
-                >
-                  <WhatsAppIcon className="size-4" />
-                  {PRODUCTS_CTA_MESSAGE}
-                </Cta>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {pausedProducts.length > 0 ? (
-          <Notice className="mt-10 max-w-[70ch]" title={PRODUCTS_PAUSED_NOTE_TITLE}>
-            {PRODUCTS_PAUSED_NOTE_BODY}
-          </Notice>
-        ) : null}
+        <ProductShelf
+          basePath="/products"
+          result={result}
+          state={state}
+          subcategories={subcategories}
+          whatsapp={whatsapp}
+        />
       </Section>
 
       <Section tone="tint">

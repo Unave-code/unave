@@ -115,11 +115,3 @@ export const PRODUCTS_CATEGORY_CTA_BROWSE = 'Browse these products'
 export const PRODUCTS_CATEGORY_FINAL_HEADING = 'Ready when you are'
 export const PRODUCTS_CATEGORY_FINAL_BODY =
   'Add a product from this shelf to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'
-
-/**
- * The empty state, two ways, so the page never claims the shelf is empty when
- * it is only filtered (spec 0008, AC-3).
- */
-export const PRODUCTS_CATEGORY_FILTER_EMPTY_HEADING = 'Nothing under this filter'
-export const PRODUCTS_CATEGORY_FILTER_EMPTY_BODY =
-  'No product for that audience on this shelf right now. Pick another filter, or message the kitchen and we will tell you what we can cook.'

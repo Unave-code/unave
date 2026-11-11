@@ -1069,6 +1069,10 @@ export interface Product {
    */
   price?: number | null;
   /**
+   * Derived on every save: the cheapest per-day rate for a plan, the item price for a one-time purchase, in paise. The shelf sorts and filters on it, so it is never edited by hand.
+   */
+  fromPrice?: number | null;
+  /**
    * How the meal reaches the customer. Shown as a label on the product card.
    */
   category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
@@ -2049,6 +2053,7 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   price?: T;
+  fromPrice?: T;
   category?: T;
   subcategory?: T;
   audience?: T;

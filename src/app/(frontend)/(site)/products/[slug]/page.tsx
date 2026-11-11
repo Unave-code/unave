@@ -10,6 +10,7 @@ import type { Footer, Product } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { productPageDescription } from '@/utilities/productPageCopy'
+import { hasShelfFilters, parseShelfState } from '@/utilities/productShelf'
 import { fetchRelatedProducts } from '@/utilities/products'
 import {
   isProductCategory,
@@ -51,8 +52,10 @@ const findProduct = async (slug: string): Promise<null | Product> => {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: PageProps<'/products/[slug]'>): Promise<Metadata> {
   const { slug } = await params
+  const state = parseShelfState(await searchParams)
 
   if (isProductCategory(slug)) {
     const copy = PRODUCT_CATEGORY_COPY[slug]
@@ -65,6 +68,10 @@ export async function generateMetadata({
         title: copy.metaTitle,
         url: productCategoryHref(slug),
       }),
+      /* A filtered shelf is a view of one page, not a page of its own: the
+         canonical stays on the shelf and a filtered view stays out of the
+         index (design.md §6.19). Paging is left alone. */
+      robots: hasShelfFilters(state, slug) ? { follow: true, index: false } : undefined,
       title: copy.metaTitle,
     }
   }
@@ -91,7 +98,7 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
   const { slug } = await props.params
 
   if (isProductCategory(slug)) {
-    return <ProductCategoryView category={slug} />
+    return <ProductCategoryView category={slug} searchParams={await props.searchParams} />
   }
 
   const product = await findProduct(slug)

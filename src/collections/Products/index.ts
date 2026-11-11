@@ -6,6 +6,7 @@ import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/product
 
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
 import { autoProductSlug } from './hooks/autoProductSlug'
+import { setLeadPrice } from './hooks/leadPrice'
 
 /**
  * A product the kitchen sells on the site (spec 0007).
@@ -213,6 +214,18 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      name: 'fromPrice',
+      label: 'Lead price (paise)',
+      type: 'number',
+      index: true,
+      admin: {
+        description:
+          'Derived on every save: the cheapest per-day rate for a plan, the item price for a one-time purchase, in paise. The shelf sorts and filters on it, so it is never edited by hand.',
+        position: 'sidebar',
+        readOnly: true,
+      },
+    },
+    {
       name: 'category',
       type: 'select',
       label: 'Category',
@@ -313,6 +326,7 @@ export const Products: CollectionConfig = {
   hooks: {
     afterChange: [revalidateProducts],
     afterDelete: [revalidateProductsDelete],
+    beforeChange: [setLeadPrice],
   },
   labels: {
     plural: 'Products',

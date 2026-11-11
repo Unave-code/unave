@@ -10,8 +10,6 @@ import {
   CATEGORY_LABEL,
   categoryBadgeAriaLabel,
   PRODUCTS_CATEGORY_CTA_BROWSE,
-  PRODUCTS_CATEGORY_FILTER_EMPTY_BODY,
-  PRODUCTS_CATEGORY_FILTER_EMPTY_HEADING,
   PRODUCTS_CATEGORY_FINAL_BODY,
   PRODUCTS_CATEGORY_FINAL_HEADING,
   PRODUCT_CATEGORY_COPY,
@@ -109,11 +107,9 @@ describe('the per category copy', () => {
 })
 
 describe('the shared page words', () => {
-  it('carry a browse label, a closing section and both empty states', () => {
+  it('carry a browse label and a closing section', () => {
     expect(PRODUCTS_CATEGORY_CTA_BROWSE.trim()).toBeTruthy()
     expect(PRODUCTS_CATEGORY_FINAL_HEADING.trim()).toBeTruthy()
     expect(PRODUCTS_CATEGORY_FINAL_BODY.trim()).toBeTruthy()
-    expect(PRODUCTS_CATEGORY_FILTER_EMPTY_HEADING.trim()).toBeTruthy()
-    expect(PRODUCTS_CATEGORY_FILTER_EMPTY_BODY.trim()).toBeTruthy()
   })
 })

@@ -4,11 +4,12 @@
 **Revised**: 2026-11-06, a subcategory layer is added: an admin managed option list per category, required on every plan, filtered on the category pages beside the audience. New criteria AC-8 to AC-10; the earlier criteria keep their numbers and their meaning.
 **Revised**: 2026-11-06, the filter controls gain art: each audience pill carries an icon beside its label, and the subcategory controls become round image tiles, each fed by an optional image on the option. New criterion AC-11; AC-2, AC-8 and AC-10 keep their numbers and their meaning.
 **Revised**: 2026-11-06, the subcategory filter row is withdrawn from the category pages, so the audience pills are each page's only filter; the subcategory data layer stays. AC-10 is withdrawn and AC-11 is narrowed to the audience pills.
+**Revised**: 2026-11-11, the page's own audience pills are replaced by the shared shelf controls that `/products` also renders: search, filters (category, audience, type, section), a price range and a sort, all carried in the web address and read on the server, with numbered pages. AC-2 and AC-3 are revised, AC-11 is withdrawn (the pills lose their icons), and AC-12 to AC-15 are added. The store's plans were renamed products on 2026-11-07 (the rename landed across the codebase, the routes and the database), so this revision reads *plan* as *product* and `/plans` as `/products`, and writes the new criteria in the current names.
 **Status**: In Progress
 
 ## Summary
 
-Each plan category gets its own page: ready to cook, ready to eat, and fresh from produce, at web addresses like `/plans/ready-to-cook`. The words on the page (headlines, intros) live in code, while the plan cards on it come from the Plans collection in the admin, the same split every existing page uses. Each page carries pills that filter the plans by audience (All, Kids, Adults, Special), and the category labels on plan cards become links to these pages. The 2026-11-06 revision adds a subcategory layer: the kitchen manages a list of finer labels per category in the admin and every plan carries one. A second filter row for those labels was tried on the category pages and then withdrawn, so the audience pills carry the page's only filter. The same revision gives those pills art: each carries an icon beside its label.
+Each product category gets its own page: ready to cook, ready to eat, and fresh from produce, at web addresses like `/products/ready-to-cook`. The words on the page (headlines, intros) live in code, while the product cards on it come from the Products collection in the admin, the same split every existing page uses. Each page carries pills that filter the products by audience (All, Kids, Adults, Special), and the category labels on product cards become links to these pages. The 2026-11-06 revision adds a subcategory layer: the kitchen manages a list of finer labels per category in the admin and every product carries one. A second filter row for those labels was tried on the category pages and then withdrawn, so the audience pills carry the page's only filter. The same revision gives those pills art: each carries an icon beside its label; the 2026-11-11 revision withdraws the icons again (AC-11). The 2026-11-11 revision replaces those pills with the shared shelf controls `/products` also renders — search, filters, price, sort and numbered pages, all in the web address, so a filtered shelf is a link that survives a reload and a share, and the subcategory layer finally earns a surface.
 
 ## Context
 
@@ -35,8 +36,8 @@ Not deciding means the labels stay inert text, the only browsing aid stays the o
 **Acceptance criteria** (the contract, each criterion is IDed and independently checkable):
 
 - **AC-1**: `/plans/ready-to-cook`, `/plans/ready-to-eat` and `/plans/fresh-from-produce` each render with a green opening band (the category name and a one line intro) and a grid of that category's plans. Open plans are buyable; paused plans render with the paused label and no buy action, and the paused plans notice renders whenever the category has paused plans, exactly as on `/plans`.
-- **AC-2**: Each category page has an audience filter with the choices All, Kids, Adults and Special. All is the default. Each choice is a pill carrying its own icon beside its label. Choosing a pill filters the visible cards in the browser with no page reload and no change to the web address. The pills meet the design system's accessibility rules: a labelled group of buttons with pressed state, 44px targets, a polite live region that announces how many plans match, and no motion.
-- **AC-3**: When a category has no plans at all, the page shows the same empty state card the plans page uses: a heading, a line of copy, and the WhatsApp button when the footer carries a number. When a filter choice matches no card (but the category has plans), the same card component shows with a filter specific line, so the copy never claims the shelf is empty when it is only filtered.
+- **AC-2 (revised 2026-11-11)**: Each category page carries an audience filter with the choices All, Kids, Adults and Special, All by default — now as one facet of the shared shelf controls rather than a row of client side pills. Choosing a value writes it into the web address and the server re-renders the shelf, so the choice survives a reload and a share and works with JavaScript off. The facet is a labelled group of 44px links, each named by its visible label, the chosen one marked `aria-current`, and the group leads with All. The icon per pill that AC-11 introduced is withdrawn (AC-11).
+- **AC-3 (revised 2026-11-11)**: When a category has no products at all, the page shows the empty state card the products page uses: a heading, a line of copy, and the WhatsApp button when the footer carries a number. When the shelf holds products but the search or the filters match none, the same card shows with filter specific words and a *Clear all* action, so the copy never claims the shelf is empty when it is only filtered.
 - **AC-4**: A category web address that is not one of the three category values renders the site group's not found page.
 - **AC-5**: On `/plans` and on the home page, each plan card's category pill is a link to that category's page, with a distinct accessible name (for example "Browse ready to cook plans") and AA contrast in its green treatment. Each category page links to the other two category pages as a plain text link row under the grid.
 - **AC-6**: Each category page carries its own title, description and canonical URL, and appears in the sitemap generated by the pages sitemap route.
@@ -44,7 +45,11 @@ Not deciding means the labels stay inert text, the only browsing aid stays the o
 - **AC-8**: A Subcategories collection grouped with the store content holds the option list: a title (the filter label) and exactly one category each (the same three values the Plans category select uses), identified by the document id (no slug field: nothing public reads one, and two categories may each carry a same named option). Staff manage the list entirely in the admin, and a plan's subcategory picker offers only the subcategories of the plan's own category.
 - **AC-9**: Every plan carries exactly one subcategory from its own category, required with no default: creating or editing a plan without one is refused, and a plan whose subcategory belongs to a different category is refused on save. A subcategory that plans still use cannot be deleted; staff reassign those plans first. The three plans that existed before this revision stay unassigned until staff assign them in the admin, and the migration that adds the field touches no existing row.
 - **AC-10 (withdrawn 2026-11-06)**: A second filter row for subcategories briefly followed AC-11 on the category pages. It is withdrawn: the pages carry the audience filter only, and the subcategory layer stays in the admin and on the plans, read by no page filter.
-- **AC-11**: Each audience pill carries art: an icon drawn from code shipped with the site (one per audience, plus All), shown beside its label. The icon is decorative to assistive technology, the label stays the pill's accessible name, the pill keeps a 44px target and a pressed state, and there is no motion beyond a colour change.
+- **AC-11 (withdrawn 2026-11-11)**: Each audience pill carried art: an icon drawn from code shipped with the site (one per audience, plus All), shown beside its label. The icons are withdrawn with the client side pills: the shelf's four facets are one pill language, and giving one facet art while the rest go plain read as an accident. The pills never carried art in their accessible name, so nothing about naming changes.
+- **AC-12**: `/products` and each category page render the same shelf: one search field, filters (category, audience, type and section), a price range and a sort, with the state carried in the web address (`?q=&category=&audience=&type=&subcategory=&from=&to=&sort=&page=`). Every view is a real server rendered query: it is shareable, bookmarkable, reloadable and works with JavaScript off. An unrecognised value is dropped rather than raising an error, and any change other than the page number returns the shelf to page one.
+- **AC-13**: The shelf holds twelve products to a page and pages with numbered links that keep the filters in force; a page past the end renders the last real page rather than an empty shelf. Price filtering and price sorting read one stored number per product, the lead price the card shows, kept in paise on `products.fromPrice` by a save hook, so the filter, the sort and the card can never disagree.
+- **AC-14**: The shelf's controls are one slim bar above the grid, not a card: each facet is a labelled group of 44px links that leads with All and marks the chosen one `aria-current`, and the search, the price range, the sort and the two actions share the one plain `GET` row below, which carries the chosen facets as hidden fields, so applying one never drops the others. One primary action applies the form and a quiet *Clear all* returns to the bare shelf. A quiet line above the grid says how many products the page is showing.
+- **AC-15**: A category page pins its own category: it is not offered as a facet there and the address can never widen the shelf past the page it is on, and its Section facet lists only that category's subcategories. A searched or filtered shelf is kept out of the index (`noindex, follow`) with its canonical on the clean shelf, so filtering never multiplies indexable pages; paging is left indexable.
 
 ## Options considered
 
@@ -87,7 +92,7 @@ Three hand written page files, each with its own copy and its own grid query.
 
 **Chosen option**: Option 1: Code copy with one dynamic route
 
-One dynamic route serves all three category pages, with copy from a shared code module and plan data from the CMS. The pages render force-dynamic like `/plans`, so live prices and paused states are always current. The `/plans` page itself stays unchanged except that badges become links. The 2026-11-06 revision extends this same option with a subcategory layer: a new admin managed collection and a second client side filter row; the single dynamic route, the code copy and the reserved slugs are unchanged.
+One dynamic route serves all three category pages, with copy from a shared code module and plan data from the CMS. The pages render force-dynamic like `/plans`, so live prices and paused states are always current. The `/plans` page itself stays unchanged except that badges become links. The 2026-11-06 revision extends this same option with a subcategory layer: a new admin managed collection and a second client side filter row; the single dynamic route, the code copy and the reserved slugs are unchanged. The 2026-11-11 revision replaces the page's own client side pills with the shared, server rendered product shelf that `/products` also renders (a shared engine, `src/utilities/productShelf.ts`, and its controls); the single dynamic route, the code copy and the reserved slugs are still unchanged.
 
 **Implementation skills**: none used for this design (the project's own `design.md` and existing page patterns were the authority)
 
@@ -95,7 +100,7 @@ One dynamic route serves all three category pages, with copy from a shared code 
 
 The engineer's core question was Payload CMS or code. The deciding force is precedent plus maintenance weight: every page in this repo keeps its copy in code and only records in the admin, so a CMS managed category page would be the first of its kind, carrying new admin styling and a second home for category truth. The kitchen edits plan prices and availability constantly (that is what Plans is for), but category page words change rarely, and when they do, a developer is already involved in most site changes. Option 2 would buy copy independence that nobody has asked for, at the cost of a new surface to keep on brand. The runner up is the hybrid (code defaults, admin overrides), and it stays the natural next step if the kitchen starts asking to reword these pages often.
 
-The audience filter is client side pills rather than separate audience URLs because search engines do not need six near identical pages and the pills keep the address space and the sitemap honest: one page per category, three in total.
+The audience filter is client side pills rather than separate audience URLs because search engines do not need six near identical pages and the pills keep the address space and the sitemap honest: one page per category, three in total. (Revised 2026-11-11: the filter now lives in the web address so a filtered shelf is linkable and reloadable. The indexability the old reasoning protected is kept instead by `noindex, follow` on any searched or filtered view, with the canonical on the clean shelf, so the catalogue never multiplies into near identical indexable pages.)
 
 ## Feature design
 
@@ -127,8 +132,10 @@ The route's single input, the category slug, must be one of the three category v
 | Render opening band | Eyebrow, headline, accent phrase, intro line | Copy module, keyed by category slug (new code file) |
 | Render plan grid | Plan cards for the category | `plans` rows filtered by `category` (DB column) |
 | Paused label on a card | Paused pill and no buy panel | `plans.available` (DB column) |
-| Audience pills | Labels All, Kids, Adults, Special, each with an icon | Copy module (shared audience label map); icons are code in the filter component |
-| Filtered grid | Cards matching the chosen audience | `plans.audience` (DB column), filtered client side |
+| Shelf facets and the search form | The four facet rows, the search field, the price range, the sort | Copy module for the words; values read from the `products` columns (category, audience, type, subcategory, the stored lead price) |
+| Filtered, sorted, paged grid | One page of cards matching the address's state | `products` rows filtered, sorted and paged server side through `src/utilities/productShelf.ts` |
+| Lead price on a card and in the price control | *From ₹X a day*, and the numbers the price filter and price sort read | `products.fromPrice` in paise, written on save by the lead price hook (`src/utilities/leadPrice.ts`) |
+| Numbered pages | Page links that keep the filters in force | Derived from the filtered count and `?page=` |
 | Empty state card | Heading, copy, WhatsApp CTA | Copy module for words; `footer.contact.whatsapp` global for the number (same source the plans page uses) |
 | Page metadata | Title, description, canonical URL | Copy module; canonical derived from the category slug |
 | Sitemap entry | One URL per category page | The three category values, added to `defaultSitemap` in `src/app/(frontend)/(sitemaps)/pages-sitemap.xml/route.ts` |
@@ -139,7 +146,9 @@ The route's single input, the category slug, must be one of the three category v
 
 - The route accepts exactly the three category values; any other slug renders not found, through the site group's not found page
 - A plan slug is unique (already enforced) and must not equal any category route value, enforced by validation on the Plans collection's slug field: a lowercase comparison against the reserved set, run on create and update, with the admin form error as the way a collision surfaces
-- The audience filter never changes the URL and never triggers a server round trip
+- The audience filter never changes the URL and never triggers a server round trip (revised 2026-11-11: the shelf's state lives in the web address and the server renders it, so a filtered view is a link; the parameter names are a fixed set and each reads a column the collection already carries)
+- The lead price is computed in one place (`src/utilities/leadPrice.ts`), stored on the product by a `beforeChange` hook, and read by the card, the price filter and the price sort, so the three cannot drift
+- A category page's address can never widen the shelf: the category is pinned server side, never offered as a facet there
 - The label map for badges and the copy module draw from one shared source, so a label never says one thing on a card and another on its page
 - `PlanCard` stays a server component (it holds rich text and the purchase form). The client side filter receives an id to audience map and toggles card visibility only; cards never hydrate
 - The category route owns the `/plans/<segment>` slot. A future plan detail page must live under a different prefix (for example `/plan/<slug>`); checkout is unaffected because plan slugs travel as query parameters, not path segments
@@ -148,7 +157,7 @@ The revision adds these invariants:
 
 - A plan's subcategory always belongs to the plan's category: the save validation refuses a mismatched pair, so a card can never be offered under a category its subcategory does not serve
 - A subcategory that plans still use cannot be deleted; staff reassign the plans first
-- The filter art never reaches the accessible name: the audience icons are decorative, and every pill is named by its visible label
+- The filter art never reaches the accessible name: the audience icons are decorative, and every pill is named by its visible label (moot 2026-11-11: the icons are withdrawn)
 
 **Security model**:
 
@@ -156,13 +165,14 @@ Public read, no accounts, no personal data on these pages. Plans are already rea
 
 **Critical test scenarios** (each maps to an acceptance criterion in `## Requirements`):
 
-- Happy path: open `/plans/ready-to-cook`, see only ready to cook plans, pick Kids and see only kid plans without a reload, verifies **AC-1**, **AC-2**
-- Failure case: open `/plans/lunch-plan` (a plan slug, not a category) and receive the not found page, verifies **AC-4**
-- Empty case: open a category whose every plan is paused and see the paused cards, the paused notice and no buy action; open a filter choice with no cards and see the filter specific empty card with the WhatsApp button, verifies **AC-3**
-- Accessibility: tab to the filter group, toggle a pill with the keyboard, hear the live region report the new count, verifies **AC-2**
-- Subcategory case: creating or editing a plan with no subcategory is refused, verifies **AC-9**
-- Admin/permission: a plan saved with a subcategory from another category is refused; deleting a subcategory that plans use is denied, verifies **AC-9**
-- Art case: every audience pill renders its icon, and the pill's accessible name is exactly its label, verifies **AC-11**
+- Happy path: open `/products/ready-to-cook`, see only that category's products, then add `?audience=kids` and reload to see only kid products in that category, verifies **AC-1**, **AC-2**
+- Failure case: open `/products/lunch-plan` (a product slug, not a category) and receive the product's own page, verifies **AC-4**
+- Empty case: open a category whose every product is paused and see the paused cards, the paused notice and no buy action; filter to a combination with no cards and see the filter specific empty card with the WhatsApp button and *Clear all*, verifies **AC-3**
+- Accessibility: tab through the shelf's facets and its form, choose a facet and reach the new view by keyboard, verifies **AC-12**, **AC-14**
+- Subcategory case: creating or editing a product with no subcategory is refused, verifies **AC-9**
+- Admin/permission: a product saved with a subcategory from another category is refused; deleting a subcategory that products use is denied, verifies **AC-9**
+- Shelf case: `?q=lunch` narrows the shelf, `?from=50&to=250` bounds it by the stored lead price, `?sort=price-asc` orders it, and `?page=99` renders the last real page, verifies **AC-12**, **AC-13**
+- Category boundary: a category page carries no category facet, and its Section facet lists only that category's subcategories, verifies **AC-15**
 
 ## Build plan
 
@@ -186,6 +196,13 @@ Revision task (2026-11-06, the filter art), no migration (the audience icons are
 
 11. Give the audience pills their art: an icon per pill, plus the tests that pin the accessible names, satisfies **AC-11**
 
+Revision tasks (2026-11-11, the shared product shelf), one guarded migration that adds `products.from_price` (nullable, indexed) with a backfill over existing rows and nothing destructive (dev gets the schema by push, production by the compose migrate service):
+
+12. Add `products.fromPrice`: the stored lead price in paise, its single owner `src/utilities/leadPrice.ts`, the `beforeChange` hook that keeps it in step, the card reading it with the function as fallback, and the guarded migration with its backfill, satisfies **AC-13**
+13. Build the shared shelf engine `src/utilities/productShelf.ts`: the state parser, the `where` builder, the href builder, the facet fetch and the paged fetch, satisfies **AC-12**, **AC-13**, **AC-15**
+14. Build the shelf's controls and its rendered section once (`ProductShelfControls`, `ProductShelf`) and render them on `/products` and on every category page, with the category pinned on the category pages, satisfies **AC-12**, **AC-14**, **AC-15**
+15. Tests and typecheck: the state parser, the hrefs, the `where` builder, both surfaces' render, and the category copy suite, satisfies **AC-12** to **AC-15**
+
 ## Consequences
 
 **Positive**:
@@ -196,7 +213,7 @@ Revision task (2026-11-06, the filter art), no migration (the audience icons are
 **Negative / tradeoffs**:
 - Category page words change only through a code change and a deploy
 - The address space under `/plans` now splits between the shelf and three reserved category slugs, a rule future plan slugs must respect
-- A refreshed or shared filtered view always lands back on All, because the filter is deliberately not in the web address; nobody should later "fix" this with query parameters, which would create six near identical indexable variants
+- A refreshed or shared filtered view always lands back on All, because the filter is deliberately not in the web address; nobody should later "fix" this with query parameters, which would create six near identical indexable variants. (Revised 2026-11-11: the state now lives in the web address, so a filtered or shared view keeps its filters. The old worry — that query parameters would create dozens of near identical indexable variants — is answered by keeping searched and filtered views out of the index (`noindex, follow`, canonical on the clean shelf) rather than by refusing the parameters.)
 
 **Neutral**:
 - The sitemap grows by three URLs
@@ -207,7 +224,7 @@ Revision task (2026-11-06, the filter art), no migration (the audience icons are
 
 Positive:
 - Finer grouping needs no developer: the kitchen owns the option list, per category
-- The filter stays client side, so the address space and the sitemap stay honest: still three pages
+- The filter stays client side, so the address space and the sitemap stay honest: still three pages (reversed 2026-11-11: the shelf is server rendered and its state lives in the address, kept out of the index by `noindex, follow`)
 
 Negative / tradeoffs:
 - The subcategory layer now has no page that reads it, so it serves the kitchen's own labels until it earns a surface
@@ -215,6 +232,22 @@ Negative / tradeoffs:
 
 Neutral:
 - One guarded migration (a new table plus a nullable column); no backfill, nothing destructive
+
+**Added by the 2026-11-11 revision**:
+
+Positive:
+- A searched, filtered or sorted shelf is a real link: shareable, bookmarkable, reloadable, and working with JavaScript off
+- One shelf serves `/products` and every category page, so the storefront browses the same way everywhere, and the subcategory layer at last has a page that reads it
+- The lead price the card shows is stored once, so the price filter, the price sort and the card cannot disagree
+
+Negative / tradeoffs:
+- The parameter names are now part of the public surface; renaming one is a breaking change
+- A searched or filtered view is deliberately kept out of the index, so those views earn no search traffic of their own
+- A product with no computable lead price (impossible through the admin, since a price is required) would lead a dearest-first sort and sit outside both ends of a price range; none exists in a valid catalogue
+
+Neutral:
+- One guarded migration (a nullable indexed column plus a backfill); nothing destructive
+- The shelf renders server side, so each change reloads the page rather than filtering in the browser
 
 ## Follow-up
 
@@ -224,3 +257,5 @@ Neutral:
 - [ ] If the kitchen later wants to reword category pages themselves, revisit the hybrid option (code defaults, admin overrides)
 - [ ] Staff assign subcategories to the three existing plans in the admin, alongside the placeholder label fixes they already owe
 - [ ] If subcategory pages or card badges are wanted later, design them then: routes under a category would need reserved slugs and sitemap entries, and badges would add a third label to the cards
+- [ ] A database managed by dev push gets the `from_price` column but not the migration's backfill; after the column arrives, run `npx payload run ./src/scripts/backfill-lead-price.ts` once, or the price filter looks broken until every product is saved by hand (production gets the backfill from the migration)
+- [ ] The shelf's search matches a product's title and points only: the description is a `jsonb` rich text column a simple query cannot pattern match. If search over descriptions is wanted later, design it then (a generated search column, or Postgres full text search)

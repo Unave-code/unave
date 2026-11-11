@@ -5,6 +5,7 @@ import React from 'react'
 import { Media } from '@/components/Media'
 import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
+import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
@@ -59,13 +60,12 @@ export const ProductCard: React.FC<{
   /* The lead price is the cheapest per-day rate across the durations, floored
      to whole rupees: "From ₹59 a day" leads a shopper to the running cost
      without promising more precision than it carries, and the exact totals sit
-     on the product's own page. A rate that floors to zero (a day or two at a
-     small price) leads with nothing rather than a nonsense "From ₹0". */
-  const perDayRates = durations
-    .filter((duration) => duration.days > 0)
-    .map((duration) => Math.floor(duration.price / duration.days / 100) * 100)
-    .filter((rate) => rate > 0)
-  const perDay = perDayRates.length > 0 ? Math.min(...perDayRates) : null
+     on the product's own page. The stored `fromPrice` is that same number,
+     worked out once on save, and it is what the shelf sorts and filters on; the
+     fallback keeps a card honest if a row somehow carries no stored value. */
+  const storedLead =
+    typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
+  const perDay = isOneTime ? null : (storedLead ?? leadPricePaise(product))
   const planPriceLine = perDay !== null ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}` : undefined
   const priceLine = isOneTime
     ? (oneTimePrice >= 1 ? formatPaise(oneTimePrice) : undefined)
