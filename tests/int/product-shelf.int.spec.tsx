@@ -7,12 +7,24 @@ import { ProductShelfControls } from '@/components/Store/ProductShelfControls'
 import type { Product } from '@/payload-types'
 import {
   EMPTY_SHELF,
+  fetchProductShelf,
   hasShelfFilters,
   parseShelfState,
   shelfHref,
   shelfWhere,
   type ShelfState,
 } from '@/utilities/productShelf'
+
+const payloadFind = vi.hoisted(() => vi.fn())
+
+vi.mock('payload', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('payload')>()
+
+  return {
+    ...actual,
+    getPayload: vi.fn().mockResolvedValue({ find: payloadFind }),
+  }
+})
 
 // Next's image optimizer needs the Next runtime; a card only cares that an image
 // element renders, so it is a plain img here, exactly as the card test does.
@@ -35,7 +47,10 @@ vi.mock('next/image', () => ({
  * can be rendered and read without a browser.
  */
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  payloadFind.mockReset()
+})
 
 const renderControls = (
   state: Partial<ShelfState> = {},
@@ -63,6 +78,7 @@ describe('reading the address', () => {
         page: '3',
         q: '  dal  ',
         sort: 'price-asc',
+        subcategory: 'tiffin',
         to: '150',
       }),
     ).toEqual({
@@ -72,6 +88,7 @@ describe('reading the address', () => {
       page: 3,
       q: 'dal',
       sort: 'price-asc',
+      subcategory: 'tiffin',
       to: 150,
     })
   })
@@ -95,6 +112,11 @@ describe('reading the address', () => {
 
   it('takes the last of a parameter an address repeats', () => {
     expect(parseShelfState({ audience: ['kids', 'adults'] }).audience).toBe('adults')
+  })
+
+  it('trims a subcategory slug and treats a blank one as no filter', () => {
+    expect(parseShelfState({ subcategory: '  tiffin  ' }).subcategory).toBe('tiffin')
+    expect(parseShelfState({ subcategory: ' ' }).subcategory).toBeNull()
   })
 
   it('accepts zero as a real low end and keeps a page of one or more', () => {
@@ -145,6 +167,12 @@ describe('writing the address', () => {
       '/products/ready-to-cook?audience=kids',
     )
   })
+
+  it('writes and preserves a subcategory slug', () => {
+    expect(shelfHref('/products', { ...EMPTY_SHELF, subcategory: 'tiffin', page: 2 })).toBe(
+      '/products?subcategory=tiffin&page=2',
+    )
+  })
 })
 
 describe('what counts as filtered', () => {
@@ -156,6 +184,7 @@ describe('what counts as filtered', () => {
   it('is true once anything is asked', () => {
     expect(hasShelfFilters({ ...EMPTY_SHELF, q: 'dal' })).toBe(true)
     expect(hasShelfFilters({ ...EMPTY_SHELF, from: 0 })).toBe(true)
+    expect(hasShelfFilters({ ...EMPTY_SHELF, subcategory: 'tiffin' })).toBe(true)
   })
 
   it('counts a category only where the page is not already that category', () => {
@@ -172,6 +201,12 @@ describe('the query the shelf reads by', () => {
   it('pins a category page to its own category, whatever the address says', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, category: 'ready-to-eat' }, 'ready-to-cook')).toEqual({
       and: [{ category: { equals: 'ready-to-cook' } }],
+    })
+  })
+
+  it('filters by the resolved subcategory document ID', () => {
+    expect(shelfWhere({ ...EMPTY_SHELF, subcategory: 'tiffin' }, undefined, 7)).toEqual({
+      and: [{ subcategory: { equals: 7 } }],
     })
   })
 
@@ -198,6 +233,60 @@ describe('the query the shelf reads by', () => {
         { fromPrice: { less_than_equal: 15000 } },
       ],
     })
+  })
+})
+
+describe('fetching a subcategory shelf', () => {
+  it('resolves a slug to its relation ID before querying products', async () => {
+    payloadFind
+      .mockResolvedValueOnce({ docs: [{ id: 7 }] })
+      .mockResolvedValueOnce({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
+
+    await fetchProductShelf({ ...EMPTY_SHELF, subcategory: 'tiffin' })
+
+    expect(payloadFind).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        collection: 'subcategories',
+        where: { slug: { equals: 'tiffin' } },
+      }),
+    )
+    expect(payloadFind).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        collection: 'products',
+        where: { and: [{ subcategory: { equals: 7 } }] },
+      }),
+    )
+  })
+
+  it('does not widen the shelf when a subcategory slug is unknown', async () => {
+    payloadFind.mockResolvedValueOnce({ docs: [] })
+
+    await expect(fetchProductShelf({ ...EMPTY_SHELF, subcategory: 'missing' })).resolves.toEqual({
+      docs: [],
+      page: 1,
+      totalDocs: 0,
+      totalPages: 0,
+    })
+    expect(payloadFind).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps a subcategory shelf inside a mismatched fixed category', async () => {
+    payloadFind
+      .mockResolvedValueOnce({ docs: [{ id: 7, category: 'ready-to-eat' }] })
+      .mockResolvedValueOnce({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
+
+    await fetchProductShelf({ ...EMPTY_SHELF, subcategory: 'tiffin' }, 'ready-to-cook')
+
+    expect(payloadFind).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: {
+          and: [{ category: { equals: 'ready-to-cook' } }, { subcategory: { equals: 7 } }],
+        },
+      }),
+    )
   })
 })
 
@@ -252,6 +341,14 @@ describe('the shelf controls', () => {
       field.getAttribute('name'),
     )
     expect(names.sort()).toEqual(['audience', 'category', 'from', 'q', 'sort', 'to'])
+  })
+
+  it('keeps the subcategory slug when applying other shelf controls', () => {
+    const { container } = renderControls({ subcategory: 'tiffin' })
+
+    expect(
+      container.querySelector('input[type="hidden"][name="subcategory"]')?.getAttribute('value'),
+    ).toBe('tiffin')
   })
 
   it('shows the words, the range and the sort that are already in force', () => {

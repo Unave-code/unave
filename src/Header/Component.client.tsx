@@ -213,25 +213,30 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           ref={barRef}
           {...(theme ? { 'data-theme': theme } : {})}
         >
-          <div className="container flex items-center justify-between gap-6 py-3">
-            <Link aria-label="UNAVE home" className="text-primary shrink-0" href="/">
+          <div className="container grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-3 lg:flex lg:justify-between lg:gap-6">
+            <Link
+              aria-label="UNAVE home"
+              className="text-primary col-start-1 row-start-1 shrink-0 lg:order-1"
+              href="/"
+            >
               <Logo />
             </Link>
 
-            <nav aria-label="Main" className="hidden lg:block">
+            <nav aria-label="Main" className="hidden lg:order-2 lg:block">
               <HeaderNav items={menuItems} />
             </nav>
 
-            <div className="flex items-center gap-2">
-              <AccountLinks name={session?.name ?? null} signedIn={signedIn} />
+            <Link
+              aria-label="Search meals and plans"
+              className="text-primary border-current/25 hover:bg-current/10 col-span-2 row-start-2 inline-flex h-11 min-w-0 items-center gap-3 rounded-pill border px-4 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none lg:order-3 lg:col-auto lg:row-auto lg:w-48 lg:shrink-0 xl:w-56"
+              href="/search"
+            >
+              <Search aria-hidden="true" className="size-5 shrink-0" strokeWidth={2} />
+              <span className="text-caption truncate">Search meals and plans</span>
+            </Link>
 
-              <Link
-                aria-label="Search"
-                className="text-primary hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
-                href="/search"
-              >
-                <Search aria-hidden="true" className="size-5" strokeWidth={2} />
-              </Link>
+            <div className="col-start-2 row-start-1 flex items-center gap-2 lg:order-4">
+              <AccountLinks name={session?.name ?? null} signedIn={signedIn} />
 
               <CartNavLink
                 active={pathname === '/cart'}

@@ -5,11 +5,10 @@ import { revalidateTag } from 'next/cache'
 import type { Product } from '@/payload-types'
 
 /**
- * Clearing the homepage shelf when a product changes.
+ * Clearing the homepage Best sellers shelf when a product changes.
  *
- * `getHomeProducts` caches the four products under the `products` tag, so a
- * price or a pause edited in the admin has to knock that cache over or the front
- * page would keep advertising the old one until the next rebuild.
+ * `getFeaturedHomeProducts` caches featured products under the `products` tag,
+ * so a price or availability change must clear it.
  */
 export const revalidateProducts: CollectionAfterChangeHook<Product> = ({
   doc,

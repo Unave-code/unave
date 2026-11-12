@@ -15,9 +15,10 @@ import {
  *
  * `/products` and the three category pages are the same shelf reading the same
  * collection, so every rule about what a customer can ask for lives here once.
- * The state travels in the address — `?q=&audience=&from=&sort=&page=2` — which
- * means a filtered view can be linked, bookmarked, reloaded and stepped through
- * with the back button, and the whole thing works with JavaScript off.
+ * The state travels in the address, for example
+ * `?q=&category=&audience=&subcategory=&from=&to=&sort=&page=2`, so a filtered
+ * view can be linked, bookmarked, reloaded and stepped through with the back
+ * button, and the whole thing works with JavaScript off.
  *
  * The queries themselves are plain Payload `find` calls, so a page is a real
  * database query with a limit, not a filtered list of everything.
@@ -66,6 +67,7 @@ export interface ShelfState {
   page: number
   q: string
   sort: ShelfSortKey
+  subcategory: null | string
   /** The high end of the price range, in whole rupees a day. */
   to: null | number
 }
@@ -78,6 +80,7 @@ export const EMPTY_SHELF: ShelfState = {
   page: 1,
   q: '',
   sort: 'newest',
+  subcategory: null,
   to: null,
 }
 
@@ -118,6 +121,7 @@ export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
   const audienceRaw = firstValue(raw.audience)
   const categoryRaw = firstValue(raw.category)
   const sortRaw = firstValue(raw.sort)
+  const subcategoryRaw = firstValue(raw.subcategory)
 
   return {
     audience:
@@ -132,6 +136,7 @@ export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
       sortRaw && (SHELF_SORT_ORDER as string[]).includes(sortRaw)
         ? (sortRaw as ShelfSortKey)
         : 'newest',
+    subcategory: subcategoryRaw?.trim() || null,
     to: wholeRupees(firstValue(raw.to)),
   }
 }
@@ -161,6 +166,7 @@ export const shelfHref = (
   if (next.q) params.set('q', next.q)
   if (next.category) params.set('category', next.category)
   if (next.audience) params.set('audience', next.audience)
+  if (next.subcategory) params.set('subcategory', next.subcategory)
   if (next.from !== null) params.set('from', String(next.from))
   if (next.to !== null) params.set('to', String(next.to))
   if (next.sort !== 'newest') params.set('sort', next.sort)
@@ -176,6 +182,7 @@ export const hasShelfFilters = (state: ShelfState, fixedCategory?: ProductCatego
   Boolean(
     state.q ||
       state.audience ||
+      state.subcategory ||
       state.from !== null ||
       state.to !== null ||
       (state.category && state.category !== fixedCategory),
@@ -191,11 +198,13 @@ export const hasShelfFilters = (state: ShelfState, fixedCategory?: ProductCatego
 export const shelfWhere = (
   state: ShelfState,
   fixedCategory?: ProductCategoryValue,
+  subcategoryId?: number,
 ): Where => {
   const and: Where[] = []
   const category = fixedCategory ?? state.category
 
   if (category) and.push({ category: { equals: category } })
+  if (subcategoryId !== undefined) and.push({ subcategory: { equals: subcategoryId } })
   if (state.audience) and.push({ audience: { equals: state.audience } })
   if (state.from !== null) and.push({ fromPrice: { greater_than_equal: state.from * 100 } })
   if (state.to !== null) and.push({ fromPrice: { less_than_equal: state.to * 100 } })
@@ -225,13 +234,28 @@ export const fetchProductShelf = async (
   fixedCategory?: ProductCategoryValue,
 ): Promise<ShelfResult> => {
   const payload = await getPayload({ config: configPromise })
+  let subcategoryId: number | undefined
+
+  if (state.subcategory) {
+    const subcategory = await payload.find({
+      collection: 'subcategories',
+      depth: 0,
+      limit: 1,
+      where: { slug: { equals: state.subcategory } },
+    })
+    const match = subcategory.docs[0]
+
+    if (!match) return { docs: [], page: 1, totalDocs: 0, totalPages: 0 }
+
+    subcategoryId = match.id
+  }
 
   const query = {
     collection: 'products' as const,
     depth: 1 as const,
     limit: SHELF_PER_PAGE,
     sort: SHELF_SORT_QUERY[state.sort],
-    where: shelfWhere(state, fixedCategory),
+    where: shelfWhere(state, fixedCategory, subcategoryId),
   }
 
   let result = await payload.find({ ...query, page: state.page })

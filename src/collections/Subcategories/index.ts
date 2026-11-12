@@ -4,20 +4,16 @@ import { anyone } from '../../access/anyone'
 import { isStaff } from '../../access/isStaff'
 import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
+import { autoSubcategorySlug } from './hooks/autoSubcategorySlug'
 import { denyDeleteInUse } from './hooks/denyDeleteInUse'
+import {
+  revalidateSubcategories,
+  revalidateSubcategoriesDelete,
+} from './hooks/revalidateSubcategories'
 
 /**
- * The finer labels inside a product category (spec 0008, AC-8).
- *
- * Ready to cook might split into breakfast and lunch; ready to eat into tiffin
- * and dessert. The kitchen owns the list and edits it in the admin, so a new
- * grouping never needs a developer. Each option belongs to exactly one
- * category, and the picker on a product offers only the options of that
- * product's own category.
- *
- * There is no slug field: nothing public addresses a subcategory on its own.
- * The document id is the identity, which is also why two categories can each
- * carry an option with the same name.
+ * The finer labels inside a product category (spec 0008, AC-8). Their unique
+ * slugs also identify the server-side shelf filter (assumed spec 0009).
  */
 export const Subcategories: CollectionConfig = {
   slug: 'subcategories',
@@ -28,9 +24,9 @@ export const Subcategories: CollectionConfig = {
     update: isStaff,
   },
   admin: {
-    defaultColumns: ['title', 'category', 'updatedAt'],
+    defaultColumns: ['title', 'slug', 'category', 'updatedAt'],
     description:
-      'The finer labels inside each product category. Products pick one from their own category, and the category pages filter by them.',
+      'Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.',
     group: 'Store',
     useAsTitle: 'title',
   },
@@ -44,22 +40,47 @@ export const Subcategories: CollectionConfig = {
       },
     },
     {
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      hooks: {
+        beforeValidate: [autoSubcategorySlug],
+      },
+      admin: {
+        description:
+          'Generated from the title when empty. Entered values are normalized.',
+      },
+    },
+    {
       name: 'category',
       type: 'select',
       label: 'Category',
       required: true,
       admin: {
-        description: 'Which shelf this option belongs to. A product can only pick options from its own category.',
+        description:
+          'Which shelf this option belongs to. A product can only pick options from its own category.',
       },
       options: PRODUCT_CATEGORY_VALUES.map((value) => ({
         label: CATEGORY_LABEL[value],
         value,
       })),
     },
+    {
+      name: 'image',
+      type: 'upload',
+      label: 'Image',
+      relationTo: 'media',
+      admin: {
+        description: 'Optional image for this subcategory.',
+      },
+    },
   ],
   hooks: {
     // A subcategory still chosen by a product cannot be deleted, because that
     // would leave the product without the label its category page filters on.
+    afterChange: [revalidateSubcategories],
+    afterDelete: [revalidateSubcategoriesDelete],
     beforeDelete: [denyDeleteInUse],
   },
   labels: {

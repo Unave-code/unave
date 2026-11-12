@@ -4,10 +4,7 @@ import { RowLabelProps, useRowLabel } from '@payloadcms/ui'
 
 export const RowLabel: React.FC<RowLabelProps> = () => {
   const data = useRowLabel<NonNullable<Hero['slides']>[number]>()
+  const index = data.rowNumber === undefined ? '' : ` ${data.rowNumber + 1}`
 
-  const label = data?.data?.headline
-    ? `Slide ${data.rowNumber !== undefined ? data.rowNumber + 1 : ''}: ${data?.data?.headline.replace(/\*/g, '')}`
-    : 'Slide'
-
-  return <div>{label}</div>
+  return <div>{`Image${index}`}</div>
 }

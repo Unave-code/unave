@@ -105,6 +105,10 @@ export const ProductShelfControls: React.FC<{
       className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2"
       method="get"
     >
+      {state.subcategory ? (
+        <input name="subcategory" type="hidden" value={state.subcategory} />
+      ) : null}
+
       <div className="relative min-w-[12rem] flex-1">
         <Search
           aria-hidden="true"

@@ -9,16 +9,9 @@
  * the business. Search this file for `—` before launch.
  */
 
-import { WHATSAPP_CTA_LABEL } from '@/utilities/whatsapp'
-
 export const HOME_TITLE = 'UNAVE | Healthy food, cooked in our own kitchen'
 export const HOME_DESCRIPTION =
   'Healthy, nutrition-conscious and diabetes-conscious meals cooked fresh in our cloud kitchen. Tell us what you need and we will cook it.'
-
-/** Where the calls to action point. Only pages that exist today. */
-export const HOME_HREF_CONTACT = '/contact'
-export const HOME_HREF_HOW_IT_WORKS = '#how-it-works'
-export const HOME_HREF_FAQ = '#faq'
 
 /**
  * Placeholder photography: free-licence stock, already cropped and compressed to
@@ -26,81 +19,22 @@ export const HOME_HREF_FAQ = '#faq'
  * files (same names, same paths) when it lands and nothing else has to change.
  */
 export const IMAGES = {
-  /** A full day of meals, photographed from above. Sits behind the hero. */
+  /** A full day of meals, shown when no banner images are configured. */
   heroBg: '/images/hero-table.jpg',
-  /** Our kitchen, mid-service. */
-  kitchen: '/images/kitchen.jpg',
   /** The same laid-out table, reused beside the common questions. */
   faq: '/images/hero-table.jpg',
 } as const
 
 /** 1. Announcement bar now lives in the site chrome (Header global), above the navbar. */
 
-/** 2. Hero. These strings seed the Home hero global's default slide (§6.3) and
- * stand in again if the global ever renders without slides. Editing the live hero
- * happens in the admin; editing here changes what a fresh global starts from. */
-export const HERO_EYEBROW = 'Cloud kitchen · Cooked fresh'
+/** 2. The image slider's accessible heading. */
 export const HERO_HEADLINE = 'Good food, cooked in'
 export const HERO_HEADLINE_ACCENT = 'our own kitchen.'
-export const HERO_SUB =
-  'Healthy, nutrition-conscious and diabetes-conscious meals, cooked in small batches and delivered to your door.'
-export const HERO_PRIMARY = WHATSAPP_CTA_LABEL
-export const HERO_SECONDARY = 'How It Works'
 
-/** Feature chips under the hero buttons, shared by every slide. `icon` is resolved in HeroCarousel.tsx. */
-export const HERO_CHIPS = [
-  { label: 'Fresh daily', icon: 'leaf' },
-  { label: 'Small batches', icon: 'flask' },
-  { label: 'No account needed', icon: 'lock' },
-  { label: 'Home-style cooking', icon: 'utensils' },
-] as const
-
-/** 3. Trust strip. Every claim here has to survive a question, and a note is
- * rendered only when it says something specific — an empty note leaves the
- * label standing on its own rather than showing a stub. */
-export const TRUST = [
-  {
-    label: 'Delivered to your door',
-    /** Deliberately area-less: zones are confirmed by message (see the FAQ), never promised. */
-    note: 'On the schedule we agree with you',
-    icon: 'truck',
-  },
-  {
-    label: 'Cooked in our kitchen',
-    note: 'Small batches, every day',
-    icon: 'utensils',
-  },
-  {
-    label: 'FSSAI licensed',
-    /** The licence number is still owed by the business; until it lands the label carries the claim alone. */
-    note: '',
-    icon: 'badge',
-  },
-  {
-    label: 'Home-style cooking',
-    note: 'Oil, salt and portions we control',
-    icon: 'leaf',
-  },
-  {
-    label: 'One kitchen, one focus',
-    note: 'Healthy food only',
-    icon: 'shield',
-  },
-] as const
-
-/** 4. Welcome */
-export const WELCOME_HEADING = 'Welcome to UNAVE'
-export const WELCOME_BODY = [
-  'We are a cloud kitchen that cooks one kind of food: healthy, home-style meals, cooked fresh so the daily question of what to eat is already answered.',
-  'Tell us what you need and how often, and we cook, pack and deliver on the schedule you agree with us. You can change or stop whenever you like, with one message.',
-]
-export const WELCOME_PHOTO = 'Our kitchen, mid-service'
-
-/** 5. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
+/** 4. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
  * three with an `image` are the ones the bento gives a wide or tall tile to, so the
  * copy is ordered kitchen first, then how you talk to us, then what we keep. Those
- * three photographs deliberately skip `/images/kitchen.jpg`, which the welcome
- * section above already shows, and `/images/hero-table.jpg`, which the hero uses. */
+ * three photographs deliberately skip `/images/hero-table.jpg`, which the hero uses. */
 export const BENEFITS_HEADING = 'What makes us different'
 export const BENEFITS_INTRO =
   'Six decisions about how the kitchen runs, and what each one means for your week.'
@@ -140,7 +74,7 @@ export const BENEFITS = [
   },
 ] as const
 
-/** 6. What we cook */
+/** 5. What we cook */
 export const CATEGORIES_HEADING = 'What we cook'
 export const CATEGORIES_INTRO =
   'Four kinds of food, one kitchen. Every meal is cooked the day it is sent out.'
@@ -176,42 +110,53 @@ export const CATEGORIES = [
   },
 ] as const
 
-/** 6b. Products. Featured open products first, then the newest open ones, four at most. */
-export const PRODUCTS_SECTION_HEADING = 'Choose your product'
+/** Featured products selected by the kitchen. */
+export const BEST_SELLERS_HEADING = 'Best sellers'
+export const BEST_SELLERS_INTRO = 'Featured products selected by our kitchen.'
+export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
+
+/** 6b. Category browsing. */
+export const PRODUCTS_SECTION_HEADING = 'Choose your category'
 export const PRODUCTS_SECTION_INTRO =
-  'A product is a length of meals cooked from this kitchen, paid once. Pick the length that suits your week and we cook from it.'
+  'Browse the meal types, then find a product that fits your week.'
 export const PRODUCTS_SECTION_CTA = 'See every product'
-export const PRODUCTS_SECTION_EMPTY_HEADING = 'The menu is being set'
-export const PRODUCTS_SECTION_EMPTY_BODY =
-  'No products are open right now. Message the kitchen and we will tell you what we can cook for you this week.'
 
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */
 export const NOTICE_TITLE = 'A note on your goals'
 export const NOTICE_BODY =
   'We cook healthy food and we describe it honestly. We do not promise weight loss, muscle gain or any medical outcome, and our meals are not a substitute for advice from your doctor or a qualified nutritionist. If you are managing a condition, please talk to them about your food.'
 
-/** 7b. From our kitchen. Placeholder photography, captions only, no claims. */
-export const GALLERY_HEADING = 'From our kitchen'
-export const GALLERY_INTRO =
-  'A look at what leaves the kitchen: cooked the same morning, portioned, and packed to travel.'
+/** Homepage food photography and captions. */
 export const GALLERY = [
-  { image: '/images/gallery-1.jpg', caption: 'Morning prep, before the first delivery' },
-  { image: '/images/gallery-2.jpg', caption: 'Cooked in batches we can actually control' },
-  { image: '/images/gallery-3.jpg', caption: 'Portioned for one sitting, nothing wasted' },
+  {
+    image: '/images/gallery-1.jpg',
+    alt: 'A plated meal with vegetables and sauce',
+  },
+  {
+    image: '/images/gallery-2.jpg',
+    alt: 'A salad with sliced avocado, greens and pomegranate',
+  },
+  {
+    image: '/images/gallery-3.jpg',
+    alt: 'Fresh vegetables arranged on a kitchen prep board',
+  },
 ] as const
 
-/** 8. How it works */
+/** 7. How it works */
 export const STEPS_HEADING = 'How it works'
 export const STEPS_INTRO =
   'Four steps from your first message to the box at your door, and nothing is cooked until you have agreed it.'
 export const STEPS = [
   { title: 'Tell us what you need', body: 'Message us, or use the form on the contact page.' },
-  { title: 'We plan the week', body: 'The kitchen confirms what we can cook and when we can deliver.' },
+  {
+    title: 'We plan the week',
+    body: 'The kitchen confirms what we can cook and when we can deliver.',
+  },
   { title: 'We cook and deliver', body: 'Fresh the same morning, packed to travel to your door.' },
   { title: 'Say if it changes', body: 'One message to skip a day, change a meal or stop.' },
 ] as const
 
-/** 10. Customer words. Placeholders until real, attributed quotes arrive. */
+/** 9. Customer words. Placeholders until real, attributed quotes arrive. */
 export const TESTIMONIALS_HEADING = 'What customers say'
 export const TESTIMONIALS = [
   { quote: '[Customer quote goes here]', name: '[Customer name]', note: '[Area]' },
@@ -221,7 +166,7 @@ export const TESTIMONIALS = [
 export const TESTIMONIALS_PLACEHOLDER =
   'Placeholder quotes. Real, attributed customer words only, and no health outcomes.'
 
-/** 11. Common questions */
+/** 10. Common questions */
 export const FAQ_HEADING = 'Common questions'
 export const FAQ_PHOTO = 'The day’s meals, laid out ready to pack'
 export const FAQ = [

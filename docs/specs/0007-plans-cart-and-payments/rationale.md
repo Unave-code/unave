@@ -124,3 +124,53 @@ What the revision keeps from the removal's lessons, so the old pain points do no
 The AC renumbering, since the old set was written for one plan per order: old AC-2 (direct link) splits into the new AC-2 (cart add rules) and AC-3 (cart page); old AC-3 becomes AC-4; old AC-4 becomes AC-5; old AC-5 becomes AC-6; old AC-6 becomes AC-7; old AC-7 becomes AC-8; old AC-8 becomes AC-9; old AC-9 becomes AC-10; old AC-10 becomes AC-11; old AC-11 becomes AC-12; old AC-12 becomes AC-13. AC-1 keeps its number and loses the buy wording.
 
 The tradeoff accepted: the cart's complexity is back, bounded by the cap, the identifier only cookie and the no server cart rule. The engineer chose this knowingly for a concrete pipeline of products, and the build plan tasks 14 to 19 carry it.
+
+## Revision, 2026-11-12: Best sellers product card data
+
+The homepage already selects available featured products from the Products collection, but its card has no source for an old price or pack size. One time products have a single price, while meal plans have separate prices for each duration. The card therefore needs optional data that fits the existing product types without changing the cart or order model.
+
+### Options considered
+
+#### Option 1: Keep the current card
+
+Continue showing the current price only.
+
+**Pros**:
+
+- No schema change or extra admin work.
+
+**Cons**:
+
+- The card cannot show the comparison price and pack size from the supplied image.
+
+#### Option 2: Add optional fields to one time products (chosen)
+
+Add a paise based old price and plain text pack size to the existing Products collection. Derive the discount from the two prices.
+
+**Pros**:
+
+- The card reads product details from the same record staff already maintain.
+- Missing values remain valid, and existing product rows need no backfill.
+- One time products have one current price, so the comparison is unambiguous.
+
+**Cons**:
+
+- Staff must keep the reference price and pack size accurate.
+- A comparison price on a plan would be ambiguous because each duration has a different price.
+
+#### Option 3: Add comparison prices to every plan duration and structured pack units
+
+Store an old price alongside each plan duration, and split pack size into an amount and unit.
+
+**Pros**:
+
+- Discounts could be shown for plans and size values could be normalized.
+
+**Cons**:
+
+- Neither is needed for the requested card. This adds fields and admin choices to products that do not use them.
+- A plan's discount would appear beside a per day lead price while its actual selected totals vary by duration.
+
+## Rationale
+
+The existing Product model already distinguishes a one time price from a meal plan's duration prices. Optional fields on one time products are the smallest change that gives the card a reliable source and leaves plans accurate. The discount percentage is derived from the current and old prices, so the admin cannot save a percentage that contradicts them. The text pack size is enough for display and does not introduce unit conversion rules. The engineer chose this data shape. The system can check that an old price exceeds the current price, but staff remain responsible for keeping the reference price truthful.

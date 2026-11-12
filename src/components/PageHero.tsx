@@ -20,7 +20,7 @@ interface Props {
 
 /**
  * The green band that opens a content page (design.md §10.1, §10.3): eyebrow, a
- * Lora headline with a gold accent phrase, one lead line, on a photograph, with
+ * Nunito headline with a gold accent phrase, one lead line, on a photograph, with
  * the logo swoosh faint behind it.
  *
  * About, Contact and Products each carry their own copy of this band, because each

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
-import { Lora, Plus_Jakarta_Sans } from 'next/font/google'
+import { Nunito } from 'next/font/google'
 import React from 'react'
 
 import { Providers } from '@/providers'
@@ -12,27 +12,19 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
-// design.md §4: Lora for headings, Plus Jakarta Sans for body and UI. Only the weights used.
-const lora = Lora({
+// Nunito replaces the site's previous heading and body families; the type scale stays unchanged.
+const nunito = Nunito({
   subsets: ['latin'],
-  weight: ['600', '700'],
+  weight: 'variable',
   style: ['normal', 'italic'],
-  variable: '--font-lora',
-  display: 'swap',
-})
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-jakarta',
+  variable: '--font-nunito',
   display: 'swap',
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      className={cn(lora.variable, jakarta.variable, GeistMono.variable)}
+      className={cn(nunito.variable, GeistMono.variable)}
       data-theme="light"
       lang="en"
       suppressHydrationWarning

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import React from 'react'
 
 import { Benefits } from '@/components/home/Benefits'
+import { BestSellers } from '@/components/home/BestSellers'
 import { Categories } from '@/components/home/Categories'
 import { Faq } from '@/components/home/Faq'
 import { Gallery } from '@/components/home/Gallery'
@@ -9,13 +10,9 @@ import { Hero } from '@/components/home/Hero'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { ProductShelf } from '@/components/home/Products'
 import { Testimonials } from '@/components/home/Testimonials'
-import { TrustStrip } from '@/components/home/TrustStrip'
-import { Welcome } from '@/components/home/Welcome'
 import { FAQ, HOME_DESCRIPTION, HOME_TITLE } from '@/utilities/homeCopy'
-import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getServerSideURL } from '@/utilities/getURL'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import type { Footer } from '@/payload-types'
 
 export const metadata: Metadata = {
   alternates: {
@@ -55,9 +52,6 @@ const structuredData = [
 ]
 
 export default async function HomePage() {
-  const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
-  const whatsapp = footer?.contact?.whatsapp ?? null
-
   return (
     <main>
       <script
@@ -67,14 +61,13 @@ export default async function HomePage() {
         type="application/ld+json"
       />
 
-      <Hero whatsapp={whatsapp} />
-      <TrustStrip />
-      <ProductShelf whatsapp={whatsapp} />
-      <Welcome />
+      <Hero />
+      <Gallery />
+      <ProductShelf />
+      <BestSellers />
       <Benefits />
       <Categories />
       <HowItWorks />
-      <Gallery />
       <Testimonials />
       <Faq />
     </main>

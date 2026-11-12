@@ -1048,6 +1048,14 @@ export interface Product {
    */
   price?: number | null;
   /**
+   * Optional reference price for a one-time product. It must be higher than the current price.
+   */
+  compareAtPrice?: number | null;
+  /**
+   * Optional display text for a one-time product, for example 260 g.
+   */
+  packSize?: string | null;
+  /**
    * Derived on every save: the cheapest per-day rate for a plan, the item price for a one-time purchase, in paise. The shelf sorts and filters on it, so it is never edited by hand.
    */
   fromPrice?: number | null;
@@ -1075,7 +1083,7 @@ export interface Product {
   createdAt: string;
 }
 /**
- * The finer labels inside each product category. Products pick one from their own category, and the category pages filter by them.
+ * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "subcategories".
@@ -1087,9 +1095,17 @@ export interface Subcategory {
    */
   title: string;
   /**
+   * Generated from the title when empty. Entered values are normalized.
+   */
+  slug: string;
+  /**
    * Which shelf this option belongs to. A product can only pick options from its own category.
    */
   category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
+  /**
+   * Optional image for this subcategory.
+   */
+  image?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -1894,6 +1910,8 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   price?: T;
+  compareAtPrice?: T;
+  packSize?: T;
   fromPrice?: T;
   category?: T;
   subcategory?: T;
@@ -1909,7 +1927,9 @@ export interface ProductsSelect<T extends boolean = true> {
  */
 export interface SubcategoriesSelect<T extends boolean = true> {
   title?: T;
+  slug?: T;
   category?: T;
+  image?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2318,7 +2338,7 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
- * The carousel at the top of the home page. One slide shows at a time; leave a photograph empty to keep the built-in kitchen photo.
+ * Upload the promotional images shown in the home page slider. Set each image’s alt text in Media for accessibility.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "hero".
@@ -2326,52 +2346,14 @@ export interface Footer {
 export interface Hero {
   id: number;
   /**
-   * Shown one at a time across the top of the home page. The first slide is the page headline; the carousel turns by itself every few seconds unless a visitor pauses it.
+   * Add up to five wide banner images. They rotate automatically, and visitors can pause or move between them.
    */
   slides?:
     | {
         /**
-         * The small gold line above the headline, for example "Cloud kitchen · Cooked fresh". Leave empty for none.
-         */
-        eyebrow?: string | null;
-        /**
-         * The big Lora line. Wrap the phrase to set in gold italics in asterisks, for example: Good food, cooked in *our own kitchen*.
-         */
-        headline: string;
-        /**
-         * One or two quiet sentences under the headline. Leave empty for none.
-         */
-        subLine?: string | null;
-        /**
-         * Runs full-bleed behind this slide. Leave empty to keep the built-in kitchen photograph.
+         * Choose a wide banner. Add meaningful alt text to the media item; older empty slides are ignored.
          */
         image?: (number | null) | Media;
-        /**
-         * Adds a dark green scrim behind the words so they stay readable on a busy photograph. Off leaves the photograph untouched.
-         */
-        overlay?: boolean | null;
-        /**
-         * The gold pill. Leave empty for "Message us on WhatsApp".
-         */
-        primaryLabel?: string | null;
-        /**
-         * On: the button opens WhatsApp on the footer's number with the opening line written. Off: it follows the Primary link below instead.
-         */
-        primaryWhatsapp?: boolean | null;
-        /**
-         * Used only when "opens WhatsApp" is off. A path such as /products, or a full URL.
-         */
-        primaryUrl?: string | null;
-        primaryNewTab?: boolean | null;
-        /**
-         * The quiet outlined pill beside the primary. Leave empty for no secondary button.
-         */
-        secondaryLabel?: string | null;
-        /**
-         * A path such as #how-it-works, or a full URL.
-         */
-        secondaryUrl?: string | null;
-        secondaryNewTab?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -2516,18 +2498,7 @@ export interface HeroSelect<T extends boolean = true> {
   slides?:
     | T
     | {
-        eyebrow?: T;
-        headline?: T;
-        subLine?: T;
         image?: T;
-        overlay?: T;
-        primaryLabel?: T;
-        primaryWhatsapp?: T;
-        primaryUrl?: T;
-        primaryNewTab?: T;
-        secondaryLabel?: T;
-        secondaryUrl?: T;
-        secondaryNewTab?: T;
         id?: T;
       };
   updatedAt?: T;

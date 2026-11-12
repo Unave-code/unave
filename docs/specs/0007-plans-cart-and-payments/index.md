@@ -4,11 +4,12 @@
 **Revised**: 2026-11-01, the cart was removed; one plan per order. Later the same day, only completed payments are recorded: an order row is written when a payment is captured, so no pending rows exist.
 **Revised**: 2026-11-06, the cart returns: Add to cart on every open plan card, a cart page, one payment for the whole basket, and the direct Buy now checkout link is retired. Acceptance criteria were renumbered in this revision; the mapping is recorded in the rationale.
 **Revised**: 2026-11-11, the header cart control no longer depends on a `/cart` menu row existing. Staff can still add one in Site chrome to choose its label and place, but a header with no such row now renders the control with the default label and appends a drawer row, so a database built from migrations alone cannot ship without a way to the basket (AC-12).
+**Revised**: 2026-11-12, the homepage Best sellers cards gain optional old price and pack size fields for one time products, and the section uses the compact card treatment from the supplied image (AC-14 to AC-16).
 **Status**: In Progress
 
 ## Summary
 
-The kitchen sells meal plans on the site and now wants a basket: more products are coming, and customers should be able to take several plans in one order and pay once. A plan card carries a duration choice and one Add to cart control, the basket lives in a browser cookie as plain identifiers, a cart page lists the lines with live prices from the database, and checkout signs the customer in and pays the whole total through Razorpay's checkout popup. Payment is confirmed by a verified webhook plus a return check, and only a captured payment writes an order row, one row that may hold up to ten line snapshots. The order, its two emails and the admin view follow patterns the site already has.
+The kitchen sells products through the site and customers can add several to one basket and pay once. The homepage Best sellers shelf shows only available featured products, with optional old price and pack size details for one time products. Prices and basket contents still come from the server and the product records.
 
 ## Requirements
 
@@ -23,6 +24,7 @@ The kitchen sells meal plans on the site and now wants a basket: more products a
 - As staff, I want plans, prices and availability editable in the admin so that the menu stays current without a deploy.
 - As staff, I want every paid order visible in the admin with every line it held, and announced by email, so that the kitchen can start deliveries.
 - As the owner, I want every amount computed on the server so that nobody can pay a doctored price.
+- As a shopper, I want to see a featured product's size and any discount before adding it, so that I can compare products.
 
 **Acceptance criteria** (the contract, each criterion is IDed and independently checkable; renumbered by the 2026-11-06 revision, see the rationale for the mapping from the previous set):
 
@@ -39,16 +41,19 @@ The kitchen sells meal plans on the site and now wants a basket: more products a
 - **AC-11**: Every order's lines, prices and total shown anywhere match the server computed snapshot written when the payment was confirmed; editing a plan's title or price after a purchase never rewrites a past order, line by line.
 - **AC-12**: The header always carries a cart control. Staff may add a link to `/cart` in the admin (Site chrome) to choose its label and its place in the drawer, but the control and its live count are rendered by code, so a header with no `/cart` row still shows it with the default label and the drawer appends one. The count reflects each visitor's cookie. The chrome copy is updated so the site no longer implies one plan per order.
 - **AC-13**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are documented in `.env.example`; without them the site still browses and messages normally, and the pay action reports a plain configuration error instead of breaking the page. The active mode (test or live, read from the key id's prefix) is logged at order creation and shown in the admin, so a test key pointed at a live dashboard is visible before it costs money.
+- **AC-14**: The homepage Best sellers section has no top padding and shows only available products marked Featured, newest first, up to 15 products. It uses five columns on wide screens and adapts below that, never fills gaps with unfeatured products, and keeps its existing empty state and See every product link when no products match.
+- **AC-15**: Each Best sellers card shows a rounded product image, a clipped title, the current price, and an outlined Add button with a 44px minimum target. The image and title link to the product page; Add uses the existing cart flow. A one time product shows its pack size when set. When its optional old price is greater than its current price, the card shows the old price and derives a discount percentage by rounding down from the paise values. The discount badge appears only when that percentage is at least 1%. Meal plans keep their current per day lead price and do not show old price or pack size. Keyboard focus remains visible and motion respects `prefers-reduced-motion`.
+- **AC-16**: Staff can set an optional old price and optional plain text pack size on one time products in Payload. The old price is entered in rupees through `RupeeField` and stored in paise, and must be greater than the current one time price. The fields are shown and used only for one time products. Pack size is display text only. Existing products with either field empty remain valid and render without the corresponding detail.
 
 ## Decision
 
 **Chosen option**: Option 2: a dedicated Payload commerce slice on Razorpay Standard Checkout.
 
-The `plans` and `orders` collections live beside the existing collections, a browser cookie cart holds plain line identifiers, the cart page and checkout resolve every line from Payload at request time, the server talks to Razorpay over direct REST (no SDK dependency), and the paid signal is a verified return plus a signed webhook. The 2026-11-06 revision restores the cart part of this same option, which the 2026-11-01 revision had removed. Reasoning and options: see [rationale.md](rationale.md).
+The `products` and `orders` collections live beside the existing collections, a browser cookie cart holds plain line identifiers, the cart page and checkout resolve every line from Payload at request time, the server talks to Razorpay over direct REST (no SDK dependency), and the paid signal is a verified return plus a signed webhook. The 2026-11-06 revision restores the cart part of this same option, which the 2026-11-01 revision had removed. For Best sellers, optional old price and pack size fields belong on one time product records; discounts are derived from the two prices rather than stored separately. Reasoning and options: see [rationale.md](rationale.md).
 
 ## Feature design
 
-**Data model sketch** (the target; no migration needed: the `orders.items` array already holds more than one item):
+**Data model sketch** (the target; payment and order fields need no migration, while the Best sellers fields add nullable product columns):
 
 - `plans` (Payload collection, staff write, public read):
   - `title` text, required · `slug` text, required, unique · `description` rich text · `image` relation to media (optional)
@@ -62,6 +67,12 @@ The `plans` and `orders` collections live beside the existing collections, a bro
   - gateway fields: `gatewayOrderId` (unique), `gatewayPaymentId`, `gatewaySignature`, `paidAt`
   - `startsOn` optional date, staff editable (the kitchen records when deliveries begin)
   - timestamps
+
+**Best sellers product fields** (the 2026-11-12 addition):
+
+- `products.compareAtPrice`: optional integer in paise, used only for one time products. Payload staff enter it in rupees through `RupeeField`; it must exceed the product's current `price`. The displayed discount percentage is derived by rounding down `(compareAtPrice - price) / compareAtPrice * 100`; the badge is omitted if that result is zero.
+- `products.packSize`: optional plain text used only for one time products, for example `260 g`. It is displayed as entered and is not used in calculations.
+- Both columns are nullable. Existing products need no backfill and remain valid without either value. No order, cart, or payment fields change.
 
 **The cart and the buy path** (identifiers only, resolved at every hop):
 
@@ -113,6 +124,13 @@ The `plans` and `orders` collections live beside the existing collections, a bro
 | Order placed page | the lines, the total, the payment id | `orders` columns (the payment id is the receipt; no separate money document, per the engineer's choice) |
 | Account orders list | the customer's orders | orders filtered by the session customer (spec 0005 session) |
 | Confirmation and notice mail | recipients, copy, per line details | customer email from the order; kitchen recipient from the same setting the enquiry notice already uses (spec 0006); copy from the `order` key in EmailSettings (spec 0002 pattern) |
+| Home Best sellers shelf | available featured products, newest first, up to 15 | `products`, filtered by `available=true` and `featured=true`; no unfeatured fallback |
+| Best sellers card | title, image, link | product record's `title`, `image` and `slug` |
+| Best sellers card | current price for a one time product | `products.price`, stored in paise and formatted by `formatPaise` |
+| Best sellers card | current price for a meal plan | existing `fromPrice` lead value, derived from durations and shown per day |
+| Best sellers card | old price and discount | optional `products.compareAtPrice`; percentage derived from compare price and current price, rounded down, and shown only when at least 1% |
+| Best sellers card | pack size | optional `products.packSize`, displayed as entered |
+| Best sellers card | Add action | product slug and the reserved one time duration or first plan duration, submitted through the existing cart add flow |
 
 **Key invariants**:
 
@@ -125,11 +143,14 @@ The `plans` and `orders` collections live beside the existing collections, a bro
 - Lines, delivery snapshots and amounts on an order are immutable once written; plan edits never rewrite history.
 - A paused or unknown plan, or a missing duration, can never enter an order: it is refused at add time, marked stale on the cart page, and blocks payment at checkout with a plain sentence.
 - Prices are integers in paise; currency is INR only.
+- An old price exists only for a one time product and must be greater than its current price; discounts are derived, never separately stored.
+- Pack size is optional display text for a one time product; it has no effect on a price, cart line, or order total.
 - An order row exists only for a captured payment by a signed in, verified customer; no order is anonymous, and no order exists for an unpaid checkout.
 
 **Security model**:
 
 - `plans`: public read, staff only write (the existing staff and admin gates). `orders`: written only by the payment confirmation (the verify endpoint and the webhook) with `overrideAccess` (public REST create stays off); read is staff or the owning customer; GraphQL is turned off for `orders` outright so the auto generated API cannot leak rows. The webhook is public but useless without a valid signature.
+- The Best sellers fields follow the existing `products` access rules: public read and staff only write.
 - Order creation is rate limited per IP like the enquiry endpoint, and same origin checked; the webhook route handler is exempt from the same origin check because Razorpay posts it, and the HMAC over the raw body is its authentication.
 - The cart cookie is not a money surface: it holds identifiers only, is readable by JavaScript so the header count can update, and a doctored cookie can only produce lines that the server refuses at the next resolution. The checkout form posts no lines at all: the create endpoint reads the basket from the cart cookie on the server and resolves and prices every line itself, so a crafted request body cannot order a basket the customer never saw.
 - No card data ever touches this server: Standard Checkout collects payment inside Razorpay's hosted frame, so PCI scope stays with the gateway. What the site stores is ids, amounts and delivery details.
@@ -146,6 +167,7 @@ The `plans` and `orders` collections live beside the existing collections, a bro
 - Happy path: browse `/plans` signed out, add two plans with their durations to the cart, see the header count rise, review the cart at live prices, sign in at checkout, pay once in test mode, land on the order placed page with both lines and an emptied basket, see both emails list both lines, see the order with both items in the account list, verifies AC-1 through AC-9, AC-11
 - Failure case: a tampered or stale cart (unknown plan, paused plan, removed duration) renders marked on `/cart` and blocks payment at checkout with the line named; a doctored cookie with prices in it changes nothing because the server never reads prices from the cookie; an unsigned or replayed webhook changes nothing; a checkout that is never paid writes no row; a 11th line and a duplicate line are refused, verifies AC-2, AC-3, AC-4, AC-5, AC-6, AC-7
 - Auth/permission: a signed out visitor at `/checkout` is redirected to sign in and back with the cart intact; customer A cannot read customer B's order; a customer session cannot reach the CMS, verifies AC-4, AC-9
+- Homepage: only available featured products appear, with no more than 15 cards; a one time product with both optional fields shows the old price, derived discount and pack size, while a rounded down discount of zero shows no badge; a plan or product with empty fields shows no inapplicable details; Add still posts through the cart flow, verifies AC-14 to AC-16
 
 ## Build plan
 
@@ -156,9 +178,10 @@ Ordered for the Tracer Bullet approach (prove the whole pipe with one real user 
 16. Multi line checkout and order creation: checkout renders every line with the server computed total and refuses stale lines by name, the create endpoint resolves and prices every line from the records, enforces the cap and duplicate rules, and carries the intent on the gateway order's notes within the note size limits, satisfies **AC-4**, **AC-5**
 17. Confirmation with all items: the verify return and the signed webhook write one paid row holding every line snapshot, guarded by the unique gateway order id, with the amount checked against the sum of the intent's line prices, and the winner clears the cart cookie so the paid basket cannot be checked out twice, satisfies **AC-6**, **AC-7**, **AC-11**
 18. Mail, account, admin and chrome: the order emails list every line and the total, the account list shows the lines, the admin shows the items, and the chrome copy no longer says one plan per order (the cart link itself is added by staff in the admin), satisfies **AC-8**, **AC-9**, **AC-10**, **AC-12**
-19. Tests and re-verify: cart unit and integration coverage (cookie rules, stale lines, cap, duplicates, tampered cookie), the multi line checkout and webhook coverage, the cross customer denials, and a fresh `/check verify` pass, satisfies all ACs
+19. Tests and re-verify: cart unit and integration coverage (cookie rules, stale lines, cap, duplicates, tampered cookie), the multi line checkout and webhook coverage, the cross customer denials, and a fresh `/check verify` pass, satisfies **AC-1** to **AC-13**
+20. Best sellers fields and cards: add nullable product columns and one time admin fields, validate old price, update the homepage card, its section spacing, the design guide and the admin description, and cover one time, plan, empty field, zero discount and cart add behavior, satisfies **AC-14**, **AC-15**, **AC-16**
 
-No migration is needed: the `orders.items` array already holds multiple items, and the cart state lives in a cookie by design.
+The cart and order design needs no schema change. The new product fields need one additive migration with nullable columns; existing rows need no backfill.
 
 ## Consequences
 
@@ -175,12 +198,14 @@ No migration is needed: the `orders.items` array already holds multiple items, a
 - The cart's complexity returns: a cookie format, duplicate refusals, a cart page with empty and stale line states, and a second place where a total is shown (the server computes it, but it must agree everywhere it renders).
 - The checkout intent now carries up to ten lines, so the notes payload is bigger and the cap is a real constraint; a future product with larger baskets would need the intent to live somewhere bigger than notes.
 - Two buttons' worth of copy on every card (duration choice plus Add to cart) is one more thing to keep accessible and honest.
+- Staff maintain the reference price and pack size. The system can check that an old price exceeds the current price, but cannot prove the old price was genuinely charged before.
 
 **Neutral**:
 
 - The direct checkout deep links stop working as purchase links: an old shared `/checkout?plan=...` link now lands on checkout's empty cart sentence, which points to the plans.
 - Razorpay runs in test mode first; going live is a key swap plus a webhook configuration in the dashboard.
 - Refunds and cancellations stay handwork in the Razorpay dashboard, by message.
+- The new product columns are nullable, so existing catalogue rows need no data backfill.
 
 ## Follow-up
 

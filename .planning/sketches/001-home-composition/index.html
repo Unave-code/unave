@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UNAVE sketch 001 — Home composition</title>
+  <link rel="stylesheet" href="../themes/default.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--cream); color: var(--ink-900); font-family: var(--font-sans); font-size: 15px; line-height: 1.55; }
+    img { max-width: 100%; display: block; }
+    button, a { font-family: inherit; }
+    button { cursor: pointer; }
+    h1, h2, h3, .serif { font-family: var(--font-heading); font-weight: 500; letter-spacing: -0.02em; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
+    .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: var(--gold-400); }
+    .muted { color: var(--ink-600); }
+    .gold-text { color: var(--gold-600); font-style: italic; }
+    .pill { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; border: 0; text-decoration: none; font-weight: 600; font-size: 14px; transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), background 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .pill:active { transform: scale(0.98); }
+    .pill-gold { background: var(--gold-400); color: var(--green-900); }
+    .pill-gold:hover { background: var(--gold-500); }
+    .pill-ghost { background: transparent; color: #faf7ef; box-shadow: inset 0 0 0 1.5px rgba(250, 247, 239, 0.55); }
+    .pill-ghost:hover { background: rgba(250, 247, 239, 0.1); }
+    .pill-green { background: var(--green-700); color: #faf7ef; }
+    .pill-green:hover { background: var(--green-600); }
+    .pill-line { background: transparent; color: var(--green-700); box-shadow: inset 0 0 0 1.5px var(--green-200, #cfe3d8); }
+    .pill-line:hover { background: var(--green-50); }
+
+    #variant-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 9998; background: #111; color: #fff; padding: 8px 16px; display: flex; gap: 8px; font-family: system-ui; font-size: 12px; }
+    .variant-tab { background: transparent; color: #bbb; border: 0; padding: 8px 12px; border-radius: 6px; }
+    .variant-tab.active { background: #2a2a2a; color: #fff; }
+    .variant { display: none; padding-top: 40px; }
+    .variant.active { display: block; }
+    #stage { margin: 0 auto; background: var(--cream); min-height: 100dvh; }
+
+    .announce { background: var(--green-900); color: var(--gold-400); font-size: 12px; letter-spacing: 0.04em; }
+    .announce a { color: inherit; text-decoration: none; display: flex; justify-content: center; gap: 18px; padding: 10px 20px; min-height: 40px; align-items: center; }
+    .announce .quiet { color: #faf7ef; opacity: 0.8; }
+    .announce .go { text-decoration: underline; text-underline-offset: 3px; }
+
+    .nav { position: sticky; top: 40px; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; color: #faf7ef; transition: background 280ms cubic-bezier(0.32, 0.72, 0, 1), color 280ms; }
+    .nav.is-solid { background: var(--green-900); box-shadow: 0 10px 30px rgba(15, 46, 33, 0.18); }
+    .brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; letter-spacing: 0.28em; font-weight: 700; font-size: 13px; }
+    .brand svg { width: 28px; height: 18px; }
+    .nav-links { display: flex; gap: 28px; font-size: 13px; font-weight: 500; }
+    .nav-links a { color: inherit; text-decoration: none; position: relative; }
+    .nav-links a[aria-current="page"]::after, .nav-links a:hover::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: currentColor; border-radius: 99px;
+    }
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn { width: 44px; height: 44px; border-radius: 99px; border: 0; background: transparent; color: inherit; display: grid; place-items: center; }
+    .icon-btn:hover { background: currentColor; color: var(--green-900); background: rgba(250,247,239,0.12); color: inherit; }
+    .ghost-link { color: inherit; text-decoration: none; font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 99px; }
+    .ghost-link:hover { background: rgba(250,247,239,0.12); }
+    .count { background: var(--gold-400); color: var(--green-900); font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 99px; display: grid; place-items: center; position: absolute; top: 6px; right: 6px; }
+    .cart-wrap { position: relative; }
+
+    .hero { position: relative; min-height: 92dvh; color: #faf7ef; overflow: hidden; margin-top: -76px; padding-top: 76px; }
+    .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 900ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .hero-slide.on { opacity: 1; }
+    .hero-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15,46,33,0.78) 0%, rgba(15,46,33,0.28) 48%, rgba(15,46,33,0.08) 100%); }
+    .hero-copy { position: relative; z-index: 2; width: min(640px, calc(100% - 48px)); padding: 18vh 0 80px 40px; }
+    .hero h1 { font-size: clamp(34px, 5vw, 58px); line-height: 1.08; margin: 12px 0 16px; }
+    .hero p.lead { font-size: 16px; max-width: 42ch; color: rgba(250,247,239,0.88); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .hero-ctrl { position: absolute; z-index: 3; left: 40px; right: 40px; bottom: 28px; display: flex; justify-content: space-between; align-items: center; }
+    .dots { display: flex; gap: 10px; }
+    .dots button { width: 44px; height: 44px; border: 0; background: transparent; display: grid; place-items: center; }
+    .dots button span { width: 8px; height: 8px; border-radius: 99px; background: rgba(250,247,239,0.35); display: block; }
+    .dots button.on span { background: var(--gold-400); transform: scale(1.25); }
+    .ctrl-btns { display: flex; gap: 6px; }
+    .ctrl-btns button { width: 44px; height: 44px; border-radius: 99px; border: 0; background: rgba(250,247,239,0.12); color: #faf7ef; }
+
+    .section { padding: 88px 0; }
+    .kicker { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: var(--gold-600); margin-bottom: 10px; }
+    .section h2 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.15; margin: 0 0 12px; color: var(--green-700); }
+    .intro { max-width: 46ch; color: var(--ink-600); margin-bottom: 40px; }
+
+    .shelf-2 { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 18px; }
+    .plate { position: relative; border-radius: 20px; overflow: hidden; min-height: 420px; isolation: isolate; }
+    .plate.tall { min-height: 640px; grid-row: span 2; }
+    .plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 700ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .plate:hover img { transform: scale(1.04); }
+    .plate-band { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 22px 20px; background: linear-gradient(to top, rgba(15,46,33,0.92), rgba(15,46,33,0.2)); color: #faf7ef; display: flex; justify-content: space-between; align-items: end; gap: 12px; }
+    .plate h3 { margin: 0; font-size: 22px; color: #faf7ef; }
+    .price { color: var(--gold-400); font-weight: 600; font-size: 14px; }
+    .add { position: absolute; top: 16px; right: 16px; min-height: 44px; padding: 0 16px; border-radius: 99px; border: 0; background: var(--gold-400); color: var(--green-900); font-weight: 600; font-size: 13px; opacity: 0; transform: translateY(-6px); transition: 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .plate:hover .add, .plate:focus-within .add { opacity: 1; transform: none; }
+    @media (hover: none) { .add { opacity: 1; transform: none; } }
+
+    .who-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .who-card { position: relative; border-radius: 18px; overflow: hidden; min-height: 280px; color: #faf7ef; text-decoration: none; }
+    .who-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .who-card span { position: absolute; left: 16px; right: 16px; bottom: 16px; font-family: var(--font-heading); font-size: 22px; }
+
+    .story { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; }
+    .story img { width: 100%; height: 520px; object-fit: cover; border-radius: 20px; }
+    .notice { background: var(--gold-100); border-left: 4px solid var(--gold-500); border-radius: 16px; padding: 16px 18px; margin-top: 24px; font-size: 15px; }
+
+    .film { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+    .film figure { margin: 0; padding: 0 18px; text-align: center; }
+    .num { width: 36px; height: 36px; border-radius: 99px; background: var(--gold-400); color: var(--green-900); display: grid; place-items: center; font-weight: 700; margin: 0 auto 14px; }
+    .film h3 { font-family: var(--font-sans); font-size: 15px; font-weight: 700; color: var(--green-700); margin: 0 0 6px; }
+    .film p { margin: 0; color: var(--ink-600); font-size: 14px; }
+    .track { position: relative; }
+    .track::before { content: ""; position: absolute; top: 18px; left: 12%; right: 12%; border-top: 1px dashed #cfe3d8; }
+
+    .quotes { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; }
+    .quotes blockquote { margin: 0 0 28px; font-family: var(--font-heading); font-size: 28px; line-height: 1.25; color: var(--green-700); font-style: italic; }
+    .quotes img { width: 100%; height: 100%; min-height: 360px; object-fit: cover; border-radius: 20px; }
+
+    .faq-list { max-width: 720px; }
+    .faq-item { border-top: 1px solid var(--line); }
+    .faq-item button { width: 100%; text-align: left; background: none; border: 0; padding: 18px 0; font-size: 15px; font-weight: 700; color: var(--green-700); display: flex; justify-content: space-between; }
+    .faq-item .ans { display: none; padding: 0 0 18px; color: var(--ink-600); }
+    .faq-item.open .ans { display: block; }
+
+    footer.site { position: relative; color: var(--green-700); min-height: 420px; overflow: hidden; padding: 80px 0 32px; }
+    footer.site img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: bottom; }
+    footer.site .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 28px; font-weight: 600; }
+    footer.site a { color: inherit; text-decoration: none; display: block; padding: 6px 0; }
+    footer.site h4 { margin: 0 0 10px; font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-600); }
+
+    .wa { position: fixed; right: 22px; bottom: 72px; z-index: 50; width: 56px; height: 56px; border-radius: 99px; background: #25d366; color: #fff; display: grid; place-items: center; border: 0; box-shadow: var(--shadow-md); }
+    .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: var(--green-900); color: #faf7ef; padding: 12px 18px; border-radius: 99px; opacity: 0; pointer-events: none; z-index: 90; transition: 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* B: catalog */
+    .hero-b { min-height: 78dvh; display: grid; grid-template-columns: 0.92fr 1.08fr; margin-top: -76px; padding-top: 76px; background: var(--cream); color: var(--ink-900); }
+    .hero-b .copy { padding: 12vh 48px 64px; display: flex; flex-direction: column; justify-content: center; }
+    .hero-b h1 { font-size: clamp(36px, 4.6vw, 52px); color: var(--green-700); margin: 10px 0 14px; }
+    .hero-b .slides { position: relative; overflow: hidden; }
+    .hero-b .slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 900ms cubic-bezier(0.32, 0.72, 0, 1); }
+    .hero-b .slides img.on { opacity: 1; }
+    .nav-b { color: var(--green-700); }
+    .nav-b.is-solid { background: var(--green-900); color: var(--gold-400); }
+    .shelf-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .thin { padding: 56px 0; }
+    .band-green { background: var(--green-50); }
+    .who-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .who-chip { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; color: var(--green-700); font-weight: 600; }
+    .who-chip img { width: 36px; height: 36px; border-radius: 99px; object-fit: cover; }
+    .diff-line { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .diff-line h3 { font-family: var(--font-heading); font-size: 22px; color: var(--green-700); margin: 0 0 8px; }
+
+    /* C: film */
+    .hero-c { min-height: 100dvh; }
+    .hero-c .hero-copy { padding-top: 28vh; max-width: 720px; }
+    .hero-c h1 { font-size: clamp(42px, 7vw, 78px); }
+    .chapter { position: relative; min-height: 72dvh; color: #faf7ef; display: grid; align-items: end; }
+    .chapter img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .chapter .veil { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,46,33,0.82), transparent 55%); }
+    .chapter .txt { position: relative; z-index: 1; padding: 0 48px 56px; max-width: 640px; }
+    .runway { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory; }
+    .runway .plate { min-width: 320px; height: 460px; scroll-snap-align: start; flex: 0 0 auto; }
+    .pull { font-family: var(--font-heading); font-style: italic; font-size: clamp(26px, 3vw, 38px); color: var(--green-700); max-width: 22ch; margin: 0 0 36px; }
+    .stack-how { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stack-how figure { margin: 0; }
+    .stack-how img { height: 220px; width: 100%; object-fit: cover; border-radius: 16px; }
+
+    .grain { pointer-events: none; position: fixed; inset: 0; z-index: 70; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+    @media (max-width: 900px) {
+      .hero-copy { padding: 16vh 20px 90px; }
+      .hero-ctrl { left: 16px; right: 16px; }
+      .nav-links { display: none; }
+      .shelf-2, .who-row, .story, .film, .quotes, .hero-b, footer.site .wrap, .shelf-3, .diff-line, .stack-how { grid-template-columns: 1fr; }
+      .hero-b .slides { min-height: 46vh; }
+      .chapter .txt { padding: 0 20px 40px; }
+      .plate.tall { min-height: 420px; }
+    }
+
+    #sketch-tools { position: fixed; bottom: 12px; right: 12px; z-index: 9999; font-family: system-ui; font-size: 12px; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 8px; opacity: 0.4; transition: opacity 0.2s; display: flex; gap: 8px; align-items: center; }
+    #sketch-tools:hover { opacity: 1; }
+    #sketch-tools select, #sketch-tools button { font: inherit; color: #111; }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div id="variant-nav">
+    <button class="variant-tab active" type="button" data-v="a">A: Editorial table</button>
+    <button class="variant-tab" type="button" data-v="b">B: Quiet catalog</button>
+    <button class="variant-tab" type="button" data-v="c">C: Kitchen film</button>
+  </div>
+  <div id="stage">
+
+  <div id="variant-a" class="variant active">
+    <div class="announce"><a href="#shelf-a"><span>This week’s kitchen</span><span class="quiet">Small batches, packed the morning they leave</span><span class="go">See the plates</span></a></div>
+    <header class="nav" data-nav>
+      <a class="brand" href="#">{swoosh} UNAVE</a>
+      <nav class="nav-links">
+        <a href="#" aria-current="page">Home</a>
+        <a href="#">About</a>
+        <a href="#">Our kitchen</a>
+        <a href="#">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="cart-wrap"><button class="icon-btn" type="button" data-cart aria-label="Cart">Bag<span class="count" data-count>0</span></button></span>
+        <a class="ghost-link" href="#">Sign in</a>
+      </div>
+    </header>
+    <section class="hero" data-hero>
+      <div class="hero-slide on"><img src="https://unave.in/images/hero-table.jpg" alt="" /><div class="hero-scrim"></div></div>
+      <div class="hero-slide"><img src="https://unave.in/images/kitchen.jpg" alt="" /><div class="hero-scrim"></div></div>
+      <div class="hero-slide"><img src="https://unave.in/images/gallery-2.jpg" alt="" /><div class="hero-scrim"></div></div>
+      <div class="hero-copy">
+        <div class="eyebrow">Cloud kitchen · cooked fresh</div>
+        <h1>Good food, cooked in <em class="gold-text">our own kitchen.</em></h1>
+        <p class="lead">Healthy, nutrition-conscious meals in small batches. The daily question of what to eat, already answered.</p>
+        <div class="hero-actions">
+          <a class="pill pill-gold" href="#shelf-a">See the plates</a>
+          <a class="pill pill-ghost" href="#how-a">How it works</a>
+        </div>
+      </div>
+      <div class="hero-ctrl">
+        <div class="dots" data-dots></div>
+        <div class="ctrl-btns">
+          <button type="button" data-pause>Pause</button>
+          <button type="button" data-prev>Prev</button>
+          <button type="button" data-next>Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="shelf-a">
+      <div class="wrap">
+        <div class="kicker">From the kitchen</div>
+        <h2>Choose your product</h2>
+        <p class="intro">A length of meals, paid once. The photograph is the menu.</p>
+        <div class="shelf-2">
+          <article class="plate tall">
+            <img src="https://unave.in/images/gallery-2.jpg" alt="Mixed Poriyal" />
+            <button class="add" type="button" data-add>Add to cart</button>
+            <div class="plate-band"><div><h3>Mixed Poriyal</h3><div class="price">from ₹180 / day</div></div></div>
+          </article>
+          <article class="plate">
+            <img src="https://unave.in/images/gallery-3.jpg" alt="Mixed Pulao" />
+            <button class="add" type="button" data-add>Add to cart</button>
+            <div class="plate-band"><div><h3>Mixed Pulao</h3><div class="price">from ₹220 / day</div></div></div>
+          </article>
+          <article class="plate">
+            <img src="https://unave.in/images/category-healthy.jpg" alt="Vegetable Soup Cuts" />
+            <button class="add" type="button" data-add>Add to cart</button>
+            <div class="plate-band"><div><h3>Vegetable Soup Cuts</h3><div class="price">₹160</div></div></div>
+          </article>
+        </div>
+        <p style="margin-top:28px"><a class="pill pill-line" href="#">See every product</a></p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="kicker">Who it is for</div>
+        <h2>Four kinds of food, one kitchen.</h2>
+        <div class="who-row">
+          <a class="who-card" href="#"><img src="https://unave.in/images/category-healthy.jpg" alt="" /><span>Healthy food</span></a>
+          <a class="who-card" href="#"><img src="https://unave.in/images/category-nutrition.jpg" alt="" /><span>Nutrition</span></a>
+          <a class="who-card" href="#"><img src="https://unave.in/images/category-diet.jpg" alt="" /><span>Diet food</span></a>
+          <a class="who-card" href="#"><img src="https://unave.in/images/category-diabetes.jpg" alt="" /><span>Diabetes-conscious</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section band-green">
+      <div class="wrap story">
+        <img src="https://unave.in/images/kitchen.jpg" alt="Our kitchen, mid-service" />
+        <div>
+          <div class="kicker">The kitchen</div>
+          <h2>Welcome to UNAVE</h2>
+          <p>We cook one kind of food: healthy, home-style meals, cooked fresh so the daily question of what to eat is already answered.</p>
+          <p class="muted">Tell us what you need and how often. We cook, pack and deliver on the schedule you agree with us. You can change or stop with one message.</p>
+          <div class="notice"><strong>A note on your goals.</strong> We describe the food honestly. We do not promise weight loss, muscle gain or any medical outcome.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-a">
+      <div class="wrap">
+        <div class="kicker">The week</div>
+        <h2>How it works</h2>
+        <p class="intro">Nothing is cooked until you have agreed it.</p>
+        <div class="track film">
+          <figure><div class="num">1</div><h3>Tell us what you need</h3><p>Message us, or use the form.</p></figure>
+          <figure><div class="num">2</div><h3>We plan the week</h3><p>The kitchen confirms what and when.</p></figure>
+          <figure><div class="num">3</div><h3>We cook and deliver</h3><p>Fresh the same morning.</p></figure>
+          <figure><div class="num">4</div><h3>Say if it changes</h3><p>One message to skip or stop.</p></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap quotes">
+        <div>
+          <div class="kicker">What makes us different</div>
+          <blockquote>We cook healthy food only. Nothing else competes for the kitchen’s attention.</blockquote>
+          <blockquote>Meals are cooked here, in batches we can actually control.</blockquote>
+          <blockquote>No forms to fight. Tell us on WhatsApp and we plan the week with you.</blockquote>
+        </div>
+        <img src="https://unave.in/images/band-cta.jpg" alt="" />
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="kicker">Plain answers</div>
+        <h2>Common questions</h2>
+        <div class="faq-list">
+          <div class="faq-item open"><button type="button">How do I order?</button><div class="ans">Message us on WhatsApp or use the form on the contact page. Tell us what you eat, how often and where you are.</div></div>
+          <div class="faq-item"><button type="button">When and where do you deliver?</button><div class="ans">On the schedule the kitchen agrees with you. We confirm whether we reach you before anything is cooked.</div></div>
+          <div class="faq-item"><button type="button">Can I pause or cancel?</button><div class="ans">Yes. Tell us in a message and it is done.</div></div>
+          <div class="faq-item"><button type="button">Do I need an account?</button><div class="ans">No. You can browse and order without one. An account only saves your details.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site">
+      <img class="bg" src="https://unave.in/images/footer-field.jpg" alt="" />
+      <div class="wrap">
+        <div><div class="brand" style="margin-bottom:12px">{swoosh} UNAVE</div><p>Healthy food, cooked in our own kitchen.</p></div>
+        <div><h4>Explore</h4><a href="#">About</a><a href="#">Our kitchen</a><a href="#">Contact</a></div>
+        <div><h4>Policies</h4><a href="#">Delivery</a><a href="#">Refunds</a><a href="#">Terms</a></div>
+        <div><h4>Contact</h4><a href="#">WhatsApp</a><a href="#">Email</a></div>
+      </div>
+    </footer>
+    <button class="wa" type="button" data-wa aria-label="WhatsApp">WA</button>
+  </div>
+
+  <div id="variant-b" class="variant">
+    <div class="announce"><a href="#shelf-b"><span>Cooked this morning</span><span class="quiet">Plans and one-time plates, paid once</span><span class="go">Browse</span></a></div>
+    <header class="nav nav-b" data-nav>
+      <a class="brand" href="#">{swoosh} UNAVE</a>
+      <nav class="nav-links">
+        <a href="#" aria-current="page">Home</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="cart-wrap"><button class="icon-btn" type="button" data-cart aria-label="Cart">Bag<span class="count" data-count>0</span></button></span>
+        <a class="ghost-link" href="#">Sign in</a>
+      </div>
+    </header>
+    <section class="hero-b" data-hero>
+      <div class="copy">
+        <div class="kicker">Cloud kitchen · cooked fresh</div>
+        <h1>Good food, cooked in <em class="gold-text">our own kitchen.</em></h1>
+        <p class="muted" style="max-width:42ch">Healthy, nutrition-conscious and diabetes-conscious meals, cooked in small batches and delivered to your door.</p>
+        <div class="hero-actions">
+          <a class="pill pill-green" href="#shelf-b">See the plates</a>
+          <a class="pill pill-line" href="#how-b">How it works</a>
+        </div>
+        <div class="hero-ctrl" style="position:static;margin-top:36px;padding:0;left:auto;right:auto">
+          <div class="dots" data-dots></div>
+          <div class="ctrl-btns">
+            <button type="button" data-pause style="color:var(--green-700);background:var(--green-100)">Pause</button>
+            <button type="button" data-prev style="color:var(--green-700);background:var(--green-100)">Prev</button>
+            <button type="button" data-next style="color:var(--green-700);background:var(--green-100)">Next</button>
+          </div>
+        </div>
+      </div>
+      <div class="slides">
+        <img class="on" src="https://unave.in/images/hero-table.jpg" alt="" />
+        <img src="https://unave.in/images/gallery-1.jpg" alt="" />
+        <img src="https://unave.in/images/gallery-3.jpg" alt="" />
+      </div>
+    </section>
+
+    <section class="section" id="shelf-b" style="padding-top:48px">
+      <div class="wrap">
+        <div class="kicker">The shelf</div>
+        <h2>Choose your product</h2>
+        <div class="shelf-3">
+          <article class="plate" style="min-height:380px"><img src="https://unave.in/images/gallery-2.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Mixed Poriyal</h3><div class="price">from ₹180 / day</div></div></div></article>
+          <article class="plate" style="min-height:380px"><img src="https://unave.in/images/gallery-3.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Mixed Pulao</h3><div class="price">from ₹220 / day</div></div></div></article>
+          <article class="plate" style="min-height:380px"><img src="https://unave.in/images/category-nutrition.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Garlic Idly Podi</h3><div class="price">₹90</div></div></div></article>
+        </div>
+        <p style="margin-top:28px"><a class="pill pill-line" href="#">See every product</a></p>
+      </div>
+    </section>
+
+    <section class="thin">
+      <div class="wrap">
+        <div class="kicker">Who it is for</div>
+        <div class="who-links">
+          <a class="who-chip" href="#"><img src="https://unave.in/images/category-healthy.jpg" alt="" />Healthy food</a>
+          <a class="who-chip" href="#"><img src="https://unave.in/images/category-nutrition.jpg" alt="" />Nutrition</a>
+          <a class="who-chip" href="#"><img src="https://unave.in/images/category-diet.jpg" alt="" />Diet food</a>
+          <a class="who-chip" href="#"><img src="https://unave.in/images/category-diabetes.jpg" alt="" />Diabetes-conscious</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="thin band-green">
+      <div class="wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center">
+        <div>
+          <div class="kicker">The kitchen</div>
+          <h2>Welcome to UNAVE</h2>
+          <p>We are a cloud kitchen that cooks one kind of food. Tell us what you need and how often, and we cook on the schedule you agree with us.</p>
+        </div>
+        <img src="https://unave.in/images/kitchen.jpg" alt="" style="height:280px;width:100%;object-fit:cover;border-radius:16px" />
+      </div>
+    </section>
+
+    <section class="section" id="how-b">
+      <div class="wrap">
+        <div class="kicker">The week</div>
+        <h2>How it works</h2>
+        <div class="track film">
+          <figure><div class="num">1</div><h3>Tell us</h3><p>WhatsApp or the form.</p></figure>
+          <figure><div class="num">2</div><h3>We plan</h3><p>What we can cook, and when.</p></figure>
+          <figure><div class="num">3</div><h3>We cook</h3><p>Fresh the same morning.</p></figure>
+          <figure><div class="num">4</div><h3>You change it</h3><p>One message to skip or stop.</p></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="thin">
+      <div class="wrap">
+        <div class="kicker">What makes us different</div>
+        <div class="diff-line">
+          <div><h3>One kitchen</h3><p class="muted">Healthy food only. Nothing else competes.</p></div>
+          <div><h3>Cooked, not assembled</h3><p class="muted">Batches we can actually control.</p></div>
+          <div><h3>A message is enough</h3><p class="muted">No app, no phone tree.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Common questions</h2>
+        <div class="faq-list">
+          <div class="faq-item open"><button type="button">How do I order?</button><div class="ans">Message us on WhatsApp or use the contact form.</div></div>
+          <div class="faq-item"><button type="button">Do I need an account?</button><div class="ans">No. An account only saves your details.</div></div>
+          <div class="faq-item"><button type="button">Can I pause?</button><div class="ans">Yes. One message and it is done.</div></div>
+        </div>
+        <div class="notice" style="margin-top:28px"><strong>A note on your goals.</strong> Food options, not medical advice.</div>
+      </div>
+    </section>
+    <footer class="site">
+      <img class="bg" src="https://unave.in/images/footer-field.jpg" alt="" />
+      <div class="wrap">
+        <div><div class="brand">{swoosh} UNAVE</div><p>Healthy food, cooked in our own kitchen.</p></div>
+        <div><h4>Explore</h4><a href="#">About</a><a href="#">Contact</a></div>
+        <div><h4>Policies</h4><a href="#">Delivery</a><a href="#">Terms</a></div>
+        <div><h4>Contact</h4><a href="#">WhatsApp</a></div>
+      </div>
+    </footer>
+    <button class="wa" type="button" data-wa aria-label="WhatsApp">WA</button>
+  </div>
+
+  <div id="variant-c" class="variant">
+    <div class="announce"><a href="#shelf-c"><span>Small batches leave this kitchen every morning.</span><span class="go">See this week’s plates</span></a></div>
+    <header class="nav" data-nav>
+      <a class="brand" href="#">{swoosh} UNAVE</a>
+      <nav class="nav-links">
+        <a href="#" aria-current="page">Home</a>
+        <a href="#">About</a>
+        <a href="#">Our kitchen</a>
+        <a href="#">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="cart-wrap"><button class="icon-btn" type="button" data-cart aria-label="Cart">Bag<span class="count" data-count>0</span></button></span>
+        <a class="ghost-link" href="#">Sign in</a>
+      </div>
+    </header>
+    <section class="hero hero-c" data-hero>
+      <div class="hero-slide on"><img src="https://unave.in/images/hero-table.jpg" alt="" /><div class="hero-scrim" style="background:linear-gradient(to top, rgba(15,46,33,0.75), rgba(15,46,33,0.15) 50%)"></div></div>
+      <div class="hero-slide"><img src="https://unave.in/images/gallery-1.jpg" alt="" /><div class="hero-scrim" style="background:linear-gradient(to top, rgba(15,46,33,0.75), rgba(15,46,33,0.15) 50%)"></div></div>
+      <div class="hero-slide"><img src="https://unave.in/images/kitchen.jpg" alt="" /><div class="hero-scrim" style="background:linear-gradient(to top, rgba(15,46,33,0.75), rgba(15,46,33,0.15) 50%)"></div></div>
+      <div class="hero-copy">
+        <h1>Good food, cooked in <em class="gold-text">our own kitchen.</em></h1>
+        <div class="hero-actions">
+          <a class="pill pill-gold" href="#shelf-c">See the plates</a>
+        </div>
+      </div>
+      <div class="hero-ctrl">
+        <div class="dots" data-dots></div>
+        <div class="ctrl-btns">
+          <button type="button" data-pause>Pause</button>
+          <button type="button" data-prev>Prev</button>
+          <button type="button" data-next>Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter">
+      <img src="https://unave.in/images/category-healthy.jpg" alt="" />
+      <div class="veil"></div>
+      <div class="txt"><div class="eyebrow">Who it is for</div><h2 style="color:#faf7ef;font-size:42px;margin:8px 0">Healthy food</h2><p>Everyday meals cooked the way you would at home. Vegetables, dal, rice, rotis and millets.</p></div>
+    </section>
+    <section class="chapter">
+      <img src="https://unave.in/images/category-nutrition.jpg" alt="" />
+      <div class="veil"></div>
+      <div class="txt"><h2 style="color:#faf7ef;font-size:42px;margin:8px 0">Nutrition food</h2><p>Built around protein, fibre and whole grains, for people who want their plate to earn its place.</p></div>
+    </section>
+    <section class="chapter">
+      <img src="https://unave.in/images/category-diet.jpg" alt="" />
+      <div class="veil"></div>
+      <div class="txt"><h2 style="color:#faf7ef;font-size:42px;margin:8px 0">Diet food</h2><p>Lighter portions and simple cooking, without cutting the flavour down to nothing.</p></div>
+    </section>
+    <section class="chapter">
+      <img src="https://unave.in/images/category-diabetes.jpg" alt="" />
+      <div class="veil"></div>
+      <div class="txt"><h2 style="color:#faf7ef;font-size:42px;margin:8px 0">Diabetes-conscious</h2><p>No added sugar, controlled portions and slow-release grains. Food option, not medical advice.</p></div>
+    </section>
+
+    <section class="section" id="shelf-c">
+      <div class="wrap">
+        <div class="kicker">This week</div>
+        <h2>Choose your product</h2>
+        <div class="runway">
+          <article class="plate"><img src="https://unave.in/images/gallery-2.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Mixed Poriyal</h3><div class="price">from ₹180 / day</div></div></div></article>
+          <article class="plate"><img src="https://unave.in/images/gallery-3.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Mixed Pulao</h3><div class="price">from ₹220 / day</div></div></div></article>
+          <article class="plate"><img src="https://unave.in/images/category-healthy.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Soup Cuts</h3><div class="price">₹160</div></div></div></article>
+          <article class="plate"><img src="https://unave.in/images/category-nutrition.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Garlic Idly Podi</h3><div class="price">₹90</div></div></div></article>
+          <article class="plate"><img src="https://unave.in/images/gallery-1.jpg" alt="" /><button class="add" type="button" data-add>Add to cart</button><div class="plate-band"><div><h3>Lemon Pickle</h3><div class="price">₹120</div></div></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section band-green">
+      <div class="wrap">
+        <p class="pull">We cook one kind of food, so the daily question of what to eat is already answered.</p>
+        <img src="https://unave.in/images/kitchen.jpg" alt="Our kitchen, mid-service" style="width:min(720px,100%);height:380px;object-fit:cover;border-radius:20px" />
+        <div class="notice" style="max-width:640px"><strong>A note on your goals.</strong> We do not promise weight loss, muscle gain or any medical outcome.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="kicker">The week</div>
+        <h2>How it works</h2>
+        <div class="stack-how">
+          <figure><img src="https://unave.in/images/gallery-1.jpg" alt="" /><h3>1. Tell us</h3></figure>
+          <figure><img src="https://unave.in/images/kitchen.jpg" alt="" /><h3>2. We plan</h3></figure>
+          <figure><img src="https://unave.in/images/gallery-2.jpg" alt="" /><h3>3. We cook</h3></figure>
+          <figure><img src="https://unave.in/images/gallery-3.jpg" alt="" /><h3>4. You change it</h3></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="kicker">What makes us different</div>
+        <p class="pull">Cooked, not assembled.</p>
+        <p class="pull">A message is enough.</p>
+        <p class="pull">Honest about the food.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Common questions</h2>
+        <div class="faq-list">
+          <div class="faq-item open"><button type="button">How do I order?</button><div class="ans">WhatsApp or the contact form. The kitchen comes back with a plan.</div></div>
+          <div class="faq-item"><button type="button">Do I need an account?</button><div class="ans">No. Browsing and ordering stay open.</div></div>
+        </div>
+      </div>
+    </section>
+    <footer class="site">
+      <img class="bg" src="https://unave.in/images/footer-field.jpg" alt="" />
+      <div class="wrap">
+        <div><div class="brand">{swoosh} UNAVE</div></div>
+        <div><h4>Explore</h4><a href="#">About</a></div>
+        <div><h4>Policies</h4><a href="#">Terms</a></div>
+        <div><h4>Contact</h4><a href="#">WhatsApp</a></div>
+      </div>
+    </footer>
+    <button class="wa" type="button" data-wa aria-label="WhatsApp">WA</button>
+  </div>
+  </div>
+
+  <div class="toast" id="toast">Added to the basket</div>
+  <div id="sketch-tools">
+    <span>Viewport</span>
+    <button type="button" data-vp="375">Phone</button>
+    <button type="button" data-vp="768">Tablet</button>
+    <button type="button" data-vp="0">Full</button>
+  </div>
+
+  <script>
+    const swoosh = `<svg viewBox="0 0 48 28" fill="none" aria-hidden="true"><path d="M4 22c8-16 18-18 28-10 6 5 10 4 12 1" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`;
+    document.querySelectorAll('.brand').forEach(el => { el.innerHTML = el.innerHTML.replace('{swoosh}', swoosh); });
+
+    function showVariant(id) {
+      document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.variant-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('variant-' + id).classList.add('active');
+      document.querySelector('[data-v="'+id+'"]').classList.add('active');
+      window.scrollTo(0,0);
+      bindHeroes();
+    }
+    document.querySelectorAll('.variant-tab').forEach(t => t.addEventListener('click', () => showVariant(t.dataset.v)));
+
+    function bindHeroes() {
+      document.querySelectorAll('.variant.active [data-hero]').forEach(hero => {
+        if (hero.dataset.bound) return;
+        hero.dataset.bound = '1';
+        const slides = [...hero.querySelectorAll('.hero-slide, .slides img')].filter(el => el.matches('.hero-slide, .slides img'));
+        const dots = hero.querySelector('[data-dots]');
+        let i = 0, paused = false;
+        slides.forEach((_, idx) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.innerHTML = '<span></span>';
+          if (idx === 0) b.classList.add('on');
+          b.addEventListener('click', () => go(idx));
+          dots && dots.appendChild(b);
+        });
+        const go = (n) => {
+          i = (n + slides.length) % slides.length;
+          slides.forEach((s, idx) => s.classList.toggle('on', idx === i));
+          dots && [...dots.children].forEach((d, idx) => d.classList.toggle('on', idx === i));
+        };
+        hero.querySelector('[data-next]')?.addEventListener('click', () => go(i+1));
+        hero.querySelector('[data-prev]')?.addEventListener('click', () => go(i-1));
+        hero.querySelector('[data-pause]')?.addEventListener('click', (e) => {
+          paused = !paused;
+          e.target.textContent = paused ? 'Play' : 'Pause';
+        });
+        setInterval(() => { if (!paused && hero.closest('.variant.active')) go(i+1); }, 5200);
+      });
+    }
+    bindHeroes();
+
+    document.querySelectorAll('[data-nav]').forEach(nav => {
+      const parent = nav.closest('.variant');
+      parent.addEventListener('scroll', () => {}, {passive:true});
+    });
+    window.addEventListener('scroll', () => {
+      const v = document.querySelector('.variant.active');
+      const nav = v.querySelector('[data-nav]');
+      if (!nav) return;
+      nav.classList.toggle('is-solid', window.scrollY > 40);
+    }, {passive:true});
+
+    document.querySelectorAll('.faq-item button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const list = item.parentElement;
+        list.querySelectorAll('.faq-item').forEach(i => { if (i !== item) i.classList.remove('open'); });
+        item.classList.toggle('open');
+      });
+    });
+
+    let cart = 0;
+    const toast = document.getElementById('toast');
+    function ping(msg) {
+      toast.textContent = msg;
+      toast.classList.add('on');
+      setTimeout(() => toast.classList.remove('on'), 1600);
+    }
+    document.addEventListener('click', (e) => {
+      const add = e.target.closest('[data-add]');
+      if (add) {
+        cart += 1;
+        document.querySelectorAll('[data-count]').forEach(c => c.textContent = cart);
+        ping('Added to the basket');
+      }
+      if (e.target.closest('[data-wa]')) ping('WhatsApp would open with the kitchen’s number');
+      if (e.target.closest('[data-cart]')) ping(cart ? cart + ' in the basket' : 'Basket is empty');
+    });
+
+    document.querySelectorAll('#sketch-tools [data-vp]').forEach(b => {
+      b.addEventListener('click', () => {
+        const w = Number(b.dataset.vp);
+        document.getElementById('stage').style.maxWidth = w ? w + 'px' : '';
+      });
+    });
+  </script>
+</body>
+</html>

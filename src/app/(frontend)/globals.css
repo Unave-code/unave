@@ -52,10 +52,10 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
 
-  /* Type — Lora for headings, Plus Jakarta Sans for body and UI (design.md §4) */
-  --font-sans: var(--font-jakarta);
-  --font-body: var(--font-jakarta);
-  --font-heading: var(--font-lora);
+  /* Nunito for headings, body and UI; preserve the existing scale (design.md §4). */
+  --font-sans: var(--font-nunito);
+  --font-body: var(--font-nunito);
+  --font-heading: var(--font-nunito);
   --font-mono: var(--font-geist-mono);
 
   /* Type scale — one small, fixed size per role (design.md §4). No fluid
@@ -455,6 +455,11 @@
   }
 }
 
+/* Keep a little white space between the green navbar and the image panel. */
+.hero-carousel.opening-band-tall {
+  padding-top: calc(var(--navbar-height) + 2rem);
+}
+
 /* The account's request dialogs (design.md §6.15). A native <dialog>, so the
    browser owns the focus trap, the Escape key and the inert page behind it; only
    the scrim and the centring are ours. */
@@ -471,6 +476,14 @@
    uses, because the band behind them is dark. */
 body:has(.opening-band) .site-header:not([data-scrolled='true']) {
   --primary: var(--gold-400);
+  color: var(--cream);
+}
+
+/* The home hero is an inset banner, so its header needs its own dark surface. */
+body:has(.hero-carousel) .site-header:not([data-scrolled='true']) {
+  --primary: var(--gold-400);
+  background-color: var(--green-900);
+  border-bottom-color: var(--green-800);
   color: var(--cream);
 }
 

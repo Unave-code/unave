@@ -7,6 +7,7 @@ import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/product
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
 import { autoProductSlug } from './hooks/autoProductSlug'
 import { setLeadPrice } from './hooks/leadPrice'
+import { validateCompareAtPrice } from './validateCompareAtPrice'
 
 /**
  * A product the kitchen sells on the site (spec 0007).
@@ -211,6 +212,37 @@ export const Products: CollectionConfig = {
         }
 
         return true
+      },
+    },
+    {
+      name: 'compareAtPrice',
+      label: 'Old price (₹)',
+      type: 'number',
+      min: 1,
+      admin: {
+        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'one-time',
+        components: {
+          Field: '@/components/Admin/RupeeField#RupeeField',
+        },
+        description:
+          'Optional reference price for a one-time product. It must be higher than the current price.',
+      },
+      validate: (
+        value: unknown,
+        { siblingData }: { siblingData: { price?: null | number; type?: null | string } },
+      ) => {
+        if (siblingData.type !== 'one-time') return true
+
+        return validateCompareAtPrice(value, siblingData.price)
+      },
+    },
+    {
+      name: 'packSize',
+      label: 'Pack size',
+      type: 'text',
+      admin: {
+        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'one-time',
+        description: 'Optional display text for a one-time product, for example 260 g.',
       },
     },
     {

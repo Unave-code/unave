@@ -105,10 +105,10 @@ Spec [0005](../specs/0005-customer-accounts/index.md) · code in `src/collection
 
 ## Slice 3: Ordering
 
-### 4. Plans and payments · in-progress (verified) · GA
+### 4. Plans and payments · in-progress (Best sellers revision pending) · GA
 The kitchen sells plans through the site again, built fresh rather than restored from the removed build. A plan is a duration paid upfront, say a week or a month of meals, collected through an online payment gateway (Razorpay is the named pick; the spec owns that decision). A plan card carries a duration choice and one Add to cart control, the basket lives in a browser cookie (identifiers only, 10 line cap, duplicates refused), the cart page shows live prices, checkout requires sign in and pays the whole basket once, and staff manage plans and see orders with all their items in the Payload admin. (The 2026-11-06 spec revision restored the cart that the earlier revision had removed; the acceptance criteria were renumbered.)
 **Supersedes:** the "an account only saves details" promise in `design.md`: buying now requires an account, so that contract changes at spec time, while browsing and messaging stay open to everyone.
-**Done when:** a visitor can browse plans and fill a basket without an account, review the cart at live prices, sign in at checkout, pay once for the whole basket, and the kitchen sees each order with its lines and can edit plans, prices and availability in the admin; the chrome copy no longer says one plan per order.
+**Done when:** a visitor can browse plans and fill a basket without an account, review the cart at live prices, sign in at checkout, pay once for the whole basket, and the kitchen sees each order with its lines and can edit plans, prices and availability in the admin; the chrome copy no longer says one plan per order. The homepage Best sellers section shows only available featured products, with compact cards and optional old price and pack size details for one time products.
 - [x] Design it (spec): `/architect plans and payments`
 - [x] Build it: `/develop plans and payments`
    - [x] Collections, migration and access rules (AC-4, AC-9, AC-10)
@@ -123,16 +123,21 @@ The kitchen sells plans through the site again, built fresh rather than restored
    - [x] Cart revision, milestone 4: confirmation with all items, mails, account list, admin and chrome copy (AC-6 to AC-13)
    - [x] Cart revision, milestone 5: tests and a fresh verify pass (all ACs)
 - [x] Verify it: `/check verify plans and payments`
+- [ ] Build it: `/develop plans and payments`
+   - [ ] Nullable old price and pack size fields, validation and migration (AC-16)
+   - [x] Compact Best sellers cards, cart action and section spacing (AC-14, AC-15)
+   - [x] Focused tests, admin copy and design guide updates (AC-14 to AC-16)
+- [ ] Verify it (Best sellers revision): `/check verify plans and payments`
 - [ ] Test it: `/test plans and payments`
 - [ ] Review it (fresh model): `/check review plans and payments`
 - [ ] Document it: `/document plans and payments`
-Spec [0007](../specs/0007-plans-cart-and-payments/index.md) · code in `src/collections/Products/`, `src/collections/Orders/`, `src/utilities/razorpay.ts`, `src/components/Store/`, `src/app/(frontend)/(site)/products`, `src/app/(frontend)/(site)/checkout`, `src/app/(frontend)/(site)/order-placed/`, `src/app/(frontend)/api/razorpay/`, `src/email/templates/Order.tsx`, `src/migrations/`
+Spec [0007](../specs/0007-plans-cart-and-payments/index.md) · code in `src/collections/Products/`, `src/collections/Orders/`, `src/utilities/razorpay.ts`, `src/components/Store/`, `src/components/home/BestSellers.tsx`, `src/components/home/BestSellerAddButton.tsx`, `src/app/(frontend)/(site)/products`, `src/app/(frontend)/(site)/checkout`, `src/app/(frontend)/(site)/order-placed/`, `src/app/(frontend)/api/razorpay/`, `src/email/templates/Order.tsx`, `src/migrations/`
 
 ## Slice 4: Browsing by category
 
-### 5. Plan category pages · in-progress (subcategory revision)
-One page per product category (`/products/ready-to-cook`, `/products/ready-to-eat`, `/products/fresh-from-produce`) with an accessible audience filter (All, Kids, Adults, Special) and the product cards each category owns. Copy lives in code, product data comes from the Products collection, and the category badges on product cards become the links that lead there. The 2026-11-06 revision adds a subcategory layer: an admin managed option list per category (title and category, no slug), required on every product with no default. A second filter row for those labels was tried on the category pages and then withdrawn, so the audience pills are each page's only filter; they carry an icon each, and their empty states sit centered.
-**Done when:** all three pages render with their own band, grid and filters, unknown category slugs render not found, empty categories and empty filter combinations show the WhatsApp empty state card, the sitemap carries the three URLs, and the kitchen owns the subcategory list per category in the admin.
+### 5. Plan category pages · in-progress (subcategory revision, assumed decision spec 0009)
+One page per product category (`/products/ready-to-cook`, `/products/ready-to-eat`, `/products/fresh-from-produce`) with the shared shelf controls and category badges linking to each page. Copy lives in code, product data in the Products collection. The kitchen manages required subcategories in Payload; each may have a Media image and has a required unique slug generated from its title. Products must choose a subcategory in the same category. Homepage subcategory tiles use the assumed query-filter decision in spec 0009.
+**Done when:** all three pages render with their category content and shared shelf controls, unknown category slugs show not found, empty states behave as specified, the sitemap contains the three URLs, and staff can manage Subcategory images and unique generated slugs in the admin. Homepage subcategory tiles open the matching category shelf filtered to that subcategory, and existing subcategory records have unique slugs.
 - [x] Design it (spec): `/architect plan category pages`
 - [x] Build it: `/develop plan category pages`
    - [x] Shared category module and reserved category slugs (AC-1, AC-6, AC-7)
@@ -144,9 +149,13 @@ One page per product category (`/products/ready-to-cook`, `/products/ready-to-ea
 - [x] Subcategory revision, milestone 1: the Subcategories collection, the required no default relation with category match validation, and the guarded migration (AC-8, AC-9)
 - [x] Subcategory revision, milestone 2: the second filter row on the category pages, combined client side (AC-10), withdrawn 2026-11-06
 - [x] Subcategory revision, milestone 3: tests and a fresh verify pass (AC-8 to AC-10)
-- [ ] Verify it (revision): `/check verify plan subcategory filters`
-- [ ] Test it (revision): `/test plan subcategory filters`
-Spec [0008](../specs/0008-plan-category-pages.md) · code in `src/utilities/productsCategoryCopy.ts`, `src/app/(frontend)/(site)/products/[category]/`, `src/components/Store/ProductFilters.tsx`, `src/components/Store/ProductCard.tsx`, `src/collections/Products/index.ts`, `src/collections/Subcategories/`, `src/migrations/`, `src/app/(frontend)/(sitemaps)/pages-sitemap.xml/route.ts`
+- [ ] Build it: `/develop plan category pages`
+   - [x] Subcategory tiles link to the server filtered category shelf by slug (assumed decision, spec 0009)
+   - [x] Optional Media image and automatic slug generation in Subcategories (AC-16, AC-17)
+   - [x] Slug backfill, uniqueness constraints and regression tests (AC-16, AC-17)
+- [ ] Verify it (revision): `/check verify plan category pages`
+- [ ] Test it (revision): `/test plan category pages`
+Spec [0008](../specs/0008-plan-category-pages.md) · assumed behavior [0009](../specs/0009-subcategory-query-filter.md) · code in `src/utilities/productsCategoryCopy.ts`, `src/app/(frontend)/(site)/products/[slug]/`, `src/components/Store/ProductFilters.tsx`, `src/components/Store/ProductCard.tsx`, `src/components/home/Products.tsx`, `src/components/Store/ProductShelf.tsx`, `src/components/Store/ProductShelfControls.tsx`, `src/utilities/productShelf.ts`, `src/collections/Products/index.ts`, `src/collections/Subcategories/`, `src/migrations/`, `src/app/(frontend)/(sitemaps)/pages-sitemap.xml/route.ts`
 
 ## Deferred
 

@@ -259,7 +259,8 @@ beforeAll(async () => {
   // Every product carries a subcategory from its own category (spec 0008, AC-9).
   const subcategory = await payload.create({
     collection: 'subcategories',
-    data: { category: 'ready-to-eat', title: `${run} tiffin` },
+    context: { disableRevalidate: true },
+    data: { category: 'ready-to-eat', slug: '', title: `${run} tiffin` },
     overrideAccess: true,
   })
 
@@ -298,7 +299,12 @@ afterAll(async () => {
 
   for (const id of subcategoryIDs) {
     try {
-      await payload.delete({ collection: 'subcategories', id, overrideAccess: true })
+      await payload.delete({
+        collection: 'subcategories',
+        context: { disableRevalidate: true },
+        id,
+        overrideAccess: true,
+      })
     } catch {
       // Best effort cleanup.
     }

@@ -73,12 +73,14 @@ test.beforeAll(async () => {
   // 0008, AC-9), so the fixtures create their option rows first.
   const breakfast = await payload.create({
     collection: 'subcategories',
-    data: { category: 'ready-to-cook', title: 'Breakfast' },
+    context: { disableRevalidate: true },
+    data: { category: 'ready-to-cook', slug: '', title: 'Breakfast' },
     overrideAccess: true,
   })
   const dinner = await payload.create({
     collection: 'subcategories',
-    data: { category: 'ready-to-cook', title: 'Dinner' },
+    context: { disableRevalidate: true },
+    data: { category: 'ready-to-cook', slug: '', title: 'Dinner' },
     overrideAccess: true,
   })
 
@@ -132,7 +134,12 @@ test.afterAll(async () => {
 
   for (const id of [breakfastId, dinnerId]) {
     try {
-      await payload.delete({ collection: 'subcategories', id, overrideAccess: true })
+      await payload.delete({
+        collection: 'subcategories',
+        context: { disableRevalidate: true },
+        id,
+        overrideAccess: true,
+      })
     } catch {
       // Best effort cleanup.
     }

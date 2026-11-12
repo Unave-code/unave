@@ -1,41 +1,26 @@
 import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 import { Cta } from '@/components/Cta'
-import { WhatsAppIcon } from '@/components/WhatsAppIcon'
-import { ProductCard } from '@/components/Store/ProductCard'
+import { Media } from '@/components/Media'
+import { EMPTY_SHELF, shelfHref } from '@/utilities/productShelf'
 import {
-  HOME_HREF_CONTACT,
   PRODUCTS_SECTION_CTA,
-  PRODUCTS_SECTION_EMPTY_BODY,
-  PRODUCTS_SECTION_EMPTY_HEADING,
   PRODUCTS_SECTION_HEADING,
   PRODUCTS_SECTION_INTRO,
 } from '@/utilities/homeCopy'
-import { getHomeProducts } from '@/utilities/products'
-import { WHATSAPP_CTA_LABEL, WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/utilities/whatsapp'
+import { productCategoryHref } from '@/utilities/productsCategoryCopy'
+import { getHomeSubcategories } from '@/utilities/products'
 
 import { Section } from './Section'
 
 /**
- * The products shelf, twelve at most (design.md §10.1): four rows of three on a
- * wide screen, two columns on tablet and phones.
- *
- * The cards are the ones `/products` uses, not a summary of them: photo-first,
- * the name and the cheapest per-day rate on a gradient band, and one Add to
- * cart control for the kitchen's default duration, so someone who already knows
- * what they want buys from the front page and someone still comparing follows
- * the card to the product's own page. Prices come from the product records
- * through the same card, so there is no second place to keep them right.
- *
- * A kitchen with nothing open shows a quiet empty card with a WhatsApp action
- * instead of disappearing: the shelf sits high on the page, right under the
- * trust strip, so a blank gap there would read as a broken site rather than a
- * kitchen between menus. The *See every product* link is dropped in that state,
- * because it would lead to a catalogue with nothing in it.
+ * The homepage category section (design.md §10.1): subcategory tiles and a link
+ * to the full product shelf. Product cards live in BestSellers.
  */
-export const ProductShelf: React.FC<{ whatsapp?: null | string }> = async ({ whatsapp }) => {
-  const products = await getHomeProducts()()
-  const hasProducts = products.length > 0
+export const ProductShelf: React.FC = async () => {
+  const subcategories = await getHomeSubcategories()()
 
   return (
     <Section id="products">
@@ -45,45 +30,68 @@ export const ProductShelf: React.FC<{ whatsapp?: null | string }> = async ({ wha
           <p className="text-body text-ink-600 mt-4">{PRODUCTS_SECTION_INTRO}</p>
         </div>
 
-        {hasProducts ? (
-          <Cta className="shrink-0" href="/products" variant="secondary">
-            {PRODUCTS_SECTION_CTA}
-          </Cta>
-        ) : null}
+        <Cta className="shrink-0" href="/products" variant="secondary">
+          {PRODUCTS_SECTION_CTA}
+        </Cta>
       </div>
 
-      {hasProducts ? (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} returnPath="/" />
-          ))}
-        </div>
-      ) : (
-        <div className="border-line bg-card mt-10 max-w-[52ch] rounded-2xl border p-8">
-          <h3 className="text-h3">{PRODUCTS_SECTION_EMPTY_HEADING}</h3>
-          <p className="text-body text-ink-600 mt-3">{PRODUCTS_SECTION_EMPTY_BODY}</p>
+      {subcategories.length > 0 ? (
+        <ul
+          aria-label="Meal subcategories"
+          className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+        >
+          {subcategories.map((subcategory) => {
+            const image =
+              typeof subcategory.image === 'object' && subcategory.image ? subcategory.image : null
+            const tile = (
+              <>
+                <div className="relative aspect-square overflow-hidden rounded-2xl">
+                  {image?.url ? (
+                    <Media
+                      alt={image.alt?.trim() || subcategory.title}
+                      fill
+                      imgClassName="object-cover"
+                      resource={image}
+                      size="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                    />
+                  ) : (
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      className="object-cover"
+                      fill
+                      sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                      src="/images/product-placeholder.jpg"
+                    />
+                  )}
+                </div>
+                <h3 className="text-h3 bg-transparent px-3 py-3 text-center">
+                  {subcategory.title}
+                </h3>
+              </>
+            )
 
-          {whatsapp ? (
-            <div className="mt-6">
-              <Cta
-                href={whatsappHref(whatsapp)}
-                rel="noopener noreferrer"
-                target="_blank"
-                variant="secondary"
-              >
-                <WhatsAppIcon className="size-4" />
-                {WHATSAPP_CTA_LABEL}
-              </Cta>
-            </div>
-          ) : (
-            <div className="mt-6">
-              <Cta href={HOME_HREF_CONTACT} variant="secondary">
-                {WHATSAPP_FALLBACK_LABEL}
-              </Cta>
-            </div>
-          )}
-        </div>
-      )}
+            return (
+              <li key={subcategory.id}>
+                {subcategory.slug ? (
+                  <Link
+                    aria-label={`Browse ${subcategory.title} products`}
+                    className="block rounded-2xl focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none"
+                    href={shelfHref(productCategoryHref(subcategory.category), {
+                      ...EMPTY_SHELF,
+                      subcategory: subcategory.slug,
+                    })}
+                  >
+                    {tile}
+                  </Link>
+                ) : (
+                  tile
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
     </Section>
   )
 }

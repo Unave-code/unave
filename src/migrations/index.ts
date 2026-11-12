@@ -22,7 +22,11 @@ import * as migration_20261110_130000_hero_slide_overlay from './20261110_130000
 import * as migration_20261111_090000_one_time_products from './20261111_090000_one_time_products';
 import * as migration_20261111_160000_product_lead_price from './20261111_160000_product_lead_price';
 import * as migration_20261111_170000_normalize_product_slugs from './20261111_170000_normalize_product_slugs';
-
+import * as migration_20261112_100000_home_hero_image_slides from './20261112_100000_home_hero_image_slides';
+import * as migration_20261112_130000_subcategory_image from './20261112_130000_subcategory_image';
+import * as migration_20261112_140000_subcategory_slug_nullable from './20261112_140000_subcategory_slug_nullable';
+import * as migration_20261112_150000_best_seller_product_fields from './20261112_150000_best_seller_product_fields';
+import * as migration_20261112_160000_subcategory_slug_backfill from './20261112_160000_subcategory_slug_backfill';
 
 export const migrations = [
   {
@@ -144,5 +148,30 @@ export const migrations = [
     up: migration_20261111_170000_normalize_product_slugs.up,
     down: migration_20261111_170000_normalize_product_slugs.down,
     name: '20261111_170000_normalize_product_slugs',
+  },
+  {
+    up: migration_20261112_100000_home_hero_image_slides.up,
+    down: migration_20261112_100000_home_hero_image_slides.down,
+    name: '20261112_100000_home_hero_image_slides',
+  },
+  {
+    up: migration_20261112_130000_subcategory_image.up,
+    down: migration_20261112_130000_subcategory_image.down,
+    name: '20261112_130000_subcategory_image',
+  },
+  {
+    up: migration_20261112_140000_subcategory_slug_nullable.up,
+    down: migration_20261112_140000_subcategory_slug_nullable.down,
+    name: '20261112_140000_subcategory_slug_nullable',
+  },
+  {
+    up: migration_20261112_150000_best_seller_product_fields.up,
+    down: migration_20261112_150000_best_seller_product_fields.down,
+    name: '20261112_150000_best_seller_product_fields',
+  },
+  {
+    up: migration_20261112_160000_subcategory_slug_backfill.up,
+    down: migration_20261112_160000_subcategory_slug_backfill.down,
+    name: '20261112_160000_subcategory_slug_backfill',
   },
 ];

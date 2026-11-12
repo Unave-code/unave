@@ -10,7 +10,7 @@ import { getMediaUrl } from '@/utilities/getMediaUrl'
 
 /**
  * The band that opens one blog post (design.md §10.4): the post's categories as
- * the eyebrow, the title in Lora, then the byline, on the post's own
+ * the eyebrow, the title in Nunito, then the byline, on the post's own
  * photograph. The band is marked `.opening-band`, so it
  * runs up behind the transparent navbar. A post without a hero image still gets
  * the band, just without the photograph.

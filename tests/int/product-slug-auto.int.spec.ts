@@ -178,7 +178,8 @@ beforeAll(async () => {
 
   const subcategory = await payload.create({
     collection: 'subcategories',
-    data: { category: 'ready-to-eat', title: `${run} tiffin` },
+    context: { disableRevalidate: true },
+    data: { category: 'ready-to-eat', slug: '', title: `${run} tiffin` },
     overrideAccess: true,
   })
 
@@ -200,7 +201,12 @@ afterAll(async () => {
   }
 
   try {
-    await payload.delete({ collection: 'subcategories', id: subcategoryId, overrideAccess: true })
+    await payload.delete({
+      collection: 'subcategories',
+      context: { disableRevalidate: true },
+      id: subcategoryId,
+      overrideAccess: true,
+    })
   } catch {
     // Best effort cleanup.
   }
