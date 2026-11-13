@@ -7,7 +7,6 @@ import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/product
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
 import { autoProductSlug } from './hooks/autoProductSlug'
 import { setLeadPrice } from './hooks/leadPrice'
-import { auditComboChange, auditComboDelete } from './hooks/comboAudit'
 import { prepareComboComponents } from './hooks/prepareComboComponents'
 import { validateCompareAtPrice } from './validateCompareAtPrice'
 
@@ -470,8 +469,8 @@ export const Products: CollectionConfig = {
     },
   ],
   hooks: {
-    afterChange: [auditComboChange, revalidateProducts],
-    afterDelete: [auditComboDelete, revalidateProductsDelete],
+    afterChange: [revalidateProducts],
+    afterDelete: [revalidateProductsDelete],
     beforeChange: [prepareComboComponents, setLeadPrice],
   },
   labels: {

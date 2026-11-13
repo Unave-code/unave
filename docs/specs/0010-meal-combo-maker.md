@@ -31,7 +31,7 @@ Orders are written only after payment succeeds. The current payment flow keeps c
 6. **AC-6**: The existing signed in checkout creates a temporary server side intent containing the verified customer ID; the validated delivery snapshot (`name`, `phone`, `addressLine1`, `addressLine2`, `city`, `state`, `pincode`, `foodPreference`, and `note`); and every item snapshot (`productId`, `productTitle`, `durationLabel`, `days`, `qty`, and `unitPrice`) with nested combo component snapshots (`productId`, `productTitle`, and selected plan `durationLabel` and `days`). The server resolves item and component values from the current product records and calculates the total as the sum of `unitPrice` multiplied by `qty`. The intent is saved before payment details are returned to the browser. A failed save does not launch payment. No order row is created before a captured payment.
 7. **AC-7**: The verified browser return and signed payment webhook use the same intent keyed by the unique Razorpay order ID. The browser return must pass Razorpay signature verification, and the webhook must pass HMAC verification. Both require a captured payment, matching gateway order ID, INR currency, and an exact integer paise amount equal to both the gateway order amount and intent total. They then create one paid order. A unique database constraint on `gatewayOrderId` resolves simultaneous return and webhook writes; the losing writer reads and returns the already written order. Before reading an intent, either signal checks for an order already written for that gateway order ID and returns the existing result when the customer owns it. A combo remains one order line, with its price and quantity plus a frozen component snapshot containing each component name and, for meal plans, the selected duration label and days. Component prices are not stored as order line prices. The order confirmation, account, admin, and existing order emails show the combo and its component snapshot. Changes to a combo after the payment step opens do not change that intent.
 8. **AC-8**: An intent is deleted only after its paid order is committed. A failure to delete a committed intent is logged and leaves the record for a safe retry; idempotent order lookup prevents a duplicate order. An unpaid intent may be deleted after 30 days only when the gateway explicitly confirms that no payment was captured. A timeout, error, or indeterminate gateway result retains the intent and logs the failure. A captured payment with a missing or unreadable intent never causes an order to be guessed from current product data; the gateway order ID, payment ID, and gateway status are logged without customer personal data so staff can compare them in Razorpay and reconcile manually.
-9. **AC-9**: Every successful staff creation, edit, and deletion of a combo produces an append only audit record with the staff actor, time, action, and before and after combo fields, including title, slug, price, availability, category, subcategory, audience, description, image, featured state, and components. Component snapshots include the referenced product ID and title and, for meal plans, the selected duration label and days. Staff can read the records; customers cannot create, edit, or read them. The audit record and combo change are written in one database transaction. Audit write failures are surfaced and do not report the combo change as successful.
+9. **AC-9**: The application does not expose a combo audit collection or write audit records. Creating, editing, or deleting a combo does not depend on audit storage.
 10. **AC-10**: Products remain publicly readable and staff writable under the existing access rules. Orders remain readable only by staff and their owning customer, and are writable only by payment confirmation. Checkout intents have no public REST, GraphQL, or admin access and are read or written only by server payment code. No card data is stored by Unave.
 11. **AC-11**: Existing product accessibility and content rules continue to apply to combo surfaces. Controls retain at least 44 pixel targets, keyboard focus remains visible, and reduced motion is respected. Every combo product page places the existing `Notice` component next to the combo description and included products, with the title “A note on our meals” and text “Our meals are food options and are not a substitute for medical or nutritional advice.” This keeps the required notice beside any medical, allergy, diabetes, or child nutrition claim.
 
@@ -92,7 +92,7 @@ The staff need is a fixed price bundle built from existing catalogue items, not 
 
 The gateway note limit makes the current checkout intent unsuitable for larger combo baskets. A private Payload record is the smallest durable place in the existing PostgreSQL database to keep the exact order data needed by either payment signal. It is not an order and does not change the rule that an order means a captured payment. A scheduled Payload job can clean abandoned intents using the existing job runner.
 
-As an additional safeguard for staff changes that affect a sale, the implementation should record an append only audit event for every successful combo creation, edit, and deletion. The runner up is relying on product timestamps alone, but those cannot explain who changed a price or what the old components were.
+Combo audit records are not needed for this feature. Existing audit tables and records are retained, but the application does not register or access them.
 
 ## Feature design
 
@@ -106,7 +106,7 @@ As an additional safeguard for staff changes that affect a sale, the implementat
    5. The self relationship is one combo to two through ten non combo products. A source product may be referenced by many combos. A combo cannot reference itself or any other combo.
 2. `orders` remains the paid order collection. A combo is one item with a relationship to the combo product, `productTitle`, `qty`, and `unitPrice` snapshot fields. Its `durationLabel` is the reserved `one-time` value and its `days` is zero. Its nested `components` snapshot has the optional source product relationship, required product title, and optional duration label and days. Relationships may become empty if a product is deleted; the snapshot text remains. The order's unit price is the combo price, with no component price allocation. Existing order fields stay immutable after creation.
 3. `checkoutIntents` is a private temporary collection. Each record has a unique required `gatewayOrderId`, required customer relationship, required delivery snapshot, required `items` array, required total in paise, and required `expiresAt`. Each item stores the product relationship, title, duration label, days, quantity, unit price, and for combos, component references and snapshots. The collection is created for a gateway order, removed after its paid order is written, or removed after 30 days only after the gateway confirms no payment was captured. It has no admin listing or public API.
-4. `comboAuditLogs` is append only. Each record has a required staff user relationship, action (`created`, `updated`, or `deleted`), optional combo relationship, before and after JSON snapshots of all editable combo fields: title, slug, price, availability, category, subcategory, audience, description, image, featured state, and components. A component snapshot records product ID, title, and selected meal plan duration label and days. Each record has a creation timestamp. Staff can read records. No one can update or delete them.
+4. Combo audit tables are not part of the application model. Any existing audit tables and records remain stored, with no application reads, writes, or cleanup.
 5. Existing `media`, `subcategories`, `customers`, `users`, and `orders` records remain the related entities. Existing products need no backfill; only the new type and nullable or new fields and collections require schema changes.
 
 **State transitions**:
@@ -114,7 +114,6 @@ As an additional safeguard for staff changes that affect a sale, the implementat
 1. A combo's sellable state is derived. It is available when its own `available` flag is true, all referenced products exist and are available, and any selected plan durations still match. Staff can pause it directly.
 2. A checkout intent exists after payment order creation. A captured payment creates one paid order and then removes the intent. An unpaid intent is removed after 30 days only after the gateway confirms it was not captured.
 3. An order is born paid and its item and component snapshots never change.
-4. Audit records are created once and are never changed or removed.
 
 **API surface**:
 
@@ -150,8 +149,6 @@ As an additional safeguard for staff changes that affect a sale, the implementat
 | Clean an abandoned intent | Whether a payment was captured | Current payment status fetched from Razorpay; no captured payment is required before deletion |
 | Log a payment reconciliation failure | Gateway order ID, payment ID when available, gateway status, and failure reason | Razorpay response or signed event, plus server error details; never customer personal data |
 | Show the required combo notice | Title, text, and presentation | `docs/design/design.md` sections 6.9 and 6.12 and existing `src/components/Notice.tsx` component |
-| Record a combo audit event | Actor and timestamp | Authenticated Payload staff request and server clock |
-| Record a combo audit event | Before and after values | Product document before and after the staff mutation, with component titles and duration snapshots resolved from product records |
 
 **Key invariants**:
 
@@ -163,11 +160,10 @@ As an additional safeguard for staff changes that affect a sale, the implementat
 6. A previously recorded order is returned idempotently before looking for a deleted intent.
 7. The checkout intent remains until the order write succeeds. A paid order always has its frozen component snapshot.
 8. A missing intent never falls back to current product data for a captured payment.
-9. Audit records are append only and staff mutations do not report success if their audit record cannot be stored.
 
 **Security model**:
 
-Products follow the existing access rules: public read and staff write. Customers must use the existing signed in checkout and can read only their own paid orders. Staff can read all orders. Checkout intents are server only, with no admin screen, public REST access, or GraphQL access. Audit records are staff read only and server written. The temporary intent duplicates delivery information already held for checkout, so its access is restricted and its lifetime is bounded. Razorpay continues to handle card data; Unave stores no card number or security code. No additional regulatory requirement was identified.
+Products follow the existing access rules: public read and staff write. Customers must use the existing signed in checkout and can read only their own paid orders. Staff can read all orders. Checkout intents are server only, with no admin screen, public REST access, or GraphQL access. The temporary intent duplicates delivery information already held for checkout, so its access is restricted and its lifetime is bounded. Razorpay continues to handle card data; Unave stores no card number or security code. No additional regulatory requirement was identified.
 
 **Configuration required**:
 
@@ -176,21 +172,21 @@ None. Reuse the existing database, Razorpay credentials, and scheduled Payload j
 **Critical test scenarios**:
 
 1. Price and editing: staff can enter valid rupee values including paise, excess decimal precision is rejected without rounding, and invalid or duplicate component and duration selections cannot be saved. Verifies **AC-1**, **AC-2**.
-2. Happy path: staff creates a combo containing a one time product and one fixed duration of a plan, a customer adds it to the cart, pays, and sees one paid order line with the frozen component snapshot in the order, account, admin, and emails. The product page also shows the required nearby notice title and text. Verifies **AC-2**, **AC-3**, **AC-5**, **AC-6**, **AC-7**, **AC-11**.
+2. Happy path: staff creates a combo containing a one time product and one fixed duration of a plan, a customer adds it to the cart, pays, and sees one paid order line with the frozen component snapshot in the order, account, admin, and emails. The product page also shows the required nearby notice title and text. Combo creation succeeds without an audit collection or write. Verifies **AC-2**, **AC-3**, **AC-5**, **AC-6**, **AC-7**, **AC-9**, **AC-11**.
 3. Availability and cart: a missing, paused, or invalid duration component makes the combo visibly unavailable and prevents purchase; a stale cart line is marked, excluded from the total, and blocks checkout. Verifies **AC-3**, **AC-4**, **AC-5**.
 4. Payment consistency: the return and webhook race, or the source combo changes after payment begins; exactly one order is written from the original intent. Invalid signature, status, order ID, currency, or amount is rejected. A missing intent creates no guessed order and logs gateway and payment IDs when available. Verifies **AC-6**, **AC-7**, **AC-8**.
-5. Retention and audit: an unpaid intent is retained until 30 days and is deleted only after an uncaptured gateway result; a timeout, captured, or unreadable result is retained. Staff create, edit, and delete operations create immutable audit entries with full before and after fields, and failed audit storage does not report a successful change. Verifies **AC-8**, **AC-9**.
-6. Auth and privacy: an anonymous visitor can browse but cannot check out; a customer cannot read another customer's order or any intent or audit record. Verifies **AC-3**, **AC-10**.
+5. Retention: an unpaid intent is retained until 30 days and is deleted only after an uncaptured gateway result; a timeout, captured, or unreadable result is retained. Verifies **AC-8**.
+6. Auth and privacy: an anonymous visitor can browse but cannot check out; a customer cannot read another customer's order or any intent. Verifies **AC-3**, **AC-10**.
 
 ## Build plan
 
 Ordered for the Tracer Bullet approach: first prove one combo can travel from the staff form through the existing paid order path, then add all validation and failure handling.
 
-1. Add one guarded migration for the combo product type and component rows, order component snapshots, private checkout intents, and append only combo audit records. Keep existing product rows valid without backfill. Satisfies **AC-1**, **AC-2**, **AC-6**, **AC-7**, **AC-9**.
+1. Add one guarded migration for the combo product type and component rows, order component snapshots, and private checkout intents. Keep existing product rows valid without backfill. Satisfies **AC-1**, **AC-2**, **AC-6**, **AC-7**.
 2. Build the first full path through standard Payload component rows, product detail and shelf rendering, the nearby notice, one time cart resolution, checkout intent creation, payment confirmation, and a paid order snapshot. Satisfies **AC-1**, **AC-3**, **AC-5**, **AC-6**, **AC-7**, **AC-11**.
 3. Harden component validation, availability derivation, invalid duration handling, stale cart behavior, and cache revalidation when source products change. Satisfies **AC-2**, **AC-4**, **AC-5**.
 4. Integrate the intent with both payment signals, verify payment values, make order creation idempotent, update customer and staff order views and existing order emails, and add the 30 day cleanup job with explicit reconciliation logging. Satisfies **AC-6**, **AC-7**, **AC-8**, **AC-10**.
-5. Add audit recording for combo create, update, and delete operations, and cover permissions, failed audit writes, checkout races, stale combos, and the main customer journey with focused unit, integration, and end to end tests. Satisfies **AC-9**, **AC-10**, **AC-11**.
+5. Keep combo audit storage out of the application and cover checkout races, stale combos, access rules, and the main customer journey with focused unit, integration, and end to end tests. Satisfies **AC-2**, **AC-4**, **AC-5**, **AC-7**, **AC-8**, **AC-9**, **AC-10**, **AC-11**.
 
 ## Consequences
 
@@ -205,7 +201,7 @@ Ordered for the Tracer Bullet approach: first prove one combo can travel from th
 
 1. The product and order schemas gain nested component data and need a guarded migration.
 2. Unpaid payment attempts now require a temporary database record and gateway status checks during cleanup.
-3. Keeping an audit trail adds storage and makes combo saves depend on successful audit writes.
+3. Combo edits do not have a separate audit history in the admin. Existing database audit tables and records are left untouched and unused by the application.
 4. Changes to a source product can pause several combos, so staff need to repair or reenable affected products deliberately.
 
 **Neutral**:

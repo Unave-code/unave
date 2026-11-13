@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
 import { CheckoutIntents } from './collections/CheckoutIntents'
-import { ComboAuditLogs } from './collections/ComboAuditLogs'
 import { Customers } from './collections/Customers'
 import { EmailLog } from './collections/EmailLog'
 import { Enquiries } from './collections/Enquiries'
@@ -157,7 +156,6 @@ export default buildConfig({
     Media,
     Categories,
     CheckoutIntents,
-    ComboAuditLogs,
     Users,
     Customers,
     Enquiries,

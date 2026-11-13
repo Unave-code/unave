@@ -15,16 +15,13 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
  *
  * A combo is a product with two to ten distinct products inside it. The
  * collection refuses a duplicate, a combo inside a combo, a meal plan without
- * one current duration and a price with more than two decimal places. Every
- * accepted save leaves an append only audit record with the actor, the action
- * and the before and after snapshots, and a failed audit write fails the save.
+ * one current duration and a price with more than two decimal places.
  */
 
 let payload: Payload
 
 const run = `it-combo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const productIDs: (number | string)[] = []
-const auditIDs: (number | string)[] = []
 const subcategoryIDs: (number | string)[] = []
 let staff: User
 let planId: number
@@ -67,19 +64,6 @@ const comboData = (
   type: 'combo' as const,
   ...overrides,
 })
-
-const findAudits = async (comboId: number | string) => {
-  const found = await payload.find({
-    collection: 'combo-audit-logs',
-    depth: 0,
-    limit: 10,
-    overrideAccess: true,
-    sort: 'createdAt',
-    where: { combo: { equals: comboId } },
-  })
-
-  return found.docs
-}
 
 beforeAll(async () => {
   payload = await getPayload({ config })
@@ -158,14 +142,6 @@ afterAll(async () => {
     }
   }
 
-  for (const id of auditIDs) {
-    try {
-      await payload.delete({ collection: 'combo-audit-logs', id, overrideAccess: true })
-    } catch {
-      // Best effort cleanup.
-    }
-  }
-
   for (const id of subcategoryIDs) {
     try {
       await payload.delete({
@@ -204,16 +180,6 @@ describe('saving a combo', () => {
     expect(created.components?.[1]?.durationLabel).toBe('One week')
     expect(created.components?.[1]?.durationDaysSnapshot).toBe(5)
     expect(created.durations).toHaveLength(0)
-
-    const audits = await findAudits(created.id)
-    auditIDs.push(...audits.map((audit) => audit.id))
-
-    expect(audits).toHaveLength(1)
-    expect(audits[0]?.action).toBe('created')
-    expect(String(audits[0]?.actor)).toBe(String(staff.id))
-    expect(audits[0]?.after).toMatchObject({ price: 99000, slug: created.slug, title: 'Family combo' })
-    expect((audits[0]?.after as { components?: unknown[] } | null)?.components).toHaveLength(2)
-    expect(audits[0]?.before).toBeNull()
   })
 
   it('refuses the same product twice', async () => {
@@ -305,60 +271,7 @@ describe('saving a combo', () => {
     expect(message).toMatch(/two decimal places/i)
   })
 
-  it('records an edit with the before and after snapshots, and a delete', async () => {
-    const created = (await payload.create({
-      collection: 'products',
-      data: comboData([{ product: oneTimeId }, { durationLabel: 'One week', product: planId }]),
-      depth: 0,
-      ...staffOptions(),
-    })) as Product
-
-    const updated = (await payload.update({
-      collection: 'products',
-      data: { available: false, price: 88000 },
-      depth: 0,
-      id: created.id,
-      ...staffOptions(),
-    })) as Product
-
-    expect(updated.available).toBe(false)
-
-    const beforeDelete = await findAudits(created.id)
-    auditIDs.push(...beforeDelete.map((audit) => audit.id))
-
-    await payload.delete({
-      collection: 'products',
-      context: { disableRevalidate: true },
-      id: created.id,
-      overrideAccess: true,
-      user: staff,
-    })
-
-    // The deleted combo's row is gone, so its audit record keeps the snapshots
-    // but no combo reference. Read the newest delete record for this actor.
-    const deletedAudit = await payload.find({
-      collection: 'combo-audit-logs',
-      depth: 0,
-      limit: 1,
-      overrideAccess: true,
-      sort: '-createdAt',
-      where: {
-        action: { equals: 'deleted' },
-        actor: { equals: staff.id },
-      },
-    })
-
-    const audits = [...beforeDelete, ...deletedAudit.docs]
-    auditIDs.push(...deletedAudit.docs.map((audit) => audit.id))
-
-    expect(audits.map((audit) => audit.action)).toEqual(['created', 'updated', 'deleted'])
-    expect(audits[1]?.before).toMatchObject({ available: true, price: 99000 })
-    expect(audits[1]?.after).toMatchObject({ available: false, price: 88000 })
-    expect(audits[2]?.after).toBeNull()
-    expect(audits[2]?.before).toMatchObject({ price: 88000 })
-  })
-
-  it('keeps a customer out of the audit log and out of writing a product', async () => {
+  it('keeps a customer from writing a product', async () => {
     const customer = await payload.create({
       collection: 'customers',
       data: {
@@ -377,15 +290,6 @@ describe('saving a combo', () => {
           collection: 'products',
           data: comboData([{ product: oneTimeId }, { durationLabel: 'One week', product: planId }]),
           depth: 0,
-          overrideAccess: false,
-          user: customer,
-        }),
-      ).rejects.toThrow()
-
-      await expect(
-        payload.find({
-          collection: 'combo-audit-logs',
-          limit: 1,
           overrideAccess: false,
           user: customer,
         }),

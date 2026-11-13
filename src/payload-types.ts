@@ -73,7 +73,6 @@ export interface Config {
     media: Media;
     categories: Category;
     'checkout-intents': CheckoutIntent;
-    'combo-audit-logs': ComboAuditLog;
     users: User;
     customers: Customer;
     enquiries: Enquiry;
@@ -104,7 +103,6 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'checkout-intents': CheckoutIntentsSelect<false> | CheckoutIntentsSelect<true>;
-    'combo-audit-logs': ComboAuditLogsSelect<false> | ComboAuditLogsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
@@ -1071,36 +1069,6 @@ export interface Subcategory {
   createdAt: string;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "combo-audit-logs".
- */
-export interface ComboAuditLog {
-  id: number;
-  actor: number | User;
-  action: 'created' | 'updated' | 'deleted';
-  combo?: (number | null) | Product;
-  before?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  after?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Messages from the contact form. One row per message, newest last.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1455,10 +1423,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'checkout-intents';
         value: number | CheckoutIntent;
-      } | null)
-    | ({
-        relationTo: 'combo-audit-logs';
-        value: number | ComboAuditLog;
       } | null)
     | ({
         relationTo: 'users';
@@ -1888,19 +1852,6 @@ export interface CheckoutIntentsSelect<T extends boolean = true> {
       };
   total?: T;
   expiresAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "combo-audit-logs_select".
- */
-export interface ComboAuditLogsSelect<T extends boolean = true> {
-  actor?: T;
-  action?: T;
-  combo?: T;
-  before?: T;
-  after?: T;
   updatedAt?: T;
   createdAt?: T;
 }
