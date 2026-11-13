@@ -3,9 +3,8 @@ import type { Payload } from 'payload'
 import type { Customer, Footer, Order } from '@/payload-types'
 import { renderOrder } from '@/email/templates/render'
 import { sendOrderMail } from '@/email/send'
-import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { formatPaise } from '@/utilities/money'
-import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
+import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
 
 /**
  * The two emails a paid order sends (spec 0007, AC-7).
@@ -79,8 +78,8 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
 
     return {
       amountLabel: formatPaise(unitPrice * qty),
-      durationLabel:
-        item.durationLabel === ONE_TIME_DURATION ? PRODUCT_ONE_TIME_LABEL : (item.durationLabel ?? ''),
+      componentsLabel: orderComponentsLabel(item.components) ?? undefined,
+      durationLabel: orderItemKind(item),
       title: qty > 1 ? `${qty} × ${item.productTitle ?? ''}` : (item.productTitle ?? ''),
     }
   })

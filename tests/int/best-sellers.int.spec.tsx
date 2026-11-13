@@ -31,6 +31,24 @@ const renderBestSellers = async (products: Product[]) => {
 }
 
 describe('the homepage Best sellers shelf', () => {
+  it('renders featured products in a labeled, keyboard-reachable list', async () => {
+    const product = {
+      available: true,
+      featured: true,
+      id: 4,
+      slug: 'brown-rice',
+      title: 'Brown rice',
+      type: 'one-time',
+      price: 5000,
+    } as unknown as Product
+
+    await renderBestSellers([product])
+
+    const rail = screen.getByRole('list', { name: 'Featured products' })
+    expect(rail.getAttribute('tabindex')).toBe('0')
+    expect(screen.getByRole('link', { name: 'View Brown rice' })).toBeTruthy()
+  })
+
   it('shows a one-time product’s pack size, old price, discount, and cart form', async () => {
     const product = {
       available: true,

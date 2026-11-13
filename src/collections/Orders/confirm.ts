@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 
 import type { Order } from '@/payload-types'
 
-import type { OrderIntent } from './intent'
+import { deleteCheckoutIntent, type OrderIntent } from './intent'
 import { sendOrderMails } from './mail'
 
 /**
@@ -48,7 +48,10 @@ export const recordPaidOrder = async (
 ): Promise<RecordOrderResult> => {
   const already = await findByGatewayOrder(payload, input.gatewayOrderId)
 
-  if (already) return { order: already, recorded: false }
+  if (already) {
+    await deleteCheckoutIntent(payload, input.intent.id, input.gatewayOrderId)
+    return { order: already, recorded: false }
+  }
 
   let order: Order
 
@@ -74,10 +77,15 @@ export const recordPaidOrder = async (
     // won the race; its row is the truth and it already sent the mails.
     const raced = await findByGatewayOrder(payload, input.gatewayOrderId)
 
-    if (raced) return { order: raced, recorded: false }
+    if (raced) {
+      await deleteCheckoutIntent(payload, input.intent.id, input.gatewayOrderId)
+      return { order: raced, recorded: false }
+    }
 
     throw error
   }
+
+  await deleteCheckoutIntent(payload, input.intent.id, input.gatewayOrderId)
 
   try {
     await sendOrderMails(payload, order)

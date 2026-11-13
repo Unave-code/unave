@@ -115,8 +115,12 @@ export default async function CartPage({
                   <div className="min-w-0">
                     <p className="text-base font-bold">{line.productTitle}</p>
                     <p className="text-ink-600 mt-1 text-sm">
-                      {line.type === 'one-time' ? PRODUCT_ONE_TIME_LABEL : line.duration}
-                      {line.days !== null
+                      {line.type === 'combo'
+                        ? 'Meal combo'
+                        : line.type === 'one-time'
+                          ? PRODUCT_ONE_TIME_LABEL
+                          : line.duration}
+                      {line.days !== null && line.days > 0
                         ? `, ${line.days} ${line.days === 1 ? 'day' : 'days'}`
                         : ''}
                     </p>
@@ -134,7 +138,7 @@ export default async function CartPage({
                         buttons, so it works without JavaScript. Minus rests
                         at one, plus at the cap, and a stale line — one the
                         menu no longer prices — shows no stepper at all. */}
-                    {!line.stale && line.type === 'one-time' ? (
+                    {!line.stale && line.type !== 'plan' ? (
                       <form action="/api/cart/qty" className="flex items-center gap-2" method="post">
                         <input
                           name="line"
@@ -175,7 +179,7 @@ export default async function CartPage({
                     <p className="text-right text-sm font-bold">
                       {line.price !== null ? formatPaise(line.lineTotal) : '—'}
 
-                      {!line.stale && line.type === 'one-time' && line.qty > 1 && line.price !== null ? (
+                      {!line.stale && line.type !== 'plan' && line.qty > 1 && line.price !== null ? (
                         <span className="text-ink-600 mt-0.5 block text-xs font-medium">
                           {line.qty} &times; {formatPaise(line.price)}
                         </span>
@@ -188,7 +192,7 @@ export default async function CartPage({
 
                       <button
                         aria-label={
-                          line.type === 'one-time'
+                          line.type !== 'plan'
                             ? `Remove ${line.productTitle} from the cart`
                             : `Remove ${line.duration} of ${line.productTitle} from the cart`
                         }

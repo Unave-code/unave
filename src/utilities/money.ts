@@ -34,13 +34,14 @@ export const formatRupeeInput = (paise: unknown): string => {
 }
 
 export const rupeesToPaise = (text: string): number | null => {
-  const cleaned = text.replace(/[^0-9.]/g, '')
+  const cleaned = text.trim()
 
-  if (cleaned.trim().length === 0) return null
+  if (cleaned.length === 0) return null
+  if (!/^\d+(?:\.\d{0,2})?$/.test(cleaned)) return null
 
-  const rupees = Number(cleaned)
+  const paise = Number(cleaned) * 100
 
-  if (!Number.isFinite(rupees)) return null
+  if (!Number.isSafeInteger(paise)) return null
 
-  return Math.round(rupees * 100)
+  return paise
 }

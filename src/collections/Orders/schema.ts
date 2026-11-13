@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { customerProfileSchema } from '@/utilities/customerProfile'
+import { FOOD_PREFERENCE_VALUES } from '@/utilities/foodPreference'
 
 /**
  * What the checkout may send, and nothing more (spec 0007).
@@ -17,6 +18,7 @@ import { customerProfileSchema } from '@/utilities/customerProfile'
 const required = (message: string) => z.string().trim().min(1, { message })
 
 export const orderDeliverySchema = customerProfileSchema.extend({
+  foodPreference: z.enum(FOOD_PREFERENCE_VALUES).default('none'),
   name: required('Enter a name for the delivery.'),
 })
 

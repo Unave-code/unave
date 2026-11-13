@@ -4,14 +4,14 @@ import configPromise from '@payload-config'
 import { fetchRazorpayOrder, verifyWebhookSignature } from '@/utilities/razorpay'
 
 import { recordPaidOrder } from '@/collections/Orders/confirm'
-import { readOrderNotes } from '@/collections/Orders/intent'
+import { findCheckoutIntent } from '@/collections/Orders/intent'
 
 /**
  * Razorpay's webhook (spec 0007, AC-6).
  *
  * This is the second of the two payment signals, and the one that matters when
  * the browser never comes back: it writes the paid order itself, from the
- * checkout intent the gateway order carries in its notes. The signature is
+ * private checkout intent stored by Unave. The signature is
  * checked over the raw request bytes before anything is parsed, because
  * re-serialized JSON can differ in whitespace and a crafted body could exploit
  * that. Only a `payment.captured` event for an amount that matches both the
@@ -31,7 +31,6 @@ type OrderEntity = {
   amount?: unknown
   currency?: unknown
   id?: unknown
-  notes?: unknown
 }
 
 type WebhookEvent = {
@@ -111,35 +110,65 @@ export async function POST(request: Request): Promise<Response> {
     return new Response('Event acknowledged.', { status: 200 })
   }
 
-  // The gateway order holds the checkout intent. A real delivery carries it on
-  // the event already, so the network round trip is only for hand built calls.
   const orderEntity = event.payload?.order?.entity
 
-  let orderAmount: null | number = null
-  let notes: unknown = null
+  let gatewayOrder: { amount: number; currency: string; id: string } | null = null
 
-  if (orderEntity && typeof orderEntity.amount === 'number' && orderEntity.notes) {
-    orderAmount = orderEntity.amount
-    notes = orderEntity.notes
+  if (
+    orderEntity &&
+    typeof orderEntity.amount === 'number' &&
+    typeof orderEntity.currency === 'string' &&
+    typeof orderEntity.id === 'string' &&
+    orderEntity.id === captured.orderId
+  ) {
+    gatewayOrder = {
+      amount: orderEntity.amount,
+      currency: orderEntity.currency,
+      id: orderEntity.id,
+    }
   } else {
     try {
       const order = await fetchRazorpayOrder(captured.orderId)
-      orderAmount = order.amount
-      notes = order.notes
+      gatewayOrder = { amount: order.amount, currency: order.currency, id: order.id }
     } catch (error) {
       payload.logger.warn({
         err: error instanceof Error ? error.message : String(error),
         msg: 'razorpay_webhook_order_unreadable',
         order: captured.orderId,
       })
-      return new Response('Event acknowledged.', { status: 200 })
+      return new Response('Gateway order could not be read.', { status: 500 })
     }
   }
 
-  const intent = readOrderNotes(notes)
+  if (!gatewayOrder) {
+    payload.logger.error({
+      gatewayOrderId: captured.orderId,
+      msg: 'razorpay_webhook_order_missing',
+    })
+    return new Response('Gateway order could not be read.', { status: 500 })
+  }
+
+  let intent
+
+  try {
+    intent = await findCheckoutIntent(payload, captured.orderId)
+  } catch (error) {
+    payload.logger.error({
+      err: error instanceof Error ? error.message : String(error),
+      gatewayOrderId: captured.orderId,
+      msg: 'razorpay_webhook_intent_read_failed',
+      paymentId: captured.paymentId,
+    })
+    return new Response('Event acknowledged.', { status: 500 })
+  }
 
   if (!intent) {
-    payload.logger.warn({ msg: 'razorpay_webhook_intent_missing', order: captured.orderId })
+    payload.logger.warn({
+      gatewayOrderId: captured.orderId,
+      msg: 'razorpay_webhook_intent_missing',
+      paymentId: captured.paymentId,
+      status: paymentEntity(event)?.status,
+    })
     return new Response('Event acknowledged.', { status: 200 })
   }
 
@@ -147,10 +176,21 @@ export async function POST(request: Request): Promise<Response> {
   // the gateway order and the intent before anything is written.
   const payment = paymentEntity(event)
   const amount = typeof payment?.amount === 'number' ? payment.amount : null
+  const currency = typeof payment?.currency === 'string' ? payment.currency : null
 
-  if (amount === null || amount !== orderAmount || amount !== intent.total) {
+  if (
+    amount === null ||
+    !Number.isSafeInteger(amount) ||
+    currency !== 'INR' ||
+    payment?.order_id !== captured.orderId ||
+    gatewayOrder.id !== captured.orderId ||
+    gatewayOrder.currency !== 'INR' ||
+    amount !== gatewayOrder.amount ||
+    amount !== intent.total
+  ) {
     payload.logger.warn({
       amount,
+      currency,
       msg: 'razorpay_webhook_amount_mismatch',
       order: captured.orderId,
     })

@@ -31,12 +31,27 @@ describe('rupeesToPaise', () => {
     expect(rupeesToPaise('1500')).toBe(150000)
   })
 
-  it('reads a formatted rupee figure with a comma and decimals', () => {
-    expect(rupeesToPaise('1,500.50')).toBe(150050)
+  it('refuses a comma grouped figure rather than guessing at it', () => {
+    expect(rupeesToPaise('1,500.50')).toBeNull()
   })
 
-  it('rounds a fraction of a paisa to the nearest paisa', () => {
-    expect(rupeesToPaise('499.999')).toBe(50000)
+  it('rejects more than two decimal places instead of rounding them', () => {
+    // Spec 0010, AC-1: excess precision is refused, never silently rounded.
+    expect(rupeesToPaise('499.999')).toBeNull()
+    expect(rupeesToPaise('0.001')).toBeNull()
+  })
+
+  it('accepts a whole number of rupees and one or two decimals', () => {
+    expect(rupeesToPaise('499')).toBe(49900)
+    expect(rupeesToPaise('499.5')).toBe(49950)
+    expect(rupeesToPaise('499.05')).toBe(49905)
+  })
+
+  it('rejects anything that is not a plain rupee figure', () => {
+    expect(rupeesToPaise('₹499')).toBeNull()
+    expect(rupeesToPaise('4,99')).toBeNull()
+    expect(rupeesToPaise('-5')).toBeNull()
+    expect(rupeesToPaise('abc')).toBeNull()
   })
 
   it('answers nothing for an empty field', () => {

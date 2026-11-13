@@ -65,6 +65,17 @@ const oneTimeProduct = {
   type: 'one-time',
 } as unknown as Product
 
+const comboProduct = {
+  available: true,
+  components: [{ product: oneTimeProduct }, { durationLabel: 'One week', product }],
+  durations: [],
+  id: 5,
+  price: 99000,
+  slug: 'family-combo',
+  title: 'Family combo',
+  type: 'combo',
+} as unknown as Product
+
 describe('reading the cookie value', () => {
   it('returns nothing for a missing, malformed or non-array value', () => {
     expect(parseCartEntries(undefined)).toEqual([])
@@ -365,8 +376,7 @@ describe('resolving the cart against the live records', () => {
     expect(result.total).toBe(150000)
   })
 
-  it('asks for each slug once, even when a product appears at two durations', async () => {
-    const payload = payloadServing([product])
+  it('asks for each slug once, even when a product appears at two durations', async () => {    const payload = payloadServing([product])
 
     await resolveCartLines({
       lines: [
@@ -390,5 +400,50 @@ describe('resolving the cart against the live records', () => {
     })
     expect(productDuration(product, 'Two weeks')).toBeNull()
     expect(productDuration(null, 'One week')).toBeNull()
+  })
+
+  it('charges a combo through its own price, times the quantity, and keeps its contents', async () => {
+    const result = await resolveCartLines({
+      lines: [{ duration: ONE_TIME_DURATION, product: 'family-combo', qty: 2 }],
+      payload: payloadServing([comboProduct]),
+    })
+
+    expect(result.usable).toHaveLength(1)
+    expect(result.usable[0]).toMatchObject({
+      days: 0,
+      lineTotal: 198000,
+      price: 99000,
+      productTitle: 'Family combo',
+      qty: 2,
+      stale: false,
+      type: 'combo',
+    })
+    expect(result.usable[0]?.components).toHaveLength(2)
+    expect(result.total).toBe(198000)
+  })
+
+  it('marks a combo stale when a product inside it is paused or the line carries another duration', async () => {
+    const broken = {
+      ...comboProduct,
+      components: [
+        { product: { ...oneTimeProduct, available: false } },
+        { durationLabel: 'One week', product },
+      ],
+      id: 6,
+      slug: 'broken-combo',
+      title: 'Broken combo',
+    } as unknown as Product
+
+    const result = await resolveCartLines({
+      lines: [
+        { duration: 'One week', product: 'family-combo', qty: 1 },
+        { duration: ONE_TIME_DURATION, product: 'broken-combo', qty: 1 },
+      ],
+      payload: payloadServing([comboProduct, broken]),
+    })
+
+    expect(result.usable).toHaveLength(0)
+    expect(result.stale.map((line) => line.reason)).toEqual(['missing-duration', 'paused'])
+    expect(result.total).toBe(0)
   })
 })

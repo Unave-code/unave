@@ -24,7 +24,7 @@ export interface LeadPriceSource {
 }
 
 export const leadPricePaise = (product: LeadPriceSource): null | number => {
-  if (product.type === 'one-time') {
+  if (product.type === 'one-time' || product.type === 'combo') {
     const price = Number(product.price)
 
     return Number.isFinite(price) && price >= 1 ? price : null

@@ -41,6 +41,7 @@ export type ProductDuration = {
 }
 
 export type ProductPurchaseProps = {
+  combo?: boolean
   /** The plan's durations. Empty by construction on a one-time purchase. */
   durations: ProductDuration[]
   /**
@@ -57,6 +58,7 @@ export type ProductPurchaseProps = {
 }
 
 export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
+  combo = false,
   durations,
   oneTimePrice,
   productSlug,
@@ -82,8 +84,9 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
         <div aria-live="polite">
           <p className="text-h2 text-green-700">{formatPaise(oneTimePrice)}</p>
           <p className="text-ink-600 mt-2 text-sm">
-            {PRODUCT_ONE_TIME_LABEL} — cooked fresh and delivered once. Adding it again raises the
-            quantity, up to ten.
+            {combo
+              ? 'A fixed price combo. Adding it again raises the quantity, up to ten.'
+              : `${PRODUCT_ONE_TIME_LABEL} — cooked fresh and delivered once. Adding it again raises the quantity, up to ten.`}
           </p>
         </div>
 

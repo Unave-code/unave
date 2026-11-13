@@ -21,6 +21,11 @@ import { Section } from './Section'
  */
 export const ProductShelf: React.FC = async () => {
   const subcategories = await getHomeSubcategories()()
+  const subcategoryCount = subcategories.length
+  const subcategoryCountLabel =
+    subcategoryCount === 1
+      ? '1 meal type currently available.'
+      : `${subcategoryCount} meal types currently available.`
 
   return (
     <Section id="products">
@@ -28,6 +33,9 @@ export const ProductShelf: React.FC = async () => {
         <div className="max-w-[58ch]">
           <h2 className="text-h2">{PRODUCTS_SECTION_HEADING}</h2>
           <p className="text-body text-ink-600 mt-4">{PRODUCTS_SECTION_INTRO}</p>
+          {subcategoryCount > 0 ? (
+            <p className="text-caption text-ink-600 mt-3">{subcategoryCountLabel}</p>
+          ) : null}
         </div>
 
         <Cta className="shrink-0" href="/products" variant="secondary">

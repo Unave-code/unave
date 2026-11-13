@@ -83,6 +83,7 @@ type Status = 'idle' | 'starting' | 'paying'
 export const CheckoutForm: React.FC<{
   defaults: {
     city: string
+    foodPreference: string
     line1: string
     line2: string
     name: string
@@ -143,6 +144,7 @@ export const CheckoutForm: React.FC<{
   const startPayment = async () => {
     const delivery = {
       city: readValue('city'),
+      foodPreference: readValue('foodPreference'),
       line1: readValue('line1'),
       line2: readValue('line2'),
       name: readValue('name'),
@@ -277,6 +279,12 @@ export const CheckoutForm: React.FC<{
         }}
         noValidate
       >
+        <input
+          id="checkout-foodPreference"
+          name="foodPreference"
+          type="hidden"
+          value={defaults.foodPreference}
+        />
         <div>
           <h2 className="text-h3">{CHECKOUT_DELIVERY_HEADING}</h2>
           <p className="text-ink-600 mt-2 text-sm leading-6">{CHECKOUT_DELIVERY_INTRO}</p>

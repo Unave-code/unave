@@ -9,6 +9,7 @@ import {
   readCartFromHeaders,
 } from '@/utilities/cart'
 import { productDuration } from '@/utilities/cartLines'
+import { isProductSellable } from '@/utilities/combos'
 import { isSameOriginRequest, safeReturnPath, seeOther } from '@/utilities/formPost'
 
 /**
@@ -55,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
   const payload = await getPayload({ config: configPromise })
   const found = await payload.find({
     collection: 'products',
-    depth: 0,
+    depth: 1,
     limit: 1,
     where: { slug: { equals: productSlug } },
   })
@@ -63,13 +64,13 @@ export async function POST(request: Request): Promise<Response> {
   const product = found.docs[0]
 
   if (!product) return back('/cart?notice=unknown')
-  if (!product.available) return back('/cart?notice=paused')
+  if (!isProductSellable(product)) return back('/cart?notice=paused')
 
   const cart = readCartFromHeaders(request.headers.get('cookie'))
 
   // A one-time product has no durations to choose: its line carries the
   // reserved duration label exactly, and the quantity carries the rest.
-  if (product.type === 'one-time') {
+  if (product.type === 'one-time' || product.type === 'combo') {
     if (durationLabel !== ONE_TIME_DURATION) return back('/cart?notice=changed')
 
     const result = addOneTimeCartLine(cart, product.slug)

@@ -213,29 +213,29 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           ref={barRef}
           {...(theme ? { 'data-theme': theme } : {})}
         >
-          <div className="container grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-3 lg:flex lg:justify-between lg:gap-6">
+          <div className="container grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-3 xl:flex xl:justify-between xl:gap-6">
             <Link
               aria-label="UNAVE home"
-              className="text-primary col-start-1 row-start-1 shrink-0 lg:order-1"
+              className="text-primary col-start-1 row-start-1 shrink-0 xl:order-1"
               href="/"
             >
               <Logo />
             </Link>
 
-            <nav aria-label="Main" className="hidden lg:order-2 lg:block">
+            <nav aria-label="Main" className="hidden xl:order-2 xl:block">
               <HeaderNav items={menuItems} />
             </nav>
 
             <Link
               aria-label="Search meals and plans"
-              className="text-primary border-current/25 hover:bg-current/10 col-span-2 row-start-2 inline-flex h-11 min-w-0 items-center gap-3 rounded-pill border px-4 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none lg:order-3 lg:col-auto lg:row-auto lg:w-48 lg:shrink-0 xl:w-56"
+              className="text-primary border-current/25 hover:bg-current/10 col-span-2 row-start-2 inline-flex h-11 min-w-0 items-center gap-3 rounded-pill border px-4 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none xl:order-3 xl:col-auto xl:row-auto xl:w-48 xl:shrink-0 2xl:w-56"
               href="/search"
             >
               <Search aria-hidden="true" className="size-5 shrink-0" strokeWidth={2} />
               <span className="text-caption truncate">Search meals and plans</span>
             </Link>
 
-            <div className="col-start-2 row-start-1 flex items-center gap-2 lg:order-4">
+            <div className="col-start-2 row-start-1 flex items-center gap-2 xl:order-4">
               <AccountLinks name={session?.name ?? null} signedIn={signedIn} />
 
               <CartNavLink
@@ -248,7 +248,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
                 aria-controls="mobile-menu"
                 aria-expanded={menuOpen}
                 aria-label="Open menu"
-                className="border-current/25 hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill border transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none lg:hidden motion-reduce:transition-none"
+                className="border-current/25 hover:bg-current/10 inline-flex size-11 items-center justify-center rounded-pill border transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none xl:hidden motion-reduce:transition-none"
                 onClick={() => setMenuOpen(true)}
                 ref={triggerRef}
                 type="button"

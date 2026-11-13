@@ -56,6 +56,35 @@ const openProduct = {
   title: 'Lunch plan',
 } as unknown as Product
 
+const comboProduct = {
+  available: true,
+  audience: 'adults',
+  category: 'ready-to-eat',
+  components: [
+    {
+      durationDaysSnapshot: 5,
+      durationLabel: 'One week',
+      product: {
+        available: true,
+        durations: [{ days: 5, id: 'd1', label: 'One week', price: 150000 }],
+        id: 12,
+        title: 'Lunch plan',
+        type: 'plan',
+      },
+    },
+    {
+      product: { available: true, id: 34, price: 4900, title: 'Phulka box', type: 'one-time' },
+    },
+  ],
+  description: { root: { children: [] } },
+  id: 99,
+  price: 99000,
+  slug: 'family-combo',
+  subcategory: { category: 'ready-to-eat', id: 6, title: 'Combos' },
+  title: 'Family combo',
+  type: 'combo',
+} as unknown as Product
+
 describe('a product page', () => {
   it('leads with the name, the eyebrow, the badges, the price panel and its points', () => {
     render(<ProductDetail product={openProduct} whatsapp="+919000000000" />)
@@ -113,5 +142,53 @@ describe('a product page', () => {
 
     expect(screen.queryByRole('heading', { name: 'More from the kitchen' })).toBeNull()
     expect(screen.queryAllByTestId('related-card')).toHaveLength(0)
+  })
+
+  it('lists what a combo includes and keeps the required notice beside it', () => {
+    render(<ProductDetail product={comboProduct} />)
+
+    expect(screen.getByRole('heading', { name: 'Included in this combo' })).toBeTruthy()
+    expect(screen.getByText('Lunch plan')).toBeTruthy()
+    expect(screen.getByText('One week, 5 days')).toBeTruthy()
+    expect(screen.getByText('Phulka box')).toBeTruthy()
+    expect(screen.getByText('A note on our meals')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Our meals are food options and are not a substitute for medical or nutritional advice.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Add to cart' })).toBeTruthy()
+  })
+
+  it('shows a paused combo in full, with nothing to add', () => {
+    render(
+      <ProductDetail
+        product={{ ...comboProduct, available: false } as unknown as Product}
+      />,
+    )
+
+    expect(screen.getByText('Paused')).toBeTruthy()
+    expect(screen.getByText('₹990')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Included in this combo' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
+  })
+
+  it('marks a combo paused when one of its products is paused', () => {
+    render(
+      <ProductDetail
+        product={
+          {
+            ...comboProduct,
+            components: [
+              ...((comboProduct.components ?? []) as unknown[]),
+              { product: { available: false, id: 40, title: 'Paused item', type: 'one-time' } },
+            ],
+          } as unknown as Product
+        }
+      />,
+    )
+
+    expect(screen.getByText('Paused')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
   })
 })

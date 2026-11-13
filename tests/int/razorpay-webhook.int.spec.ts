@@ -6,9 +6,7 @@ import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
-import type { Customer, Order } from '@/payload-types'
-
-import { buildOrderNotes } from '../../src/collections/Orders/intent'
+import type { CheckoutIntent, Customer, Order } from '@/payload-types'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -63,6 +61,7 @@ let payload: Payload
 const run = `it-hook-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const orderIDs: (number | string)[] = []
 const customerIDs: (number | string)[] = []
+const intentGatewayIds: string[] = []
 let productId: number | string
 let subcategoryId: number | string
 
@@ -85,30 +84,42 @@ const createCustomer = async (): Promise<Customer> => {
   return created
 }
 
-/** The intent a browser would have put on the gateway order at checkout. */
-const stagedNotes = (customer: Customer): Record<string, string> =>
-  buildOrderNotes({
-    customerId: customer.id,
-    delivery: {
-      city: 'Pune',
-      line1: '12 Test Road',
-      name: 'Asha Kale',
-      phone: '9876543210',
-      pincode: '411001',
-      state: 'Maharashtra',
-    },
-    items: [
-      {
-        days: 5,
-        durationLabel: 'One week',
-        productId,
-        productTitle: 'Lunch plan',
-        qty: 1,
-        unitPrice: TOTAL,
+/** The intent the checkout endpoint would have stored before payment opened. */
+const stageIntent = async (customer: Customer, gatewayOrderId: string): Promise<void> => {
+  await payload.create({
+    collection: 'checkout-intents',
+    data: {
+      customer: Number(customer.id),
+      delivery: {
+        addressLine1: '12 Test Road',
+        city: 'Pune',
+        foodPreference: 'none',
+        name: 'Asha Kale',
+        phone: '9876543210',
+        pincode: '411001',
+        state: 'Maharashtra',
       },
-    ],
-    note: '',
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      gatewayOrderId,
+      items: [
+        {
+          days: 5,
+          durationLabel: 'One week',
+          productId: Number(productId),
+          productRef: Number(productId),
+          productTitle: 'Lunch plan',
+          qty: 1,
+          unitPrice: TOTAL,
+        },
+      ],
+      total: TOTAL,
+    },
+    depth: 0,
+    overrideAccess: true,
   })
+
+  intentGatewayIds.push(gatewayOrderId)
+}
 
 const findOrderByGateway = async (gatewayOrderId: string): Promise<Order | null> => {
   const found = await payload.find({
@@ -142,16 +153,16 @@ const post = async (rawBody: string, signature: string | null): Promise<Response
 const capturedEvent = (
   orderId: string,
   paymentId: string,
-  options: { amount?: number; notes?: Record<string, string> } = {},
+  options: { amount?: number; omitOrder?: boolean } = {},
 ): string => {
   const amount = options.amount ?? TOTAL
 
   return JSON.stringify({
     event: 'payment.captured',
     payload: {
-      ...(options.notes
-        ? { order: { entity: { amount, currency: 'INR', id: orderId, notes: options.notes } } }
-        : {}),
+      ...(options.omitOrder
+        ? {}
+        : { order: { entity: { amount, currency: 'INR', id: orderId } } }),
       payment: {
         amount,
         currency: 'INR',
@@ -168,11 +179,7 @@ const capturedEvent = (
  * wrapped in an `entity` object. The route must write the order on this shape,
  * not only on the flat shape the hand built tests below use.
  */
-const capturedEventNested = (
-  orderId: string,
-  paymentId: string,
-  notes: Record<string, string>,
-): string =>
+const capturedEventNested = (orderId: string, paymentId: string): string =>
   JSON.stringify({
     account_id: 'acc_test',
     contains: ['order', 'payment'],
@@ -180,7 +187,7 @@ const capturedEventNested = (
     entity: 'event',
     event: 'payment.captured',
     payload: {
-      order: { entity: { amount: TOTAL, currency: 'INR', entity: 'order', id: orderId, notes } },
+      order: { entity: { amount: TOTAL, currency: 'INR', entity: 'order', id: orderId } },
       payment: {
         entity: {
           amount: TOTAL,
@@ -235,6 +242,30 @@ beforeEach(() => {
 })
 
 afterAll(async () => {
+  for (const gatewayOrderId of intentGatewayIds) {
+    try {
+      const found = await payload.find({
+        collection: 'checkout-intents',
+        depth: 0,
+        limit: 1,
+        overrideAccess: true,
+        where: { gatewayOrderId: { equals: gatewayOrderId } },
+      })
+
+      const intent = found.docs[0] as CheckoutIntent | undefined
+
+      if (intent) {
+        await payload.delete({
+          collection: 'checkout-intents',
+          id: intent.id,
+          overrideAccess: true,
+        })
+      }
+    } catch {
+      // Best effort cleanup.
+    }
+  }
+
   for (const id of orderIDs) {
     try {
       await payload.delete({ collection: 'orders', id, overrideAccess: true })
@@ -274,7 +305,9 @@ describe('the Razorpay webhook', () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_a`
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_1', { notes: stagedNotes(customer) })
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_1')
     const response = await post(raw, sign(raw))
 
     expect(response.status).toBe(200)
@@ -295,7 +328,9 @@ describe('the Razorpay webhook', () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_nested`
 
-    const raw = capturedEventNested(gatewayOrderId, 'pay_hook_nested', stagedNotes(customer))
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEventNested(gatewayOrderId, 'pay_hook_nested')
     const response = await post(raw, sign(raw))
 
     expect(response.status).toBe(200)
@@ -312,7 +347,9 @@ describe('the Razorpay webhook', () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_b`
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_2', { notes: stagedNotes(customer) })
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_2')
 
     const unsigned = await post(raw, null)
     expect(unsigned.status).toBe(400)
@@ -328,10 +365,9 @@ describe('the Razorpay webhook', () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_c`
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_3', {
-      amount: 1,
-      notes: stagedNotes(customer),
-    })
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_3', { amount: 1 })
     const response = await post(raw, sign(raw))
 
     expect(response.status).toBe(200)
@@ -340,10 +376,10 @@ describe('the Razorpay webhook', () => {
     expect(mocks.sendOrderMails).not.toHaveBeenCalled()
   })
 
-  it('writes nothing when the gateway order carries no readable intent', async () => {
+  it('writes nothing when no intent was stored for the gateway order', async () => {
     const gatewayOrderId = `order_${run}_empty`
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_4', { notes: {} })
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_4')
     const response = await post(raw, sign(raw))
 
     expect(response.status).toBe(200)
@@ -380,7 +416,9 @@ describe('the Razorpay webhook', () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_e`
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_6', { notes: stagedNotes(customer) })
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_6')
 
     expect((await post(raw, sign(raw))).status).toBe(200)
     expect((await post(raw, sign(raw))).status).toBe(200)
@@ -391,18 +429,19 @@ describe('the Razorpay webhook', () => {
     expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 
-  it('reads the intent over REST when the event omits the order entity', async () => {
+  it('reads the gateway order over REST when the event omits the order entity', async () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_fetch`
+
+    await stageIntent(customer, gatewayOrderId)
 
     mocks.fetchRazorpayOrder.mockResolvedValue({
       amount: TOTAL,
       currency: 'INR',
       id: gatewayOrderId,
-      notes: stagedNotes(customer),
     })
 
-    const raw = capturedEvent(gatewayOrderId, 'pay_hook_7')
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_7', { omitOrder: true })
     const response = await post(raw, sign(raw))
 
     expect(response.status).toBe(200)
@@ -413,13 +452,13 @@ describe('the Razorpay webhook', () => {
     orderIDs.push(after!.id)
   })
 
-  it('acknowledges a signed body about an order the gateway does not know', async () => {
+  it('answers retryably when the gateway cannot name the order', async () => {
     mocks.fetchRazorpayOrder.mockRejectedValue(new Error('razorpay_order_fetch_failed_404'))
 
-    const raw = capturedEvent(`order_${run}_unknown`, 'pay_hook_8')
+    const raw = capturedEvent(`order_${run}_unknown`, 'pay_hook_8', { omitOrder: true })
     const response = await post(raw, sign(raw))
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(500)
     expect(await findOrderByGateway(`order_${run}_unknown`)).toBeNull()
     expect(mocks.sendOrderMails).not.toHaveBeenCalled()
   })

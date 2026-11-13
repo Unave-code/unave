@@ -21,6 +21,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 3 | Customer accounts | Slice 2 | in-progress |
 | 4 | Plans and payments | Slice 3 | in-progress |
 | 5 | Plan category pages | Slice 4 | in-progress |
+| 6 | Meal combo maker | Slice 5 | in-progress |
 
 ## Removed
 
@@ -156,6 +157,21 @@ One page per product category (`/products/ready-to-cook`, `/products/ready-to-ea
 - [ ] Verify it (revision): `/check verify plan category pages`
 - [ ] Test it (revision): `/test plan category pages`
 Spec [0008](../specs/0008-plan-category-pages.md) · assumed behavior [0009](../specs/0009-subcategory-query-filter.md) · code in `src/utilities/productsCategoryCopy.ts`, `src/app/(frontend)/(site)/products/[slug]/`, `src/components/Store/ProductFilters.tsx`, `src/components/Store/ProductCard.tsx`, `src/components/home/Products.tsx`, `src/components/Store/ProductShelf.tsx`, `src/components/Store/ProductShelfControls.tsx`, `src/utilities/productShelf.ts`, `src/collections/Products/index.ts`, `src/collections/Subcategories/`, `src/migrations/`, `src/app/(frontend)/(sitemaps)/pages-sitemap.xml/route.ts`
+
+## Slice 5: Meal combos
+
+### 6. Meal combo maker · in-progress
+Staff create fixed price combos from existing products in the Payload admin. Customers find combos in the existing store and buy them through its cart and checkout. Paid orders keep an unchanged snapshot of the combo contents.
+**Done when:** staff can create, edit, pause and delete combos with two to ten distinct products, each paid combo appears as one order line with its frozen contents, and unavailable combos cannot be purchased.
+- [x] Design it (spec): `/architect meal combo maker`
+- [x] Build it: `/develop meal combo maker`
+   - [x] Product schema, admin editor, component validation and audit records (AC-1, AC-2, AC-9)
+   - [x] Store display, availability, cart handling and required notice (AC-3, AC-4, AC-5, AC-11)
+   - [x] Checkout intents, payment verification, frozen order snapshots and order views (AC-6, AC-7, AC-10)
+   - [x] Intent cleanup, reconciliation logging and focused regression tests (AC-8, AC-9, AC-10, AC-11)
+- [ ] Verify it: `/check verify meal combo maker`
+- [ ] Test it: `/test meal combo maker`
+Spec [0010](../specs/0010-meal-combo-maker.md) · code in `src/collections/Products/index.ts`, `src/collections/Products/hooks/prepareComboComponents.ts`, `src/collections/Products/hooks/comboAudit.ts`, `src/utilities/combos.ts`, `src/collections/CheckoutIntents/`, `src/collections/ComboAuditLogs/`, `src/collections/Orders/intent.ts`, `src/collections/Orders/endpoints.ts`, `src/collections/Orders/confirm.ts`, `src/jobs/cleanupCheckoutIntents.ts`, `src/migrations/`, `src/utilities/cartLines.ts`, `src/components/Store/ProductCard.tsx`, `src/components/Store/ProductDetail.tsx`, `src/components/Store/ProductPurchase.tsx`, `src/app/(frontend)/(site)/cart/page.tsx`, `src/app/(frontend)/(site)/checkout/`, `src/app/(frontend)/(site)/order-placed/[id]/page.tsx`, `src/app/(frontend)/(site)/account/AccountPanels.tsx`, `src/email/templates/Order.tsx`, `tests/int/combos.int.spec.ts`, `tests/int/combo-product.int.spec.ts`
 
 ## Deferred
 

@@ -44,9 +44,11 @@ const authHeader = (): string => `Basic ${Buffer.from(`${KEY_ID}:${KEY_SECRET}`)
 
 export type RazorpayOrder = {
   amount: number
+  amount_paid?: number
   currency: string
   id: string
   notes: Record<string, string>
+  status?: string
 }
 
 export type RazorpayPayment = {
@@ -129,9 +131,11 @@ export const fetchRazorpayOrder = async (orderId: string): Promise<RazorpayOrder
 
   return {
     amount: data.amount,
+    amount_paid: typeof data.amount_paid === 'number' ? data.amount_paid : undefined,
     currency: data.currency,
     id: data.id,
     notes: data.notes as Record<string, string>,
+    status: typeof data.status === 'string' ? data.status : undefined,
   }
 }
 

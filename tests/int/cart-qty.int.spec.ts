@@ -3,76 +3,130 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { buildOrderNotes, readOrderNotes, type OrderIntentItem } from '../../src/collections/Orders/intent'
+import { readCheckoutIntent } from '../../src/collections/Orders/intent'
 import { POST } from '../../src/app/(frontend)/api/cart/qty/route'
+import type { CheckoutIntent } from '../../src/payload-types'
 import { encodeCartLine, ONE_TIME_DURATION } from '../../src/utilities/cart'
 
 /**
- * Two small machines the one-time build added, held without a database.
+ * Two small machines the combo build touched, held without a database.
  *
- * The checkout intent rides the gateway order's notes, so a quantity must
- * survive the trip out and back: a six element line carries it, an older five
- * element line reads as one, and a line with a quantity that cannot be trusted
- * refuses the whole pack. The quantity route rewrites the cookie and nothing
- * else, so a Request with a Cookie header is the whole test bench.
+ * A checkout intent is now a private row, not a set of gateway notes, so the
+ * reader that turns a row back into an order checks it again: every quantity
+ * must be a whole number from one to ten, and the stored total must be exactly
+ * the sum of the lines. A row that fails either check writes no order.
+ *
+ * The quantity route rewrites the cookie and nothing else, so a Request with a
+ * Cookie header is the whole test bench for it.
  */
 
-const planItem: OrderIntentItem = {
-  days: 5,
-  durationLabel: 'One week',
-  productId: 12,
-  productTitle: 'Lunch plan',
-  unitPrice: 150000,
-}
+const record = (overrides: Record<string, unknown> = {}): CheckoutIntent =>
+  ({
+    customer: 7,
+    delivery: {
+      addressLine1: '12 Test Road',
+      city: 'Pune',
+      foodPreference: 'none',
+      name: 'Asha Kale',
+      phone: '9876543210',
+      pincode: '411001',
+      state: 'Maharashtra',
+    },
+    expiresAt: '2026-12-12T00:00:00.000Z',
+    gatewayOrderId: 'order_1',
+    id: 1,
+    items: [
+      {
+        days: 5,
+        durationLabel: 'One week',
+        product: 12,
+        productId: 12,
+        productTitle: 'Lunch plan',
+        qty: 1,
+        unitPrice: 150000,
+      },
+      {
+        days: 0,
+        durationLabel: ONE_TIME_DURATION,
+        product: 34,
+        productId: 34,
+        productTitle: 'Phulka box',
+        qty: 3,
+        unitPrice: 4900,
+      },
+    ],
+    total: 150000 + 3 * 4900,
+    ...overrides,
+  }) as unknown as CheckoutIntent
 
-const oneTimeItem: OrderIntentItem = {
-  days: 0,
-  durationLabel: ONE_TIME_DURATION,
-  productId: 34,
-  productTitle: 'Phulka box',
-  qty: 3,
-  unitPrice: 4900,
-}
-
-describe('packing the checkout intent', () => {
-  it('round trips quantities, and totals them into the intent', () => {
-    const notes = buildOrderNotes({
-      customerId: 7,
-      delivery: { name: 'Asha Kale', phone: '9876543210' },
-      items: [planItem, oneTimeItem],
-    })
-
-    const intent = readOrderNotes(notes)
+describe('reading a stored checkout intent', () => {
+  it('keeps every line quantity and totals them', () => {
+    const intent = readCheckoutIntent(record())
 
     expect(intent).not.toBeNull()
     expect(intent!.items.map((item) => item.qty)).toEqual([1, 3])
     expect(intent!.total).toBe(150000 + 3 * 4900)
   })
 
-  it('reads an older five element line as quantity one', () => {
-    const intent = readOrderNotes({
-      c: '7',
-      l0: JSON.stringify([[12, 'One week', 5, 150000, 'Lunch plan']]),
-    })
+  it('carries a combo line and its frozen components', () => {
+    const intent = readCheckoutIntent(
+      record({
+        items: [
+          {
+            components: [
+              { days: 5, durationLabel: 'One week', product: 12, productId: 12, productTitle: 'Lunch plan' },
+              { product: 34, productId: 34, productTitle: 'Phulka box' },
+            ],
+            days: 0,
+            durationLabel: ONE_TIME_DURATION,
+            product: 99,
+            productId: 99,
+            productTitle: 'Family combo',
+            qty: 2,
+            unitPrice: 99000,
+          },
+        ],
+        total: 198000,
+      }),
+    )
 
     expect(intent).not.toBeNull()
-    expect(intent!.items).toHaveLength(1)
-    expect(intent!.items[0]).toMatchObject({ productTitle: 'Lunch plan', qty: 1 })
-    expect(intent!.total).toBe(150000)
+    expect(intent!.items[0]?.components).toHaveLength(2)
+    expect(intent!.items[0]?.components?.[0]).toMatchObject({
+      days: 5,
+      durationLabel: 'One week',
+      productTitle: 'Lunch plan',
+    })
   })
 
-  it('refuses a packed line whose quantity cannot be trusted', () => {
-    const base = [12, 'One week', 5, 150000, 'Lunch plan']
-
-    expect(readOrderNotes({ c: '7', l0: JSON.stringify([[...base, 'junk']]) })).toBeNull()
-    expect(readOrderNotes({ c: '7', l0: JSON.stringify([[...base, 0]]) })).toBeNull()
-    expect(readOrderNotes({ c: '7', l0: JSON.stringify([[...base, -1]]) })).toBeNull()
-    expect(readOrderNotes({ c: '7', l0: JSON.stringify([[...base, 2.5]]) })).toBeNull()
+  it('refuses a stored total that does not equal its lines', () => {
+    expect(readCheckoutIntent(record({ total: 1 }))).toBeNull()
   })
 
-  it('refuses a pack of an unreadable shape, as before', () => {
-    expect(readOrderNotes({ c: '7', l0: JSON.stringify([[12, 'One week', 5, 150000]]) })).toBeNull()
-    expect(readOrderNotes({ c: '7', l0: 'not json' })).toBeNull()
+  it('refuses a line whose quantity cannot be trusted', () => {
+    for (const qty of [0, -1, 2.5, 11]) {
+      const bad = record({
+        items: [
+          {
+            days: 0,
+            durationLabel: ONE_TIME_DURATION,
+            product: 34,
+            productId: 34,
+            productTitle: 'Phulka box',
+            qty,
+            unitPrice: 4900,
+          },
+        ],
+        total: 4900 * (Number.isFinite(qty) ? qty : 0),
+      })
+
+      expect(readCheckoutIntent(bad)).toBeNull()
+    }
+  })
+
+  it('refuses a record whose customer or delivery is unreadable', () => {
+    expect(readCheckoutIntent(record({ customer: null }))).toBeNull()
+    expect(readCheckoutIntent(record({ delivery: {} }))).toBeNull()
   })
 })
 

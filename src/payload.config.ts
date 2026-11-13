@@ -5,6 +5,8 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
+import { CheckoutIntents } from './collections/CheckoutIntents'
+import { ComboAuditLogs } from './collections/ComboAuditLogs'
 import { Customers } from './collections/Customers'
 import { EmailLog } from './collections/EmailLog'
 import { Enquiries } from './collections/Enquiries'
@@ -23,6 +25,7 @@ import { EmailSettings } from './globals/EmailSettings'
 import { Hero } from './globals/Hero/config'
 import { Header } from './Header/config'
 import { pruneEmailLogTask } from './jobs/pruneEmailLog'
+import { cleanupCheckoutIntentsTask } from './jobs/cleanupCheckoutIntents'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -153,6 +156,8 @@ export default buildConfig({
     Posts,
     Media,
     Categories,
+    CheckoutIntents,
+    ComboAuditLogs,
     Users,
     Customers,
     Enquiries,
@@ -188,6 +193,6 @@ export default buildConfig({
         return authHeader === `Bearer ${secret}`
       },
     },
-    tasks: [pruneEmailLogTask],
+    tasks: [cleanupCheckoutIntentsTask, pruneEmailLogTask],
   },
 })

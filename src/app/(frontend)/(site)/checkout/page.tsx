@@ -56,6 +56,7 @@ type CheckoutProfile = {
     state?: string | null
   } | null
   name?: string | null
+  foodPreference?: string | null
   phone?: string | null
 }
 
@@ -108,6 +109,7 @@ export default async function CheckoutPage() {
     select: {
       address: { city: true, line1: true, line2: true, pincode: true, state: true },
       name: true,
+      foodPreference: true,
       phone: true,
     },
   })) as CheckoutProfile | null
@@ -123,6 +125,7 @@ export default async function CheckoutPage() {
         <CheckoutForm
           defaults={{
             city: profile?.address?.city ?? '',
+            foodPreference: profile?.foodPreference ?? 'none',
             line1: profile?.address?.line1 ?? '',
             line2: profile?.address?.line2 ?? '',
             name: profile?.name?.trim() || customer.name || '',
@@ -143,15 +146,17 @@ export default async function CheckoutPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-bold">{line.productTitle}</p>
                     <p className="text-ink-600 mt-0.5 text-sm">
-                      {line.type === 'one-time'
-                        ? PRODUCT_ONE_TIME_LABEL
+                      {line.type === 'combo'
+                        ? 'Meal combo'
+                        : line.type === 'one-time'
+                          ? PRODUCT_ONE_TIME_LABEL
                         : `${line.duration}, ${line.days} ${line.days === 1 ? 'day' : 'days'}`}
                     </p>
                   </div>
 
                   <p className="shrink-0 text-right text-sm font-bold">
                     {formatPaise(line.lineTotal)}
-                    {line.type === 'one-time' && line.qty > 1 ? (
+                    {line.type !== 'plan' && line.qty > 1 ? (
                       <span className="text-ink-600 mt-0.5 block text-xs font-medium">
                         {line.qty} &times; {formatPaise(line.price ?? 0)}
                       </span>

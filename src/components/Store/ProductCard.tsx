@@ -7,6 +7,7 @@ import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
+import { isProductSellable } from '@/utilities/combos'
 import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
 
@@ -55,6 +56,9 @@ export const ProductCard: React.FC<{
   // A one-time purchase sells one item at one price: its lead is the flat
   // price, not a per-day rate, and its cart line carries the reserved duration.
   const isOneTime = product.type === 'one-time'
+  const isCombo = product.type === 'combo'
+  const isFlatPrice = isOneTime || isCombo
+  const isAvailable = isProductSellable(product)
   const oneTimePrice = Number(product.price)
 
   /* The lead price is the cheapest per-day rate across the durations, floored
@@ -65,9 +69,9 @@ export const ProductCard: React.FC<{
      fallback keeps a card honest if a row somehow carries no stored value. */
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
-  const perDay = isOneTime ? null : (storedLead ?? leadPricePaise(product))
+  const perDay = isFlatPrice ? null : (storedLead ?? leadPricePaise(product))
   const planPriceLine = perDay !== null ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}` : undefined
-  const priceLine = isOneTime
+  const priceLine = isFlatPrice
     ? (oneTimePrice >= 1 ? formatPaise(oneTimePrice) : undefined)
     : planPriceLine
 
@@ -95,7 +99,7 @@ export const ProductCard: React.FC<{
         />
       )}
 
-      {product.audience || !product.available ? (
+      {product.audience || !isAvailable ? (
         <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-wrap gap-2">
           {product.audience ? (
             <span className={`${PHOTO_PILL} bg-green-900/70 text-cream ring-cream/25`}>
@@ -103,7 +107,7 @@ export const ProductCard: React.FC<{
             </span>
           ) : null}
 
-          {!product.available ? (
+          {!isAvailable ? (
             <span className={`${PHOTO_PILL} bg-gold-400 text-green-900 ring-gold-300/70`}>Paused</span>
           ) : null}
         </div>
@@ -115,7 +119,7 @@ export const ProductCard: React.FC<{
       <div className="from-green-900/95 via-green-900/50 pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t px-4 pt-16 pb-4 to-transparent sm:px-5 sm:pb-5">
         <h3 className="text-h3 text-cream text-balance">{product.title}</h3>
 
-        {product.available && isOneTime ? (
+        {isAvailable && isFlatPrice ? (
           <AddToCartButton
             durationLabel={ONE_TIME_DURATION}
             oneTime
@@ -123,7 +127,7 @@ export const ProductCard: React.FC<{
             productSlug={product.slug}
             returnPath={returnPath}
           />
-        ) : product.available && first ? (
+        ) : isAvailable && first ? (
           <AddToCartButton
             durationLabel={first.label}
             priceLine={priceLine}

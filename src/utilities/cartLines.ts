@@ -4,6 +4,7 @@ import type { Product } from '@/payload-types'
 
 import type { CartLine } from './cart'
 import { cartLineKey, ONE_TIME_DURATION } from './cart'
+import { comboComponents, isProductSellable, type ComboComponentSnapshot } from './combos'
 
 /**
  * Resolving the cart against the live product records (spec 0007, AC-3 and AC-5).
@@ -30,6 +31,7 @@ export type StaleReason = 'missing-duration' | 'paused' | 'unknown-product'
 
 export type ResolvedCartLine = {
   days: null | number
+  components?: ComboComponentSnapshot[]
   duration: string
   key: string
   /** What the line charges: the unit price times the quantity. */
@@ -42,7 +44,7 @@ export type ResolvedCartLine = {
   slug: string
   stale: boolean
   /** What the record says the product is. A line with no record reads as a plan. */
-  type: 'one-time' | 'plan'
+  type: 'combo' | 'one-time' | 'plan'
 }
 
 export type ResolvedCart = {
@@ -83,7 +85,7 @@ export const resolveCartLines = async ({
   if (slugs.length > 0) {
     const found = await payload.find({
       collection: 'products',
-      depth: 0,
+      depth: 1,
       limit: 100,
       overrideAccess: true,
       where: { slug: { in: slugs } },
@@ -97,25 +99,23 @@ export const resolveCartLines = async ({
   const all: ResolvedCartLine[] = lines.map((line) => {
     const key = cartLineKey(line)
     const product = productsBySlug.get(line.product) ?? null
-    const type: 'one-time' | 'plan' = product?.type === 'one-time' ? 'one-time' : 'plan'
+    const type: 'combo' | 'one-time' | 'plan' =
+      product?.type === 'combo' ? 'combo' : product?.type === 'one-time' ? 'one-time' : 'plan'
     const qty = safeQty(line.qty)
+    const components = product?.type === 'combo' ? comboComponents(product) : null
 
-    // A meal plan prices through its chosen duration; a one-time product prices
-    // through the single price on the record, and only the reserved duration
-    // label may carry it — anything else is a line the cookie invented.
-    const duration =
-      type === 'one-time' ? null : productDuration(product, line.duration)
-    const oneTimePrice =
-      type === 'one-time' && line.duration === ONE_TIME_DURATION
+    const duration = type === 'plan' ? productDuration(product, line.duration) : null
+    const flatPrice =
+      type !== 'plan' && line.duration === ONE_TIME_DURATION
         ? Number(product?.price)
         : Number.NaN
 
     let price: null | number
     let days: null | number
 
-    if (type === 'one-time') {
-      price = Number.isFinite(oneTimePrice) && oneTimePrice >= 1 ? oneTimePrice : null
-      days = null
+    if (type !== 'plan') {
+      price = Number.isFinite(flatPrice) && flatPrice >= 1 ? flatPrice : null
+      days = type === 'combo' ? 0 : null
     } else {
       price = duration?.price ?? null
       days = duration?.days ?? null
@@ -124,11 +124,12 @@ export const resolveCartLines = async ({
     let reason: null | StaleReason = null
 
     if (!product) reason = 'unknown-product'
-    else if (!product.available) reason = 'paused'
+    else if (!isProductSellable(product)) reason = 'paused'
     else if (price === null) reason = 'missing-duration'
 
     return {
       days,
+      ...(components ? { components } : {}),
       duration: line.duration,
       key,
       lineTotal: (price ?? 0) * qty,

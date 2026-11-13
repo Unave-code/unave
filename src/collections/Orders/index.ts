@@ -134,6 +134,29 @@ export const Orders: CollectionConfig = {
           },
           label: 'Unit price (₹)',
         },
+        {
+          name: 'components',
+          type: 'array',
+          maxRows: 10,
+          admin: {
+            description: 'The combo contents copied at purchase time.',
+            condition: (_, siblingData) =>
+              siblingData?.durationLabel === 'one-time' &&
+              Array.isArray(siblingData?.components) &&
+              siblingData.components.length > 0,
+          },
+          fields: [
+            {
+              name: 'product',
+              type: 'relationship',
+              relationTo: 'products',
+              maxDepth: 0,
+            },
+            { name: 'productTitle', type: 'text', required: true },
+            { name: 'durationLabel', type: 'text' },
+            { name: 'days', type: 'number' },
+          ],
+        },
       ],
       required: true,
     },

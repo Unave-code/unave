@@ -9,7 +9,7 @@ import React from 'react'
 import { Cta } from '@/components/Cta'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
-import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
+import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 
 import {
@@ -104,6 +104,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                 : 1
             const isOneTime = item.durationLabel === 'one-time'
             const unitPrice = Number(item.unitPrice)
+            const components = orderComponentsLabel(item.components)
 
             return (
               <li className="flex items-start justify-between gap-4 py-4" key={index}>
@@ -113,11 +114,14 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                   </p>
                   <p className="text-ink-600 mt-0.5 text-sm">
                     {isOneTime
-                      ? PRODUCT_ONE_TIME_LABEL
+                      ? orderItemKind(item)
                       : `${item.durationLabel}, ${Number(item.days)} ${
                           Number(item.days) === 1 ? 'day' : 'days'
                         } of meals`}
                   </p>
+                  {components ? (
+                    <p className="text-ink-600 mt-1 text-sm">Includes: {components}</p>
+                  ) : null}
                 </div>
 
                 <p className="shrink-0 text-right text-sm font-bold">

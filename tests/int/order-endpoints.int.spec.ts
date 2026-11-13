@@ -5,9 +5,8 @@ import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from '../../src/collections/Orders/endpoints'
-import { buildOrderNotes, type OrderIntentItem } from '../../src/collections/Orders/intent'
 import config from '@/payload.config'
-import type { Customer, Order, Product } from '@/payload-types'
+import type { CheckoutIntent, Customer, Order, Product } from '@/payload-types'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -59,6 +58,7 @@ const productIDs: (number | string)[] = []
 const subcategoryIDs: (number | string)[] = []
 const customerIDs: (number | string)[] = []
 const orderIDs: (number | string)[] = []
+const intentGatewayIds: string[] = []
 
 let readyToEatSubcategoryId: number | string
 
@@ -169,6 +169,7 @@ const createProduct = async (overrides: Partial<{ available: boolean; title: str
 
 const delivery = {
   city: 'Pune',
+  foodPreference: 'none',
   line1: '12 Test Road',
   line2: '',
   name: 'Asha Kale',
@@ -202,42 +203,90 @@ const findOrderByGateway = async (gatewayOrderId: string): Promise<Order | null>
   return (found.docs[0] as Order | undefined) ?? null
 }
 
-const itemFor = (product: Product, index = 0): OrderIntentItem => {
+const itemFor = (product: Product, index = 0): IntentItemRow => {
   const duration = product.durations?.[index]
+  const id = Number(product.id)
 
   return {
     days: Number(duration?.days),
     durationLabel: duration?.label ?? '',
-    productId: product.id,
+    productId: id,
+    productRef: id,
     productTitle: product.title,
+    qty: 1,
     unitPrice: Number(duration?.price),
   }
 }
 
+type IntentItemRow = {
+  components?: Array<{
+    days?: number
+    durationLabel?: string
+    productId: number
+    productRef: number | null
+    productTitle: string
+  }>
+  days: number
+  durationLabel: string
+  productId: number
+  productRef: number | null
+  productTitle: string
+  qty: number
+  unitPrice: number
+}
+
+const findIntent = async (gatewayOrderId: string): Promise<CheckoutIntent | null> => {
+  const found = await payload.find({
+    collection: 'checkout-intents',
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+    where: { gatewayOrderId: { equals: gatewayOrderId } },
+  })
+
+  return (found.docs[0] as CheckoutIntent | undefined) ?? null
+}
+
 /**
- * Put a checkout intent on the gateway order the verify tests read back, and
- * make the payment look captured, so the endpoint only has to decide whether to
- * write the row.
+ * Store the checkout intent the verify tests read back, and make the payment
+ * look captured, so the endpoint only has to decide whether to write the row.
  */
-const stageGatewayOrder = (
-  items: OrderIntentItem[],
+const stageGatewayOrder = async (
+  items: IntentItemRow[],
   customer: { id: number | string },
   gatewayOrderId: string,
 ) => {
-  const total = items.reduce((sum, item) => sum + item.unitPrice, 0)
+  const total = items.reduce((sum, item) => sum + item.unitPrice * item.qty, 0)
 
-  const notes = buildOrderNotes({
-    customerId: customer.id,
-    delivery,
-    items,
-    note: 'Ring the bell twice',
+  await payload.create({
+    collection: 'checkout-intents',
+    data: {
+      customer: Number(customer.id),
+      delivery: {
+        addressLine1: delivery.line1,
+        city: delivery.city,
+        foodPreference: delivery.foodPreference,
+        name: delivery.name,
+        note: 'Ring the bell twice',
+        phone: delivery.phone,
+        pincode: delivery.pincode,
+        state: delivery.state,
+      },
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      gatewayOrderId,
+      items,
+      total,
+    },
+    depth: 0,
+    overrideAccess: true,
   })
+
+  intentGatewayIds.push(gatewayOrderId)
 
   mocks.fetchRazorpayOrder.mockResolvedValue({
     amount: total,
     currency: 'INR',
     id: gatewayOrderId,
-    notes,
   })
 
   mocks.fetchRazorpayPayment.mockResolvedValue({
@@ -250,7 +299,7 @@ const stageGatewayOrder = (
 
   mocks.verifyPaymentSignature.mockReturnValue(true)
 
-  return { notes, total }
+  return { total }
 }
 
 beforeAll(async () => {
@@ -281,42 +330,69 @@ beforeEach(() => {
 })
 
 afterAll(async () => {
-  for (const id of orderIDs) {
+  // The dev database is remote, so clean up in parallel: done one at a time,
+  // these deletes outlast the hook timeout.
+  const bestEffort = async (work: () => Promise<unknown>) => {
     try {
-      await payload.delete({ collection: 'orders', id, overrideAccess: true })
+      await work()
     } catch {
       // Best effort cleanup.
     }
   }
 
-  for (const id of productIDs) {
-    try {
-      await payload.delete({ collection: 'products', id, overrideAccess: true, context: { disableRevalidate: true } })
-    } catch {
-      // Best effort cleanup.
-    }
-  }
+  await Promise.all(
+    intentGatewayIds.map((gatewayOrderId) =>
+      bestEffort(async () => {
+        const intent = await findIntent(gatewayOrderId)
 
-  for (const id of subcategoryIDs) {
-    try {
-      await payload.delete({
-        collection: 'subcategories',
-        context: { disableRevalidate: true },
-        id,
-        overrideAccess: true,
-      })
-    } catch {
-      // Best effort cleanup.
-    }
-  }
+        if (intent) {
+          await payload.delete({
+            collection: 'checkout-intents',
+            id: intent.id,
+            overrideAccess: true,
+          })
+        }
+      }),
+    ),
+  )
 
-  for (const id of customerIDs) {
-    try {
-      await payload.delete({ collection: 'customers', id, overrideAccess: true })
-    } catch {
-      // Best effort cleanup.
-    }
-  }
+  await Promise.all(
+    orderIDs.map((id) =>
+      bestEffort(() => payload.delete({ collection: 'orders', id, overrideAccess: true })),
+    ),
+  )
+
+  await Promise.all(
+    productIDs.map((id) =>
+      bestEffort(() =>
+        payload.delete({
+          collection: 'products',
+          id,
+          overrideAccess: true,
+          context: { disableRevalidate: true },
+        }),
+      ),
+    ),
+  )
+
+  await Promise.all(
+    subcategoryIDs.map((id) =>
+      bestEffort(() =>
+        payload.delete({
+          collection: 'subcategories',
+          context: { disableRevalidate: true },
+          id,
+          overrideAccess: true,
+        }),
+      ),
+    ),
+  )
+
+  await Promise.all(
+    customerIDs.map((id) =>
+      bestEffort(() => payload.delete({ collection: 'customers', id, overrideAccess: true })),
+    ),
+  )
 })
 
 describe('POST /api/orders/create', () => {
@@ -354,24 +430,24 @@ describe('POST /api/orders/create', () => {
     // No local row is written, so no order id comes back.
     expect(body.orderId).toBeUndefined()
 
-    const notes = mocks.createRazorpayOrder.mock.calls[0]?.[2] as Record<string, string>
-    expect(notes.d_name).toBe('Asha Kale')
-    expect(notes.d_city).toBe('Pune')
-    expect(notes.d_note).toBe('Ring the bell twice')
-
-    const pack = JSON.parse(notes.l0) as unknown[]
-    expect(pack).toHaveLength(2)
+    const intent = await findIntent(`order_${run}_1`)
+    expect(intent).not.toBeNull()
+    expect(intent!.delivery?.name).toBe('Asha Kale')
+    expect(intent!.delivery?.city).toBe('Pune')
+    expect(intent!.delivery?.note).toBe('Ring the bell twice')
+    expect(intent!.items).toHaveLength(2)
+    expect(intent!.total).toBe(300000)
 
     // Nothing reached the orders table.
     expect(await findOrderByGateway(`order_${run}_1`)).toBeNull()
   })
 
-  it('packs two lines into one note', async () => {
+  it('stores two lines in one intent', async () => {
     const customer = await createCustomer()
     const product = await createProduct()
 
     mocks.createRazorpayOrder.mockResolvedValue({
-      amount: 960000,
+      amount: 810000,
       currency: 'INR',
       id: `order_${run}_packed`,
     })
@@ -388,9 +464,10 @@ describe('POST /api/orders/create', () => {
 
     expect(response.status).toBe(200)
 
-    const notes = mocks.createRazorpayOrder.mock.calls[0]?.[2] as Record<string, string>
-    expect(JSON.parse(notes.l0)).toHaveLength(2)
-    expect(notes.l1).toBeUndefined()
+    const intent = await findIntent(`order_${run}_packed`)
+    expect(intent).not.toBeNull()
+    expect(intent!.items).toHaveLength(2)
+    expect(intent!.total).toBe(810000)
   })
 
   it('trusts the product records, not the browser, for every rupee', async () => {
@@ -427,8 +504,16 @@ describe('POST /api/orders/create', () => {
     const body = (await response.json()) as { amount: number }
     expect(body.amount).toBe(150000)
 
-    const notes = mocks.createRazorpayOrder.mock.calls[0]?.[2] as Record<string, string>
-    expect(JSON.parse(notes.l0)[0].slice(0, 4)).toEqual([product.id, 'One week', 5, 150000])
+    const intent = await findIntent(`order_${run}_claims`)
+    expect(intent).not.toBeNull()
+    expect(intent!.items[0]).toMatchObject({
+      days: 5,
+      durationLabel: 'One week',
+      productTitle: 'Lunch plan',
+      qty: 1,
+      unitPrice: 150000,
+    })
+    expect(Number(intent!.items[0]?.productId)).toBe(Number(product.id))
   })
 
   it('opens a fresh gateway order on every attempt instead of reusing one', async () => {
@@ -623,7 +708,7 @@ describe('POST /api/orders/verify', () => {
     const dinner = await createProduct({ title: 'Dinner plan' })
     const gatewayOrderId = `order_${run}_v1`
 
-    stageGatewayOrder([itemFor(lunch, 0), itemFor(dinner, 0)], customer, gatewayOrderId)
+    await stageGatewayOrder([itemFor(lunch, 0), itemFor(dinner, 0)], customer, gatewayOrderId)
 
     const response = (await verifyOrderEndpoint.handler(
       createRequest(
@@ -666,7 +751,7 @@ describe('POST /api/orders/verify', () => {
     const product = await createProduct()
     const gatewayOrderId = `order_${run}_v2`
 
-    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
     mocks.verifyPaymentSignature.mockReturnValue(false)
 
     const response = (await verifyOrderEndpoint.handler(
@@ -690,7 +775,7 @@ describe('POST /api/orders/verify', () => {
     const product = await createProduct()
     const gatewayOrderId = `order_${run}_v3`
 
-    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
     mocks.fetchRazorpayPayment.mockResolvedValue({
       amount: 999, // The browser paid a different amount.
       currency: 'INR',
@@ -720,7 +805,7 @@ describe('POST /api/orders/verify', () => {
     const product = await createProduct()
     const gatewayOrderId = `order_${run}_v4`
 
-    stageGatewayOrder([itemFor(product, 0)], owner, gatewayOrderId)
+    await stageGatewayOrder([itemFor(product, 0)], owner, gatewayOrderId)
 
     const response = (await verifyOrderEndpoint.handler(
       createRequest(
@@ -769,7 +854,7 @@ describe('POST /api/orders/verify', () => {
     const product = await createProduct()
     const gatewayOrderId = `order_${run}_v6`
 
-    stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
 
     const body = {
       razorpay_order_id: gatewayOrderId,

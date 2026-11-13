@@ -27,6 +27,8 @@ import * as migration_20261112_130000_subcategory_image from './20261112_130000_
 import * as migration_20261112_140000_subcategory_slug_nullable from './20261112_140000_subcategory_slug_nullable';
 import * as migration_20261112_150000_best_seller_product_fields from './20261112_150000_best_seller_product_fields';
 import * as migration_20261112_160000_subcategory_slug_backfill from './20261112_160000_subcategory_slug_backfill';
+import * as migration_20261112_170000_meal_combos from './20261112_170000_meal_combos';
+import * as migration_20261112_180000_announcement_messages from './20261112_180000_announcement_messages';
 
 export const migrations = [
   {
@@ -173,5 +175,15 @@ export const migrations = [
     up: migration_20261112_160000_subcategory_slug_backfill.up,
     down: migration_20261112_160000_subcategory_slug_backfill.down,
     name: '20261112_160000_subcategory_slug_backfill',
+  },
+  {
+    up: migration_20261112_170000_meal_combos.up,
+    down: migration_20261112_170000_meal_combos.down,
+    name: '20261112_170000_meal_combos',
+  },
+  {
+    up: migration_20261112_180000_announcement_messages.up,
+    down: migration_20261112_180000_announcement_messages.down,
+    name: '20261112_180000_announcement_messages',
   },
 ];

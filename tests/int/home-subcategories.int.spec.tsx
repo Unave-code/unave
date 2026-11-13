@@ -25,6 +25,16 @@ afterEach(() => {
 })
 
 describe('homepage subcategory tiles', () => {
+  it('states how many meal types are currently available', async () => {
+    getSubcategories.mockResolvedValue([
+      { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
+    ])
+
+    render(await ProductShelf({}))
+
+    expect(screen.getByText('1 meal type currently available.')).toBeTruthy()
+  })
+
   it('opens the category shelf filtered by the subcategory slug', async () => {
     getSubcategories.mockResolvedValue([
       { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },

@@ -224,6 +224,14 @@ export const seed = async ({
       data: {
         announcement: {
           enabled: true,
+          messages: [
+            {
+              text: "This week's menu is live",
+              note: 'The kitchen is taking orders',
+              linkLabel: 'Message us',
+              linkUrl: '/contact',
+            },
+          ],
           text: "This week's menu is live",
           note: 'The kitchen is taking orders',
           linkLabel: 'Message us',

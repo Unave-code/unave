@@ -2,10 +2,9 @@ import Link from 'next/link'
 import React from 'react'
 
 import { AUTH_INLINE_LINK } from '@/components/CustomerAuth/styles'
-import { ONE_TIME_DURATION } from '@/utilities/cart'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
-import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
+import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
 import { ORDER_REQUEST_TYPES, type OrderRequestType } from '@/utilities/orderRequest'
 import { cn } from '@/utilities/ui'
 
@@ -146,12 +145,10 @@ export const OrdersPanel: React.FC<{
                         ? item.qty
                         : 1
                     const name = qty > 1 ? `${qty} × ${item.productTitle}` : (item.productTitle ?? '')
-                    const detail =
-                      item.durationLabel === ONE_TIME_DURATION
-                        ? PRODUCT_ONE_TIME_LABEL
-                        : `${item.durationLabel} (${Number(item.days)} days)`
+                    const detail = orderItemKind(item)
+                    const components = orderComponentsLabel(item.components)
 
-                    return `${name}, ${detail}`
+                    return `${name}, ${detail}${components ? `, includes ${components}` : ''}`
                   })
                   .join(' + ')}
               </p>

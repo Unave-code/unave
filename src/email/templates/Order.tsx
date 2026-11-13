@@ -15,6 +15,7 @@ export type OrderMailVariant = 'confirmation' | 'kitchenNotice'
 
 export type OrderEmailLine = {
   amountLabel: string
+  componentsLabel?: string
   durationLabel: string
   title: string
 }
@@ -148,9 +149,14 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
             <Text style={paragraph}>{intro}</Text>
 
             {lines.map((line, index) => (
-              <Text key={index} style={lineRow}>
-                {`${line.title} · ${line.durationLabel} · ${line.amountLabel}`}
-              </Text>
+              <React.Fragment key={index}>
+                <Text style={lineRow}>
+                  {`${line.title} · ${line.durationLabel} · ${line.amountLabel}`}
+                </Text>
+                {line.componentsLabel ? (
+                  <Text style={small}>{`Includes: ${line.componentsLabel}`}</Text>
+                ) : null}
+              </React.Fragment>
             ))}
 
             <Text style={totalRow}>{`Total: ${totalLabel}`}</Text>

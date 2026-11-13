@@ -72,6 +72,8 @@ export interface Config {
     posts: Post;
     media: Media;
     categories: Category;
+    'checkout-intents': CheckoutIntent;
+    'combo-audit-logs': ComboAuditLog;
     users: User;
     customers: Customer;
     enquiries: Enquiry;
@@ -101,6 +103,8 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'checkout-intents': CheckoutIntentsSelect<false> | CheckoutIntentsSelect<true>;
+    'combo-audit-logs': ComboAuditLogsSelect<false> | ComboAuditLogsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
@@ -148,6 +152,7 @@ export interface Config {
   user: User | Customer;
   jobs: {
     tasks: {
+      cleanupCheckoutIntents: TaskCleanupCheckoutIntents;
       pruneEmailLog: TaskPruneEmailLog;
       schedulePublish: TaskSchedulePublish;
       inline: {
@@ -821,6 +826,50 @@ export interface Form {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "checkout-intents".
+ */
+export interface CheckoutIntent {
+  id: number;
+  gatewayOrderId: string;
+  customer: number | Customer;
+  delivery: {
+    name: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    state: string;
+    pincode: string;
+    foodPreference: string;
+    note?: string | null;
+  };
+  items: {
+    productRef?: (number | null) | Product;
+    productId: number;
+    productTitle: string;
+    durationLabel: string;
+    days: number;
+    qty: number;
+    unitPrice: number;
+    components?:
+      | {
+          productRef?: (number | null) | Product;
+          productId: number;
+          productTitle: string;
+          durationLabel?: string | null;
+          days?: number | null;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  total: number;
+  expiresAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * People who signed in with Google or signed up with an email address. Created by signing in, never by hand.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -877,6 +926,179 @@ export interface Customer {
     | null;
   password?: string | null;
   collection: 'customers';
+}
+/**
+ * The meal products sold on the site. Turn `available` off to pause a product without deleting it; prices are entered and shown in rupees.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  title: string;
+  /**
+   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
+   */
+  slug: string;
+  /**
+   * A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.
+   */
+  type: 'plan' | 'one-time' | 'combo';
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Up to five short lines shown on the product card, under the description. For example "Delivered in an insulated tiffin".
+   */
+  points?:
+    | {
+        point: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The photo shown at the top of the product card on the shelf. Leave it empty and a branded placeholder is used instead.
+   */
+  image?: (number | null) | Media;
+  /**
+   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
+   */
+  durations?:
+    | {
+        /**
+         * Shown on the product card and at checkout, for example "One week".
+         */
+        label: string;
+        days: number;
+        /**
+         * What the customer pays for this duration, in rupees. 499 means ₹499.
+         */
+        price: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The fixed price for one item or combo, in rupees. You can enter up to two decimal places.
+   */
+  price?: number | null;
+  /**
+   * Choose two to ten different products. A meal plan needs one of its current durations.
+   */
+  components?:
+    | {
+        product?: (number | null) | Product;
+        productTitleSnapshot?: string | null;
+        durationDaysSnapshot?: number | null;
+        /**
+         * Choose a current duration when the selected product is a meal plan.
+         */
+        durationLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional reference price for a one-time product. It must be higher than the current price.
+   */
+  compareAtPrice?: number | null;
+  /**
+   * Optional display text for a one-time product, for example 260 g.
+   */
+  packSize?: string | null;
+  /**
+   * Derived on every save: the cheapest per-day rate for a plan, or the flat price for a one-time product or combo, in paise.
+   */
+  fromPrice?: number | null;
+  /**
+   * How the meal reaches the customer. Shown as a label on the product card.
+   */
+  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
+  /**
+   * The finer label inside the category, for example "Breakfast". Only options of the chosen category are offered, and the category pages filter by them.
+   */
+  subcategory?: (number | null) | Subcategory;
+  /**
+   * Who the product is for. Shown as a label on the product card, next to the category.
+   */
+  audience: 'kids' | 'adults' | 'special';
+  /**
+   * Off means the product shows a paused label and cannot be bought.
+   */
+  available?: boolean | null;
+  /**
+   * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
+   */
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories".
+ */
+export interface Subcategory {
+  id: number;
+  /**
+   * The filter label, for example "Breakfast" or "Tiffin".
+   */
+  title: string;
+  /**
+   * Generated from the title when empty. Entered values are normalized.
+   */
+  slug: string;
+  /**
+   * Which shelf this option belongs to. A product can only pick options from its own category.
+   */
+  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
+  /**
+   * Optional image for this subcategory.
+   */
+  image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "combo-audit-logs".
+ */
+export interface ComboAuditLog {
+  id: number;
+  actor: number | User;
+  action: 'created' | 'updated' | 'deleted';
+  combo?: (number | null) | Product;
+  before?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  after?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Messages from the contact form. One row per message, newest last.
@@ -952,6 +1174,18 @@ export interface Order {
      */
     qty?: number | null;
     unitPrice?: number | null;
+    /**
+     * The combo contents copied at purchase time.
+     */
+    components?:
+      | {
+          product?: (number | null) | Product;
+          productTitle: string;
+          durationLabel?: string | null;
+          days?: number | null;
+          id?: string | null;
+        }[]
+      | null;
     id?: string | null;
   }[];
   /**
@@ -978,134 +1212,6 @@ export interface Order {
    * When deliveries begin. The kitchen sets this, nobody else.
    */
   startsOn?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The meal products sold on the site. Turn `available` off to pause a product without deleting it; prices are entered and shown in rupees.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "products".
- */
-export interface Product {
-  id: number;
-  title: string;
-  /**
-   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
-   */
-  slug: string;
-  /**
-   * A meal plan is bought as a duration — a week, a month — chosen at checkout. A one-time purchase is a single item with one price and no durations, bought in a quantity of one to ten.
-   */
-  type: 'plan' | 'one-time';
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Up to five short lines shown on the product card, under the description. For example "Delivered in an insulated tiffin".
-   */
-  points?:
-    | {
-        point: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * The photo shown at the top of the product card on the shelf. Leave it empty and a branded placeholder is used instead.
-   */
-  image?: (number | null) | Media;
-  /**
-   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
-   */
-  durations?:
-    | {
-        /**
-         * Shown on the product card and at checkout, for example "One week".
-         */
-        label: string;
-        days: number;
-        /**
-         * What the customer pays for this duration, in rupees. 499 means ₹499.
-         */
-        price: number;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * What one item costs, in rupees. 499 means ₹499. Shown on a one-time purchase only.
-   */
-  price?: number | null;
-  /**
-   * Optional reference price for a one-time product. It must be higher than the current price.
-   */
-  compareAtPrice?: number | null;
-  /**
-   * Optional display text for a one-time product, for example 260 g.
-   */
-  packSize?: string | null;
-  /**
-   * Derived on every save: the cheapest per-day rate for a plan, the item price for a one-time purchase, in paise. The shelf sorts and filters on it, so it is never edited by hand.
-   */
-  fromPrice?: number | null;
-  /**
-   * How the meal reaches the customer. Shown as a label on the product card.
-   */
-  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
-  /**
-   * The finer label inside the category, for example "Breakfast". Only options of the chosen category are offered, and the category pages filter by them.
-   */
-  subcategory?: (number | null) | Subcategory;
-  /**
-   * Who the product is for. Shown as a label on the product card, next to the category.
-   */
-  audience: 'kids' | 'adults' | 'special';
-  /**
-   * Off means the product shows a paused label and cannot be bought.
-   */
-  available?: boolean | null;
-  /**
-   * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
-   */
-  featured?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "subcategories".
- */
-export interface Subcategory {
-  id: number;
-  /**
-   * The filter label, for example "Breakfast" or "Tiffin".
-   */
-  title: string;
-  /**
-   * Generated from the title when empty. Entered values are normalized.
-   */
-  slug: string;
-  /**
-   * Which shelf this option belongs to. A product can only pick options from its own category.
-   */
-  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
-  /**
-   * Optional image for this subcategory.
-   */
-  image?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -1274,7 +1380,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'pruneEmailLog' | 'schedulePublish';
+        taskSlug: 'inline' | 'cleanupCheckoutIntents' | 'pruneEmailLog' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -1307,7 +1413,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'pruneEmailLog' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'cleanupCheckoutIntents' | 'pruneEmailLog' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1345,6 +1451,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'checkout-intents';
+        value: number | CheckoutIntent;
+      } | null)
+    | ({
+        relationTo: 'combo-audit-logs';
+        value: number | ComboAuditLog;
       } | null)
     | ({
         relationTo: 'users';
@@ -1732,6 +1846,66 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "checkout-intents_select".
+ */
+export interface CheckoutIntentsSelect<T extends boolean = true> {
+  gatewayOrderId?: T;
+  customer?: T;
+  delivery?:
+    | T
+    | {
+        name?: T;
+        phone?: T;
+        addressLine1?: T;
+        addressLine2?: T;
+        city?: T;
+        state?: T;
+        pincode?: T;
+        foodPreference?: T;
+        note?: T;
+      };
+  items?:
+    | T
+    | {
+        productRef?: T;
+        productId?: T;
+        productTitle?: T;
+        durationLabel?: T;
+        days?: T;
+        qty?: T;
+        unitPrice?: T;
+        components?:
+          | T
+          | {
+              productRef?: T;
+              productId?: T;
+              productTitle?: T;
+              durationLabel?: T;
+              days?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  total?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "combo-audit-logs_select".
+ */
+export interface ComboAuditLogsSelect<T extends boolean = true> {
+  actor?: T;
+  action?: T;
+  combo?: T;
+  before?: T;
+  after?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -1844,6 +2018,15 @@ export interface OrdersSelect<T extends boolean = true> {
         days?: T;
         qty?: T;
         unitPrice?: T;
+        components?:
+          | T
+          | {
+              product?: T;
+              productTitle?: T;
+              durationLabel?: T;
+              days?: T;
+              id?: T;
+            };
         id?: T;
       };
   delivery?:
@@ -1910,6 +2093,15 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   price?: T;
+  components?:
+    | T
+    | {
+        product?: T;
+        productTitleSnapshot?: T;
+        durationDaysSnapshot?: T;
+        durationLabel?: T;
+        id?: T;
+      };
   compareAtPrice?: T;
   packSize?: T;
   fromPrice?: T;
@@ -2218,25 +2410,29 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Header {
   id: number;
   /**
-   * The strip above the navbar on every page. Untick it and it disappears everywhere (design.md §6.2).
+   * The moving strip above the navbar on every page. Untick it to hide the strip everywhere (design.md §6.2).
    */
   announcement?: {
     enabled?: boolean | null;
     /**
-     * The gold line on the left.
+     * Add one or more announcements. They move across the top of every page.
      */
+    messages?:
+      | {
+          text: string;
+          note?: string | null;
+          linkLabel?: string | null;
+          /**
+           * Optional. A path such as /contact, or a full URL.
+           */
+          linkUrl?: string | null;
+          newTab?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
     text?: string | null;
-    /**
-     * The quieter line beside the headline.
-     */
     note?: string | null;
-    /**
-     * The underlined words on the right, for example "Message us".
-     */
     linkLabel?: string | null;
-    /**
-     * The whole bar links here. A path such as /contact, or a full URL.
-     */
     linkUrl?: string | null;
     newTab?: boolean | null;
   };
@@ -2420,6 +2616,16 @@ export interface HeaderSelect<T extends boolean = true> {
     | T
     | {
         enabled?: T;
+        messages?:
+          | T
+          | {
+              text?: T;
+              note?: T;
+              linkLabel?: T;
+              linkUrl?: T;
+              newTab?: T;
+              id?: T;
+            };
         text?: T;
         note?: T;
         linkLabel?: T;
@@ -2575,6 +2781,14 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCleanupCheckoutIntents".
+ */
+export interface TaskCleanupCheckoutIntents {
+  input?: unknown;
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

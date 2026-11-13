@@ -7,6 +7,8 @@ import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/product
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
 import { autoProductSlug } from './hooks/autoProductSlug'
 import { setLeadPrice } from './hooks/leadPrice'
+import { auditComboChange, auditComboDelete } from './hooks/comboAudit'
+import { prepareComboComponents } from './hooks/prepareComboComponents'
 import { validateCompareAtPrice } from './validateCompareAtPrice'
 
 /**
@@ -88,11 +90,12 @@ export const Products: CollectionConfig = {
       defaultValue: 'plan',
       admin: {
         description:
-          'A meal plan is bought as a duration — a week, a month — chosen at checkout. A one-time purchase is a single item with one price and no durations, bought in a quantity of one to ten.',
+          'A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.',
       },
       options: [
         { label: 'Meal plan', value: 'plan' },
         { label: 'One-time purchase', value: 'one-time' },
+        { label: 'Meal combo', value: 'combo' },
       ],
     },
     {
@@ -133,7 +136,7 @@ export const Products: CollectionConfig = {
       type: 'array',
       label: 'Durations',
       admin: {
-        condition: (data) => (data as { type?: null | string } | undefined)?.type !== 'one-time',
+        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'plan',
         description:
           'What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.',
       },
@@ -177,7 +180,7 @@ export const Products: CollectionConfig = {
       ) => {
         const type = siblingData.type
 
-        if (type === 'one-time') return true
+        if (type !== 'plan') return true
 
         if (!Array.isArray(value) || value.length === 0) {
           return 'Add at least one duration — a label, days and a price.'
@@ -192,12 +195,15 @@ export const Products: CollectionConfig = {
       type: 'number',
       min: 1,
       admin: {
-        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'one-time',
+        condition: (data) =>
+          ['one-time', 'combo'].includes(
+            (data as { type?: null | string } | undefined)?.type ?? '',
+          ),
         components: {
           Field: '@/components/Admin/RupeeField#RupeeField',
         },
         description:
-          'What one item costs, in rupees. 499 means ₹499. Shown on a one-time purchase only.',
+          'The fixed price for one item or combo, in rupees. You can enter up to two decimal places.',
       },
       validate: (
         value: unknown,
@@ -205,10 +211,118 @@ export const Products: CollectionConfig = {
       ) => {
         const type = siblingData.type
 
-        if (type !== 'one-time') return true
+        if (type !== 'one-time' && type !== 'combo') return true
 
-        if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) {
-          return 'Enter the price for one item, in rupees.'
+        if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+          return 'Enter a price with at most two decimal places.'
+        }
+
+        return true
+      },
+    },
+    {
+      name: 'components',
+      type: 'array',
+      label: 'Combo contents',
+      minRows: 2,
+      maxRows: 10,
+      admin: {
+        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'combo',
+        description:
+          'Choose two to ten different products. A meal plan needs one of its current durations.',
+      },
+      fields: [
+        {
+          name: 'product',
+          type: 'relationship',
+          relationTo: 'products',
+          required: false,
+          filterOptions: {
+            type: { not_equals: 'combo' },
+          },
+        },
+        {
+          name: 'productTitleSnapshot',
+          type: 'text',
+          admin: { hidden: true, readOnly: true },
+        },
+        {
+          name: 'durationDaysSnapshot',
+          type: 'number',
+          admin: { hidden: true, readOnly: true },
+        },
+        {
+          name: 'durationLabel',
+          type: 'text',
+          label: 'Meal plan duration',
+          admin: {
+            components: {
+              Field: '@/components/Admin/ComboDurationField#ComboDurationField',
+            },
+            description: 'Choose a current duration when the selected product is a meal plan.',
+          },
+        },
+      ],
+      validate: async (
+        value: unknown,
+        {
+          req,
+          siblingData,
+        }: { req: PayloadRequest; siblingData: { id?: number | string; type?: null | string } },
+      ) => {
+        if (siblingData.type !== 'combo') return true
+        if (!Array.isArray(value) || value.length < 2 || value.length > 10) {
+          return 'Add between two and ten products to this combo.'
+        }
+
+        const ids = value.map((row) => {
+          if (!row || typeof row !== 'object') return null
+          const product = (row as { product?: unknown }).product
+          return typeof product === 'object' && product !== null
+            ? (product as { id?: unknown }).id
+            : product
+        })
+
+        if (ids.some((id) => typeof id !== 'number' && typeof id !== 'string')) {
+          return 'Choose a product for every combo row.'
+        }
+        if (new Set(ids.map(String)).size !== ids.length) {
+          return 'Choose each product only once.'
+        }
+        if (siblingData.id !== undefined && ids.some((id) => String(id) === String(siblingData.id))) {
+          return 'A combo cannot contain itself.'
+        }
+
+        const foundProducts = await req.payload.find({
+          collection: 'products',
+          depth: 0,
+          limit: ids.length,
+          overrideAccess: true,
+          where: { id: { in: ids as (number | string)[] } },
+        })
+        const productsById = new Map(foundProducts.docs.map((product) => [String(product.id), product]))
+
+        for (let index = 0; index < ids.length; index += 1) {
+          const product = productsById.get(String(ids[index]))
+          const row = value[index] as { durationLabel?: unknown }
+
+          if (!product || product.type === 'combo') {
+            return 'Each combo row must point to an existing one-time product or meal plan.'
+          }
+
+          if (product.type === 'plan') {
+            const label =
+              typeof row.durationLabel === 'string' ? row.durationLabel.trim().toLowerCase() : ''
+            const matches = (product.durations ?? []).filter(
+              (duration) => duration.label.trim().toLowerCase() === label,
+            )
+
+            if (!label || matches.length !== 1) {
+              return 'Choose one current, uniquely named duration for each meal plan.'
+            }
+          } else if (typeof row.durationLabel === 'string' && row.durationLabel.trim()) {
+            return 'A one-time product does not have a meal plan duration.'
+          }
         }
 
         return true
@@ -252,7 +366,7 @@ export const Products: CollectionConfig = {
       index: true,
       admin: {
         description:
-          'Derived on every save: the cheapest per-day rate for a plan, the item price for a one-time purchase, in paise. The shelf sorts and filters on it, so it is never edited by hand.',
+          'Derived on every save: the cheapest per-day rate for a plan, or the flat price for a one-time product or combo, in paise.',
         position: 'sidebar',
         readOnly: true,
       },
@@ -356,9 +470,9 @@ export const Products: CollectionConfig = {
     },
   ],
   hooks: {
-    afterChange: [revalidateProducts],
-    afterDelete: [revalidateProductsDelete],
-    beforeChange: [setLeadPrice],
+    afterChange: [auditComboChange, revalidateProducts],
+    afterDelete: [auditComboDelete, revalidateProductsDelete],
+    beforeChange: [prepareComboComponents, setLeadPrice],
   },
   labels: {
     plural: 'Products',

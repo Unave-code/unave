@@ -19,7 +19,7 @@ export const BestSellerAddButton: React.FC<{
   )
 
   return (
-    <div className="mt-auto pt-4">
+    <div className="flex min-h-11 items-center gap-3">
       <form action="/api/cart/add" method="post" onSubmit={onSubmit}>
         <input name="product" type="hidden" value={productSlug} />
         <input name="duration" type="hidden" value={oneTime ? ONE_TIME_DURATION : durationLabel} />
@@ -27,7 +27,12 @@ export const BestSellerAddButton: React.FC<{
 
         <button
           aria-label={`Add ${productTitle} to cart`}
-          className={cn(CTA_BASE, CTA_SIZES.small, CTA_VARIANTS.secondary, 'w-24 uppercase')}
+          className={cn(
+            CTA_BASE,
+            CTA_SIZES.small,
+            CTA_VARIANTS.secondary,
+            'w-24 shrink-0 uppercase',
+          )}
           disabled={pending}
           type="submit"
         >
@@ -35,7 +40,7 @@ export const BestSellerAddButton: React.FC<{
         </button>
       </form>
 
-      <p aria-live="polite" className="text-ink-600 mt-2 min-h-5 text-sm">
+      <p aria-live="polite" className="text-ink-600 min-w-0 flex-1 text-sm">
         {message}
       </p>
     </div>

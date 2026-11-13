@@ -1,15 +1,11 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
-import { Benefits } from '@/components/home/Benefits'
 import { BestSellers } from '@/components/home/BestSellers'
-import { Categories } from '@/components/home/Categories'
 import { Faq } from '@/components/home/Faq'
 import { Gallery } from '@/components/home/Gallery'
 import { Hero } from '@/components/home/Hero'
-import { HowItWorks } from '@/components/home/HowItWorks'
 import { ProductShelf } from '@/components/home/Products'
-import { Testimonials } from '@/components/home/Testimonials'
 import { FAQ, HOME_DESCRIPTION, HOME_TITLE } from '@/utilities/homeCopy'
 import { getServerSideURL } from '@/utilities/getURL'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
@@ -65,10 +61,6 @@ export default async function HomePage() {
       <Gallery />
       <ProductShelf />
       <BestSellers />
-      <Benefits />
-      <Categories />
-      <HowItWorks />
-      <Testimonials />
       <Faq />
     </main>
   )

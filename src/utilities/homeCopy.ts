@@ -27,9 +27,10 @@ export const IMAGES = {
 
 /** 1. Announcement bar now lives in the site chrome (Header global), above the navbar. */
 
-/** 2. The image slider's accessible heading. */
+/** 2. The visible home hero heading and current offer terms. */
 export const HERO_HEADLINE = 'Good food, cooked in'
 export const HERO_HEADLINE_ACCENT = 'our own kitchen.'
+export const HERO_OFFER_COPY = 'The 20% offer depends on portion size and product type.'
 
 /** 4. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
  * three with an `image` are the ones the bento gives a wide or tall tile to, so the
@@ -111,14 +112,13 @@ export const CATEGORIES = [
 ] as const
 
 /** Featured products selected by the kitchen. */
-export const BEST_SELLERS_HEADING = 'Best sellers'
-export const BEST_SELLERS_INTRO = 'Featured products selected by our kitchen.'
+export const BEST_SELLERS_HEADING = 'Featured products'
+export const BEST_SELLERS_INTRO = 'Products selected by the kitchen.'
 export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
 
 /** 6b. Category browsing. */
-export const PRODUCTS_SECTION_HEADING = 'Choose your category'
-export const PRODUCTS_SECTION_INTRO =
-  'Browse the meal types, then find a product that fits your week.'
+export const PRODUCTS_SECTION_HEADING = 'Browse our current selection'
+export const PRODUCTS_SECTION_INTRO = 'Explore the available meal types, or see every product.'
 export const PRODUCTS_SECTION_CTA = 'See every product'
 
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */

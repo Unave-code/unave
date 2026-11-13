@@ -4,10 +4,8 @@ import { link } from '@/fields/link'
 import { revalidateHeader } from './hooks/revalidateHeader'
 
 /**
- * What the announcement bar says before it is edited for the first time. The read
- * hook below falls back to these, so moving the bar into the CMS did not blank it
- * out on the global document that already existed (design.md §1: no countdown and
- * no invented scarcity).
+ * Defaults for a new announcement bar. The read hooks retain the original
+ * single-message values until existing globals have their message rows.
  */
 const ANNOUNCEMENT_DEFAULTS = {
   enabled: true,
@@ -26,9 +24,7 @@ const fillDefault =
 /**
  * The sticky bar at the top of every page (design.md §6.2).
  *
- * Everything here is editorial: the announcement strip above the bar, the links
- * and the floating WhatsApp button all come from the CMS, so nothing in the
- * chrome has to be touched in code to change it.
+ * The announcements, links and floating WhatsApp button come from the CMS.
  */
 export const Header: GlobalConfig = {
   slug: 'header',
@@ -46,7 +42,7 @@ export const Header: GlobalConfig = {
       label: 'Announcement bar',
       admin: {
         description:
-          'The strip above the navbar on every page. Untick it and it disappears everywhere (design.md §6.2).',
+          'The moving strip above the navbar on every page. Untick it to hide the strip everywhere (design.md §6.2).',
       },
       fields: [
         {
@@ -57,50 +53,93 @@ export const Header: GlobalConfig = {
           label: 'Show the announcement bar',
         },
         {
+          name: 'messages',
+          type: 'array',
+          label: 'Announcements',
+          minRows: 1,
+          defaultValue: [
+            {
+              text: ANNOUNCEMENT_DEFAULTS.text,
+              note: ANNOUNCEMENT_DEFAULTS.note,
+              linkLabel: ANNOUNCEMENT_DEFAULTS.linkLabel,
+              linkUrl: ANNOUNCEMENT_DEFAULTS.linkUrl,
+            },
+          ],
+          admin: {
+            description: 'Add one or more announcements. They move across the top of every page.',
+            initCollapsed: true,
+          },
+          fields: [
+            {
+              name: 'text',
+              type: 'text',
+              label: 'Headline',
+              required: true,
+            },
+            {
+              name: 'note',
+              type: 'text',
+              label: 'Supporting line',
+            },
+            {
+              name: 'linkLabel',
+              type: 'text',
+              label: 'Link label',
+            },
+            {
+              name: 'linkUrl',
+              type: 'text',
+              label: 'Link',
+              admin: {
+                description: 'Optional. A path such as /contact, or a full URL.',
+              },
+            },
+            {
+              name: 'newTab',
+              type: 'checkbox',
+              defaultValue: false,
+              label: 'Open in a new tab',
+            },
+          ],
+        },
+        {
           name: 'text',
           type: 'text',
-          label: 'Headline',
+          label: 'Legacy headline',
           defaultValue: ANNOUNCEMENT_DEFAULTS.text,
           hooks: { afterRead: [fillDefault(ANNOUNCEMENT_DEFAULTS.text)] },
-          admin: {
-            description: 'The gold line on the left.',
-          },
+          admin: { hidden: true },
         },
         {
           name: 'note',
           type: 'text',
-          label: 'Supporting line',
+          label: 'Legacy supporting line',
           defaultValue: ANNOUNCEMENT_DEFAULTS.note,
           hooks: { afterRead: [fillDefault(ANNOUNCEMENT_DEFAULTS.note)] },
-          admin: {
-            description: 'The quieter line beside the headline.',
-          },
+          admin: { hidden: true },
         },
         {
           name: 'linkLabel',
           type: 'text',
-          label: 'Link label',
+          label: 'Legacy link label',
           defaultValue: ANNOUNCEMENT_DEFAULTS.linkLabel,
           hooks: { afterRead: [fillDefault(ANNOUNCEMENT_DEFAULTS.linkLabel)] },
-          admin: {
-            description: 'The underlined words on the right, for example "Message us".',
-          },
+          admin: { hidden: true },
         },
         {
           name: 'linkUrl',
           type: 'text',
-          label: 'Link',
+          label: 'Legacy link',
           defaultValue: ANNOUNCEMENT_DEFAULTS.linkUrl,
           hooks: { afterRead: [fillDefault(ANNOUNCEMENT_DEFAULTS.linkUrl)] },
-          admin: {
-            description: 'The whole bar links here. A path such as /contact, or a full URL.',
-          },
+          admin: { hidden: true },
         },
         {
           name: 'newTab',
           type: 'checkbox',
           defaultValue: false,
-          label: 'Open in a new tab',
+          label: 'Legacy open in a new tab',
+          admin: { hidden: true },
         },
       ],
     },

@@ -9,6 +9,7 @@ import RichText from '@/components/RichText'
 import { Section } from '@/components/home/Section'
 import type { Product } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
+import { isProductSellable, selectedComboDuration } from '@/utilities/combos'
 import { PRODUCT_BACK_LABEL, PRODUCT_PAUSED_INLINE, PRODUCT_POINTS_HEADING } from '@/utilities/productPageCopy'
 import {
   PRODUCTS_PAUSED_NOTE_BODY,
@@ -68,8 +69,24 @@ export const ProductDetail: React.FC<{
   }))
 
   const isOneTime = product.type === 'one-time'
+  const isCombo = product.type === 'combo'
+  const isAvailable = isProductSellable(product)
   const oneTimePrice = Number(product.price)
-  const buyableOneTime = isOneTime && oneTimePrice >= 1
+  const buyableOneTime = (isOneTime || isCombo) && oneTimePrice >= 1
+  const comboContents = (product.components ?? []).map((component) => {
+    const source =
+      component.product && typeof component.product === 'object' ? component.product : null
+    const duration =
+      source?.type === 'plan'
+        ? selectedComboDuration(source, component.durationLabel)
+        : null
+
+    return {
+      days: duration?.days ?? component.durationDaysSnapshot,
+      durationLabel: duration?.label ?? component.durationLabel,
+      title: source?.title ?? component.productTitleSnapshot ?? 'Product unavailable',
+    }
+  })
 
   const points = (product.points ?? [])
     .map((entry) => entry.point?.trim() ?? '')
@@ -150,7 +167,7 @@ export const ProductDetail: React.FC<{
                     </span>
                   ) : null}
 
-                  {!product.available ? (
+                  {!isAvailable ? (
                     <span className={`${HERO_CHIP} bg-gold-400 text-green-900 ring-gold-300/70`}>Paused</span>
                   ) : null}
                 </div>
@@ -167,8 +184,9 @@ export const ProductDetail: React.FC<{
           </div>
 
           <div className="lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
-            {product.available && buyableOneTime ? (
+            {isAvailable && buyableOneTime ? (
               <ProductPurchase
+                combo={isCombo}
                 durations={[]}
                 oneTimePrice={oneTimePrice}
                 productSlug={product.slug}
@@ -176,7 +194,7 @@ export const ProductDetail: React.FC<{
                 returnPath={productHref(product.slug)}
                 whatsapp={whatsapp}
               />
-            ) : product.available && !isOneTime && durations.length > 0 ? (
+            ) : isAvailable && !isOneTime && !isCombo && durations.length > 0 ? (
               <ProductPurchase
                 durations={durations}
                 productSlug={product.slug}
@@ -217,6 +235,36 @@ export const ProductDetail: React.FC<{
             {product.description ? (
               <RichText className="text-body text-ink-600 mt-8 max-w-[52ch]" data={product.description} enableGutter={false} />
             ) : null}
+            {isCombo ? (
+              <>
+                <section aria-labelledby="combo-contents-heading" className="mt-8">
+                  <h2 className="text-h3" id="combo-contents-heading">
+                    Included in this combo
+                  </h2>
+                  <ul className="mt-3 space-y-3">
+                    {comboContents.map((component, index) => (
+                      <li
+                        className="border-line flex flex-col gap-1 border-b pb-3 last:border-0"
+                        key={`${component.title}-${index}`}
+                      >
+                        <span className="font-bold">{component.title}</span>
+                        {component.durationLabel ? (
+                          <span className="text-ink-600 text-sm">
+                            {component.durationLabel}
+                            {component.days
+                              ? `, ${component.days} ${component.days === 1 ? 'day' : 'days'}`
+                              : ''}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <Notice className="mt-8" title="A note on our meals">
+                  Our meals are food options and are not a substitute for medical or nutritional advice.
+                </Notice>
+              </>
+            ) : null}
           </div>
 
           {points.length > 0 ? (
@@ -254,7 +302,7 @@ export const ProductDetail: React.FC<{
           </div>
         ) : null}
 
-        {!product.available ? (
+        {!isAvailable ? (
           <Notice className="mt-10 max-w-[70ch]" title={PRODUCTS_PAUSED_NOTE_TITLE}>
             {PRODUCTS_PAUSED_NOTE_BODY}
           </Notice>

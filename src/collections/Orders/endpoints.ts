@@ -27,7 +27,7 @@ import {
 } from '@/utilities/razorpay'
 
 import { recordPaidOrder } from './confirm'
-import { buildOrderNotes, readOrderNotes } from './intent'
+import { findCheckoutIntent } from './intent'
 import { orderCreateSchema, orderVerifySchema } from './schema'
 
 /**
@@ -43,11 +43,8 @@ import { orderCreateSchema, orderVerifySchema } from './schema'
  * line — and every line is checked against the live product before a rupee is
  * used.
  *
- * No order row is written at checkout. The lines, their prices and days, and the
- * delivery details ride on the Razorpay order's notes, so a row can be written
- * the moment a payment is captured, whether that signal comes from the browser's
- * return or from the signed webhook. An abandoned checkout therefore leaves
- * nothing behind, and a row in Orders always means one completed payment.
+ * No order row is written at checkout. A private intent keeps the verified
+ * customer, delivery, and item snapshots until payment is confirmed.
  */
 
 const readJson = async (req: PayloadRequest): Promise<Record<string, unknown> | null> => {
@@ -141,41 +138,77 @@ export const createOrderEndpoint: Endpoint = {
     }
 
     const items = cart.usable.map((line) => ({
+      components: line.components?.map((component) => ({
+        days: component.days,
+        durationLabel: component.durationLabel,
+        productId: component.product,
+        productRef: component.product,
+        productTitle: component.productTitle,
+      })),
       days: line.days ?? 0,
       durationLabel: line.duration,
-      productId: line.productId ?? 0,
+      productId: Number(line.productId),
+      productRef: Number(line.productId),
       productTitle: line.productTitle,
       qty: line.qty,
       unitPrice: line.price ?? 0,
     }))
 
-    // The whole checkout intent rides on the gateway order, so either payment
-    // signal can write the paid row later. Nothing is written here.
-    const notes = buildOrderNotes({
-      customerId: customer.id,
-      delivery: {
-        city: delivery.city,
-        line1: delivery.line1,
-        line2: delivery.line2,
-        name: delivery.name,
-        phone: delivery.phone,
-        pincode: delivery.pincode,
-        state: delivery.state,
-      },
-      items,
-      note,
-    })
-
     let gateway
 
     try {
-      gateway = await createRazorpayOrder(cart.total, randomUUID(), notes)
+      gateway = await createRazorpayOrder(cart.total, randomUUID())
     } catch (error) {
       req.payload.logger.error({
         err: error instanceof Error ? error.message : String(error),
         msg: 'razorpay_order_create_failed',
       })
       return json('The payment gateway did not respond. Please try again in a moment.', 503)
+    }
+
+    if (
+      gateway.currency !== 'INR' ||
+      gateway.amount !== cart.total ||
+      !Number.isSafeInteger(gateway.amount)
+    ) {
+      req.payload.logger.error({
+        gatewayOrderId: gateway.id,
+        msg: 'razorpay_order_create_amount_mismatch',
+      })
+      return json('The payment could not be prepared. Please try again.', 503)
+    }
+
+    try {
+      await req.payload.create({
+        collection: 'checkout-intents',
+        data: {
+          customer: customer.id,
+          delivery: {
+            addressLine1: delivery.line1,
+            addressLine2: delivery.line2,
+            city: delivery.city,
+            foodPreference: delivery.foodPreference,
+            name: delivery.name,
+            note,
+            phone: delivery.phone,
+            pincode: delivery.pincode,
+            state: delivery.state,
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          gatewayOrderId: gateway.id,
+          items,
+          total: cart.total,
+        },
+        depth: 0,
+        overrideAccess: true,
+      })
+    } catch (error) {
+      req.payload.logger.error({
+        err: error instanceof Error ? error.message : String(error),
+        gatewayOrderId: gateway.id,
+        msg: 'checkout_intent_save_failed',
+      })
+      return json('The checkout could not be saved. Please try again.', 503)
     }
 
     const mode = razorpayMode()
@@ -222,7 +255,31 @@ export const verifyOrderEndpoint: Endpoint = {
       return json(PAYMENT_UNCONFIRMED, 400)
     }
 
-    // The product and the delivery live on the gateway order, not in a local row.
+    const existing = await req.payload.find({
+      collection: 'orders',
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      where: { gatewayOrderId: { equals: razorpay_order_id } },
+    })
+    const existingOrder = existing.docs[0]
+
+    if (existingOrder) {
+      const owner =
+        typeof existingOrder.customer === 'object' && existingOrder.customer !== null
+          ? existingOrder.customer.id
+          : existingOrder.customer
+
+      if (String(owner) !== String(customer.id)) {
+        return json('That order could not be found.', 404)
+      }
+
+      return Response.json(
+        { orderId: existingOrder.id, recorded: false, status: 'paid' },
+        { headers: { 'Set-Cookie': clearCartCookie() } },
+      )
+    }
+
     let razorpayOrder
 
     try {
@@ -233,14 +290,6 @@ export const verifyOrderEndpoint: Endpoint = {
         msg: 'order_return_gateway_order_unreadable',
       })
       return json(PAYMENT_UNCONFIRMED, 400)
-    }
-
-    const intent = readOrderNotes(razorpayOrder.notes)
-
-    // A 404 rather than a 403: the answer must not confirm that somebody else's
-    // payment exists under that id.
-    if (!intent || String(intent.customerId) !== String(customer.id)) {
-      return json('That order could not be found.', 404)
     }
 
     let payment
@@ -255,9 +304,29 @@ export const verifyOrderEndpoint: Endpoint = {
       return json(PAYMENT_UNCONFIRMED, 400)
     }
 
+    let intent
+
+    try {
+      intent = await findCheckoutIntent(req.payload, razorpay_order_id)
+    } catch (error) {
+      req.payload.logger.error({
+        err: error instanceof Error ? error.message : String(error),
+        gatewayOrderId: razorpay_order_id,
+        msg: 'checkout_intent_read_failed',
+      })
+      return json(ORDER_NOT_SAVED, 500)
+    }
+
+    if (!intent || String(intent.customerId) !== String(customer.id)) {
+      return json('That order could not be found.', 404)
+    }
+
     if (
+      razorpayOrder.id !== razorpay_order_id ||
+      razorpayOrder.currency !== 'INR' ||
       payment.status !== 'captured' ||
       payment.order_id !== razorpay_order_id ||
+      !Number.isSafeInteger(payment.amount) ||
       payment.amount !== razorpayOrder.amount ||
       payment.currency !== 'INR' ||
       intent.total !== razorpayOrder.amount
