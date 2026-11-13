@@ -29,6 +29,7 @@ import * as migration_20261112_150000_best_seller_product_fields from './2026111
 import * as migration_20261112_160000_subcategory_slug_backfill from './20261112_160000_subcategory_slug_backfill';
 import * as migration_20261112_170000_meal_combos from './20261112_170000_meal_combos';
 import * as migration_20261112_180000_announcement_messages from './20261112_180000_announcement_messages';
+import * as migration_20261113_130000_locked_document_relations from './20261113_130000_locked_document_relations';
 
 export const migrations = [
   {
@@ -185,5 +186,10 @@ export const migrations = [
     up: migration_20261112_180000_announcement_messages.up,
     down: migration_20261112_180000_announcement_messages.down,
     name: '20261112_180000_announcement_messages',
+  },
+  {
+    up: migration_20261113_130000_locked_document_relations.up,
+    down: migration_20261113_130000_locked_document_relations.down,
+    name: '20261113_130000_locked_document_relations',
   },
 ];
