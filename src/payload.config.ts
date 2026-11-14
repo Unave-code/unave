@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 import { Categories } from './collections/Categories'
 import { CheckoutIntents } from './collections/CheckoutIntents'
 import { Customers } from './collections/Customers'
+import { LegacyComboAuditLogs } from './collections/LegacyComboAuditLogs'
 import { EmailLog } from './collections/EmailLog'
 import { Enquiries } from './collections/Enquiries'
 import { Media } from './collections/Media'
@@ -156,6 +157,7 @@ export default buildConfig({
     Media,
     Categories,
     CheckoutIntents,
+    LegacyComboAuditLogs,
     Users,
     Customers,
     Enquiries,

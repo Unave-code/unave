@@ -113,7 +113,8 @@ docker run --rm -v UNAVE_MEDIA_VOLUME:/data alpine tar czf - -C /data . > /backu
 **Migrations.** New schema arrives as a guarded file in `src/migrations`
 registered in `index.ts`; the compose `migrate` service applies it on the next
 deploy. Development pushes its own schema with the dev server and is never
-migrated; production only ever migrates.
+migrated; production only ever migrates. The retired combo audit table stays
+registered as hidden so development sync keeps its existing records.
 
 ## Moving content off Neon
 
