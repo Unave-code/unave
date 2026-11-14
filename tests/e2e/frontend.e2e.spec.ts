@@ -24,7 +24,7 @@ test.describe('Frontend', () => {
       await expect(page.getByRole('heading', { name: heading, exact: true })).toHaveCount(0)
     }
 
-    await expect(page.getByRole('heading', { name: 'Featured products' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Best sellers' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'What customers say' })).toHaveCount(0)
     await expect(page.getByText('[Customer quote goes here]')).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Common questions' })).toBeVisible()
@@ -53,6 +53,7 @@ test.describe('Frontend', () => {
     const cards = page.locator('#best-sellers article')
     if (await cards.count()) {
       const card = cards.first()
+      const grid = page.locator('#best-sellers ul')
 
       for (const width of [375, 1280]) {
         await page.setViewportSize({ width, height: 900 })
@@ -64,9 +65,12 @@ test.describe('Frontend', () => {
           throw new Error('The featured product card or image has no layout box')
         }
 
-        const imageShare = imageBox.height / cardBox.height
-        expect(imageShare).toBeGreaterThan(0.74)
-        expect(imageShare).toBeLessThan(0.76)
+        expect(imageBox.width / imageBox.height).toBeCloseTo(1, 1)
+
+        const columns = await grid.evaluate(
+          (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        )
+        expect(columns).toBe(width === 375 ? 2 : 5)
       }
     } else {
       await expect(

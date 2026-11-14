@@ -18,15 +18,16 @@ import { isSameOriginRequest, safeReturnPath, seeOther } from '@/utilities/formP
  * A plain form post, so it works with JavaScript off: the card submits a product
  * slug and the chosen duration label, this route resolves both against the live
  * record, writes the identifiers into the cookie, and redirects back to the
- * shelf the customer was reading. A duplicate, a full basket, a paused product
- * or a duration that left the menu each redirect to the cart with one plain
- * sentence, never an error page.
+ * shelf the customer was reading. A failed add, a full basket, a paused product
+ * or a duration that left the menu each redirect with one plain notice, never
+ * an error page. Buy Now continues to checkout when its line is already there.
  *
  * The product record decides whether a line may enter the basket; the browser
  * never sends a price or a day count. For a one-time product — sold without
  * durations — the form carries the reserved one-time duration and the route
  * adds through the quantity-aware adder, so adding what is already there bumps
- * the quantity instead of being refused as a duplicate.
+ * the quantity instead of being refused as a duplicate. Buy Now uses the same
+ * validation and cookie, then carries the visitor to checkout.
  */
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +51,7 @@ export async function POST(request: Request): Promise<Response> {
     .trim()
     .slice(0, 80)
   const returnPath = safeReturnPath(form.get('return')) ?? '/products'
+  const buyNow = form.get('buyNow') === 'true'
 
   if (!productSlug || !durationLabel) return back('/cart?notice=unknown')
 
@@ -75,7 +77,11 @@ export async function POST(request: Request): Promise<Response> {
 
     const result = addOneTimeCartLine(cart, product.slug)
 
-    return result.ok ? back(returnPath, [cartCookie(result.lines)]) : noticeBack(result.reason)
+    if (!result.ok) {
+      return buyNow && result.reason === 'quantity' ? back(returnPath) : noticeBack(result.reason)
+    }
+
+    return back(returnPath, [cartCookie(result.lines)])
   }
 
   const duration = productDuration(product, durationLabel)
@@ -84,7 +90,9 @@ export async function POST(request: Request): Promise<Response> {
 
   const result = addCartLine(cart, { duration: duration.label, product: product.slug })
 
-  if (!result.ok) return noticeBack(result.reason)
+  if (!result.ok) {
+    return buyNow && result.reason === 'duplicate' ? back(returnPath) : noticeBack(result.reason)
+  }
 
   return back(returnPath, [cartCookie(result.lines)])
 }

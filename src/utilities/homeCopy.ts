@@ -111,8 +111,8 @@ export const CATEGORIES = [
   },
 ] as const
 
-/** Featured products selected by the kitchen. */
-export const BEST_SELLERS_HEADING = 'Featured products'
+/** Best sellers selected by the kitchen. */
+export const BEST_SELLERS_HEADING = 'Best sellers'
 export const BEST_SELLERS_INTRO = 'Products selected by the kitchen.'
 export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
 

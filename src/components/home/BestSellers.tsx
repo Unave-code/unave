@@ -48,67 +48,68 @@ const BestSellerCard: React.FC<{ product: Product }> = ({ product }) => {
   const canAdd = product.available && price && durationLabel
 
   return (
-    <article className="group grid aspect-square grid-rows-[3fr_1fr] rounded-md border border-line bg-card shadow-sm transition-shadow duration-200 hover:shadow-md motion-reduce:transition-none">
+    <article className="group bg-card overflow-hidden rounded-lg p-2 shadow-sm transition-shadow duration-200 hover:shadow-md motion-reduce:transition-none">
       <Link
         aria-label={`View ${product.title}`}
-        className="focus-visible:outline-green-700 relative block overflow-hidden rounded-t-md focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-green-700 bg-green-50 relative block aspect-square overflow-hidden rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
         href={productHref(product.slug)}
       >
-        <div className="bg-green-50 relative h-full">
-          {image?.url ? (
-            <Media
-              alt={image.alt?.trim() || product.title}
-              fill
-              imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
-              resource={image}
-              size="(min-width: 64rem) 20vw, (min-width: 40rem) 42vw, 82vw"
-            />
-          ) : (
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
-              fill
-              sizes="(min-width: 64rem) 20vw, (min-width: 40rem) 42vw, 82vw"
-              src={PRODUCT_PLACEHOLDER}
-            />
-          )}
-          <div
-            aria-hidden="true"
-            className="from-green-900/95 via-green-900/60 absolute inset-0 bg-linear-to-t to-transparent"
+        {image?.url ? (
+          <Media
+            alt={image.alt?.trim() || product.title}
+            fill
+            imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            resource={image}
+            size="(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 45vw"
           />
-          <div className="absolute inset-x-0 bottom-0 p-3">
-            <h3 className="text-body text-cream truncate font-semibold">{product.title}</h3>
-            {price ? (
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <p className="text-body text-cream font-bold">{price}</p>
-                {compareAtPrice !== null ? (
-                  <del className="text-cream/80 text-sm">{formatPaise(compareAtPrice)}</del>
-                ) : null}
+        ) : (
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            fill
+            sizes="(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 45vw"
+            src={PRODUCT_PLACEHOLDER}
+          />
+        )}
+      </Link>
+
+      <div className="flex flex-col px-2 pt-3 pb-0">
+        <h3 className="text-body text-ink-900 line-clamp-2 font-semibold leading-snug">
+          {product.title}
+        </h3>
+
+        {isOneTime && product.packSize ? (
+          <span className="rounded-pill bg-green-50 text-green-800 mt-2 inline-flex self-start px-2.5 py-1 text-xs font-medium">
+            {product.packSize}
+          </span>
+        ) : null}
+
+        {price ? (
+          <div className="mt-1">
+            <p className="text-body text-gold-600 font-bold">{price}</p>
+            {compareAtPrice !== null ? (
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <del className="text-ink-600 text-xs">{formatPaise(compareAtPrice)}</del>
                 {discount >= 1 ? (
-                  <span className="rounded-pill bg-gold-400 text-green-900 px-2 py-1 text-xs font-bold">
+                  <span className="rounded-pill bg-gold-100 text-green-900 px-2.5 py-1 text-xs font-bold">
                     {discount}% OFF
                   </span>
-                ) : null}
-                {isOneTime && product.packSize ? (
-                  <p className="text-cream ml-auto text-sm font-medium uppercase whitespace-nowrap">
-                    {product.packSize}
-                  </p>
                 ) : null}
               </div>
             ) : null}
           </div>
-        </div>
-      </Link>
+        ) : null}
 
-      <div className="min-h-0 px-3 py-2">
         {canAdd ? (
-          <BestSellerAddButton
-            durationLabel={durationLabel}
-            oneTime={isOneTime}
-            productSlug={product.slug}
-            productTitle={product.title}
-          />
+          <div className="mt-3">
+            <BestSellerAddButton
+              durationLabel={durationLabel}
+              oneTime={isOneTime}
+              productSlug={product.slug}
+              productTitle={product.title}
+            />
+          </div>
         ) : null}
       </div>
     </article>
@@ -125,12 +126,11 @@ export const BestSellers: React.FC = async () => {
 
       {products.length > 0 ? (
         <ul
-          aria-label="Featured products"
-          className="mt-8 grid auto-cols-[min(82vw,22rem)] grid-flow-col snap-x snap-mandatory justify-center gap-4 overflow-x-auto overscroll-x-contain pb-4 focus-visible:outline-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 sm:auto-cols-[min(42vw,22rem)] lg:auto-cols-[min(22vw,20rem)]"
-          tabIndex={0}
+          aria-label="Best sellers"
+          className="mt-8 grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-5"
         >
           {products.map((product) => (
-            <li className="h-full snap-start" key={product.id}>
+            <li key={product.id}>
               <BestSellerCard product={product} />
             </li>
           ))}

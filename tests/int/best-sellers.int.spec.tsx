@@ -31,7 +31,7 @@ const renderBestSellers = async (products: Product[]) => {
 }
 
 describe('the homepage Best sellers shelf', () => {
-  it('renders featured products in a labeled, keyboard-reachable list', async () => {
+  it('renders featured products in a labeled responsive grid', async () => {
     const product = {
       available: true,
       featured: true,
@@ -44,9 +44,14 @@ describe('the homepage Best sellers shelf', () => {
 
     await renderBestSellers([product])
 
-    const rail = screen.getByRole('list', { name: 'Featured products' })
-    expect(rail.getAttribute('tabindex')).toBe('0')
-    expect(screen.getByRole('link', { name: 'View Brown rice' })).toBeTruthy()
+    const grid = screen.getByRole('list', { name: 'Best sellers' })
+    expect(grid.className).toContain('grid-cols-2')
+    expect(grid.className).toContain('lg:grid-cols-5')
+    expect(screen.getByRole('link', { name: 'View Brown rice' }).className).toContain(
+      'aspect-square',
+    )
+    expect(screen.getByRole('heading', { name: 'Brown rice' }).className).not.toContain('min-h-')
+    expect(screen.getByText('₹50').className).toContain('text-gold-600')
   })
 
   it('shows a one-time product’s pack size, old price, discount, and cart form', async () => {
@@ -70,12 +75,23 @@ describe('the homepage Best sellers shelf', () => {
     expect(screen.getByText('32% OFF')).toBeTruthy()
 
     const button = screen.getByRole('button', { name: 'Add Chana masala to cart' })
+    expect(button.textContent).toContain('Add to cart')
     const form = button.closest('form')
 
     expect(form?.getAttribute('action')).toBe('/api/cart/add')
     expect(form?.querySelector('input[name="product"]')?.getAttribute('value')).toBe('chana-masala')
     expect(form?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('one-time')
     expect(form?.querySelector('input[name="return"]')?.getAttribute('value')).toBe('/')
+
+    const buyButton = screen.getByRole('button', { name: 'Buy Chana masala now' })
+    const buyForm = buyButton.closest('form')
+    expect(buyForm?.getAttribute('action')).toBe('/api/cart/add')
+    expect(buyForm?.querySelector('input[name="product"]')?.getAttribute('value')).toBe(
+      'chana-masala',
+    )
+    expect(buyForm?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('one-time')
+    expect(buyForm?.querySelector('input[name="return"]')?.getAttribute('value')).toBe('/checkout')
+    expect(buyForm?.querySelector('input[name="buyNow"]')?.getAttribute('value')).toBe('true')
   })
 
   it('keeps plan cards on their lead price and first duration', async () => {
