@@ -25,6 +25,16 @@ afterEach(() => {
 })
 
 describe('homepage subcategory tiles', () => {
+  it('centers the section heading without the product shelf action', async () => {
+    getSubcategories.mockResolvedValue([])
+
+    render(await ProductShelf({}))
+
+    const heading = screen.getByRole('heading', { name: 'Browse our current selection' })
+    expect(heading.className).toContain('text-center')
+    expect(screen.queryByRole('link', { name: 'See every product' })).toBeNull()
+  })
+
   it('omits the intro and available-meal count', async () => {
     getSubcategories.mockResolvedValue([
       { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
@@ -36,7 +46,7 @@ describe('homepage subcategory tiles', () => {
     expect(screen.queryByText('1 meal type currently available.')).toBeNull()
   })
 
-  it('renders a square icon card in a keyboard-scrollable row', async () => {
+  it('renders five compact mobile columns that wrap without horizontal scrolling', async () => {
     getSubcategories.mockResolvedValue([
       { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
     ])
@@ -44,13 +54,18 @@ describe('homepage subcategory tiles', () => {
     render(await ProductShelf({}))
 
     const list = screen.getByRole('list', { name: 'Meal subcategories' })
-    expect(list.getAttribute('tabindex')).toBe('0')
-    expect(list.className).toContain('overflow-x-auto')
+    expect(list.className).toContain('grid-cols-5')
+    expect(list.className).toContain('sm:flex-wrap')
+    expect(list.className).not.toContain('overflow-x-auto')
+    expect(list.getAttribute('tabindex')).toBeNull()
 
     const link = screen.getByRole('link', { name: 'Browse Greens products' })
-    expect(link.className).toContain('size-40')
+    expect(link.className).toContain('min-h-16')
+    expect(link.className).toContain('sm:size-40')
+    expect(link.className).toContain('rounded-2xl')
     expect(link.className).toContain('border-gold-300')
-    expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-12')
+    expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-6')
+    expect(link.querySelector('h3')?.className).toContain('wrap-anywhere')
     expect(link.querySelector('img')).toBeNull()
   })
 

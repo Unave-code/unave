@@ -27,6 +27,18 @@ afterEach(() => {
 })
 
 describe('homepage photo gallery', () => {
+  it('balances the hero heading and omits the offer note', async () => {
+    getCachedGlobal.mockReturnValue(getHero)
+    getHero.mockResolvedValue(null)
+
+    render(await Gallery({}))
+
+    expect(
+      screen.getByRole('heading', { name: 'Good food, cooked in our own kitchen.' }).className,
+    ).toContain('text-balance')
+    expect(screen.queryByText('The 20% offer depends on portion size and product type.')).toBeNull()
+  })
+
   it('uses the configured photo and links it to the saved destination', async () => {
     getCachedGlobal.mockReturnValue(getHero)
     getHero.mockResolvedValue({

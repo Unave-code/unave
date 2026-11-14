@@ -151,6 +151,7 @@ Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) ar
 - Hero headlines can emphasize one phrase in gold (e.g. "planned for your *whole month*").
 - Keep line length 45 to 75 characters.
 - Hierarchy is weight-led: never make a heading outrank another by size — use weight (700 vs 600) or colour. The home hero's display line is the single exception, sized above every page heading on purpose.
+- Section headings use a short two-tone green and gold underline aligned to the heading, centered when the heading is centered.
 
 ---
 
@@ -216,7 +217,7 @@ Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) ar
 
 ### 6.3 Hero
 
-The home hero is the image slider (§10.1). Up to five images live in the *Home hero* global (admin, **Home page → Home hero**); banner alt text comes from each Media record. The same global manages the three photos below the slider, with an optional site-path or HTTP(S) destination per image. The visible heading and offer conditions follow the photo gallery as HTML, not only as text baked into the banner. Do not invent eligible products or portion sizes. Saving the global revalidates both sections. If no image is configured, the built-in kitchen photograph keeps the home page from opening on a blank space.
+The home hero is the image slider (§10.1). Up to five images live in the *Home hero* global (admin, **Home page → Home hero**); banner alt text comes from each Media record. The same global manages the three photos below the slider, with an optional site-path or HTTP(S) destination per image. The visible heading follows the photo gallery as HTML, not only as text baked into the banner. Do not invent eligible products or portion sizes in banner artwork. Saving the global revalidates both sections. If no image is configured, the built-in kitchen photograph keeps the home page from opening on a blank space.
 
 - A rounded, constrained image banner sits on a white section below the navbar. The contact action sits at the start of the category section, before its heading.
 - The white section has 2rem of top space after the deep green navbar; the image panel is inset from the page edges.
@@ -435,8 +436,8 @@ Added 2026-11-11. `/products` and the three category pages render one shared she
 ### 10.1 Home
 
 1. Hero image slider (§6.3): up to five wide banner images edited in the admin under Home page → Home hero; it uses the built-in kitchen photograph when no images have been uploaded
-2. Three food photographs (§6.18): editable in Home page → Home hero → Images below the slider, with an optional destination link per photo; a three-column grid, two columns on tablet and stacked on mobile, followed by the visible heading and offer conditions as HTML
-3. Browse our current selection: the **See every product** action sits beside the heading. Live subcategories appear as 160px square cards in a horizontally scrollable, keyboard-focusable row; each card uses a green line icon and a centered gold serif label. Only categories present in the Subcategories collection appear. The intro and available-meal count are omitted. Cream, so the page keeps its cream and white rhythm.
+2. Three food photographs (§6.18): editable in Home page → Home hero → Images below the slider, with an optional destination link per photo; a three-column grid, two columns on tablet and stacked on mobile, followed by the visible heading as HTML
+3. Browse our current selection: a centered heading above live subcategories shown in a five-column compact grid on mobile; from 640px, 160px square cards wrap in a centered flex grid with no horizontal scrolling. Each card uses a green line icon and a centered gold serif label. Only categories present in the Subcategories collection appear. The intro and available-meal count are omitted. Cream, so the page keeps its cream and white rhythm.
 4. Best sellers: up to fifteen available products marked **Featured** in the admin, newest first. The section sits on the tint band with the standard section spacing and a responsive grid: five columns on desktop (three rows at the maximum), three on tablet and two on mobile. It never fills gaps with unfeatured products. Each white card has a soft green shadow and inset rounded square photo; the title uses its natural height and the current price follows closely in `--gold-600`, with any old price and discount beside it. A filled green **Add to cart** button with a 44px target, shopping-bag icon and inline confirmation is followed by a bordered **Buy now** button. Buy now adds through the same validated cart endpoint and redirects to checkout; the checkout guard carries signed-out visitors through sign-in without losing the basket. The empty confirmation line stays visually hidden so Buy now has only the card's 8px bottom inset beneath it. No star rating is shown because product records have no rating data. One-time products may show a pack size and, when the old price exceeds the current price, the old price and a discount percentage rounded down from paise; omit the badge below 1%. Meal plans keep their per-day lead price and show neither old price nor pack size. If nothing is featured and available, the section stays visible with a *See every product* link instead.
 5. What customers say: show only real, approved and attributed quotes; omit the section while none are available.
 6. Common questions (5 FAQs)

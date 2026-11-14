@@ -539,6 +539,32 @@ body:has(.hero-carousel) .site-header:not([data-scrolled='true']) {
   transform: scaleX(1);
 }
 
+/* Section titles use a short brand underline. Align it with the title, or center
+   it when the heading is centered (design.md §4). */
+main section h2.text-h2 {
+  text-wrap: balance;
+}
+
+main section h2.text-h2::after {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 0.25rem;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--green-700) 0 70%, var(--gold-400) 70% 100%);
+}
+
+main section.text-center h2.text-h2::after,
+main section .text-center h2.text-h2::after,
+main section h2.text-h2.text-center::after {
+  margin-inline: auto;
+}
+
+main section.bg-green-700 h2.text-h2::after {
+  background: linear-gradient(90deg, var(--gold-400) 0 70%, var(--cream) 70% 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .header-link::after {
     transition: none;
