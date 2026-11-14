@@ -41,7 +41,7 @@ export const Hero: GlobalConfig = {
   },
   admin: {
     description: 'Manage the home page slider and the three linked photos shown beneath it.',
-    group: 'Home page',
+    group: 'Website',
   },
   fields: [
     {

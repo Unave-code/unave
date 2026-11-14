@@ -25,7 +25,7 @@ export const Enquiries: CollectionConfig = {
   admin: {
     defaultColumns: ['name', 'email', 'phone', 'handled', 'createdAt'],
     description: 'Messages from the contact form. One row per message, newest last.',
-    group: 'Customers',
+    group: 'Orders',
     useAsTitle: 'email',
   },
   endpoints: [enquiryEndpoint],

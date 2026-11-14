@@ -101,6 +101,8 @@ for (const route of auditRoutes) {
           const r = el.getBoundingClientRect()
           const s = getComputedStyle(el)
           if (r.width === 0 || r.height === 0 || s.visibility === 'hidden') return false
+          // A pseudo-element grows this hit area past its painted box.
+          if (el.dataset.hitArea === '44') return false
           // Inline links inside running text are exempt under WCAG 2.5.8.
           if (el.tagName === 'A' && s.display === 'inline' && el.closest('p, li')) return false
           return r.width < 44 || r.height < 44

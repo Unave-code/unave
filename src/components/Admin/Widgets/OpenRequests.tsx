@@ -2,6 +2,8 @@ import { Link } from '@payloadcms/ui/elements/Link'
 import type { WidgetServerProps } from 'payload'
 import React from 'react'
 
+import { DayBars } from './DayBars'
+import { dailySeries } from './series'
 import './widgets.scss'
 
 /**
@@ -11,10 +13,17 @@ import './widgets.scss'
 const OpenRequests = async ({ req }: WidgetServerProps) => {
   const open = { status: { equals: 'new' } }
 
-  const [total, cancellations, pauses] = await Promise.all([
+  const [total, cancellations, pauses, perDay] = await Promise.all([
     req.payload.count({ collection: 'order-requests', where: open }),
-    req.payload.count({ collection: 'order-requests', where: { and: [open, { type: { equals: 'cancel' } }] } }),
-    req.payload.count({ collection: 'order-requests', where: { and: [open, { type: { equals: 'pause' } }] } }),
+    req.payload.count({
+      collection: 'order-requests',
+      where: { and: [open, { type: { equals: 'cancel' } }] },
+    }),
+    req.payload.count({
+      collection: 'order-requests',
+      where: { and: [open, { type: { equals: 'pause' } }] },
+    }),
+    dailySeries({ collection: 'order-requests', dateField: 'createdAt', payload: req.payload }),
   ])
 
   return (
@@ -24,7 +33,11 @@ const OpenRequests = async ({ req }: WidgetServerProps) => {
       <p className="unave-widget__meta">
         {cancellations.totalDocs} cancellations · {pauses.totalDocs} pauses
       </p>
-      <Link className="unave-widget__link" href="/admin/collections/order-requests?where[status][equals]=new">
+      <DayBars noun="Requests received" points={perDay} />
+      <Link
+        className="unave-widget__link"
+        href="/admin/collections/order-requests?where[status][equals]=new"
+      >
         Open requests
       </Link>
     </div>

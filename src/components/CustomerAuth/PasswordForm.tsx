@@ -134,7 +134,7 @@ export const PasswordForm: React.FC<Props> = ({
   return (
     <form
       action={action}
-      className="flex flex-col gap-4 short:gap-2 shorter:gap-1.5"
+      className="flex flex-col gap-5 short:gap-4 shorter:gap-2"
       method="post"
       noValidate
       onBlur={handleBlur}
@@ -183,7 +183,10 @@ export const PasswordForm: React.FC<Props> = ({
 
       {children}
 
-      <button className={cn(CTA_BASE, CTA_VARIANTS.primary, 'mt-2 short:mt-1 w-full')} type="submit">
+      <button
+        className={cn(CTA_BASE, CTA_VARIANTS.primary, 'mt-2 short:mt-1 w-full')}
+        type="submit"
+      >
         {submit}
       </button>
     </form>

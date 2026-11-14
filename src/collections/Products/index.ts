@@ -53,7 +53,7 @@ export const Products: CollectionConfig = {
     ],
     description:
       'The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.',
-    group: 'Store',
+    group: 'Catalogue',
     listSearchableFields: ['title', 'slug'],
     pagination: { defaultLimit: 25 },
     // Opens the product's own page on the site, so a change can be checked

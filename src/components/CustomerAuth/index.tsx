@@ -56,6 +56,12 @@ interface Props {
  * the kitchen needs on every order. The delivery address is not here — it is the
  * account page's onboarding form, asked for right after the account exists.
  */
+/** The two halves of the switch over the card, labelled with each screen's own action. */
+const AUTH_TABS = [
+  { href: '/sign-in', label: CUSTOMER_AUTH_COPY['sign-in'].submit, mode: 'sign-in' },
+  { href: '/sign-up', label: CUSTOMER_AUTH_COPY['sign-up'].submit, mode: 'sign-up' },
+] as const
+
 const SIGN_UP_FIELDS = [
   {
     autoComplete: 'name',
@@ -83,8 +89,37 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
 
   return (
     <AuthShell>
-      <h1 className="text-h2">{copy.title}</h1>
-      <p className="text-body text-ink-600 mt-3 short:mt-2 short:text-sm">{copy.intro}</p>
+      {/* Sign in and sign up are two views of one card: a two-part switch
+          over the heading says which one is open and moves to the other. */}
+      <nav aria-label="Account" className="bg-green-50 grid grid-cols-2 gap-1 rounded-pill p-1">
+        {AUTH_TABS.map((tab) => {
+          const current = tab.mode === mode
+          return (
+            <Link
+              aria-current={current ? 'page' : undefined}
+              className={cn(
+                'focus-visible:ring-green-500 inline-flex min-h-11 items-center justify-center rounded-pill text-sm font-bold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none',
+                current
+                  ? 'bg-white text-green-900 shadow-sm'
+                  : 'text-green-700 hover:bg-white/60 hover:text-green-900',
+              )}
+              href={
+                returnTo && tab.mode === 'sign-in'
+                  ? `${tab.href}?return=${encodeURIComponent(returnTo)}`
+                  : tab.href
+              }
+              key={tab.mode}
+            >
+              {tab.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <h1 className="mt-7 text-[26px] leading-[1.2] font-extrabold tracking-[-0.01em] text-balance text-green-900 short:mt-4">
+        {copy.title}
+      </h1>
+      <p className="text-body text-ink-600 mt-2 short:text-sm">{copy.intro}</p>
 
       {confirmation ? (
         <p className={cn(AUTH_NOTICE, 'mt-6 short:mt-4')} role="status">
@@ -116,7 +151,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
         </form>
       ) : null}
 
-      <div className="my-8 short:my-3">
+      <div className="mt-7 short:mt-3">
         <PasswordForm
           action={mode === 'sign-up' ? '/api/customers/register' : '/api/customers/login'}
           emailField
@@ -145,7 +180,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
 
       {configured ? (
         <>
-          <div className="my-7 flex items-center gap-3 short:my-4">
+          <div className="my-6 flex items-center gap-3 short:my-4">
             <span className="bg-line h-px flex-1" />
             <span className="text-ink-600 text-sm">{CUSTOMER_AUTH_DIVIDER}</span>
             <span className="bg-line h-px flex-1" />
@@ -165,18 +200,13 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
           </Cta>
         </>
       ) : (
-        <p className="text-ink-600 mt-4 text-sm leading-6 short:mt-3">{CUSTOMER_AUTH_UNAVAILABLE}</p>
+        <p className="text-ink-600 mt-4 text-sm leading-6 short:mt-3">
+          {CUSTOMER_AUTH_UNAVAILABLE}
+        </p>
       )}
 
-      <p className="text-ink-600 border-line mt-6 border-t pt-4 text-sm leading-6 short:mt-4 short:pt-3">
+      <p className="text-ink-600 border-line mt-6 border-t pt-5 text-sm leading-6 short:mt-4 short:pt-3">
         {CUSTOMER_AUTH_PRIVACY}
-      </p>
-
-      <p className="text-body text-ink-600 mt-4 short:mt-2">
-        {copy.switchPrompt}{' '}
-        <Link className={AUTH_INLINE_LINK} href={copy.switchHref}>
-          {copy.switchLabel}
-        </Link>
       </p>
     </AuthShell>
   )

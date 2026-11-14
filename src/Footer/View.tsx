@@ -13,7 +13,7 @@ import { cn } from '@/utilities/ui'
 const COLUMN_HEADING = 'text-eyebrow text-gold-600 uppercase'
 
 const LINK_CLASS =
-  'text-green-700 hover:text-gold-600 inline-flex min-h-11 items-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-gold-400 focus-visible:outline-none motion-reduce:transition-none'
+  'text-green-700 hover:text-gold-600 inline-flex min-h-11 min-w-11 items-center rounded-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-gold-400 focus-visible:outline-none motion-reduce:transition-none'
 
 const CONTACT_ICON = 'text-gold-600 size-4 shrink-0'
 
@@ -40,7 +40,9 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
   const totalColumns = columns.length + (hasContact ? 1 : 0)
 
   return (
-    <footer className="bg-green-900 text-green-700 text-body font-semibold relative mt-auto overflow-hidden">
+    // The base colour is the light end of the photograph, so the dark green type
+    // reads the same before the photo paints, on a slow phone, or if it fails.
+    <footer className="bg-cream text-green-700 text-body font-semibold relative mt-auto overflow-hidden">
       <Image
         alt=""
         aria-hidden="true"
@@ -51,6 +53,13 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
         src={FOOTER_BACKGROUND}
       />
 
+      {/* A dark band under the small print, so the cream notice and copyright
+          read on the grass of the photograph and on the bare cream alike. */}
+      <div
+        aria-hidden="true"
+        className="from-green-900/85 pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t to-transparent sm:h-36"
+      />
+
       <Swoosh className="-right-40 -bottom-56 w-[32rem] text-gold-400/[0.035]" />
 
       <div className="container relative">
@@ -58,7 +67,7 @@ export const FooterView: React.FC<{ data: FooterType }> = ({ data }) => {
           <div className="max-w-sm">
             <Link
               aria-label="UNAVE home"
-              className="text-gold-600 [--logo-height:42px] inline-flex"
+              className="text-gold-600 [--logo-height:42px] inline-flex min-h-11 items-center"
               href="/"
             >
               <Logo />

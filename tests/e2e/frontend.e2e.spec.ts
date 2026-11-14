@@ -27,7 +27,7 @@ test.describe('Frontend', () => {
     await expect(page.getByRole('heading', { name: 'Best sellers' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'What customers say' })).toHaveCount(0)
     await expect(page.getByText('[Customer quote goes here]')).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: 'Common questions' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'FAQ' })).toBeVisible()
     await expect(page.getByText(/^\d+ meal types? currently available\.$/)).toBeVisible()
 
     await page.setViewportSize({ width: 1024, height: 900 })
@@ -77,5 +77,19 @@ test.describe('Frontend', () => {
         page.locator('#best-sellers').getByRole('link', { name: 'See every product' }),
       ).toBeVisible()
     }
+  })
+
+  test('the header search finds products on the shelf', async ({ page }) => {
+    await page.goto('http://localhost:3000/')
+    const search = page.getByRole('search').getByRole('searchbox', { name: 'Search products' })
+    await search.fill('podi')
+    await search.press('Enter')
+    await expect(page).toHaveURL(/\/products\?q=podi/)
+    await expect(page.getByRole('heading', { name: 'Sambar Podi' })).toBeVisible()
+  })
+
+  test('the old search address lands on the shelf with its query', async ({ page }) => {
+    await page.goto('http://localhost:3000/search?q=podi')
+    await expect(page).toHaveURL(/\/products\?q=podi/)
   })
 })

@@ -27,7 +27,9 @@ export const ForgotPassword: React.FC<Props> = ({ error, sent }) => {
 
   return (
     <AuthShell>
-      <h1 className="text-h2">{FORGOT_COPY.title}</h1>
+      <h1 className="text-[26px] leading-[1.2] font-extrabold tracking-[-0.01em] text-balance text-green-900">
+        {FORGOT_COPY.title}
+      </h1>
       <p className="text-body text-ink-600 mt-3 short:mt-2 short:text-sm">{FORGOT_COPY.intro}</p>
 
       {confirmation ? (

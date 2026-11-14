@@ -156,14 +156,14 @@ export const STEPS = [
 /** 9. Customer words. Placeholders until real, attributed quotes arrive. */
 export const TESTIMONIALS_HEADING = 'What customers say'
 
-/** 10. Common questions */
-export const FAQ_HEADING = 'Common questions'
+/** 10. FAQ */
+export const FAQ_HEADING = 'FAQ'
 export const FAQ_PHOTO = 'The day’s meals, laid out ready to pack'
 export const FAQ = [
   {
     question: 'How do I order?',
     answer:
-      'Message us on WhatsApp or use the form on the contact page. Tell us what you eat, how often and where you are, and the kitchen comes back to you with a plan.',
+      'Add what you want to your cart and pay at checkout. Prefer to talk first? Message us on WhatsApp and the kitchen will help you choose.',
   },
   {
     question: 'When and where do you deliver?',
@@ -178,7 +178,7 @@ export const FAQ = [
   {
     question: 'Do I need an account?',
     answer:
-      'No. You can browse and order without one. An account is there if you want your details saved and your history in one place.',
+      'Only to pay. You can browse, fill a cart and message us without one; at checkout you sign in with email or Google so your order and delivery details are kept together.',
   },
   {
     question: 'I have allergies or a health condition. Can I order?',

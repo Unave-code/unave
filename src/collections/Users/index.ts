@@ -14,6 +14,7 @@ export const Users: CollectionConfig = {
     update: staffOrSelf,
   },
   admin: {
+    group: 'Settings',
     defaultColumns: ['name', 'email', 'role'],
     useAsTitle: 'name',
   },

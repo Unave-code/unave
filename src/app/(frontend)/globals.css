@@ -811,3 +811,99 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+
+/* The FAQ accordion (src/components/home/Faq.tsx): where the browser can
+   animate a <details> element's content, the answer eases open and closed
+   instead of snapping. Elsewhere it simply opens. Off under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .faq-item {
+    interpolate-size: allow-keywords;
+  }
+
+  .faq-item::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      content-visibility 260ms allow-discrete;
+  }
+
+  .faq-item[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Motion (design.md §9). One authored moment and a handful of small ones,
+   all eased out exponentially and all off under reduced motion.
+   ------------------------------------------------------------------------ */
+
+@keyframes rise-in {
+  from {
+    opacity: 0.35;
+    translate: 0 18px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  60% {
+    opacity: 1;
+    scale: 1.2;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* The add-to-cart confirmation's check. */
+.animate-pop {
+  animation: pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Tiles that respond to the pointer with a small lift. */
+.tile-lift {
+  transition:
+    translate 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tile-lift:hover {
+  translate: 0 -4px;
+  box-shadow: 0 18px 40px -22px rgb(15 46 33 / 0.35);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The authored moment: each section's content rises into place as it
+     scrolls into view, driven by the scroll position itself rather than a
+     timer, so it never replays and never waits. It starts already visible
+     (35% opacity) and is skipped entirely by browsers without scroll-driven
+     animations, so nothing can ever stay hidden. Content already on screen
+     when the page loads is past the range and simply sits in place. */
+  @supports (animation-timeline: view()) {
+    main section > .container > * {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop {
+    animation: none;
+  }
+
+  .tile-lift,
+  .tile-lift:hover {
+    transition: none;
+    translate: none;
+  }
+}

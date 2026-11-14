@@ -223,7 +223,7 @@ export default async function CartPage({
                 </Cta>
 
                 <Link
-                  className="text-green-700 hover:opacity-75 text-sm font-semibold underline transition-opacity focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none"
+                  className="text-green-700 hover:opacity-75 inline-flex min-h-11 items-center text-sm font-semibold underline transition-opacity focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none"
                   href="/products"
                 >
                   {CART_KEEP_BROWSING}

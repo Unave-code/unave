@@ -1,12 +1,13 @@
 'use client'
 
-import { ShoppingBag } from 'lucide-react'
+import { Check, ShoppingBag } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { CART_ADD_CTA, CART_ADDING } from '@/utilities/cartCopy'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
+import { perDayPaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 import { cn } from '@/utilities/ui'
@@ -42,6 +43,8 @@ export type ProductDuration = {
 
 export type ProductPurchaseProps = {
   combo?: boolean
+  /** A one-time product's old price, in paise, shown struck through when higher. */
+  compareAtPrice?: null | number
   /** The plan's durations. Empty by construction on a one-time purchase. */
   durations: ProductDuration[]
   /**
@@ -59,6 +62,7 @@ export type ProductPurchaseProps = {
 
 export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   combo = false,
+  compareAtPrice,
   durations,
   oneTimePrice,
   productSlug,
@@ -73,7 +77,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
   // Hooks run before the early return below, so the panel's shape never
   // changes the hook order between renders.
-  const { message, onSubmit, pending } = useAddToCart(
+  const { added, message, onSubmit, pending } = useAddToCart(
     { duration: isOneTime ? ONE_TIME_DURATION : (duration?.label ?? ''), product: productSlug },
     { oneTime: isOneTime },
   )
@@ -82,7 +86,21 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
     return (
       <div>
         <div aria-live="polite">
-          <p className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">{formatPaise(oneTimePrice)}</p>
+          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[34px] leading-none font-extrabold tracking-[-0.01em] text-green-900 tabular-nums">
+              {formatPaise(oneTimePrice)}
+            </span>
+            {typeof compareAtPrice === 'number' && compareAtPrice > oneTimePrice ? (
+              <>
+                <del className="text-ink-600 text-body tabular-nums">
+                  {formatPaise(compareAtPrice)}
+                </del>
+                <span className="rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900">
+                  {Math.floor(((compareAtPrice - oneTimePrice) / compareAtPrice) * 100)}% OFF
+                </span>
+              </>
+            ) : null}
+          </p>
           <p className="text-ink-600 mt-2 text-sm">
             {combo
               ? 'A fixed price combo. Adding it again raises the quantity, up to ten.'
@@ -101,8 +119,12 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
               disabled={pending}
               type="submit"
             >
-              <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
-              {pending ? CART_ADDING : CART_ADD_CTA}
+              {added ? (
+                <Check aria-hidden="true" className="animate-pop size-4" strokeWidth={2.5} />
+              ) : (
+                <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
+              )}
+              {pending ? CART_ADDING : added ? 'Added' : CART_ADD_CTA}
             </button>
 
             {whatsapp ? (
@@ -128,7 +150,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
   if (!duration) return null
 
-  const perDay = duration.days > 0 ? Math.round(duration.price / duration.days) : null
+  const perDay = duration.days > 0 ? perDayPaise(duration.price, duration.days) : null
 
   return (
     /* The panel is bare: the price, the chips and the control sit directly on
@@ -137,7 +159,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
     <div>
       <div aria-live="polite">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">
+          <span className="text-[34px] leading-none font-extrabold tracking-[-0.01em] text-green-900 tabular-nums">
             {formatPaise(perDay ?? duration.price)}
           </span>
           {perDay !== null ? <span className="text-ink-600 text-sm">a day</span> : null}
@@ -156,32 +178,58 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
         <fieldset className="border-line border-t pt-5">
           <legend className="sr-only">Choose a duration for {productTitle}</legend>
 
-          <div className="flex flex-wrap gap-2">
-            {durations.map((option, index) => (
-              <label className="cursor-pointer" key={`${option.label}-${index}`}>
-                <input
-                  checked={selected === index}
-                  className="peer sr-only"
-                  name="duration"
-                  onChange={() => setSelected(index)}
-                  type="radio"
-                  value={option.label}
-                />
+          {/* Every duration is a full-width row: its name and days on the
+              left, its total and per-day rate on the right, so choosing one
+              is also comparing them. Native radios underneath. */}
+          <div className="flex flex-col gap-2">
+            {durations.map((option, index) => {
+              const optionPerDay = option.days > 0 ? Math.round(option.price / option.days) : null
 
-                <span
-                  className={cn(
-                    'rounded-pill border-line text-green-700 hover:border-green-700 flex min-h-11 items-center gap-2 border bg-white px-4 text-sm font-semibold transition-colors',
-                    'peer-checked:border-gold-400 peer-checked:bg-gold-400 peer-checked:text-green-900',
-                    'peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-[3px]',
-                    'motion-reduce:transition-none',
-                  )}
-                >
-                  {option.label}
+              return (
+                <label className="cursor-pointer" key={`${option.label}-${index}`}>
+                  <input
+                    checked={selected === index}
+                    className="peer sr-only"
+                    name="duration"
+                    onChange={() => setSelected(index)}
+                    type="radio"
+                    value={option.label}
+                  />
 
-                  <span className="opacity-80">{formatPaise(option.price)}</span>
-                </span>
-              </label>
-            ))}
+                  <span
+                    className={cn(
+                      'border-line flex min-h-14 items-center gap-3 rounded-lg border bg-white px-4 py-3 transition-colors',
+                      'hover:border-green-700',
+                      'peer-checked:border-green-700 peer-checked:bg-green-50 peer-checked:shadow-[inset_0_0_0_1px_var(--color-green-700)]',
+                      'peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-[3px]',
+                      'motion-reduce:transition-none',
+                      'peer-checked:[&_.radio-dot]:border-green-700 peer-checked:[&_.radio-dot]:border-[6px]',
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="radio-dot border-ink-600/40 size-5 shrink-0 rounded-full border-2 bg-white transition-[border-width] duration-150 motion-reduce:transition-none"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="text-ink-900 block text-sm font-bold">{option.label}</span>
+                      <span className="text-caption text-ink-600">
+                        {option.days} {option.days === 1 ? 'day' : 'days'} of meals
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block text-sm font-bold text-green-900 tabular-nums">
+                        {formatPaise(option.price)}
+                      </span>
+                      {optionPerDay !== null ? (
+                        <span className="text-caption text-ink-600 tabular-nums">
+                          {formatPaise(optionPerDay)} a day
+                        </span>
+                      ) : null}
+                    </span>
+                  </span>
+                </label>
+              )
+            })}
           </div>
         </fieldset>
 
@@ -191,8 +239,12 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             disabled={pending}
             type="submit"
           >
-            <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
-            {pending ? CART_ADDING : CART_ADD_CTA}
+            {added ? (
+              <Check aria-hidden="true" className="animate-pop size-4" strokeWidth={2.5} />
+            ) : (
+              <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
+            )}
+            {pending ? CART_ADDING : added ? 'Added' : CART_ADD_CTA}
           </button>
 
           {whatsapp ? (

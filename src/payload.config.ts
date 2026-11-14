@@ -43,6 +43,8 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ['@/components/BeforeDashboard'],
+      // A Dashboard row at the top of the sidebar, above the groups.
+      beforeNavLinks: ['@/components/Admin/DashboardNavLink'],
       graphics: {
         Icon: '@/components/AdminIcon',
         Logo: '@/components/AdminLogo',
@@ -64,8 +66,8 @@ export default buildConfig({
       Component: '@/components/Admin/UserMenu',
     },
     /**
-     * The modular dashboard (experimental upstream): three desk widgets above
-     * the collection cards, so the day's numbers are the first thing staff
+     * The modular dashboard (experimental upstream): three desk widgets with
+     * 14-day mini charts, a full-width sales trend, then the collection cards, so the day's numbers are the first thing staff
      * see. Users can rearrange their own dashboard; defaultLayout is only the
      * first-visit arrangement.
      */
@@ -74,6 +76,7 @@ export default buildConfig({
         { widgetSlug: 'unave-orders-today', width: 'small' },
         { widgetSlug: 'unave-open-requests', width: 'small' },
         { widgetSlug: 'unave-enquiries', width: 'small' },
+        { widgetSlug: 'unave-sales-trend', width: 'full' },
         { widgetSlug: 'collections', width: 'full' },
       ],
       widgets: [
@@ -94,6 +97,12 @@ export default buildConfig({
           maxWidth: 'medium',
           minWidth: 'x-small',
           slug: 'unave-enquiries',
+        },
+        {
+          Component: '@/components/Admin/Widgets/SalesTrend',
+          maxWidth: 'full',
+          minWidth: 'medium',
+          slug: 'unave-sales-trend',
         },
       ],
     },
@@ -152,21 +161,26 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
+  /**
+   * The order here is the sidebar's order: Payload draws each nav group where
+   * its first member appears. Orders (the day's desk) first, then Catalogue,
+   * Website, and Settings last — four groups instead of the old nine.
+   */
   collections: [
-    Pages,
-    Posts,
-    Media,
-    Categories,
-    CheckoutIntents,
-    LegacyComboAuditLogs,
-    Users,
-    Customers,
-    Enquiries,
-    EmailLog,
     Orders,
     OrderRequests,
+    Enquiries,
+    Customers,
     Products,
     Subcategories,
+    Media,
+    Pages,
+    Posts,
+    Categories,
+    Users,
+    EmailLog,
+    CheckoutIntents,
+    LegacyComboAuditLogs,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   email: unaveEmailAdapter,

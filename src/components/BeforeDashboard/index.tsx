@@ -22,18 +22,16 @@ const BeforeDashboard: React.FC = () => {
   return (
     <div className={baseClass}>
       <PaymentModeNotice />
-      <p className={`${baseClass}__eyebrow`}>UNAVE</p>
-      <h2 className={`${baseClass}__title`}>The kitchen desk</h2>
-      <p className={`${baseClass}__lede`}>
-        Orders, messages and the catalogue — everything the counter needs, in one place.
-      </p>
-      <nav className={`${baseClass}__desks`}>
-        {DESKS.map((desk) => (
-          <Link className={`${baseClass}__desk`} href={desk.href} key={desk.href}>
-            {desk.label}
-          </Link>
-        ))}
-      </nav>
+      <div className={`${baseClass}__row`}>
+        <h2 className={`${baseClass}__title`}>The kitchen desk</h2>
+        <nav aria-label="Desks" className={`${baseClass}__desks`}>
+          {DESKS.map((desk) => (
+            <Link className={`${baseClass}__desk`} href={desk.href} key={desk.href}>
+              {desk.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
     </div>
   )
 }

@@ -8,7 +8,7 @@
 
 /** 52px normally, 44px on a short screen — still the minimum target size. */
 export const AUTH_INPUT =
-  'border-line text-ink-900 placeholder:text-ink-400 focus:border-green-700 focus-visible:ring-green-500 h-13 short:h-11 w-full rounded-sm border bg-white text-base transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none'
+  'border-line text-ink-900 placeholder:text-ink-400 focus:border-green-700 focus-visible:ring-green-500 h-13 short:h-11 w-full rounded-sm border bg-white hover:border-ink-400 text-base transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none'
 
 /** Room for the leading glyph, so it never sits under the text. */
 export const AUTH_INPUT_LEADING = 'pr-4 pl-12'
@@ -27,9 +27,7 @@ export const AUTH_INLINE_LINK =
   'text-green-700 font-semibold underline underline-offset-4 hover:opacity-75 transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none'
 
 /** The quiet green confirmations: registered, resent, verified. */
-export const AUTH_NOTICE =
-  'text-green-800 bg-green-50 border-green-500 rounded-sm border-l-4 p-4 text-sm leading-6'
+export const AUTH_NOTICE = 'text-green-800 bg-green-50 rounded-sm p-4 text-sm leading-6'
 
 /** Failures. A muted red, not the warning gold: nothing here is a medical note. */
-export const AUTH_PROBLEM =
-  'text-error bg-error/10 border-error rounded-sm border-l-4 p-4 text-sm leading-6'
+export const AUTH_PROBLEM = 'text-error bg-error/10 rounded-sm p-4 text-sm leading-6'

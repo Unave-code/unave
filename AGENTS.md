@@ -24,7 +24,7 @@ Hard constraints from it that override defaults:
 
 ## Site chrome
 
-The navbar and footer are Payload globals, not code: edit them in the admin under **Site chrome** (`/admin/globals/header`, `/admin/globals/footer`). The header owns the menu links, the announcement strip and the WhatsApp button; the footer owns the tagline, link columns, contact details, disclaimer and copyright. `src/Header/*` and `src/Footer/*` only render what the CMS returns, so changing copy never means touching a component.
+The navbar and footer are Payload globals, not code: edit them in the admin under **Website** (the sidebar group formerly called Site chrome) (`/admin/globals/header`, `/admin/globals/footer`). The header owns the menu links, the announcement strip and the WhatsApp button; the footer owns the tagline, link columns, contact details, disclaimer and copyright. `src/Header/*` and `src/Footer/*` only render what the CMS returns, so changing copy never means touching a component.
 
 ## Admin panel
 

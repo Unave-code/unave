@@ -44,7 +44,8 @@ export const PasswordField: React.FC<Props> = ({
   const [visible, setVisible] = useState(false)
 
   const describedBy =
-    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') || undefined
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
+    undefined
 
   return (
     <div className="flex flex-col gap-2">

@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react'
+import { Mail, Phone, User } from 'lucide-react'
 import React from 'react'
 
 import { cn } from '@/utilities/ui'
@@ -27,8 +27,9 @@ export interface TextFieldProps {
 
 /**
  * A plain text input in the auth screens' style — the name, phone and address
- * fields of the sign-up card. No leading icon, because only the email field has
- * one, and everything else reads as the same quiet column of labelled inputs.
+ * fields. A name or phone field carries a leading glyph like the email and
+ * password fields do, so the sign-up card reads as one set; address lines stay
+ * plain.
  */
 export const AuthTextField: React.FC<TextFieldProps> = ({
   autoComplete,
@@ -42,24 +43,39 @@ export const AuthTextField: React.FC<TextFieldProps> = ({
   type = 'text',
 }) => {
   const describedBy =
-    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') || undefined
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
+    undefined
+
+  const Icon = type === 'tel' ? Phone : autoComplete === 'name' ? User : null
 
   return (
     <div className="flex flex-col gap-2">
       <label className={AUTH_LABEL} htmlFor={id}>
         {label}
       </label>
-      <input
-        aria-describedby={describedBy}
-        aria-invalid={error ? true : undefined}
-        autoComplete={autoComplete}
-        className={cn(AUTH_INPUT, error && AUTH_INPUT_INVALID)}
-        id={id}
-        inputMode={inputMode}
-        name={name}
-        required={required}
-        type={type}
-      />
+      <div className="relative">
+        {Icon ? (
+          <Icon
+            aria-hidden="true"
+            className="text-ink-400 pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
+          />
+        ) : null}
+        <input
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          autoComplete={autoComplete}
+          className={cn(
+            AUTH_INPUT,
+            Icon ? AUTH_INPUT_LEADING : 'px-4',
+            error && AUTH_INPUT_INVALID,
+          )}
+          id={id}
+          inputMode={inputMode}
+          name={name}
+          required={required}
+          type={type}
+        />
+      </div>
       {hint ? (
         <p className="text-ink-600 text-sm leading-6" id={`${id}-hint`}>
           {hint}
@@ -103,7 +119,8 @@ export const AuthField: React.FC<Props> = ({
   type = 'email',
 }) => {
   const describedBy =
-    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') || undefined
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
+    undefined
 
   return (
     <div className="flex flex-col gap-2">

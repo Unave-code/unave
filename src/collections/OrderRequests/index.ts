@@ -50,7 +50,7 @@ export const OrderRequests: CollectionConfig = {
     defaultColumns: ['order', 'type', 'status', 'customer', 'createdAt'],
     description:
       'Pause and cancellation requests from customers. One row per ask; mark it handled once the kitchen has replied.',
-    group: 'Store',
+    group: 'Orders',
     useAsTitle: 'id',
   },
   fields: [

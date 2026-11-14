@@ -104,7 +104,9 @@ describe('a product page', () => {
   it('links back to the shelf and on to the product category', () => {
     render(<ProductDetail product={openProduct} />)
 
-    expect(screen.getByRole('link', { name: 'All products' }).getAttribute('href')).toBe('/products')
+    expect(screen.getByRole('link', { name: 'All products' }).getAttribute('href')).toBe(
+      '/products',
+    )
     expect(
       screen.getByRole('link', { name: 'Browse Ready to cook products' }).getAttribute('href'),
     ).toBe('/products/ready-to-cook')
@@ -130,9 +132,7 @@ describe('a product page', () => {
     // The description trails the buy panel: the price control precedes it.
     const description = screen.getByTestId('rich-text')
     const add = screen.getByRole('button', { name: 'Add to cart' })
-    expect(
-      add.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    expect(add.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     expect(screen.getByRole('heading', { name: 'More from the kitchen' })).toBeTruthy()
     expect(screen.getAllByTestId('related-card')).toHaveLength(2)
@@ -163,11 +163,7 @@ describe('a product page', () => {
   })
 
   it('shows a paused combo in full, with nothing to add', () => {
-    render(
-      <ProductDetail
-        product={{ ...comboProduct, available: false } as unknown as Product}
-      />,
-    )
+    render(<ProductDetail product={{ ...comboProduct, available: false } as unknown as Product} />)
 
     expect(screen.getByText('Paused')).toBeTruthy()
     // The price leads the middle column and the buy box.

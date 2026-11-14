@@ -72,7 +72,7 @@ Ubuntu 24.04, 4 CPUs, 8 GB RAM:
 4. Razorpay dashboard: set the webhook to
    `https://unave.in/api/razorpay/webhook` with `payment.captured`, auto
    capture on.
-5. Visit `/admin`, create the first staff account, then fill in **Site chrome**
+5. Visit `/admin`, create the first staff account, then fill in **Website → Header / Footer**
    (header, footer, contact email) and **Email settings**. The contact email in
    the footer is also the inbox every kitchen notice goes to.
 

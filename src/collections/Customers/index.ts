@@ -58,7 +58,7 @@ export const Customers: CollectionConfig = {
     defaultColumns: ['name', 'email', '_verified'],
     description:
       'People who signed in with Google or signed up with an email address. Created by signing in, never by hand.',
-    group: 'Customers',
+    group: 'Orders',
     useAsTitle: 'email',
   },
   auth: {

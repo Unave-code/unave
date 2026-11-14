@@ -5,164 +5,174 @@ import React from 'react'
 import { Media } from '@/components/Media'
 import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
+import { isProductSellable } from '@/utilities/combos'
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
-import { isProductSellable } from '@/utilities/combos'
-import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
+import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 
-import { AddToCartButton } from './AddToCartButton'
+import { ProductCardActions } from './ProductCardActions'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
 const PHOTO_PILL =
-  'rounded-pill inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide uppercase shadow-sm ring-1 backdrop-blur-sm'
+  'rounded-pill inline-flex items-center px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase shadow-sm'
 
 /**
- * One product on a shelf (design.md §6.15).
+ * One product, anywhere the site lists products (design.md §6.15): the home
+ * page's best sellers, every shelf, and the related row under a product page.
  *
- * Photo-first and almost chromeless: the photo fills the whole card, the name
- * and the cheapest per-day rate sit on a gradient band along its bottom edge,
- * and the audience — or a pause — rides as a pill on the photo. The card is
- * one stretched link, so every pixel of photo and band opens the product's own
- * page, where the durations and totals live. The band is a pass-through
- * surface: its text lets clicks fall through to the link beneath, and only the
- * buy control opts out of that.
+ * A white card with a square photo on a soft green frame, the name, the price
+ * it leads with, and the two buy controls pinned to the foot so a row of cards
+ * keeps its buttons on one line. The price is the flat price for a one-time
+ * product or a combo, or the cheapest per-day rate for a meal plan; a one-time
+ * product on offer also shows the old price struck through and the saving.
+ * The audience, a combo's item count and a pause ride as small pills on the
+ * photo. A paused product keeps its price readable and has nothing to add.
  *
- * That buy control is one gold pill adding the kitchen's default duration — the
- * first one on the record, or the reserved one-time line for a one-time
- * purchase, whose lead is the flat price instead of a per-day rate — revealed
- * on hover or focus on a fine pointer
- * (`.card-reveal`) and simply visible on touch, so a resting shelf stays quiet
- * without ever hiding the way to buy. A paused product renders with no control
- * and a gold Paused pill; its lead price stays readable.
- *
- * Prices come straight from the product record, never from the browser, and are
- * formatted in the one place money is ever formatted. The photo falls back to a
- * branded placeholder so a card is never a blank box, and every photo shares
- * one 4:3 ratio so a shelf keeps its rhythm.
+ * The photo and the name both open the product's own page; only the name is a
+ * tab stop, so a keyboard visits each card once before its buttons.
  */
 export const ProductCard: React.FC<{
   product: Product
-  /** Where a plain form post returns to, so the shelf the shopper came from stays put. */
+  /** Where a plain (no JavaScript) add to cart returns to. */
   returnPath?: string
-}> = ({ product, returnPath = '/products' }) => {
-  const durations = (product.durations ?? []).map((duration) => ({
-    days: Number(duration.days),
-    label: duration.label,
-    price: Number(duration.price),
-  }))
-  const first = durations[0]
-
-  // A one-time purchase sells one item at one price: its lead is the flat
-  // price, not a per-day rate, and its cart line carries the reserved duration.
+  /** The `sizes` hint for the photo; the default suits a five-up row. */
+  sizes?: string
+}> = ({
+  product,
+  returnPath = '/products',
+  sizes = '(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 45vw',
+}) => {
+  const image = product.image && typeof product.image === 'object' ? product.image : null
+  const href = productHref(product.slug)
   const isOneTime = product.type === 'one-time'
   const isCombo = product.type === 'combo'
-  const isFlatPrice = isOneTime || isCombo
   const isAvailable = isProductSellable(product)
-  const oneTimePrice = Number(product.price)
 
-  /* The lead price is the cheapest per-day rate across the durations, floored
-     to whole rupees: "From ₹59 a day" leads a shopper to the running cost
-     without promising more precision than it carries, and the exact totals sit
-     on the product's own page. The stored `fromPrice` is that same number,
-     worked out once on save, and it is what the shelf sorts and filters on; the
-     fallback keeps a card honest if a row somehow carries no stored value. */
+  /* A one-time product and a combo both sell at one flat price, added through
+     the reserved one-time line; only a meal plan leads with a rate a day. */
+  const isFlatPrice = isOneTime || isCombo
+  const flatPrice =
+    isFlatPrice && typeof product.price === 'number' && Number.isFinite(product.price)
+      ? product.price
+      : null
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
   const perDay = isFlatPrice ? null : (storedLead ?? leadPricePaise(product))
-  const planPriceLine =
-    perDay !== null
-      ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
-      : undefined
-  const priceLine = isFlatPrice
-    ? oneTimePrice >= 1
-      ? formatPaise(oneTimePrice)
-      : undefined
-    : planPriceLine
+  const price =
+    flatPrice !== null && flatPrice >= 1
+      ? formatPaise(flatPrice)
+      : perDay !== null
+        ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
+        : undefined
+  const compareAtPrice =
+    isOneTime &&
+    flatPrice !== null &&
+    typeof product.compareAtPrice === 'number' &&
+    product.compareAtPrice > flatPrice
+      ? product.compareAtPrice
+      : null
+  const discount =
+    compareAtPrice !== null && flatPrice !== null
+      ? Math.floor(((compareAtPrice - flatPrice) / compareAtPrice) * 100)
+      : 0
+  const durationLabel = isFlatPrice ? ONE_TIME_DURATION : product.durations?.[0]?.label
+  const canAdd = isAvailable && price && durationLabel
 
-  const image = product.image && typeof product.image === 'object' ? product.image : null
-  const imageAlt = image?.alt?.trim() || product.title
+  const hasPills = Boolean(product.audience) || isCombo || !isAvailable
 
   return (
-    <article className="group bg-green-50 relative isolate aspect-[4/3] overflow-hidden rounded-lg has-[:focus-visible]:ring-green-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-[3px]">
-      {image?.url ? (
-        <Media
-          alt={imageAlt}
-          fill
-          imgClassName="object-cover transition duration-300 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          resource={image}
-          size="(max-width: 768px) 100vw, 33vw"
-        />
-      ) : (
-        <Image
-          alt=""
-          aria-hidden="true"
-          className="object-cover transition duration-300 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          src={PRODUCT_PLACEHOLDER}
-        />
-      )}
-
-      {product.audience || isCombo || !isAvailable ? (
-        <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-wrap gap-2">
-          {isCombo ? (
-            <span className={`${PHOTO_PILL} bg-gold-100 text-green-900 ring-gold-300/70`}>
-              Combo · {product.components?.length ?? 0} items
-            </span>
-          ) : null}
-
-          {product.audience ? (
-            <span className={`${PHOTO_PILL} bg-green-900/70 text-cream ring-cream/25`}>
-              {AUDIENCE_LABEL[product.audience]}
-            </span>
-          ) : null}
-
-          {!isAvailable ? (
-            <span className={`${PHOTO_PILL} bg-gold-400 text-green-900 ring-gold-300/70`}>
-              Paused
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* The gradient band carries the name and the lead price. It lets clicks
-          fall through to the stretched link below, so even the words open the
-          product's own page. */}
-      <div className="from-green-900/95 via-green-900/50 pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t px-4 pt-16 pb-4 to-transparent sm:px-5 sm:pb-5">
-        <h3 className="text-h3 text-cream text-balance">{product.title}</h3>
-
-        {isAvailable && isFlatPrice ? (
-          <AddToCartButton
-            durationLabel={ONE_TIME_DURATION}
-            oneTime
-            priceLine={priceLine}
-            productSlug={product.slug}
-            returnPath={returnPath}
+    <article className="group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-[box-shadow,translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+      <Link
+        aria-hidden="true"
+        className="relative block aspect-square overflow-hidden rounded-md bg-green-50"
+        href={href}
+        tabIndex={-1}
+      >
+        {image?.url ? (
+          <Media
+            alt=""
+            fill
+            imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            resource={image}
+            size={sizes}
           />
-        ) : isAvailable && first ? (
-          <AddToCartButton
-            durationLabel={first.label}
-            priceLine={priceLine}
-            productSlug={product.slug}
-            returnPath={returnPath}
+        ) : (
+          <Image
+            alt=""
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            data-testid="product-image-placeholder"
+            fill
+            sizes={sizes}
+            src={PRODUCT_PLACEHOLDER}
           />
-        ) : priceLine ? (
-          <p className="text-cream/90 mt-1.5 min-h-5 text-sm font-bold tracking-tight">
-            {priceLine}
-          </p>
+        )}
+
+        {hasPills ? (
+          <span className="absolute top-2 left-2 flex flex-wrap gap-1.5">
+            {!isAvailable ? (
+              <span className={`${PHOTO_PILL} bg-gold-400 text-green-900`}>Paused</span>
+            ) : null}
+            {isCombo ? (
+              <span className={`${PHOTO_PILL} bg-gold-100 text-green-900`}>
+                Combo · {product.components?.length ?? 0} items
+              </span>
+            ) : null}
+            {product.audience ? (
+              <span className={`${PHOTO_PILL} text-cream bg-green-900/75 backdrop-blur-sm`}>
+                {AUDIENCE_LABEL[product.audience]}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
+      </Link>
+
+      <div className="flex flex-1 flex-col px-2 pt-3 pb-1">
+        <h3 className="text-body text-ink-900 line-clamp-2 leading-snug font-semibold">
+          <Link
+            className="rounded-sm underline-offset-4 hover:text-green-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+            href={href}
+          >
+            {product.title}
+          </Link>
+        </h3>
+
+        {isOneTime && product.packSize ? (
+          <span className="rounded-pill mt-2 inline-flex self-start bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800">
+            {product.packSize}
+          </span>
+        ) : null}
+
+        {price ? (
+          <div className="mt-1">
+            <p className="text-body font-bold text-green-700 tabular-nums">{price}</p>
+            {compareAtPrice !== null ? (
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <del className="text-ink-600 text-xs tabular-nums">
+                  {formatPaise(compareAtPrice)}
+                </del>
+                {discount >= 1 ? (
+                  <span className="rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900">
+                    {discount}% OFF
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {canAdd ? (
+          <div className="mt-auto pt-3">
+            <ProductCardActions
+              durationLabel={durationLabel}
+              oneTime={isFlatPrice}
+              productSlug={product.slug}
+              productTitle={product.title}
+              returnPath={returnPath}
+            />
+          </div>
         ) : null}
       </div>
-
-      {/* The door: one link stretched over the whole photo, named by the title
-          it leads to. It sits beneath the band and the pills in paint order,
-          so their words stay readable and their clicks stay its own. */}
-      <Link
-        className="focus-visible:outline-none absolute inset-0 z-0"
-        href={productHref(product.slug)}
-      >
-        <span className="sr-only">{product.title}</span>
-      </Link>
     </article>
   )
 }

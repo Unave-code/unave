@@ -36,3 +36,53 @@
     padding-top: base(0.5);
   }
 }
+
+/**
+ * Daily bars inside a widget (`DayBars`). One hue from Payload's success
+ * scale; earlier days sit a step back so today reads first. The hit areas are
+ * transparent and full height so the tooltip opens anywhere in the column.
+ */
+.unave-daybars {
+  margin: base(0.5) 0 0;
+
+  &__svg {
+    display: block;
+    overflow: visible;
+  }
+
+  &__baseline {
+    stroke: var(--theme-elevation-150);
+    stroke-width: 1;
+  }
+
+  &__hit {
+    fill: transparent;
+  }
+
+  &__bar {
+    fill: var(--theme-success-500);
+    opacity: 0.55;
+
+    &--today {
+      opacity: 1;
+    }
+  }
+
+  &__day:hover &__bar {
+    opacity: 1;
+  }
+
+  &__dates {
+    color: var(--theme-elevation-400);
+    display: flex;
+    font-size: 11px;
+    justify-content: space-between;
+    margin-top: base(0.25);
+  }
+}
+
+@media (forced-colors: active) {
+  .unave-daybars__bar {
+    fill: CanvasText;
+  }
+}

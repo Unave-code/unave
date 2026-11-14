@@ -63,25 +63,25 @@ export type SupportedTimezones =
 
 export interface Config {
   auth: {
-    users: UserAuthOperations;
     customers: CustomerAuthOperations;
+    users: UserAuthOperations;
   };
   blocks: {};
   collections: {
-    pages: Page;
-    posts: Post;
-    media: Media;
-    categories: Category;
-    'checkout-intents': CheckoutIntent;
-    'combo-audit-logs': ComboAuditLog;
-    users: User;
-    customers: Customer;
-    enquiries: Enquiry;
-    'email-log': EmailLog;
     orders: Order;
     'order-requests': OrderRequest;
+    enquiries: Enquiry;
+    customers: Customer;
     products: Product;
     subcategories: Subcategory;
+    media: Media;
+    pages: Page;
+    posts: Post;
+    categories: Category;
+    users: User;
+    'email-log': EmailLog;
+    'checkout-intents': CheckoutIntent;
+    'combo-audit-logs': ComboAuditLog;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -99,20 +99,20 @@ export interface Config {
     };
   };
   collectionsSelect: {
-    pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    'checkout-intents': CheckoutIntentsSelect<false> | CheckoutIntentsSelect<true>;
-    'combo-audit-logs': ComboAuditLogsSelect<false> | ComboAuditLogsSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    customers: CustomersSelect<false> | CustomersSelect<true>;
-    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
-    'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'order-requests': OrderRequestsSelect<false> | OrderRequestsSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
+    'checkout-intents': CheckoutIntentsSelect<false> | CheckoutIntentsSelect<true>;
+    'combo-audit-logs': ComboAuditLogsSelect<false> | ComboAuditLogsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -149,9 +149,10 @@ export interface Config {
     'unave-orders-today': UnaveOrdersTodayWidget;
     'unave-open-requests': UnaveOpenRequestsWidget;
     'unave-enquiries': UnaveEnquiriesWidget;
+    'unave-sales-trend': UnaveSalesTrendWidget;
     collections: CollectionsWidget;
   };
-  user: User | Customer;
+  user: Customer | User;
   jobs: {
     tasks: {
       cleanupCheckoutIntents: TaskCleanupCheckoutIntents;
@@ -163,24 +164,6 @@ export interface Config {
       };
     };
     workflows: unknown;
-  };
-}
-export interface UserAuthOperations {
-  forgotPassword: {
-    email: string;
-    password: string;
-  };
-  login: {
-    email: string;
-    password: string;
-  };
-  registerFirstUser: {
-    email: string;
-    password: string;
-  };
-  unlock: {
-    email: string;
-    password: string;
   };
 }
 export interface CustomerAuthOperations {
@@ -201,84 +184,163 @@ export interface CustomerAuthOperations {
     password: string;
   };
 }
+export interface UserAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
 /**
+ * One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages".
+ * via the `definition` "orders".
  */
-export interface Page {
+export interface Order {
   id: number;
-  title: string;
-  hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
-    richText?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    links?:
+  customer: number | Customer;
+  /**
+   * What was bought, copied from the product at purchase time. Product edits never change these rows.
+   */
+  items: {
+    product?: (number | null) | Product;
+    productTitle?: string | null;
+    durationLabel?: string | null;
+    days?: number | null;
+    /**
+     * How many of the product the line holds. A meal plan line is one; a one-time purchase can be up to ten.
+     */
+    qty?: number | null;
+    unitPrice?: number | null;
+    /**
+     * The combo contents copied at purchase time.
+     */
+    components?:
       | {
-          link: {
-            type?: ('reference' | 'custom') | null;
-            newTab?: boolean | null;
-            reference?:
-              | ({
-                  relationTo: 'pages';
-                  value: number | Page;
-                } | null)
-              | ({
-                  relationTo: 'posts';
-                  value: number | Post;
-                } | null);
-            url?: string | null;
-            label: string;
-            /**
-             * Choose how the link should be rendered.
-             */
-            appearance?: ('default' | 'outline') | null;
-          };
+          product?: (number | null) | Product;
+          productTitle: string;
+          durationLabel?: string | null;
+          days?: number | null;
           id?: string | null;
         }[]
       | null;
-    media?: (number | null) | Media;
-  };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
+    id?: string | null;
+  }[];
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * Where to deliver, as the customer entered it at checkout.
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  delivery?: {
+    name?: string | null;
+    phone?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    pincode?: string | null;
+    foodPreference?: string | null;
+    note?: string | null;
+  };
+  subtotal?: number | null;
+  total?: number | null;
+  gatewayOrderId?: string | null;
+  gatewayPaymentId?: string | null;
+  gatewaySignature?: string | null;
+  paidAt?: string | null;
+  /**
+   * When deliveries begin. The kitchen sets this, nobody else.
+   */
+  startsOn?: string | null;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
+ * People who signed in with Google or signed up with an email address. Created by signing in, never by hand.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
+ * via the `definition` "customers".
  */
-export interface Post {
+export interface Customer {
+  id: number;
+  name?: string | null;
+  /**
+   * Saved by the customer on their account page, and used when the kitchen is in touch.
+   */
+  phone?: string | null;
+  /**
+   * Saved by the customer on their account page, and used when the kitchen is in touch.
+   */
+  address?: {
+    line1?: string | null;
+    line2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    pincode?: string | null;
+  };
+  /**
+   * Optional. What the customer prefers to eat, so the kitchen knows.
+   */
+  foodPreference?: ('none' | 'vegetarian' | 'vegan' | 'eggetarian' | 'non-vegetarian') | null;
+  /**
+   * Whether a password is set, so a Google-only account can be told from one that also signs in with email. Maintained by sign-in; never edited by hand.
+   */
+  hasPassword?: boolean | null;
+  picture?: string | null;
+  /**
+   * The Google account id. Set by sign-in and never edited by hand.
+   */
+  googleId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
+}
+/**
+ * The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
   id: number;
   title: string;
-  heroImage?: (number | null) | Media;
-  content: {
+  /**
+   * A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.
+   */
+  type: 'plan' | 'one-time' | 'combo';
+  /**
+   * The photo on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
+   */
+  image?: (number | null) | Media;
+  description?: {
     root: {
       type: string;
       children: {
@@ -292,33 +354,90 @@ export interface Post {
       version: number;
     };
     [k: string]: unknown;
-  };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  authors?: (number | User)[] | null;
-  populatedAuthors?:
+  } | null;
+  /**
+   * Up to five short lines shown on the product page under What you get, and matched by the shop search. For example "Delivered in an insulated tiffin".
+   */
+  points?:
     | {
+        point: string;
         id?: string | null;
-        name?: string | null;
       }[]
     | null;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
    */
-  generateSlug?: boolean | null;
+  durations?:
+    | {
+        /**
+         * Shown on the product card and at checkout, for example "One week".
+         */
+        label: string;
+        days: number;
+        /**
+         * What the customer pays for this duration, in rupees. 499 means ₹499.
+         */
+        price: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The fixed price for one item or combo, in rupees. You can enter up to two decimal places.
+   */
+  price?: number | null;
+  /**
+   * Optional reference price for a one-time product. It must be higher than the current price.
+   */
+  compareAtPrice?: number | null;
+  /**
+   * Optional display text for a one-time product, for example 260 g.
+   */
+  packSize?: string | null;
+  /**
+   * Choose two to ten different products. A meal plan needs one of its current durations.
+   */
+  components?:
+    | {
+        product?: (number | null) | Product;
+        productTitleSnapshot?: string | null;
+        durationDaysSnapshot?: number | null;
+        /**
+         * Choose a current duration when the selected product is a meal plan.
+         */
+        durationLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * How the meal reaches the customer. Shown as a label on the product card.
+   */
+  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
+  /**
+   * The finer label inside the category, for example "Breakfast". Only options of the chosen category are offered, and the category pages filter by them.
+   */
+  subcategory?: (number | null) | Subcategory;
+  /**
+   * Who the product is for. Shown as a label on the product card, next to the category.
+   */
+  audience: 'kids' | 'adults' | 'special';
+  /**
+   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
+   */
   slug: string;
+  /**
+   * Off means the product shows a paused label and cannot be bought.
+   */
+  available?: boolean | null;
+  /**
+   * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
+   */
+  featured?: boolean | null;
+  /**
+   * Worked out on every save: the cheapest rate a day for a plan, or the price of a one-time product or combo. The shelf sorts and filters by it.
+   */
+  fromPrice?: number | null;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -438,6 +557,193 @@ export interface FolderInterface {
   folderType?: 'media'[] | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories".
+ */
+export interface Subcategory {
+  id: number;
+  /**
+   * The filter label, for example "Breakfast" or "Tiffin".
+   */
+  title: string;
+  /**
+   * Generated from the title when empty. Entered values are normalized.
+   */
+  slug: string;
+  /**
+   * Which shelf this option belongs to. A product can only pick options from its own category.
+   */
+  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
+  /**
+   * Optional image for this subcategory.
+   */
+  image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Pause and cancellation requests from customers. One row per ask; mark it handled once the kitchen has replied.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-requests".
+ */
+export interface OrderRequest {
+  id: number;
+  customer: number | Customer;
+  order: number | Order;
+  type: 'cancel' | 'pause';
+  pauseFrom?: string | null;
+  pauseTo?: string | null;
+  reason?: string | null;
+  status?: ('new' | 'handled') | null;
+  /**
+   * What the kitchen did about it. Never shown to the customer.
+   */
+  staffNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Messages from the contact form. One row per message, newest last.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  /**
+   * Tick when somebody has replied to this person.
+   */
+  handled?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  hero: {
+    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    richText?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    links?:
+      | {
+          link: {
+            type?: ('reference' | 'custom') | null;
+            newTab?: boolean | null;
+            reference?:
+              | ({
+                  relationTo: 'pages';
+                  value: number | Page;
+                } | null)
+              | ({
+                  relationTo: 'posts';
+                  value: number | Post;
+                } | null);
+            url?: string | null;
+            label: string;
+            /**
+             * Choose how the link should be rendered.
+             */
+            appearance?: ('default' | 'outline') | null;
+          };
+          id?: string | null;
+        }[]
+      | null;
+    media?: (number | null) | Media;
+  };
+  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  heroImage?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  relatedPosts?: (number | Post)[] | null;
+  categories?: (number | Category)[] | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  authors?: (number | User)[] | null;
+  populatedAuthors?:
+    | {
+        id?: string | null;
+        name?: string | null;
+      }[]
+    | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -828,6 +1134,39 @@ export interface Form {
   createdAt: string;
 }
 /**
+ * Every mail attempt, written by the mail module and read only. Rows are pruned after 90 days.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-log".
+ */
+export interface EmailLog {
+  id: number;
+  /**
+   * The full address. Admins only, staff see the masked version.
+   */
+  recipient: string;
+  /**
+   * First character, three asterisks, then the domain.
+   */
+  recipientMasked: string;
+  recipientName?: string | null;
+  templateKey: 'customerAuth' | 'order' | 'system';
+  subject: string;
+  status: 'sent' | 'failed' | 'skipped';
+  transport: 'zeptomail' | 'smtp' | 'none';
+  fallbackUsed?: boolean | null;
+  providerMessageId?: string | null;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  /**
+   * Set for a test send from the admin panel.
+   */
+  triggeredBy?: (number | null) | User;
+  sentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "checkout-intents".
  */
@@ -872,207 +1211,6 @@ export interface CheckoutIntent {
   createdAt: string;
 }
 /**
- * People who signed in with Google or signed up with an email address. Created by signing in, never by hand.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customers".
- */
-export interface Customer {
-  id: number;
-  name?: string | null;
-  /**
-   * Saved by the customer on their account page, and used when the kitchen is in touch.
-   */
-  phone?: string | null;
-  /**
-   * Saved by the customer on their account page, and used when the kitchen is in touch.
-   */
-  address?: {
-    line1?: string | null;
-    line2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    pincode?: string | null;
-  };
-  /**
-   * Optional. What the customer prefers to eat, so the kitchen knows.
-   */
-  foodPreference?: ('none' | 'vegetarian' | 'vegan' | 'eggetarian' | 'non-vegetarian') | null;
-  /**
-   * Whether a password is set, so a Google-only account can be told from one that also signs in with email. Maintained by sign-in; never edited by hand.
-   */
-  hasPassword?: boolean | null;
-  picture?: string | null;
-  /**
-   * The Google account id. Set by sign-in and never edited by hand.
-   */
-  googleId?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'customers';
-}
-/**
- * The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "products".
- */
-export interface Product {
-  id: number;
-  title: string;
-  /**
-   * A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.
-   */
-  type: 'plan' | 'one-time' | 'combo';
-  /**
-   * The photo on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
-   */
-  image?: (number | null) | Media;
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Up to five short lines shown on the product page under What you get, and matched by the shop search. For example "Delivered in an insulated tiffin".
-   */
-  points?:
-    | {
-        point: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
-   */
-  durations?:
-    | {
-        /**
-         * Shown on the product card and at checkout, for example "One week".
-         */
-        label: string;
-        days: number;
-        /**
-         * What the customer pays for this duration, in rupees. 499 means ₹499.
-         */
-        price: number;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * The fixed price for one item or combo, in rupees. You can enter up to two decimal places.
-   */
-  price?: number | null;
-  /**
-   * Optional reference price for a one-time product. It must be higher than the current price.
-   */
-  compareAtPrice?: number | null;
-  /**
-   * Optional display text for a one-time product, for example 260 g.
-   */
-  packSize?: string | null;
-  /**
-   * Choose two to ten different products. A meal plan needs one of its current durations.
-   */
-  components?:
-    | {
-        product?: (number | null) | Product;
-        productTitleSnapshot?: string | null;
-        durationDaysSnapshot?: number | null;
-        /**
-         * Choose a current duration when the selected product is a meal plan.
-         */
-        durationLabel?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * How the meal reaches the customer. Shown as a label on the product card.
-   */
-  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
-  /**
-   * The finer label inside the category, for example "Breakfast". Only options of the chosen category are offered, and the category pages filter by them.
-   */
-  subcategory?: (number | null) | Subcategory;
-  /**
-   * Who the product is for. Shown as a label on the product card, next to the category.
-   */
-  audience: 'kids' | 'adults' | 'special';
-  /**
-   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
-   */
-  slug: string;
-  /**
-   * Off means the product shows a paused label and cannot be bought.
-   */
-  available?: boolean | null;
-  /**
-   * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
-   */
-  featured?: boolean | null;
-  /**
-   * Worked out on every save: the cheapest rate a day for a plan, or the price of a one-time product or combo. The shelf sorts and filters by it.
-   */
-  fromPrice?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "subcategories".
- */
-export interface Subcategory {
-  id: number;
-  /**
-   * The filter label, for example "Breakfast" or "Tiffin".
-   */
-  title: string;
-  /**
-   * Generated from the title when empty. Entered values are normalized.
-   */
-  slug: string;
-  /**
-   * Which shelf this option belongs to. A product can only pick options from its own category.
-   */
-  category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
-  /**
-   * Optional image for this subcategory.
-   */
-  image?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "combo-audit-logs".
  */
@@ -1099,143 +1237,6 @@ export interface ComboAuditLog {
     | number
     | boolean
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Messages from the contact form. One row per message, newest last.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "enquiries".
- */
-export interface Enquiry {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  message: string;
-  /**
-   * Tick when somebody has replied to this person.
-   */
-  handled?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Every mail attempt, written by the mail module and read only. Rows are pruned after 90 days.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-log".
- */
-export interface EmailLog {
-  id: number;
-  /**
-   * The full address. Admins only, staff see the masked version.
-   */
-  recipient: string;
-  /**
-   * First character, three asterisks, then the domain.
-   */
-  recipientMasked: string;
-  recipientName?: string | null;
-  templateKey: 'customerAuth' | 'order' | 'system';
-  subject: string;
-  status: 'sent' | 'failed' | 'skipped';
-  transport: 'zeptomail' | 'smtp' | 'none';
-  fallbackUsed?: boolean | null;
-  providerMessageId?: string | null;
-  errorCode?: string | null;
-  errorMessage?: string | null;
-  /**
-   * Set for a test send from the admin panel.
-   */
-  triggeredBy?: (number | null) | User;
-  sentAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  customer: number | Customer;
-  /**
-   * What was bought, copied from the product at purchase time. Product edits never change these rows.
-   */
-  items: {
-    product?: (number | null) | Product;
-    productTitle?: string | null;
-    durationLabel?: string | null;
-    days?: number | null;
-    /**
-     * How many of the product the line holds. A meal plan line is one; a one-time purchase can be up to ten.
-     */
-    qty?: number | null;
-    unitPrice?: number | null;
-    /**
-     * The combo contents copied at purchase time.
-     */
-    components?:
-      | {
-          product?: (number | null) | Product;
-          productTitle: string;
-          durationLabel?: string | null;
-          days?: number | null;
-          id?: string | null;
-        }[]
-      | null;
-    id?: string | null;
-  }[];
-  /**
-   * Where to deliver, as the customer entered it at checkout.
-   */
-  delivery?: {
-    name?: string | null;
-    phone?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    pincode?: string | null;
-    foodPreference?: string | null;
-    note?: string | null;
-  };
-  subtotal?: number | null;
-  total?: number | null;
-  gatewayOrderId?: string | null;
-  gatewayPaymentId?: string | null;
-  gatewaySignature?: string | null;
-  paidAt?: string | null;
-  /**
-   * When deliveries begin. The kitchen sets this, nobody else.
-   */
-  startsOn?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Pause and cancellation requests from customers. One row per ask; mark it handled once the kitchen has replied.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "order-requests".
- */
-export interface OrderRequest {
-  id: number;
-  customer: number | Customer;
-  order: number | Order;
-  type: 'cancel' | 'pause';
-  pauseFrom?: string | null;
-  pauseTo?: string | null;
-  reason?: string | null;
-  status?: ('new' | 'handled') | null;
-  /**
-   * What the kitchen did about it. Never shown to the customer.
-   */
-  staffNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1439,46 +1440,6 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'pages';
-        value: number | Page;
-      } | null)
-    | ({
-        relationTo: 'posts';
-        value: number | Post;
-      } | null)
-    | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
-    | ({
-        relationTo: 'categories';
-        value: number | Category;
-      } | null)
-    | ({
-        relationTo: 'checkout-intents';
-        value: number | CheckoutIntent;
-      } | null)
-    | ({
-        relationTo: 'combo-audit-logs';
-        value: number | ComboAuditLog;
-      } | null)
-    | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
-        relationTo: 'customers';
-        value: number | Customer;
-      } | null)
-    | ({
-        relationTo: 'enquiries';
-        value: number | Enquiry;
-      } | null)
-    | ({
-        relationTo: 'email-log';
-        value: number | EmailLog;
-      } | null)
-    | ({
         relationTo: 'orders';
         value: number | Order;
       } | null)
@@ -1487,12 +1448,52 @@ export interface PayloadLockedDocument {
         value: number | OrderRequest;
       } | null)
     | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
         relationTo: 'products';
         value: number | Product;
       } | null)
     | ({
         relationTo: 'subcategories';
         value: number | Subcategory;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'email-log';
+        value: number | EmailLog;
+      } | null)
+    | ({
+        relationTo: 'checkout-intents';
+        value: number | CheckoutIntent;
+      } | null)
+    | ({
+        relationTo: 'combo-audit-logs';
+        value: number | ComboAuditLog;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1517,12 +1518,12 @@ export interface PayloadLockedDocument {
   globalSlug?: string | null;
   user:
     | {
-        relationTo: 'users';
-        value: number | User;
-      }
-    | {
         relationTo: 'customers';
         value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
       };
   updatedAt: string;
   createdAt: string;
@@ -1535,12 +1536,12 @@ export interface PayloadPreference {
   id: number;
   user:
     | {
-        relationTo: 'users';
-        value: number | User;
-      }
-    | {
         relationTo: 'customers';
         value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
       };
   key?: string | null;
   value?:
@@ -1565,6 +1566,275 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  customer?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        productTitle?: T;
+        durationLabel?: T;
+        days?: T;
+        qty?: T;
+        unitPrice?: T;
+        components?:
+          | T
+          | {
+              product?: T;
+              productTitle?: T;
+              durationLabel?: T;
+              days?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  delivery?:
+    | T
+    | {
+        name?: T;
+        phone?: T;
+        addressLine1?: T;
+        addressLine2?: T;
+        city?: T;
+        state?: T;
+        pincode?: T;
+        foodPreference?: T;
+        note?: T;
+      };
+  subtotal?: T;
+  total?: T;
+  gatewayOrderId?: T;
+  gatewayPaymentId?: T;
+  gatewaySignature?: T;
+  paidAt?: T;
+  startsOn?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-requests_select".
+ */
+export interface OrderRequestsSelect<T extends boolean = true> {
+  customer?: T;
+  order?: T;
+  type?: T;
+  pauseFrom?: T;
+  pauseTo?: T;
+  reason?: T;
+  status?: T;
+  staffNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  message?: T;
+  handled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  address?:
+    | T
+    | {
+        line1?: T;
+        line2?: T;
+        city?: T;
+        state?: T;
+        pincode?: T;
+      };
+  foodPreference?: T;
+  hasPassword?: T;
+  picture?: T;
+  googleId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  _verified?: T;
+  _verificationToken?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  title?: T;
+  type?: T;
+  image?: T;
+  description?: T;
+  points?:
+    | T
+    | {
+        point?: T;
+        id?: T;
+      };
+  durations?:
+    | T
+    | {
+        label?: T;
+        days?: T;
+        price?: T;
+        id?: T;
+      };
+  price?: T;
+  compareAtPrice?: T;
+  packSize?: T;
+  components?:
+    | T
+    | {
+        product?: T;
+        productTitleSnapshot?: T;
+        durationDaysSnapshot?: T;
+        durationLabel?: T;
+        id?: T;
+      };
+  category?: T;
+  subcategory?: T;
+  audience?: T;
+  slug?: T;
+  available?: T;
+  featured?: T;
+  fromPrice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories_select".
+ */
+export interface SubcategoriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  image?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  caption?: T;
+  folder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        square?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        small?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        medium?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        xlarge?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1734,100 +2004,6 @@ export interface PostsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  caption?: T;
-  folder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
-  sizes?:
-    | T
-    | {
-        thumbnail?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        square?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        small?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        medium?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        large?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        xlarge?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        og?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
@@ -1843,6 +2019,52 @@ export interface CategoriesSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-log_select".
+ */
+export interface EmailLogSelect<T extends boolean = true> {
+  recipient?: T;
+  recipientMasked?: T;
+  recipientName?: T;
+  templateKey?: T;
+  subject?: T;
+  status?: T;
+  transport?: T;
+  fallbackUsed?: T;
+  providerMessageId?: T;
+  errorCode?: T;
+  errorMessage?: T;
+  triggeredBy?: T;
+  sentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1903,227 +2125,6 @@ export interface ComboAuditLogsSelect<T extends boolean = true> {
   combo?: T;
   before?: T;
   after?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  role?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customers_select".
- */
-export interface CustomersSelect<T extends boolean = true> {
-  name?: T;
-  phone?: T;
-  address?:
-    | T
-    | {
-        line1?: T;
-        line2?: T;
-        city?: T;
-        state?: T;
-        pincode?: T;
-      };
-  foodPreference?: T;
-  hasPassword?: T;
-  picture?: T;
-  googleId?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  _verified?: T;
-  _verificationToken?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "enquiries_select".
- */
-export interface EnquiriesSelect<T extends boolean = true> {
-  name?: T;
-  email?: T;
-  phone?: T;
-  message?: T;
-  handled?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-log_select".
- */
-export interface EmailLogSelect<T extends boolean = true> {
-  recipient?: T;
-  recipientMasked?: T;
-  recipientName?: T;
-  templateKey?: T;
-  subject?: T;
-  status?: T;
-  transport?: T;
-  fallbackUsed?: T;
-  providerMessageId?: T;
-  errorCode?: T;
-  errorMessage?: T;
-  triggeredBy?: T;
-  sentAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders_select".
- */
-export interface OrdersSelect<T extends boolean = true> {
-  customer?: T;
-  items?:
-    | T
-    | {
-        product?: T;
-        productTitle?: T;
-        durationLabel?: T;
-        days?: T;
-        qty?: T;
-        unitPrice?: T;
-        components?:
-          | T
-          | {
-              product?: T;
-              productTitle?: T;
-              durationLabel?: T;
-              days?: T;
-              id?: T;
-            };
-        id?: T;
-      };
-  delivery?:
-    | T
-    | {
-        name?: T;
-        phone?: T;
-        addressLine1?: T;
-        addressLine2?: T;
-        city?: T;
-        state?: T;
-        pincode?: T;
-        foodPreference?: T;
-        note?: T;
-      };
-  subtotal?: T;
-  total?: T;
-  gatewayOrderId?: T;
-  gatewayPaymentId?: T;
-  gatewaySignature?: T;
-  paidAt?: T;
-  startsOn?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "order-requests_select".
- */
-export interface OrderRequestsSelect<T extends boolean = true> {
-  customer?: T;
-  order?: T;
-  type?: T;
-  pauseFrom?: T;
-  pauseTo?: T;
-  reason?: T;
-  status?: T;
-  staffNote?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "products_select".
- */
-export interface ProductsSelect<T extends boolean = true> {
-  title?: T;
-  type?: T;
-  image?: T;
-  description?: T;
-  points?:
-    | T
-    | {
-        point?: T;
-        id?: T;
-      };
-  durations?:
-    | T
-    | {
-        label?: T;
-        days?: T;
-        price?: T;
-        id?: T;
-      };
-  price?: T;
-  compareAtPrice?: T;
-  packSize?: T;
-  components?:
-    | T
-    | {
-        product?: T;
-        productTitleSnapshot?: T;
-        durationDaysSnapshot?: T;
-        durationLabel?: T;
-        id?: T;
-      };
-  category?: T;
-  subcategory?: T;
-  audience?: T;
-  slug?: T;
-  available?: T;
-  featured?: T;
-  fromPrice?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "subcategories_select".
- */
-export interface SubcategoriesSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  category?: T;
-  image?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2594,7 +2595,7 @@ export interface Hero {
   createdAt?: string | null;
 }
 /**
- * Written and video testimonials shown on the home page above Common questions. The section is hidden while the list is empty.
+ * Written and video testimonials shown on the home page above the FAQ. The section is hidden while the list is empty.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "testimonials".
@@ -2892,6 +2893,16 @@ export interface UnaveEnquiriesWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "unave-sales-trend_widget".
+ */
+export interface UnaveSalesTrendWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -2936,12 +2947,12 @@ export interface TaskSchedulePublish {
     global?: string | null;
     user?:
       | ({
-          relationTo: 'users';
-          value: number | User;
-        } | null)
-      | ({
           relationTo: 'customers';
           value: number | Customer;
+        } | null)
+      | ({
+          relationTo: 'users';
+          value: number | User;
         } | null);
   };
   output?: unknown;

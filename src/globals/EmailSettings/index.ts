@@ -18,7 +18,7 @@ export const EmailSettings: GlobalConfig = {
   admin: {
     description:
       'Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.',
-    group: 'Email',
+    group: 'Settings',
   },
   fields: [
     {

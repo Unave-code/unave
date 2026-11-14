@@ -27,7 +27,7 @@ export const Subcategories: CollectionConfig = {
     defaultColumns: ['title', 'slug', 'category', 'updatedAt'],
     description:
       'Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.',
-    group: 'Store',
+    group: 'Catalogue',
     useAsTitle: 'title',
   },
   fields: [

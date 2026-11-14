@@ -16,7 +16,7 @@ export const Footer: GlobalConfig = {
   },
   admin: {
     description: 'The closing band on every page: tagline, link columns, contact, disclaimer.',
-    group: 'Site chrome',
+    group: 'Website',
   },
   fields: [
     {
@@ -45,7 +45,7 @@ export const Footer: GlobalConfig = {
           links: [
             { link: { type: 'custom', url: '/about', label: 'About us' } },
             { link: { type: 'custom', url: '/#how-it-works', label: 'How it works' } },
-            { link: { type: 'custom', url: '/#faq', label: 'Common questions' } },
+            { link: { type: 'custom', url: '/#faq', label: 'FAQ' } },
           ],
         },
         {

@@ -311,7 +311,7 @@ export const seed = async ({
             links: [
               { link: { type: 'custom', label: 'Products', url: '/products' } },
               { link: { type: 'custom', label: 'How it works', url: '/#how-it-works' } },
-              { link: { type: 'custom', label: 'Common questions', url: '/#faq' } },
+              { link: { type: 'custom', label: 'FAQ', url: '/#faq' } },
               {
                 link: {
                   type: 'reference',

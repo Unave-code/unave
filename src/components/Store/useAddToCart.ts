@@ -1,13 +1,8 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 
-import {
-  CART_ADDED,
-  CART_ADD_FAILED,
-  CART_ALREADY_IN,
-  CART_FULL,
-} from '@/utilities/cartCopy'
+import { CART_ADDED, CART_ADD_FAILED, CART_ALREADY_IN, CART_FULL } from '@/utilities/cartCopy'
 import {
   CART_EVENT,
   CART_MAX_LINES,
@@ -36,6 +31,17 @@ import {
  */
 export const useAddToCart = (line: CartLineIdentity, options?: { oneTime?: boolean }) => {
   const [message, setMessage] = useState<null | string>(null)
+  /* True for a moment after a line lands, so a button can confirm it with a
+     check before going back to its resting label. */
+  const [added, setAdded] = useState(false)
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current)
+    },
+    [],
+  )
   const [pending, setPending] = useState(false)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -83,6 +89,9 @@ export const useAddToCart = (line: CartLineIdentity, options?: { oneTime?: boole
 
       window.dispatchEvent(new Event(CART_EVENT))
       setMessage(CART_ADDED)
+      setAdded(true)
+      if (addedTimer.current) clearTimeout(addedTimer.current)
+      addedTimer.current = setTimeout(() => setAdded(false), 1800)
     } catch {
       setMessage(CART_ADD_FAILED)
     } finally {
@@ -90,5 +99,5 @@ export const useAddToCart = (line: CartLineIdentity, options?: { oneTime?: boole
     }
   }
 
-  return { message, onSubmit, pending }
+  return { added, message, onSubmit, pending }
 }

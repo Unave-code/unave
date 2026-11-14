@@ -19,6 +19,9 @@ import { HeaderNav } from './Nav'
 import { CartNavLink } from './Nav/CartNavLink'
 import { AnnouncementBar } from './AnnouncementBar'
 
+/** The header search box: one name for its label and placeholder (audit S3). */
+const HEADER_SEARCH_LABEL = 'Search products'
+
 interface HeaderClientProps {
   data: HeaderType
 }
@@ -40,6 +43,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const navItems = data?.navItems || []
   /* The cart is core commerce, not editorial. When staff add a `/cart` link in
@@ -135,6 +139,20 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     }
   }, [])
 
+  /* "/" jumps to the search field from anywhere on the page, unless the visitor
+     is already typing somewhere. */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
+      event.preventDefault()
+      searchRef.current?.focus()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   /* Following a link closes the drawer. Same-page links do not change the pathname,
      so the click itself is the signal. */
   const closeMenu = () => {
@@ -213,10 +231,14 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           ref={barRef}
           {...(theme ? { 'data-theme': theme } : {})}
         >
-          <div className="container grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-3 xl:flex xl:justify-between xl:gap-6">
+          {/* Phone: logo and actions, search on its own row below. From md the
+              search moves up between them; from xl the menu joins the row and
+              the search takes the space left between the menu and the actions,
+              up to a comfortable width, so nothing floats in a gap. */}
+          <div className="container grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-6 xl:flex xl:gap-6">
             <Link
               aria-label="UNAVE home"
-              className="text-primary col-start-1 row-start-1 shrink-0 xl:order-1"
+              className="text-primary col-start-1 row-start-1 inline-flex min-h-11 shrink-0 items-center xl:order-1"
               href="/"
             >
               <Logo />
@@ -226,16 +248,38 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
               <HeaderNav items={menuItems} />
             </nav>
 
-            <Link
-              aria-label="Search meals and plans"
-              className="text-primary border-current/25 hover:bg-current/10 col-span-2 row-start-2 inline-flex h-11 min-w-0 items-center gap-3 rounded-pill border px-4 transition-colors focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none xl:order-3 xl:col-auto xl:row-auto xl:w-48 xl:shrink-0 2xl:w-56"
-              href="/search"
+            {/* A real GET form onto the products shelf, which already searches
+                titles and points, so it works with JavaScript off too. */}
+            <form
+              action="/products"
+              className="group/search text-primary border-current/20 bg-current/[0.06] hover:border-current/40 focus-within:border-current/50 focus-within:ring-current/30 col-span-2 row-start-2 flex h-11 w-full min-w-0 items-center gap-2.5 rounded-pill border pr-2 pl-4 transition-colors focus-within:ring-[3px] motion-reduce:transition-none md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-md md:justify-self-center xl:order-3 xl:ml-auto xl:max-w-[18rem] xl:flex-1 2xl:max-w-xs"
+              method="get"
+              role="search"
             >
-              <Search aria-hidden="true" className="size-5 shrink-0" strokeWidth={2} />
-              <span className="text-caption truncate">Search meals and plans</span>
-            </Link>
+              <Search
+                aria-hidden="true"
+                className="size-[18px] shrink-0 opacity-80"
+                strokeWidth={2.25}
+              />
+              <input
+                aria-keyshortcuts="/"
+                aria-label={HEADER_SEARCH_LABEL}
+                className="placeholder:text-current/65 min-w-0 flex-1 bg-transparent text-sm font-medium outline-none [&::-webkit-search-cancel-button]:hidden"
+                enterKeyHint="search"
+                name="q"
+                placeholder={HEADER_SEARCH_LABEL}
+                ref={searchRef}
+                type="search"
+              />
+              <kbd
+                aria-hidden="true"
+                className="border-current/25 hidden h-6 min-w-6 place-items-center rounded-md border px-1.5 font-sans text-xs font-semibold opacity-70 group-focus-within/search:hidden xl:grid"
+              >
+                /
+              </kbd>
+            </form>
 
-            <div className="col-start-2 row-start-1 flex items-center gap-2 xl:order-4">
+            <div className="col-start-2 row-start-1 flex items-center gap-2 justify-self-end md:col-start-3 xl:order-4">
               <AccountLinks name={session?.name ?? null} signedIn={signedIn} />
 
               <CartNavLink

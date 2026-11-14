@@ -79,7 +79,7 @@ export const Card: React.FC<{
         {titleToUse ? (
           <h3 className="text-h3">
             <Link
-              className="focus-visible:ring-green-500 rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
+              className="focus-visible:ring-green-500 inline-flex min-h-11 items-center rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
               href={href}
               ref={link.ref}
             >

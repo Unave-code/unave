@@ -8,7 +8,6 @@ import RichText from '@/components/RichText'
 import { Section } from '@/components/home/Section'
 import type { Media as MediaDoc, Product } from '@/payload-types'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
-import { leadPricePaise, perDayPaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { comboSeparatePrice, isProductSellable, selectedComboDuration } from '@/utilities/combos'
 import {
@@ -18,8 +17,6 @@ import {
 } from '@/utilities/productPageCopy'
 import {
   PRODUCT_ONE_TIME_LABEL,
-  PRODUCTS_CARD_A_DAY,
-  PRODUCTS_CARD_FROM,
   PRODUCTS_PAUSED_NOTE_BODY,
   PRODUCTS_PAUSED_NOTE_TITLE,
   PRODUCTS_RELATED_HEADING,
@@ -73,13 +70,13 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
 /**
  * One product's own page (design.md §6.15), laid out as a shop page.
  *
- * Three columns from `lg`: the photo gallery on the left, the product itself in
- * the middle — chips, name, the price it leads with, what you get and, on a
- * combo, what is inside it with a photo of each — and the buy box on the right,
- * pinned while the page scrolls: availability, the duration choice and the add
- * to cart control. Between `md` and `lg` the gallery and the middle column sit
- * side by side and the buy box follows the middle column; on a phone it all
- * stacks, gallery first.
+ * Two columns from `md`: the photo gallery on the left (seven of twelve
+ * columns from `lg`), pinned while the page scrolls, and beside it everything
+ * needed to choose and buy, in reading order — the chips, the name, its kind
+ * and whether it can be ordered, a combo's saving, then the buy panel (the
+ * price shown once, the durations as comparable rows, add to cart), then what
+ * you get and, on a combo, what is inside it with a photo of each. On a phone
+ * it all stacks, gallery first.
  *
  * Below the columns, full width: the description and a details table built
  * only from the record's own fields, then the rest of the same shelf on its own
@@ -159,18 +156,12 @@ export const ProductDetail: React.FC<{
     ),
   ]
 
-  /* The price the middle column leads with: the flat price, or a plan's
-     cheapest per-day rate. */
-  const storedLead =
-    typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
-  const lead = storedLead ?? leadPricePaise(product)
   const compareAt =
     buyableOneTime &&
     typeof product.compareAtPrice === 'number' &&
     product.compareAtPrice > oneTimePrice
       ? product.compareAtPrice
       : null
-  const discount = compareAt ? Math.floor(((compareAt - oneTimePrice) / compareAt) * 100) : 0
 
   /* A combo's value: what its items cost bought one by one. Shown only when
      the combo really is cheaper, worked out from the live item prices. */
@@ -225,21 +216,24 @@ export const ProductDetail: React.FC<{
           </ol>
         </nav>
 
-        <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-10">
-          {/* 1. Gallery */}
-          <div className="min-w-0 md:sticky md:top-28 md:row-span-2 lg:col-span-5 lg:row-span-1">
+        <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-12">
+          {/* The photos, pinned while the column beside them scrolls. */}
+          <div className="min-w-0 md:sticky md:top-28 lg:col-span-7">
             <ProductGallery images={gallery} paused={!isAvailable} />
           </div>
 
-          {/* 2. The product */}
-          <div className="min-w-0 lg:col-span-4">
+          {/* Everything needed to choose and buy, in reading order: what it
+              is, whether it can be ordered, the price and the choice, then
+              what you get and, on a combo, what is inside. */}
+          <div className="min-w-0 lg:col-span-5">
             <div className="flex flex-wrap items-center gap-2">
               {product.category ? (
                 <Link
                   aria-label={categoryBadgeAriaLabel(product.category)}
+                  data-hit-area="44"
                   className={cn(
                     CHIP,
-                    'bg-green-100 text-green-800 transition-colors hover:bg-green-200 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none',
+                    'relative bg-green-100 text-green-800 transition-colors hover:bg-green-200 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none after:absolute after:-inset-y-2 after:inset-x-0',
                   )}
                   href={productCategoryHref(product.category)}
                 >
@@ -253,99 +247,97 @@ export const ProductDetail: React.FC<{
               ) : null}
             </div>
 
-            <h1 className="mt-4 text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[34px]">
+            <h1 className="mt-4 text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[36px]">
               {product.title}
             </h1>
 
-            {subcategory ? (
-              <p className="text-caption text-ink-600 mt-1">
-                {KIND_LABEL[product.type]} · <span className="wrap-anywhere">{subcategory}</span>
-              </p>
-            ) : (
-              <p className="text-caption text-ink-600 mt-1">{KIND_LABEL[product.type]}</p>
-            )}
-
-            {/* On a phone the buy box carries the price right below, so this
-                block only stays for a combo's saving there. */}
-            <div
-              className={cn(
-                'border-line mt-5 border-t pt-5',
-                comboSaving >= 100 ? 'block' : 'hidden md:block',
-              )}
-            >
-              {lead !== null ? (
-                <p className="hidden flex-wrap items-baseline gap-x-2 gap-y-1 md:flex">
-                  {discount >= 1 ? (
-                    <span className="text-error text-lg font-bold">−{discount}%</span>
-                  ) : null}
-                  {!buyableOneTime ? (
-                    <span className="text-ink-600 text-body font-semibold">
-                      {PRODUCTS_CARD_FROM}
-                    </span>
-                  ) : null}
-                  <span className="text-[34px] leading-none font-extrabold tracking-[-0.01em] text-green-900 tabular-nums md:text-[40px]">
-                    {formatPaise(lead)}
-                  </span>
-                  {!buyableOneTime ? (
-                    <span className="text-ink-600 text-body font-semibold">
-                      {PRODUCTS_CARD_A_DAY}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-              {compareAt ? (
-                <p className="text-caption text-ink-600 mt-1 hidden md:block">
-                  Was <del>{formatPaise(compareAt)}</del>
-                </p>
-              ) : null}
-              {comboSaving >= 100 && separate !== null ? (
-                <p className="flex flex-wrap items-center gap-2 text-sm md:mt-2">
-                  <span className="text-ink-600">
-                    Bought separately <del className="tabular-nums">{formatPaise(separate)}</del>
-                  </span>
-                  <span className="rounded-pill bg-[var(--success-surface)] text-success px-2.5 py-1 text-xs font-bold tabular-nums">
-                    You save {formatPaise(comboSaving)}
-                  </span>
-                </p>
-              ) : null}
-            </div>
-
-            {!isOneTime && !isCombo && durations.length > 1 ? (
-              <section
-                aria-labelledby="product-durations-heading"
-                className="border-line mt-5 border-t pt-5"
+            <p className="text-caption text-ink-600 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>
+                {KIND_LABEL[product.type]}
+                {subcategory ? (
+                  <>
+                    {' · '}
+                    <span className="wrap-anywhere">{subcategory}</span>
+                  </>
+                ) : null}
+              </span>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 font-bold',
+                  isAvailable ? 'text-green-700' : 'text-warning',
+                )}
               >
-                <ColumnHeading id="product-durations-heading">Compare durations</ColumnHeading>
-                <ul className="divide-line border-line mt-3 divide-y rounded-md border">
-                  {durations.map((duration, index) => (
-                    <li
-                      className="flex items-center justify-between gap-4 px-4 py-3"
-                      key={`${duration.label}-${index}`}
-                    >
-                      <span className="min-w-0">
-                        <span className="text-ink-900 block text-sm font-bold">
-                          {duration.label}
-                        </span>
-                        <span className="text-caption text-ink-600">
-                          {daysText(duration.days)} of meals
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right">
-                        <span className="block text-sm font-bold text-green-900 tabular-nums">
-                          {formatPaise(duration.price)}
-                        </span>
-                        {duration.days > 0 ? (
-                          <span className="text-caption text-ink-600 tabular-nums">
-                            {formatPaise(perDayPaise(duration.price, duration.days))}{' '}
-                            {PRODUCTS_CARD_A_DAY}
-                          </span>
-                        ) : null}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+                <span
+                  aria-hidden="true"
+                  className={cn('size-2 rounded-full', isAvailable ? 'bg-success' : 'bg-gold-500')}
+                />
+                {isAvailable ? 'Available to order' : 'Paused for now'}
+              </span>
+            </p>
+
+            {comboSaving >= 100 && separate !== null ? (
+              <p className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-ink-600">
+                  Bought separately <del className="tabular-nums">{formatPaise(separate)}</del>
+                </span>
+                <span className="rounded-pill bg-[var(--success-surface)] text-success px-2.5 py-1 text-xs font-bold tabular-nums">
+                  You save {formatPaise(comboSaving)}
+                </span>
+              </p>
             ) : null}
+
+            <section aria-label="Buy" className="border-line mt-6 border-t pt-6">
+              {isAvailable && buyableOneTime ? (
+                <ProductPurchase
+                  combo={isCombo}
+                  compareAtPrice={compareAt}
+                  durations={[]}
+                  oneTimePrice={oneTimePrice}
+                  productSlug={product.slug}
+                  productTitle={product.title}
+                  returnPath={productHref(product.slug)}
+                  whatsapp={whatsapp}
+                />
+              ) : isAvailable && !isOneTime && !isCombo && durations.length > 0 ? (
+                <ProductPurchase
+                  durations={durations}
+                  productSlug={product.slug}
+                  productTitle={product.title}
+                  returnPath={productHref(product.slug)}
+                  whatsapp={whatsapp}
+                />
+              ) : (
+                <div>
+                  {buyableOneTime ? (
+                    <p className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">
+                      {formatPaise(oneTimePrice)}
+                    </p>
+                  ) : (
+                    <ul className="divide-line divide-y">
+                      {durations.map((duration, index) => (
+                        <li
+                          className="flex items-center justify-between gap-4 py-3"
+                          key={`${duration.label}-${index}`}
+                        >
+                          <div>
+                            <p className="text-sm leading-tight font-bold">{duration.label}</p>
+                            <p className="text-caption text-ink-600 mt-0.5">
+                              {daysText(duration.days)} of meals
+                            </p>
+                          </div>
+                          <p className="text-green-700 text-sm font-bold tabular-nums">
+                            {formatPaise(duration.price)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-ink-600 text-caption mt-3 leading-6">
+                    {PRODUCT_PAUSED_INLINE}
+                  </p>
+                </div>
+              )}
+            </section>
 
             {points.length > 0 ? (
               <section
@@ -439,77 +431,6 @@ export const ProductDetail: React.FC<{
               </section>
             ) : null}
           </div>
-
-          {/* 3. Buy box */}
-          <aside
-            aria-label="Buy"
-            className="border-line bg-card min-w-0 rounded-lg border p-5 md:col-start-2 lg:sticky lg:top-28 lg:col-span-3 lg:col-start-auto"
-          >
-            <p
-              className={cn(
-                'flex items-center gap-2 text-sm font-bold',
-                isAvailable ? 'text-success' : 'text-warning',
-              )}
-            >
-              <span
-                aria-hidden="true"
-                className={cn('size-2 rounded-full', isAvailable ? 'bg-success' : 'bg-gold-500')}
-              />
-              {isAvailable ? 'Available to order' : 'Paused for now'}
-            </p>
-
-            <div className="mt-4">
-              {isAvailable && buyableOneTime ? (
-                <ProductPurchase
-                  combo={isCombo}
-                  durations={[]}
-                  oneTimePrice={oneTimePrice}
-                  productSlug={product.slug}
-                  productTitle={product.title}
-                  returnPath={productHref(product.slug)}
-                  whatsapp={whatsapp}
-                />
-              ) : isAvailable && !isOneTime && !isCombo && durations.length > 0 ? (
-                <ProductPurchase
-                  durations={durations}
-                  productSlug={product.slug}
-                  productTitle={product.title}
-                  returnPath={productHref(product.slug)}
-                  whatsapp={whatsapp}
-                />
-              ) : (
-                <div>
-                  {buyableOneTime ? (
-                    <p className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">
-                      {formatPaise(oneTimePrice)}
-                    </p>
-                  ) : (
-                    <ul className="divide-line divide-y">
-                      {durations.map((duration, index) => (
-                        <li
-                          className="flex items-center justify-between gap-4 py-3"
-                          key={`${duration.label}-${index}`}
-                        >
-                          <div>
-                            <p className="text-sm leading-tight font-bold">{duration.label}</p>
-                            <p className="text-caption text-ink-600 mt-0.5">
-                              {daysText(duration.days)} of meals
-                            </p>
-                          </div>
-                          <p className="text-green-700 text-sm font-bold tabular-nums">
-                            {formatPaise(duration.price)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <p className="text-ink-600 text-caption mt-3 leading-6">
-                    {PRODUCT_PAUSED_INLINE}
-                  </p>
-                </div>
-              )}
-            </div>
-          </aside>
         </div>
 
         {/* Full width under the columns: the description and the details. */}
@@ -570,10 +491,17 @@ export const ProductDetail: React.FC<{
         <Section tone="tint">
           <h2 className="text-h2">{PRODUCTS_RELATED_HEADING}</h2>
 
-          <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul
+            aria-label={PRODUCTS_RELATED_HEADING}
+            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+          >
             {related.map((item) => (
-              <li key={item.id}>
-                <ProductCard product={item} returnPath={productHref(product.slug)} />
+              <li className="min-w-0" key={item.id}>
+                <ProductCard
+                  product={item}
+                  returnPath={productHref(product.slug)}
+                  sizes="(min-width: 64rem) 25vw, (min-width: 48rem) 30vw, 45vw"
+                />
               </li>
             ))}
           </ul>

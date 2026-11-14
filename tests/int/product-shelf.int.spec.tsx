@@ -57,11 +57,7 @@ const renderControls = (
   props: Partial<React.ComponentProps<typeof ProductShelfControls>> = {},
 ) =>
   render(
-    <ProductShelfControls
-      basePath="/products"
-      state={{ ...EMPTY_SHELF, ...state }}
-      {...props}
-    />,
+    <ProductShelfControls basePath="/products" state={{ ...EMPTY_SHELF, ...state }} {...props} />,
   )
 
 describe('reading the address', () => {
@@ -137,9 +133,17 @@ describe('writing the address', () => {
   })
 
   it('writes what is asked and nothing else', () => {
-    const state: ShelfState = { ...EMPTY_SHELF, audience: 'kids', page: 2, q: 'dal', sort: 'price-asc' }
+    const state: ShelfState = {
+      ...EMPTY_SHELF,
+      audience: 'kids',
+      page: 2,
+      q: 'dal',
+      sort: 'price-asc',
+    }
 
-    expect(shelfHref('/products', state)).toBe('/products?q=dal&audience=kids&sort=price-asc&page=2')
+    expect(shelfHref('/products', state)).toBe(
+      '/products?q=dal&audience=kids&sort=price-asc&page=2',
+    )
   })
 
   it('starts a new filter over at page one', () => {
@@ -155,13 +159,15 @@ describe('writing the address', () => {
   })
 
   it('keeps the page it names when asked for the view as it stands', () => {
-    expect(shelfHref('/products', { ...EMPTY_SHELF, page: 3, q: 'dal' })).toBe('/products?q=dal&page=3')
+    expect(shelfHref('/products', { ...EMPTY_SHELF, page: 3, q: 'dal' })).toBe(
+      '/products?q=dal&page=3',
+    )
   })
 
   it('clears one facet without clearing the others', () => {
-    expect(shelfHref('/products', { ...EMPTY_SHELF, audience: 'kids', q: 'dal' }, { audience: null })).toBe(
-      '/products?q=dal',
-    )
+    expect(
+      shelfHref('/products', { ...EMPTY_SHELF, audience: 'kids', q: 'dal' }, { audience: null }),
+    ).toBe('/products?q=dal')
   })
 
   it('keeps a category page inside itself', () => {
@@ -190,8 +196,12 @@ describe('what counts as filtered', () => {
   })
 
   it('counts a category only where the page is not already that category', () => {
-    expect(hasShelfFilters({ ...EMPTY_SHELF, category: 'ready-to-cook' }, 'ready-to-cook')).toBe(false)
-    expect(hasShelfFilters({ ...EMPTY_SHELF, category: 'ready-to-eat' }, 'ready-to-cook')).toBe(true)
+    expect(hasShelfFilters({ ...EMPTY_SHELF, category: 'ready-to-cook' }, 'ready-to-cook')).toBe(
+      false,
+    )
+    expect(hasShelfFilters({ ...EMPTY_SHELF, category: 'ready-to-eat' }, 'ready-to-cook')).toBe(
+      true,
+    )
   })
 })
 
@@ -224,10 +234,7 @@ describe('the query the shelf reads by', () => {
 
   it('reads a price range in rupees as paise, inclusive at both ends', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, from: 50, to: 150 })).toEqual({
-      and: [
-        { fromPrice: { greater_than_equal: 5000 } },
-        { fromPrice: { less_than_equal: 15000 } },
-      ],
+      and: [{ fromPrice: { greater_than_equal: 5000 } }, { fromPrice: { less_than_equal: 15000 } }],
     })
   })
 
@@ -415,13 +422,17 @@ describe('the shelf', () => {
   it('pages on links that keep the filters', () => {
     render(shelf({ state: { ...EMPTY_SHELF, q: 'dal' } }))
 
-    expect(
-      screen.getByRole('link', { name: 'Next page' }).getAttribute('href'),
-    ).toBe('/products?q=dal&page=2')
+    expect(screen.getByRole('link', { name: 'Next page' }).getAttribute('href')).toBe(
+      '/products?q=dal&page=2',
+    )
   })
 
   it('says what a paused product means when one is on the page', () => {
-    render(shelf({ result: { docs: [{ ...product, available: false }], page: 1, totalDocs: 1, totalPages: 1 } }))
+    render(
+      shelf({
+        result: { docs: [{ ...product, available: false }], page: 1, totalDocs: 1, totalPages: 1 },
+      }),
+    )
 
     expect(screen.getByText('What "paused" means')).toBeTruthy()
   })

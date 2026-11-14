@@ -55,7 +55,7 @@ export const Orders: CollectionConfig = {
     defaultColumns: ['customer', 'total', 'createdAt'],
     description:
       'One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.',
-    group: 'Store',
+    group: 'Orders',
     useAsTitle: 'id',
   },
   fields: [

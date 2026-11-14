@@ -47,11 +47,11 @@ describe('the homepage Best sellers shelf', () => {
     const grid = screen.getByRole('list', { name: 'Best sellers' })
     expect(grid.className).toContain('grid-cols-2')
     expect(grid.className).toContain('lg:grid-cols-5')
-    expect(screen.getByRole('link', { name: 'View Brown rice' }).className).toContain(
-      'aspect-square',
+    expect(screen.getByRole('link', { name: 'Brown rice' }).getAttribute('href')).toBe(
+      '/products/brown-rice',
     )
     expect(screen.getByRole('heading', { name: 'Brown rice' }).className).not.toContain('min-h-')
-    expect(screen.getByText('₹50').className).toContain('text-gold-600')
+    expect(screen.getByText('₹50').className).toContain('text-green-700')
   })
 
   it('shows a one-time product’s pack size, old price, discount, and cart form', async () => {

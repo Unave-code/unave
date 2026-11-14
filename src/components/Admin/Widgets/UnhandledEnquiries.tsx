@@ -2,6 +2,8 @@ import { Link } from '@payloadcms/ui/elements/Link'
 import type { WidgetServerProps } from 'payload'
 import React from 'react'
 
+import { DayBars } from './DayBars'
+import { dailySeries } from './series'
 import './widgets.scss'
 
 /**
@@ -11,7 +13,7 @@ import './widgets.scss'
 const UnhandledEnquiries = async ({ req }: WidgetServerProps) => {
   const waiting = { handled: { equals: false } }
 
-  const [total, latest] = await Promise.all([
+  const [total, latest, perDay] = await Promise.all([
     req.payload.count({ collection: 'enquiries', where: waiting }),
     req.payload.find({
       collection: 'enquiries',
@@ -19,14 +21,18 @@ const UnhandledEnquiries = async ({ req }: WidgetServerProps) => {
       sort: '-createdAt',
       where: waiting,
     }),
+    dailySeries({ collection: 'enquiries', dateField: 'createdAt', payload: req.payload }),
   ])
 
   const last = latest.docs[0]
   const lastLine = last
-    ? `${last.name ?? 'A customer'} · ${new Date(String(last.createdAt)).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-      })}`
+    ? `${last.name ?? 'A customer'} · ${new Date(String(last.createdAt)).toLocaleDateString(
+        'en-IN',
+        {
+          day: 'numeric',
+          month: 'short',
+        },
+      )}`
     : 'Nothing waiting'
 
   return (
@@ -34,7 +40,11 @@ const UnhandledEnquiries = async ({ req }: WidgetServerProps) => {
       <p className="unave-widget__eyebrow">Messages to answer</p>
       <p className="unave-widget__figure">{total.totalDocs}</p>
       <p className="unave-widget__meta">{lastLine}</p>
-      <Link className="unave-widget__link" href="/admin/collections/enquiries?where[handled][equals]=false">
+      <DayBars noun="Messages received" points={perDay} />
+      <Link
+        className="unave-widget__link"
+        href="/admin/collections/enquiries?where[handled][equals]=false"
+      >
         Open enquiries
       </Link>
     </div>

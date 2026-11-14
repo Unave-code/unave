@@ -142,10 +142,8 @@ export const FORGOT_COPY = {
 
 /** The reset-password card, reached from the link in that email. */
 export const RESET_COPY = {
-  intro:
-    'Choose a password you have not used here before. You will be signed in straight away.',
-  missingToken:
-    'This link is missing the code it needs. Ask for a new one and it will work.',
+  intro: 'Choose a password you have not used here before. You will be signed in straight away.',
+  missingToken: 'This link is missing the code it needs. Ask for a new one and it will work.',
   missingTokenAction: 'Ask for a new link',
   submit: 'Save new password',
   title: 'Choose a new password',

@@ -28,6 +28,7 @@ export const plugins: Plugin[] = [
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
+      admin: { group: 'Settings' },
       // @ts-expect-error - This is a valid override, mapped fields don't resolve to the same type
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
@@ -60,11 +61,13 @@ export const plugins: Plugin[] = [
       payment: false,
     },
     formSubmissionOverrides: {
+      admin: { group: 'Settings' },
       hooks: {
         afterChange: [emailFormSubmission],
       },
     },
     formOverrides: {
+      admin: { group: 'Settings' },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
           if ('name' in field && field.name === 'confirmationMessage') {
@@ -89,7 +92,10 @@ export const plugins: Plugin[] = [
   searchPlugin({
     collections: ['posts'],
     beforeSync: beforeSyncWithSearch,
+    // The search index is rebuilt from posts on every save; nobody edits it
+    // by hand, so it stays out of the sidebar.
     searchOverrides: {
+      admin: { hidden: true },
       fields: ({ defaultFields }) => {
         return [...defaultFields, ...searchFields]
       },

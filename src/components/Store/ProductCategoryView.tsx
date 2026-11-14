@@ -46,9 +46,9 @@ export const ProductCategoryView: React.FC<{
   const result = await fetchProductShelf(state, category)
 
   const copy = PRODUCT_CATEGORY_COPY[category]
-  const otherCategories = (Object.keys(CATEGORY_LABEL) as Array<keyof typeof CATEGORY_LABEL>).filter(
-    (value) => value !== category,
-  )
+  const otherCategories = (
+    Object.keys(CATEGORY_LABEL) as Array<keyof typeof CATEGORY_LABEL>
+  ).filter((value) => value !== category)
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null

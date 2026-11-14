@@ -45,7 +45,7 @@ const product = {
 } as unknown as Product
 
 describe('the product card', () => {
-  it('is one stretched link carrying the name, the audience pill and the per-day lead', () => {
+  it('links the name to the product page and shows the audience pill and per-day lead', () => {
     render(<ProductCard product={product} />)
 
     const link = screen.getByRole('link', { name: 'Lunch plan' })
@@ -76,18 +76,19 @@ describe('the product card', () => {
   it('offers one Add to cart control that posts the default duration', () => {
     render(<ProductCard product={product} returnPath="/" />)
 
-    const form = screen.getByRole('button', { name: 'Add to cart' }).closest('form')
+    const form = screen.getByRole('button', { name: 'Add Lunch plan to cart' }).closest('form')
 
     expect(form?.getAttribute('action')).toBe('/api/cart/add')
     expect(form?.querySelector('input[name="product"]')?.getAttribute('value')).toBe('lunch-plan')
     expect(form?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('One week')
     expect(form?.querySelector('input[name="return"]')?.getAttribute('value')).toBe('/')
+    expect(screen.getByRole('button', { name: 'Buy Lunch plan now' })).toBeTruthy()
   })
 
   it('offers no Add to cart control on a paused product, but keeps its lead price', () => {
     render(<ProductCard product={{ ...product, available: false } as unknown as Product} />)
 
-    expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
     expect(screen.getByText('Paused')).toBeTruthy()
     expect(screen.getByText('From ₹59 a day')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Lunch plan' })).toBeTruthy()
@@ -97,7 +98,7 @@ describe('the product card', () => {
     render(<ProductCard product={{ ...product, durations: [] } as unknown as Product} />)
 
     expect(screen.queryByText(/a day/)).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
   })
 })

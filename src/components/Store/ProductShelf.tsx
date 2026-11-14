@@ -55,11 +55,7 @@ export const ProductShelf: React.FC<{
 
   return (
     <div>
-      <ProductShelfControls
-        basePath={basePath}
-        fixedCategory={category}
-        state={state}
-      />
+      <ProductShelfControls basePath={basePath} fixedCategory={category} state={state} />
 
       {result.docs.length > 0 ? (
         <>
@@ -67,15 +63,20 @@ export const ProductShelf: React.FC<{
             {shelfResultsLine(first, last, result.totalDocs)}
           </p>
 
-          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ul
+            aria-label="Products"
+            className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+          >
             {result.docs.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                returnPath={shelfHref(basePath, state)}
-              />
+              <li className="min-w-0" key={product.id}>
+                <ProductCard
+                  product={product}
+                  returnPath={shelfHref(basePath, state)}
+                  sizes="(min-width: 64rem) 25vw, (min-width: 48rem) 30vw, 45vw"
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </>
       ) : (
         <div className="border-line mx-auto mt-8 max-w-[52ch] rounded-2xl border p-8 text-center">

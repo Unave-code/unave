@@ -6,3 +6,10 @@
   --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-serif: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
+
+/* The Dashboard row (DashboardNavLink) sits above the nav groups with the
+   same gap the groups keep between themselves. */
+.unave-nav-dashboard {
+  margin-bottom: 10px;
+  width: 100%;
+}

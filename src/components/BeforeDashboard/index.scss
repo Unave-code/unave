@@ -1,7 +1,16 @@
 @import '@payloadcms/ui/scss';
 
 .dashboard .before-dashboard {
-  margin-bottom: base(1.5);
+  margin-bottom: base(1);
+
+  /* One line: the title on the left, the desk shortcuts beside it. */
+  &__row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: base(0.5) base(1);
+    justify-content: space-between;
+  }
 
   &__eyebrow {
     color: var(--theme-elevation-400);
@@ -13,7 +22,7 @@
 
   &__title {
     font-family: var(--font-serif);
-    margin: base(0.25) 0 0;
+    margin: 0;
   }
 
   &__lede {
@@ -31,7 +40,10 @@
   &__desk {
     border: 1px solid var(--theme-elevation-150);
     border-radius: 999px;
-    padding: 4px 16px;
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    padding: 0 18px;
     text-decoration: none;
 
     &:hover {

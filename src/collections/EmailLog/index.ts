@@ -37,7 +37,7 @@ export const EmailLog: CollectionConfig = {
     ],
     description:
       'Every mail attempt, written by the mail module and read only. Rows are pruned after 90 days.',
-    group: 'Email',
+    group: 'Settings',
     useAsTitle: 'subject',
   },
   fields: [

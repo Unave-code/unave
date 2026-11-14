@@ -21,8 +21,8 @@ export const Testimonials: GlobalConfig = {
   },
   admin: {
     description:
-      'Written and video testimonials shown on the home page above Common questions. The section is hidden while the list is empty.',
-    group: 'Home page',
+      'Written and video testimonials shown on the home page above the FAQ. The section is hidden while the list is empty.',
+    group: 'Website',
   },
   fields: [
     {

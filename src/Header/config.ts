@@ -33,7 +33,7 @@ export const Header: GlobalConfig = {
   },
   admin: {
     description: 'The top of every page: the announcement strip, menu links, WhatsApp.',
-    group: 'Site chrome',
+    group: 'Website',
   },
   fields: [
     {
