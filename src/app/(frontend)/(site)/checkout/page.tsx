@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { ShieldCheck, ShoppingBag, TriangleAlert } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import configPromise from '@payload-config'
@@ -7,11 +9,15 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
+import { CheckoutSteps } from '@/components/Store/CheckoutSteps'
+import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
 import { CART_COOKIE, readCart } from '@/utilities/cart'
 import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
 import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
+import { cn } from '@/utilities/ui'
 
 import { CheckoutForm } from './CheckoutForm'
 import {
@@ -29,7 +35,10 @@ import {
 } from './copy'
 
 /**
- * The checkout page (spec 0007, AC-4 and AC-5). Signed in customers only.
+ * The checkout page (spec 0007, AC-4 and AC-5), step two of three. Signed in
+ * customers only. The delivery form sits in a card on the left; the order, with
+ * a photo per line and the total, is pinned beside it (above it on a phone), and
+ * the pay button names the amount it will charge.
  *
  * The basket comes from the cart cookie, never from the address, and every
  * line is resolved against the live product records here, so the prices and the
@@ -71,31 +80,39 @@ export default async function CheckoutPage() {
   const payload = await getPayload({ config: configPromise })
   const cart = await resolveCartLines({ lines, payload })
 
-  if (cart.all.length === 0) {
+  if (cart.all.length === 0 || cart.stale.length > 0) {
+    const empty = cart.all.length === 0
+
     return (
-      <main className="container max-w-3xl py-16 sm:py-20">
-        <h1 className="text-h2">{CHECKOUT_EMPTY_HEADING}</h1>
-        <p className="text-body text-ink-600 mt-3">{CHECKOUT_EMPTY_BODY}</p>
+      <main className="container max-w-6xl py-10 sm:py-14">
+        <CheckoutSteps current={1} />
 
-        <div className="mt-6">
-          <Cta href="/products" variant="primary">
-            {CHECKOUT_EMPTY_CTA}
-          </Cta>
-        </div>
-      </main>
-    )
-  }
+        <div className="bg-card mx-auto mt-12 flex max-w-[30rem] flex-col items-center rounded-2xl p-10 text-center shadow-sm">
+          <span
+            aria-hidden="true"
+            className={cn(
+              'grid size-16 place-items-center rounded-full',
+              empty ? 'bg-green-50 text-green-700' : 'bg-gold-100 text-gold-600',
+            )}
+          >
+            {empty ? (
+              <ShoppingBag className="size-7" strokeWidth={1.75} />
+            ) : (
+              <TriangleAlert className="size-7" strokeWidth={1.75} />
+            )}
+          </span>
+          <h1 className="mt-5 text-xl font-bold text-green-900">
+            {empty ? CHECKOUT_EMPTY_HEADING : CHECKOUT_STALE_HEADING}
+          </h1>
+          <p className="text-body text-ink-600 mt-2">
+            {empty ? CHECKOUT_EMPTY_BODY : CHECKOUT_STALE_BODY}
+          </p>
 
-  if (cart.stale.length > 0) {
-    return (
-      <main className="container max-w-3xl py-16 sm:py-20">
-        <h1 className="text-h2">{CHECKOUT_STALE_HEADING}</h1>
-        <p className="text-body text-ink-600 mt-3">{CHECKOUT_STALE_BODY}</p>
-
-        <div className="mt-6">
-          <Cta href="/cart" variant="primary">
-            {CHECKOUT_STALE_CTA}
-          </Cta>
+          <div className="mt-6">
+            <Cta href={empty ? '/products' : '/cart'} variant="primary">
+              {empty ? CHECKOUT_EMPTY_CTA : CHECKOUT_STALE_CTA}
+            </Cta>
+          </div>
         </div>
       </main>
     )
@@ -115,13 +132,17 @@ export default async function CheckoutPage() {
   })) as CheckoutProfile | null
 
   return (
-    <main className="container max-w-5xl py-16 sm:py-20">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-h2">{CHECKOUT_PAGE_HEADING}</h1>
-        <p className="text-body text-ink-600">{CHECKOUT_PAGE_INTRO}</p>
+    <main className="container max-w-6xl py-10 sm:py-14">
+      <CheckoutSteps current={1} />
+
+      <header className="mt-8 flex flex-col gap-2">
+        <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-green-900 md:text-[34px]">
+          {CHECKOUT_PAGE_HEADING}
+        </h1>
+        <p className="text-body text-ink-600 max-w-[65ch]">{CHECKOUT_PAGE_INTRO}</p>
       </header>
 
-      <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
         <CheckoutForm
           defaults={{
             city: profile?.address?.city ?? '',
@@ -134,54 +155,90 @@ export default async function CheckoutPage() {
             state: profile?.address?.state ?? '',
           }}
           email={customer.email}
+          total={formatPaise(cart.total)}
         />
 
-        <aside aria-label={CHECKOUT_SUMMARY_HEADING} className="flex min-w-0 flex-col gap-6">
-          <section className="border-line rounded-2xl border bg-white p-6 sm:p-8">
-            <h2 className="text-h3">{CHECKOUT_SUMMARY_HEADING}</h2>
+        {/* The order, pinned beside the form on a wide screen; on a phone it
+            comes first, so the shopper sees what they are paying for. */}
+        <aside
+          aria-label={CHECKOUT_SUMMARY_HEADING}
+          className="bg-card -order-1 rounded-2xl p-6 shadow-sm sm:p-7 lg:sticky lg:top-28 lg:order-none"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-green-900">{CHECKOUT_SUMMARY_HEADING}</h2>
+            <Link
+              className="text-green-700 focus-visible:ring-green-500 inline-flex min-h-11 items-center rounded-sm text-sm font-semibold underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:outline-none"
+              href="/cart"
+            >
+              Edit cart
+            </Link>
+          </div>
 
-            <ul className="border-line divide-line mt-4 divide-y border-t">
-              {cart.usable.map((line) => (
-                <li className="flex items-start justify-between gap-4 py-4" key={line.key}>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold">{line.productTitle}</p>
-                    <p className="text-ink-600 mt-0.5 text-sm">
-                      {line.type === 'combo'
-                        ? 'Meal combo'
-                        : line.type === 'one-time'
-                          ? PRODUCT_ONE_TIME_LABEL
+          <ul className="divide-line mt-3 divide-y">
+            {cart.usable.map((line) => (
+              <li className="flex items-center gap-3 py-3" key={line.key}>
+                <span className="relative size-14 shrink-0 overflow-hidden rounded-md bg-green-50">
+                  <Image
+                    alt=""
+                    className="object-cover"
+                    fill
+                    sizes="56px"
+                    src={line.image ? getMediaUrl(line.image.url) : PRODUCT_PLACEHOLDER}
+                  />
+                  {line.type !== 'plan' && line.qty > 1 ? (
+                    <span className="bg-green-900 text-cream absolute top-1 right-1 grid min-w-5 place-items-center rounded-full px-1 text-[11px] leading-5 font-bold">
+                      {line.qty}
+                    </span>
+                  ) : null}
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-ink-900 truncate text-sm font-bold">{line.productTitle}</p>
+                  <p className="text-ink-600 mt-0.5 text-sm">
+                    {line.type === 'combo'
+                      ? 'Meal combo'
+                      : line.type === 'one-time'
+                        ? PRODUCT_ONE_TIME_LABEL
                         : `${line.duration}, ${line.days} ${line.days === 1 ? 'day' : 'days'}`}
-                    </p>
-                  </div>
-
-                  <p className="shrink-0 text-right text-sm font-bold">
-                    {formatPaise(line.lineTotal)}
-                    {line.type !== 'plan' && line.qty > 1 ? (
-                      <span className="text-ink-600 mt-0.5 block text-xs font-medium">
-                        {line.qty} &times; {formatPaise(line.price ?? 0)}
-                      </span>
-                    ) : null}
                   </p>
-                </li>
-              ))}
-            </ul>
+                </div>
 
-            <div className="border-line mt-2 flex items-center justify-between border-t pt-4">
-              <p className="font-bold">{CHECKOUT_SUMMARY_TOTAL}</p>
-              <p className="text-green-700 text-lg font-bold">{formatPaise(cart.total)}</p>
-            </div>
+                <p className="shrink-0 text-right text-sm font-bold text-green-900 tabular-nums">
+                  {formatPaise(line.lineTotal)}
+                  {line.type !== 'plan' && line.qty > 1 ? (
+                    <span className="text-ink-600 mt-0.5 block text-xs font-medium">
+                      {line.qty} &times; {formatPaise(line.price ?? 0)}
+                    </span>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ul>
 
-            <p className="text-ink-600 mt-4 text-sm leading-6">
+          <div className="border-line mt-2 flex items-baseline justify-between gap-4 border-t pt-4">
+            <p className="text-ink-900 text-base font-bold">{CHECKOUT_SUMMARY_TOTAL}</p>
+            <p className="text-[28px] leading-none font-extrabold text-green-900 tabular-nums">
+              {formatPaise(cart.total)}
+            </p>
+          </div>
+
+          <p className="text-ink-600 mt-4 flex items-start gap-2 text-sm leading-6">
+            <ShieldCheck
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0 text-green-700"
+              strokeWidth={2}
+            />
+            <span>
               One payment covers every line above. Paid orders show on your{' '}
               <Link
-                className="text-green-700 hover:opacity-75 font-semibold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
+                className="font-semibold text-green-700 underline underline-offset-4 transition-opacity hover:opacity-75 focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
                 href="/account?tab=orders"
               >
                 account page
               </Link>
               .
-            </p>
-          </section>
+            </span>
+          </p>
         </aside>
       </div>
     </main>

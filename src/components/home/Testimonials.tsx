@@ -27,7 +27,7 @@ const Caption: React.FC<{ dark?: boolean; name: string; note?: string | null }> 
   name,
   note,
 }) => (
-  <figcaption className="mt-auto pt-5">
+  <figcaption className={dark ? 'mt-8' : 'mt-auto pt-5'}>
     <span className={cn('text-caption block font-bold', dark ? 'text-cream' : 'text-ink-900')}>
       {name}
     </span>
@@ -66,6 +66,10 @@ export const Testimonials: React.FC = async () => {
   if (!items.length) return null
 
   const featureIndex = items.findIndex((item) => item.kind !== 'video')
+  /* The feature tile stands two rows tall only on three columns and only
+     beside a video, which is two rows tall itself; anywhere else a tall
+     tile would just be empty green under a short quote. */
+  const tallFeature = items.some((item) => item.kind === 'video')
   let lightTile = 0
 
   /* How many grid cells each tile fills: on two columns (md) a video is one
@@ -75,7 +79,7 @@ export const Testimonials: React.FC = async () => {
   const isLongQuote = (item: Item) => (item.quote?.trim().length ?? 0) > LONG_QUOTE
   const cells = (columns: 2 | 3) =>
     items.reduce((sum, item, index) => {
-      if (index === featureIndex) return sum + 4
+      if (index === featureIndex) return sum + (columns === 3 && tallFeature ? 4 : 2)
       if (item.kind === 'video') return sum + (columns === 3 ? 2 : 1)
       return sum + (isLongQuote(item) ? 2 : 1)
     }, 0)
@@ -127,10 +131,10 @@ export const Testimonials: React.FC = async () => {
 
           if (index === featureIndex) {
             return (
-              <li className="min-w-0 md:col-span-2 md:row-span-2" key={key}>
-                <figure className="tile-lift flex h-full flex-col rounded-lg bg-green-900 p-8 shadow-md md:p-10">
+              <li className={cn('min-w-0 md:col-span-2', tallFeature && 'lg:row-span-2')} key={key}>
+                <figure className="tile-lift flex h-full flex-col justify-center rounded-lg bg-green-900 p-8 shadow-md md:p-12">
                   <Quote aria-hidden="true" className="text-gold-400 size-9" strokeWidth={2} />
-                  <blockquote className="text-cream mt-6 max-w-[34ch] text-[22px] leading-[1.45] font-semibold tracking-[-0.01em] text-balance md:text-[28px]">
+                  <blockquote className="text-cream mt-6 max-w-[34ch] text-[22px] leading-[1.45] font-semibold tracking-[-0.01em] text-balance md:text-[28px] lg:text-[32px]">
                     {item.quote}
                   </blockquote>
                   <Caption dark name={item.name} note={item.note} />

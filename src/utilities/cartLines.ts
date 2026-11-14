@@ -33,6 +33,8 @@ export type ResolvedCartLine = {
   days: null | number
   components?: ComboComponentSnapshot[]
   duration: string
+  /** The product's photo for the cart and checkout lists, when it has one. */
+  image?: { alt: string; url: string } | null
   key: string
   /** What the line charges: the unit price times the quantity. */
   lineTotal: number
@@ -69,8 +71,7 @@ export const productDuration = (product: Product | null, label: string): CartDur
 }
 
 /** A quantity a page or a sum can trust, whatever the caller handed over. */
-const safeQty = (qty: number): number =>
-  Number.isFinite(qty) && qty >= 1 ? Math.round(qty) : 1
+const safeQty = (qty: number): number => (Number.isFinite(qty) && qty >= 1 ? Math.round(qty) : 1)
 
 export const resolveCartLines = async ({
   lines,
@@ -106,9 +107,7 @@ export const resolveCartLines = async ({
 
     const duration = type === 'plan' ? productDuration(product, line.duration) : null
     const flatPrice =
-      type !== 'plan' && line.duration === ONE_TIME_DURATION
-        ? Number(product?.price)
-        : Number.NaN
+      type !== 'plan' && line.duration === ONE_TIME_DURATION ? Number(product?.price) : Number.NaN
 
     let price: null | number
     let days: null | number
@@ -131,6 +130,10 @@ export const resolveCartLines = async ({
       days,
       ...(components ? { components } : {}),
       duration: line.duration,
+      image:
+        product?.image && typeof product.image === 'object' && product.image.url
+          ? { alt: product.image.alt?.trim() || '', url: product.image.url }
+          : null,
       key,
       lineTotal: (price ?? 0) * qty,
       price,

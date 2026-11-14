@@ -513,39 +513,23 @@ a {
   background-color: color-mix(in oklab, var(--green-900) 55%, transparent);
 }
 
-.site-header:not([data-scrolled='true']) {
-  background-color: transparent;
-  border-bottom-color: transparent;
-}
-
-/* Over that band the words turn cream and gold, the colours the solid green bar
-   uses, because the band behind them is dark. */
-body:has(.opening-band) .site-header:not([data-scrolled='true']) {
-  --primary: var(--gold-400);
-  color: var(--cream);
-}
-
-/* The home hero is an inset banner, so its header needs its own dark surface. */
-body:has(.hero-carousel) .site-header:not([data-scrolled='true']) {
+.site-header {
+  /* One bar everywhere (design.md §6.2): solid deep green with a gold logo,
+     gold links and cream text, on every page and at every scroll position.
+     Pages that open on a band still run it up behind the bar; the bar simply
+     covers its top edge rather than sitting on it transparently. */
   --primary: var(--gold-400);
   background-color: var(--green-900);
   border-bottom-color: var(--green-800);
   color: var(--cream);
 }
 
-/* Scrolled header: a solid deep green bar with a gold logo and gold links
-   (design.md §6.2). The elevation is green-tinted, so the bar reads as lifted
-   rather than outlined. */
+/* Once the page scrolls, the bar lifts on a green-tinted shadow. */
 .site-header[data-scrolled='true'] {
-  --primary: var(--gold-400);
-  background-color: var(--green-900);
-  border-bottom-color: var(--green-800);
   box-shadow: 0 12px 32px -16px rgb(15 46 33 / 0.45);
-  color: var(--cream);
 }
 
-/* The bar eases between the transparent state it wears over an opening band and
-   the solid deep green one (design.md §9). Unlayered on purpose, so it wins over
+/* The bar eases its shadow in as the page scrolls (design.md §9). Unlayered on purpose, so it wins over
    the utility classes on the element. */
 .site-header {
   transition-property: background-color, border-color, box-shadow;

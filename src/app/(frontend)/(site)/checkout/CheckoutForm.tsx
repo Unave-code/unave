@@ -1,5 +1,6 @@
 'use client'
 
+import { Lock, Mail, MapPin } from 'lucide-react'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Script from 'next/script'
@@ -73,10 +74,10 @@ declare global {
   }
 }
 
-const FIELD_LABEL = 'text-ink-900 block text-sm font-medium'
-const FIELD_ERROR = 'mt-1 text-sm text-red-700'
+const FIELD_LABEL = 'text-ink-900 block text-sm font-semibold'
+const FIELD_ERROR = 'text-error mt-1.5 text-sm'
 const FIELD_INPUT =
-  'border-line bg-white focus:border-green-600 focus:ring-green-500 mt-1.5 block h-11 w-full rounded-lg border px-3 text-sm focus:ring-[3px] focus:outline-none'
+  'border-line text-ink-900 hover:border-ink-400 bg-white focus:border-green-700 focus:ring-green-500 mt-2 block h-12 w-full rounded-sm border px-4 text-base transition-colors focus:ring-[3px] focus:outline-none motion-reduce:transition-none'
 
 type Status = 'idle' | 'starting' | 'paying'
 
@@ -92,7 +93,9 @@ export const CheckoutForm: React.FC<{
     state: string
   }
   email: string
-}> = ({ defaults, email }) => {
+  /** The cart total, already formatted, shown on the pay button. */
+  total: string
+}> = ({ defaults, email, total }) => {
   const router = useRouter()
   const [errors, setErrors] = useState<FieldErrors>({})
   const [message, setMessage] = useState<string | null>(null)
@@ -117,9 +120,7 @@ export const CheckoutForm: React.FC<{
         method: 'POST',
       })
 
-      const body = (await answer.json().catch(() => null)) as
-        | { orderId?: number | string }
-        | null
+      const body = (await answer.json().catch(() => null)) as { orderId?: number | string } | null
 
       if (
         answer.ok &&
@@ -271,7 +272,7 @@ export const CheckoutForm: React.FC<{
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <form
-        className="flex flex-col gap-5"
+        className="bg-card flex flex-col gap-5 rounded-2xl p-6 shadow-sm sm:p-8"
         method="post"
         onSubmit={(event) => {
           event.preventDefault()
@@ -286,8 +287,22 @@ export const CheckoutForm: React.FC<{
           value={defaults.foodPreference}
         />
         <div>
-          <h2 className="text-h3">{CHECKOUT_DELIVERY_HEADING}</h2>
+          <h2 className="flex items-center gap-2.5 text-lg font-bold text-green-900">
+            <span
+              aria-hidden="true"
+              className="grid size-8 place-items-center rounded-full bg-green-50 text-green-700"
+            >
+              <MapPin className="size-4" strokeWidth={2} />
+            </span>
+            {CHECKOUT_DELIVERY_HEADING}
+          </h2>
           <p className="text-ink-600 mt-2 text-sm leading-6">{CHECKOUT_DELIVERY_INTRO}</p>
+          <p className="text-ink-600 mt-3 inline-flex items-center gap-2 rounded-pill bg-green-50 px-3 py-1.5 text-sm">
+            <Mail aria-hidden="true" className="size-4 text-green-700" strokeWidth={2} />
+            <span>
+              Signed in as <span className="text-ink-900 font-semibold">{email}</span>
+            </span>
+          </p>
         </div>
 
         <div>
@@ -413,18 +428,24 @@ export const CheckoutForm: React.FC<{
         </div>
 
         {message ? (
-          <p className="text-ink-900 rounded-lg bg-gold-100 p-4 text-sm leading-6" role="alert">
+          <p className="text-ink-900 bg-gold-100 rounded-sm p-4 text-sm leading-6" role="alert">
             {message}
           </p>
         ) : null}
 
-        <button
-          className={cn(CTA_BASE, CTA_VARIANTS.primary, 'w-full sm:w-auto')}
-          disabled={busy}
-          type="submit"
-        >
-          {busy ? CHECKOUT_PAY_PENDING : CHECKOUT_PAY_CTA}
-        </button>
+        <div className="border-line mt-1 border-t pt-5">
+          <button
+            className={cn(CTA_BASE, CTA_VARIANTS.primary, 'w-full disabled:opacity-70')}
+            disabled={busy}
+            type="submit"
+          >
+            <Lock aria-hidden="true" className="size-4" strokeWidth={2.25} />
+            {busy ? CHECKOUT_PAY_PENDING : `${CHECKOUT_PAY_CTA} · ${total}`}
+          </button>
+          <p className="text-ink-600 mt-3 text-center text-sm">
+            Payment opens in a secure Razorpay window.
+          </p>
+        </div>
       </form>
     </div>
   )

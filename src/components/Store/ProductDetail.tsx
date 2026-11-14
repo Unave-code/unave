@@ -443,7 +443,7 @@ export const ProductDetail: React.FC<{
                     Product description
                   </h2>
                   <RichText
-                    className="text-body text-ink-600 mt-6 max-w-[68ch]"
+                    className="text-body text-ink-600 mx-0 mt-6 max-w-[68ch]"
                     data={product.description}
                     enableGutter={false}
                   />
