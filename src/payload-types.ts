@@ -132,6 +132,7 @@ export interface Config {
     header: Header;
     footer: Footer;
     hero: Hero;
+    testimonials: Testimonial;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
@@ -139,6 +140,7 @@ export interface Config {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     hero: HeroSelect<false> | HeroSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -2592,6 +2594,44 @@ export interface Hero {
   createdAt?: string | null;
 }
 /**
+ * Written and video testimonials shown on the home page above Common questions. The section is hidden while the list is empty.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  heading?: string | null;
+  /**
+   * Drag to reorder. Use real, attributed customer words only. No health outcomes or before-and-after claims.
+   */
+  items?:
+    | {
+        kind: 'text' | 'video';
+        name: string;
+        /**
+         * Optional, for example "Anna Nagar" or "Weekly subscriber".
+         */
+        note?: string | null;
+        /**
+         * Required for a text quote. For a video, an optional short line shown below it.
+         */
+        quote?: string | null;
+        /**
+         * An MP4 or WebM under about 30 MB plays best on phones.
+         */
+        video?: (number | null) | Media;
+        /**
+         * Optional. Shown before the video plays.
+         */
+        poster?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2763,6 +2803,27 @@ export interface HeroSelect<T extends boolean = true> {
               image?: T;
               link?: T;
             };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        kind?: T;
+        name?: T;
+        note?: T;
+        quote?: T;
+        video?: T;
+        poster?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

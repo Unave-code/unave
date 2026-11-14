@@ -33,7 +33,7 @@ export const Faq: React.FC<Props> = ({
   image = { alt: FAQ_PHOTO, src: IMAGES.faq },
   items = FAQ,
 }) => (
-  <Section id="faq">
+  <Section id="faq" tone="white">
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
       <div>
         <h2 className="text-h2">{heading}</h2>

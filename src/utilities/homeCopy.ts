@@ -155,13 +155,6 @@ export const STEPS = [
 
 /** 9. Customer words. Placeholders until real, attributed quotes arrive. */
 export const TESTIMONIALS_HEADING = 'What customers say'
-export const TESTIMONIALS = [
-  { quote: '[Customer quote goes here]', name: '[Customer name]', note: '[Area]' },
-  { quote: '[Customer quote goes here]', name: '[Customer name]', note: '[Area]' },
-  { quote: '[Customer quote goes here]', name: '[Customer name]', note: '[Area]' },
-] as const
-export const TESTIMONIALS_PLACEHOLDER =
-  'Placeholder quotes. Real, attributed customer words only, and no health outcomes.'
 
 /** 10. Common questions */
 export const FAQ_HEADING = 'Common questions'

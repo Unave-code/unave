@@ -6,6 +6,7 @@ import { Faq } from '@/components/home/Faq'
 import { Gallery } from '@/components/home/Gallery'
 import { Hero } from '@/components/home/Hero'
 import { ProductShelf } from '@/components/home/Products'
+import { Testimonials } from '@/components/home/Testimonials'
 import { FAQ, HOME_DESCRIPTION, HOME_TITLE } from '@/utilities/homeCopy'
 import { getServerSideURL } from '@/utilities/getURL'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
@@ -61,6 +62,7 @@ export default async function HomePage() {
       <Gallery />
       <ProductShelf />
       <BestSellers />
+      <Testimonials />
       <Faq />
     </main>
   )

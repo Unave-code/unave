@@ -31,6 +31,7 @@ import * as migration_20261112_170000_meal_combos from './20261112_170000_meal_c
 import * as migration_20261112_180000_announcement_messages from './20261112_180000_announcement_messages';
 import * as migration_20261113_130000_locked_document_relations from './20261113_130000_locked_document_relations';
 import * as migration_20261114_102751_home_gallery_links from './20261114_102751_home_gallery_links';
+import * as migration_20261114_140000_testimonials_global from './20261114_140000_testimonials_global';
 
 export const migrations = [
   {
@@ -197,5 +198,10 @@ export const migrations = [
     up: migration_20261114_102751_home_gallery_links.up,
     down: migration_20261114_102751_home_gallery_links.down,
     name: '20261114_102751_home_gallery_links',
+  },
+  {
+    up: migration_20261114_140000_testimonials_global.up,
+    down: migration_20261114_140000_testimonials_global.down,
+    name: '20261114_140000_testimonials_global',
   },
 ];

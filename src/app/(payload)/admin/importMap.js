@@ -30,6 +30,7 @@ import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } f
 import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/RowLabel'
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
 import { RowLabel as RowLabel_1a851488169f8e97ecd9e24680b54632 } from '@/globals/Hero/RowLabel'
+import { RowLabel as RowLabel_baff87aaefb13d7fd679edb64ff4fdaa } from '@/globals/Testimonials/RowLabel'
 import { EmailTestPanel as EmailTestPanel_f35b6a58b5dff6e458ffbffad983b6d7 } from '@/components/EmailTestPanel'
 import { default as default_3b9e6534fc1e00439f903b363c16056c } from '@/components/Admin/UserMenu'
 import { default as default_95dd06517ddf44b6ffebcc0a5feac4ca } from '@/components/Admin/NoSidebarLogout'
@@ -76,6 +77,7 @@ export const importMap = {
   "@/Header/RowLabel#RowLabel": RowLabel_ec255a65fa6fa8d1faeb09cf35284224,
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
   "@/globals/Hero/RowLabel#RowLabel": RowLabel_1a851488169f8e97ecd9e24680b54632,
+  "@/globals/Testimonials/RowLabel#RowLabel": RowLabel_baff87aaefb13d7fd679edb64ff4fdaa,
   "@/components/EmailTestPanel#EmailTestPanel": EmailTestPanel_f35b6a58b5dff6e458ffbffad983b6d7,
   "@/components/Admin/UserMenu#default": default_3b9e6534fc1e00439f903b363c16056c,
   "@/components/Admin/NoSidebarLogout#default": default_95dd06517ddf44b6ffebcc0a5feac4ca,
