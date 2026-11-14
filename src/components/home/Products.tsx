@@ -1,15 +1,10 @@
-import React from 'react'
-import Image from 'next/image'
+import { Leaf } from 'lucide-react'
 import Link from 'next/link'
+import React from 'react'
 
 import { Cta } from '@/components/Cta'
-import { Media } from '@/components/Media'
 import { EMPTY_SHELF, shelfHref } from '@/utilities/productShelf'
-import {
-  PRODUCTS_SECTION_CTA,
-  PRODUCTS_SECTION_HEADING,
-  PRODUCTS_SECTION_INTRO,
-} from '@/utilities/homeCopy'
+import { PRODUCTS_SECTION_CTA, PRODUCTS_SECTION_HEADING } from '@/utilities/homeCopy'
 import { productCategoryHref } from '@/utilities/productsCategoryCopy'
 import { getHomeSubcategories } from '@/utilities/products'
 
@@ -21,23 +16,11 @@ import { Section } from './Section'
  */
 export const ProductShelf: React.FC = async () => {
   const subcategories = await getHomeSubcategories()()
-  const subcategoryCount = subcategories.length
-  const subcategoryCountLabel =
-    subcategoryCount === 1
-      ? '1 meal type currently available.'
-      : `${subcategoryCount} meal types currently available.`
 
   return (
     <Section id="products">
-      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
-        <div className="max-w-[58ch]">
-          <h2 className="text-h2">{PRODUCTS_SECTION_HEADING}</h2>
-          <p className="text-body text-ink-600 mt-4">{PRODUCTS_SECTION_INTRO}</p>
-          {subcategoryCount > 0 ? (
-            <p className="text-caption text-ink-600 mt-3">{subcategoryCountLabel}</p>
-          ) : null}
-        </div>
-
+      <div className="flex flex-wrap items-center justify-between gap-6">
+        <h2 className="text-h2">{PRODUCTS_SECTION_HEADING}</h2>
         <Cta className="shrink-0" href="/products" variant="secondary">
           {PRODUCTS_SECTION_CTA}
         </Cta>
@@ -46,45 +29,27 @@ export const ProductShelf: React.FC = async () => {
       {subcategories.length > 0 ? (
         <ul
           aria-label="Meal subcategories"
-          className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+          className="mt-6 flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+          tabIndex={0}
         >
           {subcategories.map((subcategory) => {
-            const image =
-              typeof subcategory.image === 'object' && subcategory.image ? subcategory.image : null
             const tile = (
               <>
-                <div className="relative aspect-square overflow-hidden rounded-2xl">
-                  {image?.url ? (
-                    <Media
-                      alt={image.alt?.trim() || subcategory.title}
-                      fill
-                      imgClassName="object-cover"
-                      resource={image}
-                      size="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
-                    />
-                  ) : (
-                    <Image
-                      alt=""
-                      aria-hidden="true"
-                      className="object-cover"
-                      fill
-                      sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
-                      src="/images/product-placeholder.jpg"
-                    />
-                  )}
-                </div>
-                <h3 className="text-h3 bg-transparent px-3 py-3 text-center">
+                <Leaf aria-hidden="true" className="size-12 text-green-700" strokeWidth={1.5} />
+                <h3 className="text-lg text-gold-600 font-serif leading-tight">
                   {subcategory.title}
                 </h3>
               </>
             )
+            const className =
+              'flex size-40 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-gold-300 bg-card p-4 text-center transition-colors hover:bg-green-50 focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none'
 
             return (
-              <li key={subcategory.id}>
+              <li className="snap-start" key={subcategory.id}>
                 {subcategory.slug ? (
                   <Link
                     aria-label={`Browse ${subcategory.title} products`}
-                    className="block rounded-2xl focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none"
+                    className={className}
                     href={shelfHref(productCategoryHref(subcategory.category), {
                       ...EMPTY_SHELF,
                       subcategory: subcategory.slug,
@@ -93,7 +58,7 @@ export const ProductShelf: React.FC = async () => {
                     {tile}
                   </Link>
                 ) : (
-                  tile
+                  <div className={className}>{tile}</div>
                 )}
               </li>
             )

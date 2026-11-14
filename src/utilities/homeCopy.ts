@@ -118,7 +118,6 @@ export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
 
 /** 6b. Category browsing. */
 export const PRODUCTS_SECTION_HEADING = 'Browse our current selection'
-export const PRODUCTS_SECTION_INTRO = 'Explore the available meal types, or see every product.'
 export const PRODUCTS_SECTION_CTA = 'See every product'
 
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */

@@ -25,14 +25,33 @@ afterEach(() => {
 })
 
 describe('homepage subcategory tiles', () => {
-  it('states how many meal types are currently available', async () => {
+  it('omits the intro and available-meal count', async () => {
     getSubcategories.mockResolvedValue([
       { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
     ])
 
     render(await ProductShelf({}))
 
-    expect(screen.getByText('1 meal type currently available.')).toBeTruthy()
+    expect(screen.queryByText('Explore the available meal types, or see every product.')).toBeNull()
+    expect(screen.queryByText('1 meal type currently available.')).toBeNull()
+  })
+
+  it('renders a square icon card in a keyboard-scrollable row', async () => {
+    getSubcategories.mockResolvedValue([
+      { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
+    ])
+
+    render(await ProductShelf({}))
+
+    const list = screen.getByRole('list', { name: 'Meal subcategories' })
+    expect(list.getAttribute('tabindex')).toBe('0')
+    expect(list.className).toContain('overflow-x-auto')
+
+    const link = screen.getByRole('link', { name: 'Browse Greens products' })
+    expect(link.className).toContain('size-40')
+    expect(link.className).toContain('border-gold-300')
+    expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-12')
+    expect(link.querySelector('img')).toBeNull()
   })
 
   it('opens the category shelf filtered by the subcategory slug', async () => {

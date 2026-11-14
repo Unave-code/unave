@@ -565,7 +565,7 @@ html {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 44px;
   align-items: center;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .announcement-viewport {

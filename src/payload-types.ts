@@ -2485,7 +2485,7 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
- * Upload the promotional images shown in the home page slider. Set each image’s alt text in Media for accessibility.
+ * Manage the home page slider and the three linked photos shown beneath it.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "hero".
@@ -2504,6 +2504,41 @@ export interface Hero {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Set each photo and its optional destination link.
+   */
+  gallery?: {
+    image1?: {
+      /**
+       * Choose a Media item with descriptive alt text.
+       */
+      image?: (number | null) | Media;
+      /**
+       * Optional. Use a site path such as /products or an HTTP(S) URL.
+       */
+      link?: string | null;
+    };
+    image2?: {
+      /**
+       * Choose a Media item with descriptive alt text.
+       */
+      image?: (number | null) | Media;
+      /**
+       * Optional. Use a site path such as /products or an HTTP(S) URL.
+       */
+      link?: string | null;
+    };
+    image3?: {
+      /**
+       * Choose a Media item with descriptive alt text.
+       */
+      image?: (number | null) | Media;
+      /**
+       * Optional. Use a site path such as /products or an HTTP(S) URL.
+       */
+      link?: string | null;
+    };
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2657,6 +2692,28 @@ export interface HeroSelect<T extends boolean = true> {
     | {
         image?: T;
         id?: T;
+      };
+  gallery?:
+    | T
+    | {
+        image1?:
+          | T
+          | {
+              image?: T;
+              link?: T;
+            };
+        image2?:
+          | T
+          | {
+              image?: T;
+              link?: T;
+            };
+        image3?:
+          | T
+          | {
+              image?: T;
+              link?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;
