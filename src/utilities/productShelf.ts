@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import type { Where } from 'payload'
 
 import type { Product } from '@/payload-types'
+import { PRODUCT_KIND_ORDER, type ProductKindValue } from '@/utilities/productsCopy'
 import {
   AUDIENCE_FILTER_ORDER,
   isProductCategory,
@@ -16,7 +17,7 @@ import {
  * `/products` and the three category pages are the same shelf reading the same
  * collection, so every rule about what a customer can ask for lives here once.
  * The state travels in the address, for example
- * `?q=&category=&audience=&subcategory=&from=&to=&sort=&page=2`, so a filtered
+ * `?q=&category=&kind=&audience=&subcategory=&from=&to=&sort=&page=2`, so a filtered
  * view can be linked, bookmarked, reloaded and stepped through with the back
  * button, and the whole thing works with JavaScript off.
  *
@@ -62,6 +63,8 @@ const SHELF_SORT_QUERY: Record<ShelfSortKey, string[]> = {
 export interface ShelfState {
   audience: null | ProductAudienceFilterValue
   category: null | ProductCategoryValue
+  /** Meal plans, single items or combos. */
+  kind: null | ProductKindValue
   /** The low end of the price range, in whole rupees a day. */
   from: null | number
   page: number
@@ -76,6 +79,7 @@ export interface ShelfState {
 export const EMPTY_SHELF: ShelfState = {
   audience: null,
   category: null,
+  kind: null,
   from: null,
   page: 1,
   q: '',
@@ -120,15 +124,22 @@ const wholePage = (raw: undefined | string): number => {
 export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
   const audienceRaw = firstValue(raw.audience)
   const categoryRaw = firstValue(raw.category)
+  const kindRaw = firstValue(raw.kind)
   const sortRaw = firstValue(raw.sort)
   const subcategoryRaw = firstValue(raw.subcategory)
 
   return {
     audience:
-      audienceRaw && audienceRaw !== 'all' && (AUDIENCE_FILTER_ORDER as readonly string[]).includes(audienceRaw)
+      audienceRaw &&
+      audienceRaw !== 'all' &&
+      (AUDIENCE_FILTER_ORDER as readonly string[]).includes(audienceRaw)
         ? (audienceRaw as ProductAudienceFilterValue)
         : null,
     category: categoryRaw && isProductCategory(categoryRaw) ? categoryRaw : null,
+    kind:
+      kindRaw && (PRODUCT_KIND_ORDER as readonly string[]).includes(kindRaw)
+        ? (kindRaw as ProductKindValue)
+        : null,
     from: wholeRupees(firstValue(raw.from)),
     page: wholePage(firstValue(raw.page)),
     q: (firstValue(raw.q) ?? '').trim().slice(0, SEARCH_MAX_LENGTH),
@@ -165,6 +176,7 @@ export const shelfHref = (
 
   if (next.q) params.set('q', next.q)
   if (next.category) params.set('category', next.category)
+  if (next.kind) params.set('kind', next.kind)
   if (next.audience) params.set('audience', next.audience)
   if (next.subcategory) params.set('subcategory', next.subcategory)
   if (next.from !== null) params.set('from', String(next.from))
@@ -181,11 +193,12 @@ export const shelfHref = (
 export const hasShelfFilters = (state: ShelfState, fixedCategory?: ProductCategoryValue): boolean =>
   Boolean(
     state.q ||
-      state.audience ||
-      state.subcategory ||
-      state.from !== null ||
-      state.to !== null ||
-      (state.category && state.category !== fixedCategory),
+    state.audience ||
+    state.kind ||
+    state.subcategory ||
+    state.from !== null ||
+    state.to !== null ||
+    (state.category && state.category !== fixedCategory),
   )
 
 /* ------------------------------------------------------------------- query */
@@ -205,6 +218,7 @@ export const shelfWhere = (
 
   if (category) and.push({ category: { equals: category } })
   if (subcategoryId !== undefined) and.push({ subcategory: { equals: subcategoryId } })
+  if (state.kind) and.push({ type: { equals: state.kind } })
   if (state.audience) and.push({ audience: { equals: state.audience } })
   if (state.from !== null) and.push({ fromPrice: { greater_than_equal: state.from * 100 } })
   if (state.to !== null) and.push({ fromPrice: { less_than_equal: state.to * 100 } })

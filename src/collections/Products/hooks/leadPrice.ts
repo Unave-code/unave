@@ -15,11 +15,20 @@ import { leadPricePaise } from '@/utilities/leadPrice'
  * Nothing in the admin edits the field: it is derived, and it is read only
  * there.
  */
-export const setLeadPrice: CollectionBeforeChangeHook<Product> = ({ data }) => ({
-  ...data,
-  fromPrice: leadPricePaise({
-    durations: data.durations,
-    price: data.price,
-    type: data.type,
-  }),
-})
+export const setLeadPrice: CollectionBeforeChangeHook<Product> = ({ data, originalDoc }) => {
+  /* A partial update — toggling Available over the API, say — carries only the
+     fields it changes. Whatever it leaves out is read from the stored record,
+     so the lead price is worked out from the whole product, never wiped to
+     nothing by a save that did not touch the pricing. */
+  const pick = <K extends 'durations' | 'price' | 'type'>(key: K): Product[K] | undefined =>
+    key in data ? data[key] : originalDoc?.[key]
+
+  return {
+    ...data,
+    fromPrice: leadPricePaise({
+      durations: pick('durations'),
+      price: pick('price'),
+      type: pick('type'),
+    }),
+  }
+}

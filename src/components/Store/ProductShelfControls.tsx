@@ -23,7 +23,10 @@ import {
   SHELF_APPLY,
   SHELF_CLEAR,
   SHELF_FILTER_ALL,
+  PRODUCT_KIND_FILTER_LABEL,
+  PRODUCT_KIND_ORDER,
   SHELF_FILTER_AUDIENCE,
+  SHELF_FILTER_KIND,
   SHELF_FILTER_CATEGORY,
   SHELF_PRICE_FROM,
   SHELF_PRICE_LABEL,
@@ -134,6 +137,16 @@ export const ProductShelfControls: React.FC<{
           value={state.category}
         />
       )}
+
+      <FacetSelect
+        label={SHELF_FILTER_KIND}
+        name="kind"
+        options={PRODUCT_KIND_ORDER.map((value) => ({
+          label: PRODUCT_KIND_FILTER_LABEL[value],
+          value,
+        }))}
+        value={state.kind}
+      />
 
       <FacetSelect
         label={SHELF_FILTER_AUDIENCE}

@@ -44,7 +44,8 @@ const addLine = async (page: Page, title = 'Lunch plan', duration = /^One month/
   // The card is a door now: open the product's own page, where the durations
   // and the cart live, then add the chosen one.
   await cardFor(page, title).getByRole('link').first().click()
-  await page.getByText(duration).click({ force: true })
+  // The page now also lists the durations as a summary, so pick the radio itself.
+  await page.getByRole('radio', { name: duration }).check({ force: true })
   await page.getByRole('button', { name: 'Add to cart' }).click({ force: true })
 
   // The add writes the cookie through a fetch or a form post, and the test may

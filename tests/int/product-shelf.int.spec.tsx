@@ -75,6 +75,7 @@ describe('reading the address', () => {
         audience: 'kids',
         category: 'ready-to-cook',
         from: '50',
+        kind: 'combo',
         page: '3',
         q: '  dal  ',
         sort: 'price-asc',
@@ -85,6 +86,7 @@ describe('reading the address', () => {
       audience: 'kids',
       category: 'ready-to-cook',
       from: 50,
+      kind: 'combo',
       page: 3,
       q: 'dal',
       sort: 'price-asc',
@@ -194,6 +196,16 @@ describe('what counts as filtered', () => {
 })
 
 describe('the query the shelf reads by', () => {
+  it('narrows to one kind of product', () => {
+    expect(shelfWhere({ ...EMPTY_SHELF, kind: 'combo' })).toEqual({
+      and: [{ type: { equals: 'combo' } }],
+    })
+  })
+
+  it('ignores a kind it does not know', () => {
+    expect(parseShelfState({ kind: 'bundle' }).kind).toBeNull()
+  })
+
   it('asks for nothing at all when nothing is asked', () => {
     expect(shelfWhere(EMPTY_SHELF)).toEqual({})
   })
@@ -340,7 +352,7 @@ describe('the shelf controls', () => {
     const names = [...container.querySelectorAll('select, input[name]')].map((field) =>
       field.getAttribute('name'),
     )
-    expect(names.sort()).toEqual(['audience', 'category', 'from', 'q', 'sort', 'to'])
+    expect(names.sort()).toEqual(['audience', 'category', 'from', 'kind', 'q', 'sort', 'to'])
   })
 
   it('keeps the subcategory slug when applying other shelf controls', () => {

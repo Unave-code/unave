@@ -433,6 +433,52 @@
   padding-top: calc(3.5rem + var(--navbar-height));
 }
 
+/* The scrim over a photograph in a green band. The top fades from deep green so the
+   transparent navbar reads over any photo; the left side holds the headline and
+   lead at AA contrast, and the right side lets the photograph show. On a phone the
+   copy spans the full width, so the scrim is even across. */
+.photo-scrim {
+  background:
+    linear-gradient(to bottom, rgb(15 46 33 / 0.75), rgb(15 46 33 / 0) 9rem),
+    rgb(15 46 33 / 0.72);
+}
+
+@media (width >= 48rem) {
+  .photo-scrim {
+    background:
+      linear-gradient(to bottom, rgb(15 46 33 / 0.7), rgb(15 46 33 / 0) 9rem),
+      linear-gradient(
+        to right,
+        rgb(15 46 33 / 0.92) 0%,
+        rgb(15 46 33 / 0.78) 38%,
+        rgb(15 46 33 / 0.25) 75%,
+        rgb(15 46 33 / 0.1) 100%
+      );
+  }
+}
+
+/* Browser surfaces carry the brand too: selection, caret, scrollbar and link
+   underlines are drawn from the palette rather than left at browser defaults. */
+::selection {
+  background-color: var(--gold-300);
+  color: var(--green-900);
+}
+
+html {
+  scrollbar-color: var(--green-500) var(--green-50);
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  caret-color: var(--green-700);
+}
+
+a {
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
 /* The home hero starts taller than the other opening bands, on every viewport. */
 .opening-band-tall {
   padding-top: calc(5.5rem + var(--navbar-height));

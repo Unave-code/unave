@@ -269,7 +269,7 @@ Six reasons on the white band, drawn as one bento rather than a grid of equal ca
 
 Used for medical, allergy, diabetes, child nutrition and goal disclaimers, wherever a claim is made.
 
-- Background `--gold-100`, 4px left border `--gold-500`, 16px radius, info icon.
+- Background `--gold-100`, 1px `--gold-300` border all round, 16px radius, info icon. (A thick coloured side-stripe was dropped: it read as a generic alert, not as part of the band.)
 - Title in bold ("A note on your goals", "Important, from one parent to another").
 - Text size at least 16px. **Never use tiny grey print.**
 
@@ -356,7 +356,369 @@ Enquiries are stored in the `enquiries` collection (staff read in the admin, one
 Added with the products and payments feature (spec 0007). Copy lives beside each page (`productsCopy.ts`, `productsCategoryCopy.ts`, `cartCopy.ts`, `checkout/copy.ts`, `order-placed/copy.ts`); money is always shown through the shared `formatPaise` paise formatter, never hand formatted. The store pages read live data on every request, so nothing in this section is ever cached.
 
 - **Products (`/products`)** — the deep green hero band with swoosh, gold-accented headline, and one primary pill (*Browse the products*, anchored to the grid). The grid is photo-first cards, almost chromeless: the photo fills the whole card edge-to-edge at 4:3 in a soft rounded frame with no border, and the name — in the heading serif, cream — and the cheapest per-day rate (*From ₹59 a day*, floored to whole rupees so the lead never promises more precision than the totals carry) sit on a deep green gradient band along the photo's bottom edge. The audience (Kids, Adults, Special) rides as a frosted deep-green pill — `green-900` at 70% with cream text and a hairline cream ring, so it stays legible over any photo — on the photo's top-left, and a paused product gains a gold **Paused** pill (`gold-400`, `green-900` text) beside it, its lead price still readable and nothing to add. The whole card is one stretched link to the product's own page — the band's words let clicks fall through to it, and the card's focus ring is drawn by the card itself — so open and buy stay two separate controls: one gold **Add to cart** pill (44px, the on-dark variant) sits in the band adding the record's first duration through the same POST `/api/cart/add` flow and the same polite confirmation line as the product page, revealed on hover or focus on a fine pointer (the `.card-reveal` utility in `globals.css`) and always visible on touch, the confirmation sharing the price's line so nothing shifts. The photo is the product record's `image`; when the kitchen has not uploaded one, the card falls back to a branded placeholder (`/images/product-placeholder.jpg`, the gold wordmark on deep green), so a card is never a blank box. The gold notice block (§6.9) sits under the grid explaining what *paused* means: a paused product keeps its place in every sort rather than being hidden, and every sort leads with the products to buy. Above the grid sits the shelf's search bar — search, filters, price and sort — and above the cards one quiet line says where in the shelf the page sits (*Showing 1–12 of 30 products*); twelve products to a page, with the blog's numbered pager (§10.4) under them. All of it reads and writes the address, so any view of the shelf can be linked, bookmarked and reloaded (§6.19). Two empty states, so the words never lie — one when the filters matched nothing, offering *Clear all*, and one when the shelf has nothing on it, a quiet card with a **Message us on WhatsApp** secondary action, never a dead end. A three-step *How a product works* list sits on the tint band, and the closing band carries the final CTA.
-- **Product page (`/products/<slug>`)** — the room the card opens, and it keeps the card's language in two columns on desktop. The photo fills the left column at 4:3, and the name rides the card's gradient band along its bottom edge with the badges beside it — the category chip (a light green link back to that category's page), the frosted deep-green audience chip and, on a paused product, a gold **Paused** chip — above a gold subcategory eyebrow; the page heading with its own canonical address is the band's last line. Under the photo the product's points read as a two-column list, each point check-marked in a small green chip. The right column is the buy column, pinned beside the scrolling left (`lg:sticky`): the bare buy panel, no box, hairline-divided, leads it — the chosen duration's per day price leads in bold Nunito with a quiet *a day* beside it and the total in one line under it, a hairline, then one native radio chip per duration, each carrying its label and total price so every duration and price renders without JavaScript, another hairline, then one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill in the footer's number — and the description sits under the panel. Prices stay in the body font, where the rupee sign reads clearly. On a phone the buy column — panel then description — follows the photo before the points. Below the two columns the rest of the same shelf appears as cards under a **More from the kitchen** heading: up to three related products from the product's own category, newest first, this one left out, each a full card opening its own page. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
+- **Product page (`/products/<slug>`)** — a shop page in three columns from `lg`. **Left:** the photo gallery (`ProductGallery`), one large square photo in a soft rounded frame with a medium shadow and, when there is more than one photo, a strip of thumbnails down its left edge (along the bottom on a phone); pointing at, focusing or choosing a thumbnail shows that photo, the active one ringed in gold, and a caption names what is on show. The gallery is pinned (`md:sticky`). A paused product carries a gold **Paused** chip on the photo's top-left. **Middle:** the category chip (a light green link to that category's page) and audience chip, the name as the page heading in green-900 at 34px extra-bold (28px on a phone), one quiet line with its kind and subcategory, a hairline, then the price it leads with at 40px extra-bold (34px on a phone) — the flat price, or *From ₹300 a day* for a plan, with a red percentage and a struck *Was* price when a one-time product has a compare-at price (hidden on a phone, where the buy box carries it directly below). Then, each behind its own hairline under a bold body-size heading: **Compare durations** on a plan with more than one (label, days, total and per-day rate), **What you get** (the check-marked points) and **Included in this combo (n)** on a combo. **Right:** the buy box, a bordered card pinned beside the reading: an availability line (*Available to order* in success green, or *Paused for now*), then the bare buy panel — price at 30px extra-bold, a hairline, the duration chips (native radios, so every duration renders without JavaScript), a hairline, the full width **Add to cart** pill posting to `/api/cart/add`, and the secondary **Message us on WhatsApp** pill. Between `md` and `lg` the gallery sits beside the middle column and the buy box follows it; on a phone everything stacks, gallery first. The breadcrumb ends with the product's own name as the current page.
+- **A combo shows what is inside it with pictures.** In the middle column each item is a row: its own photo at 64px (the branded placeholder when it has none), its name, its kind and duration (*Meal plan · One week, 5 days*) and an arrow; the row links to the item's own page. Every item photo also joins the gallery after the combo's own photo, captioned with the item's name, so a combo with no photo of its own still opens on real food when its items have photos. The route reads a combo at depth 2 so its items' photos arrive with it; every other product keeps the lighter depth 1 read.
+- **Under the columns, full width:** **Product description** (the rich text) with the combo's notice and the paused notice, beside a **Product details** table built only from the record's own fields — kind, category, type, audience, pack size, number of items. When there is no description and no notice, the table takes the reading width alone. Nothing on the page is invented: no ratings, no review counts, no delivery promises. Then, on its own tint band, **More from the kitchen**: up to three related products from the same category, newest first, this one left out. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding. A paused product still renders in full with its durations and prices readable and nothing to add.
+
+Design guide for the UNAVE Cloud Kitchen website. Derived from the brand logo (deep forest green + warm gold, rounded sans wordmark, swan/bird swoosh mark) and the website page content (Home, Gym & Fitness, Healthy Food, Children).
+
+---
+
+## 1. Brand Essence
+
+**What UNAVE is:** A cloud kitchen that cooks only healthy food: Healthy, Nutrition, Diet and Diabetes-conscious meals. Orders happen by message — WhatsApp, phone, email or the contact form — on a schedule the kitchen agrees with each customer.
+
+**Personality:** Calm, trustworthy, fresh, warm, honest. Nothing loud, nothing clinical.
+
+**Voice (from copy):** Plain, friendly, reassuring. Short sentences. Speaks "from one parent to another" rather than like a brand. Never makes medical or result promises ("We don't promise weight loss or muscle gain").
+
+**Design principles**
+
+1. **Calm over clever.** Generous whitespace, few elements per section. The brand sells relief from daily planning.
+2. **Fresh and natural.** Green dominates, gold accents. Photography of real, simply cooked food.
+3. **Honest and clear.** What we cook, where we deliver, terms and disclaimers are visible, never hidden. Design should make the "fine print" readable.
+4. **Easy to act.** One primary action per section: *Message us on WhatsApp*. Browsing the plans and sending a message need no account and no form-fighting. Buying a plan is the one thing that asks for an account, and only at checkout, so the kitchen knows who ordered and where to deliver. Signing in otherwise buys convenience only (a saved profile, the order list), never access.
+5. **Soft, rounded, friendly.** Echoes the rounded letterforms and curved swoosh of the logo.
+
+---
+
+## 2. Logo
+
+- **Mark:** Gold swan/bird swoosh forming a "U" curve (the "U" of UNAVE and a bowl/plate shape).
+- **Wordmark:** "UNAVE" in all caps, rounded geometric sans, wide letter-spacing.
+- **Primary lockup:** Mark stacked above wordmark, gold on deep green (as supplied).
+- **Horizontal lockup (header):** Mark left, wordmark right. Create from the supplied artwork.
+
+**Usage rules**
+
+| Rule | Spec |
+| --- | --- |
+| Clear space | At least the height of the "U" letter on all sides |
+| Min size (mark + wordmark) | 120px wide on web, 80px for mark alone |
+| Favicon / app icon | Mark only, gold on green rounded square |
+| On light backgrounds | Deep green (`--green-700`) mark and wordmark |
+| On dark backgrounds | Gold (`--gold-400`) mark and wordmark |
+| Don't | Stretch, recolor outside the palette, add shadows or outlines, or place where the mark cannot be read |
+
+---
+
+## 3. Color
+
+### 3.1 Brand palette (sampled from logo)
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| `--green-700` (Brand Green) | `#1A4B36` | Primary brand, header, footer, headings on light, primary buttons |
+| `--gold-400` (Brand Gold) | `#F1C361` | Accent, CTA on dark, highlights, icons |
+
+### 3.2 Extended palette
+
+| Token | Hex | Use |
+|---|---|---|
+| `--green-900` | `#0F2E21` | Footer base, deep overlays |
+| `--green-800` | `#143B2A` | Hover on dark surfaces |
+| `--green-600` | `#256349` | Hover on primary buttons, links |
+| `--green-500` | `#3A7D5F` | Icons, secondary accents |
+| `--green-200` | `#CFE3D8` | Borders on tinted sections |
+| `--green-100` | `#E6F0EA` | Tinted section backgrounds, table header |
+| `--green-50` | `#F3F8F5` | Subtle surfaces |
+| `--gold-600` | `#B8892A` | Gold text on light (AA-safe) |
+| `--gold-500` | `#D9A93F` | Gold hover on dark |
+| `--gold-300` | `#F6D88F` | Soft highlight |
+| `--gold-100` | `#FCF1D6` | Notice/disclaimer background |
+| `--cream` | `#FAF7EF` | Page background (warm off-white) |
+| `--white` | `#FFFFFF` | Cards |
+| `--ink-900` | `#1B2620` | Body text |
+| `--ink-600` | `#4A5A52` | Secondary text |
+| `--ink-400` | `#7C8A83` | Captions, placeholders |
+| `--line` | `#E4E0D2` | Dividers and card borders |
+
+### 3.3 Semantic colors
+
+| Purpose | Color |
+| --- | --- |
+| Success (saved, sent) | `#2E8B57` on `#E6F4EC` |
+| Error | `#B3261E` on `#FBE9E7` |
+| Warning / medical note | `#8A5A00` on `--gold-100` |
+| Info | `--green-700` on `--green-100` |
+
+### 3.4 Category colors (four food types)
+
+Subtle tints for category cards and tags. Always pair color with an icon and label.
+
+| Category | Accent | Tint |
+| --- | --- | --- |
+| Healthy food | `#3A7D5F` | `#E6F0EA` |
+| Nutrition food | `#D9A93F` | `#FCF1D6` |
+| Diet food | `#5B8C85` | `#E4F0EE` |
+| Diabetes-conscious | `#8A6D3B` | `#F4EBDD` |
+
+### 3.5 Contrast rules
+
+- Gold `#F1C361` on green `#1A4B36` is about 6:1. Use for text and buttons on dark.
+- **Never use gold as text on white or cream.** Use `--gold-600` or green.
+- Body text: `--ink-900` on cream or white.
+- Minimum WCAG AA (4.5:1 body, 3:1 large text and UI).
+
+### 3.6 Background rhythm
+
+Alternate sections to keep pages calm and scannable:
+
+1. Hero: deep green with gold CTA
+2. Cream
+3. White / green-50
+4. Cream
+5. Green-100 (notice or highlight)
+6. Final CTA: deep green
+7. Footer: `--green-900` over the field photograph (§6.12)
+
+---
+
+## 4. Typography
+
+The site uses Nunito for headings, body text and UI. Its rounded geometric forms complement the supplied wordmark; hierarchy comes from the existing size and weight scale, not a second type family.
+
+| Role | Font | Fallback |
+| --- | --- | --- |
+| Headings / body / UI | **Nunito** (variable weights, normal and italic), rounded geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| Wordmark | Use supplied logo artwork only, never retype | n/a |
+
+Load via `next/font` with `display=swap` on the site and Google Fonts for the Payload admin. Include real fallback stacks.
+
+### Type scale
+
+Sizes are fixed, not fluid: one small size per role, identical on every viewport, so no page or section ever reads bigger than another (`globals.css`). Heading hierarchy is weight-led — the display size, H1, H2 and H3 all sit at 22px, and hierarchy comes from weight, colour and the italic gold phrase, never from size jumps between screens. The one exception is the home hero's own display line and sub-line (`--text-hero`, `--text-hero-lead`), which lead the whole site and read larger than every page heading.
+
+| Style | Size | Line height | Weight | Notes |
+| --- | --- | --- | --- | --- |
+| Hero display (home hero H1) | 34px mobile / 52px desktop | 1.1 | 700 | The one size above the scale; one phrase may be italic gold |
+| Hero sub-line | 17px mobile / 19px desktop | 1.5 | 400 | Cream at 85% over the hero photograph |
+| Display (page hero H1) | 22px | 1.3 | 700 | Same size as every heading; one phrase may be italic gold |
+| H1 | 22px | 1.3 | 700 | |
+| H2 | 22px | 1.3 | 700 | Section titles |
+| H3 | 22px | 1.35 | 600 | Card titles, semibold |
+| Lead / hero sub-line | 16px | 1.55 | 400 | `--ink-600` or cream on green |
+| Body | 15px | 1.65 | 400 | Max width 65ch |
+| Small / caption | 13px | 1.5 | 500 | |
+| Button | 15px | 1 | 700 | Not uppercase |
+| Eyebrow / label | 11px | 1.2 | 700 | Uppercase, 0.12em tracking, gold-600 |
+
+Tailwind's built-in `text-sm` (13px), `text-base` (15px) and `text-lg` (16px) are remapped onto the same scale in `globals.css`, so a stray default utility never reintroduces a size the contract doesn't have.
+
+**Rules**
+
+- Sentence case everywhere. Reserve ALL CAPS for the wordmark and eyebrow labels.
+- Hero headlines can emphasize one phrase in gold (e.g. "planned for your *whole month*").
+- Keep line length 45 to 75 characters.
+- Hierarchy is weight-led: never make a heading outrank another by size — use weight (700 vs 600) or colour. The home hero's display line is the single exception, sized above every page heading on purpose.
+- Section headings use a short two-tone green and gold underline aligned to the heading, centered when the heading is centered.
+
+---
+
+## 5. Layout and Spacing
+
+**Grid:** 12 columns, max container 1200px, 24px gutters (16px mobile). Content-heavy text blocks max 720px.
+
+**Spacing scale (4px base):** 4, 8, 12, 16, 24, 32, 48, 64, 96, 128.
+
+| Context | Value |
+| --- | --- |
+| Section vertical padding | 96px desktop / 56px mobile |
+| Card padding | 24px to 32px |
+| Gap between cards | 24px |
+| Heading to paragraph | 16px |
+| Paragraph to paragraph | 16px |
+
+**Breakpoints:** 480 (small phone), 768 (tablet), 1024 (laptop), 1280 (desktop). Design **mobile-first**; most users arrive from WhatsApp and phone links.
+
+**Radius:** Soft and rounded to echo the logo.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--r-sm` | 8px | Inputs, tags |
+| `--r-md` | 16px | Cards |
+| `--r-lg` | 24px | Hero image, large panels |
+| `--r-pill` | 999px | Buttons, chips |
+
+**Elevation (soft, green-tinted):**
+
+- `--shadow-sm`: `0 1px 3px rgba(26,75,54,.08)`
+- `--shadow-md`: `0 8px 24px rgba(26,75,54,.10)`
+- `--shadow-lg`: `0 16px 40px rgba(26,75,54,.14)`
+
+---
+
+## 6. Components
+
+### 6.1 Buttons
+
+| Variant | Light bg | Dark (green) bg |
+| --- | --- | --- |
+| **Primary** | bg `#1A4B36`, text cream, hover `#256349` | bg `#F1C361`, text `#1A4B36`, hover `#D9A93F` |
+| **Secondary** | 2px green border, green text, hover green-50 | 2px gold border, gold text, hover rgba(gold, .12) |
+| **Text link** | Green, underline on hover, arrow icon | Gold |
+
+- Pill shape, 52px tall (44px min on mobile), padding 0 28px. A **small** size exists for tight surfaces, 44px tall with 20px padding and `--text-caption`-scale type — the smallest pill the design allows, used on the product cards (§6.15).
+- Focus ring: 3px `--gold-400` with 2px offset (on light: 3px `--green-500`).
+- One primary button per section. Pair with one secondary.
+- **WhatsApp actions.** Every "message the kitchen" button opens WhatsApp through one helper, `whatsappHref` in `src/utilities/whatsapp.ts`, which reads the number from the footer global, sends digits only to `wa.me`, and prefills the opening line. The button carries the filled WhatsApp glyph (`WhatsAppIcon`, in `src/components/WhatsAppIcon`) and reads **Message us on WhatsApp**. When the footer holds no number yet, the button falls back to the contact page and reads **Message us**.
+- **Standard CTA labels (from copy):** Message us on WhatsApp, Message us, Contact us, Talk to us, Ask us a question, How it works, Common questions.
+
+### 6.2 Header / Navigation
+
+- Sticky, and transparent while the page sits at the top: the band that opens a page runs up behind it, so the bar has no fill of its own there and its words turn cream and gold over a dark band, or stay green over cream. Once the page scrolls it becomes a solid `--green-900` bar with a gold wordmark, gold links, cream text and a 1px `--green-800` bottom edge. A page that opens on a photograph or a green field marks that band `.opening-band` (`src/app/(frontend)/globals.css`), which pulls the band up behind the bar and hands the bar's own height back as padding, so nothing inside the band moves.
+- Above it, a slim `--gold-400` announcement strip: one or more CMS-managed messages move across the strip in bold deep green text, with gold fades at both edges and a dismiss control at the right. The marquee pauses on hover and lays all messages out in a static row while a link has keyboard focus; under reduced motion it always shows the static row. It pins together with the bar so the bar sits directly under it.
+- Left: horizontal logo. Center/right: the menu links from the **Site chrome** header global — today Home · About · Contact, seven at most (the seventh is the cart link staff add in Site chrome; on desktop the search link reads as a pill-shaped search field beside the menu and actions, and the cart stays in the right-hand action group with its live count; on mobile the search link fills a second row under the logo and actions). **About** also sits in the footer's Explore column; the header and footer are Payload globals, so the live list is whatever they hold. Desktop links carry the animated `.header-link` underline (a 2px pill in `currentColor`, wiping in from the left over 200ms on hover or focus) which stays on the link for the page you are on (`aria-current="page"`); in the drawer the current page's row turns cream over a soft wash. The cart's count badge zooms in whenever it changes.
+- The bar's controls hovers use a soft wash of the text colour itself (`hover:bg-current/10`), so the same class reads green on the cream bar and gold on the dark one; the scrolled bar lifts on a green-tinted shadow, and every control yields a little while pressed (design.md §9). All of it is switched off under `prefers-reduced-motion`.
+- Right: no primary pill — the page's own calls to action carry the primary weight, so the bar never competes with them. It holds the account links: signed out, a quiet **Sign in** (icon only on the narrowest screens) and a **Sign up** beside it from the `sm` breakpoint up. Signed in, that control becomes an account menu — the customer's first name (or **Your account** when Payload holds no name) plus a chevron that turns when the menu is open, opening a small panel that names who is signed in and carries **Your account** and **Sign out**. These are code, never CMS copy, because they reflect session state. Sign out is a quiet form post to `/api/customers/logout`, so it also works without JavaScript and revokes the session row.
+- The menu is keyboard complete: ArrowDown/ArrowUp move between items, Home and End jump, Escape closes and returns focus to the trigger, Tab leaves, and a pointer down outside closes it.
+- Mobile: hamburger opens a full-height green drawer, gold links, large tap targets (56px). The account links close the drawer: **Sign in** and **Sign up** signed out, **Your account** and **Sign out** signed in, one 56px row each.
+- Add a floating **WhatsApp** button (bottom-right) for "send us a message and we'll help you choose".
+
+### 6.3 Hero
+
+The home hero is the image slider (§10.1). Up to five images live in the *Home hero* global (admin, **Home page → Home hero**); banner alt text comes from each Media record. The same global manages the three photos below the slider, with an optional site-path or HTTP(S) destination per image. The visible heading follows the photo gallery as HTML, not only as text baked into the banner. Do not invent eligible products or portion sizes in banner artwork. Saving the global revalidates both sections. If no image is configured, the built-in kitchen photograph keeps the home page from opening on a blank space.
+
+- A rounded, constrained image banner sits on a white section below the navbar. The contact action sits at the start of the category section, before its heading.
+- The white section has 2rem of top space after the deep green navbar; the image panel is inset from the page edges.
+- Wide promotional banners preserve their full message with `object-contain`; the fallback kitchen photograph may fill the frame. The first image loads with the document, and later slides load when needed.
+- The heading and offer conditions remain available to assistive technology even when the image is decorative.
+- Controls sit over the lower edge of the banner: gold dots (44px hit areas around an 8px visible dot), pause/play, and previous/next. A single image shows no controls. Visitors can also swipe or use the arrow keys. Rotation stops on hover, focus, a hidden tab, or a reduced-motion preference.
+
+### 6.4 Category cards (four food types)
+
+- Category images use the local food photos listed in `src/utilities/homeCopy.ts`.
+- 4-up grid desktop, 2-up tablet, 1-up mobile (horizontal swipe optional).
+- Card: white, 16px radius, 1px line border, tinted icon circle (category tint), H3 title, 2 to 3 line description.
+- **Diabetes-conscious card** carries a small inline note: *"Food option, not medical advice."*
+- Hover: lift 4px, `--shadow-md`.
+
+### 6.5 Tables (routine, situation and how-it-fits tables from the copy)
+
+- Header row `--green-100`, bold green text. Row dividers `--line`. Zebra optional (`--green-50`).
+- 16px radius on the wrapper, `overflow-x: auto` on mobile.
+- **On mobile, convert to stacked cards** (label above value) rather than horizontal scroll where there are 3 or fewer columns.
+
+### 6.6 How-it-works steps
+
+The sequence pattern, drawn as one infographic rail rather than a grid of cards (`src/components/StepRail.tsx`): the home page's *How it works* (four steps: Tell us what you need → We plan the week → We cook and deliver → Say if it changes) and our-kitchen's *What happens before your meal reaches you* (five steps) both use it.
+
+- One `<ol>`; each step a gold circle (`--gold-400`) carrying its number in `--green-900`, bold and `tabular-nums` so the figures line up. The numeral is a reading aid and stays out of the accessibility tree; the list carries the order for a screen reader.
+- A dashed `--green-200` track runs through the circle centres, starting and ending half a column in from the edges, so the rail takes any number of steps without a class per count. The circles are opaque and sit over the track, which is what hides the stub of line behind each one.
+- From `lg` the rail runs horizontally with a chevron in each gap, breaking the track so the eye is carried left to right. Below that it turns vertical: the circles stack down the left and the track runs from one to the next.
+- Under every circle a bold title and its one-line description, centred from `lg` up and capped at 34ch so a line never runs wide.
+- The home page sets the rail on the tint band, so it reads as the order drawn out rather than four more cards between two white sections; our-kitchen keeps it on cream, and the rail takes the band colour so its chevrons break the track cleanly.
+
+### 6.7 "What makes us different" list
+
+Six reasons on the white band, drawn as one bento rather than a grid of equal cards (`src/components/home/Benefits.tsx`). The section is bracketed by the four food-type cards above it and the product shelf below, so a third grid of identical boxes would read as filler.
+
+- A three-column grid from `lg` up, in the copy's order: wide, tall, small, small, wide, small (held in `TILES`). The tall tile is one column wide and two rows deep, which lets the two small tiles sit underneath the first wide one; every cell of the three rows is filled, so the block interlocks instead of stacking in bands. Two across on a tablet, one on a phone, where the tiles simply stack.
+- Three of the six carry a photograph, and they take the wide and the tall tiles — a photograph is what makes a big tile worth being big. Each is a `next/image` with `fill` under a bottom-dark scrim (`from-green-900/95 via-green-900/60 to-green-900/10`, the same scrim the product card uses), rounded 16px, with cream copy sitting in the bottom third where the scrim is heaviest, so the words clear AA over any part of the picture. Each tile passes its own `sizes`, so a narrow tile never pulls the pixels a wide one needs.
+- The other three are plain cards: `--card`, 1px `--line`, 16px radius, `--shadow-sm`, ink copy.
+- Every tile leads with its icon in a 44px chip — `--gold-400` with a `--green-900` glyph on the photographed tiles, `--green-100` with a `--green-700` glyph on the plain ones — instead of a number, because the reasons are not a sequence and numbering them implied an order that does not exist.
+- Tiles hold a minimum height (14rem, 16rem from `lg`) and pin the icon to the top and the words to the bottom, so the block keeps one rhythm whatever the copy length runs to.
+- The icons and the photographs are decorative — the words carry the claim — and stay out of the accessibility tree. The copy lives in `src/utilities/homeCopy.ts` (`BENEFITS`, `BENEFITS_INTRO`), and the photographed reasons avoid the kitchen photo the welcome section above already shows.
+
+### 6.8 FAQ accordion
+
+- Question in bold body type (15px, weight-led per §4 — never the 22px heading size), chevron icon right. Open state: green-50 background. First item open by default.
+- Smooth 200ms height transition. Keyboard accessible (`button` with `aria-expanded`).
+
+### 6.9 Notice / disclaimer block
+
+Used for medical, allergy, diabetes, child nutrition and goal disclaimers, wherever a claim is made.
+
+- Background `--gold-100`, 1px `--gold-300` border all round, 16px radius, info icon. (A thick coloured side-stripe was dropped: it read as a generic alert, not as part of the band.)
+- Title in bold ("A note on your goals", "Important, from one parent to another").
+- Text size at least 16px. **Never use tiny grey print.**
+
+### 6.10 Forms (profile and enquiry)
+
+Fields: Name, Phone, Email (+ message for enquiries); address lines 1 and 2, city, state, pincode and food preference for the account's delivery details.
+
+- Labels above inputs, 16px; inputs 52px tall, 8px radius, 1.5px `--line` border, focus 2px green + soft ring.
+- Inline validation, plain-language errors ("Please enter a 10-digit mobile number").
+- Address and phone are required on save (never store half an address); the food preference is optional and explains itself in one line under the field.
+- Every public form posts without JavaScript: a plain HTML form, server-side validation, and errors answered with one plain sentence.
+
+### 6.11 Final CTA band
+
+- Deep green, centered H2 (cream), one line of copy, gold primary + outlined secondary button.
+- Closes about, our-kitchen, the products pages and every policy page. **Not on the home page**, which opens with its action in the hero and ends on the FAQ and the footer instead (§10.1).
+
+### 6.12 Footer
+
+- `--green-900`, logo in gold, short tagline, columns: Explore (About us, How it works, Common questions), Policies (Delivery, Refunds, Cancellation, Terms, Privacy), Contact (phone, email, WhatsApp, address).
+- The field photograph (`/images/footer-field.jpg`, a green field at first light) runs full-bleed behind the footer with no scrim, anchored to its bottom edge so the crop keeps the crop rows and the sun. The footer's words flip to the light-surface palette to read on it: type in `--green-700`, the logo, icons and column headings in `--gold-600` (never `--gold-400` on a light surface), and the two small-print lines at the very bottom bold in cream so they sit on the green field, not on the sky.
+- Every line reads semibold (600): the weight sits on the `<footer>` element, so the tagline, link labels and address inherit it over the photograph. The column headings (`--text-eyebrow`) and the two small-print lines keep their own heavier weights.
+- Small line: *"Our meals are food options and are not a substitute for medical or nutritional advice."*
+- The footer is the page's closing breath, taller than a content section: 80px of clear space above and below the columns on mobile, 112px on desktop, with the small print in its own quieter band below the hairline.
+- Policies must be a visible footer group (the copy promises published terms).
+
+### 6.13 Sign-in and account pages
+
+Utility screens, not campaign pages. The four account screens drop the site header and footer and fill exactly one viewport with no page scroll, so the menu, the pill and the WhatsApp button do not compete with a password field; the content pages keep them. They reuse the Button and list primitives.
+
+**Sign in (`/sign-in`), Sign up (`/sign-up`), Forgot password (`/forgot-password`), Reset password (`/reset-password`)**
+
+All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Nunito line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
+
+
+- The shrink rules: two height variants, `short` (under 66rem tall) and `shorter` (under 44rem), drop the fields from 52px to 44px, tighten the gaps, the divider and the half's padding, and shrink the intro. The threshold is set by the tallest form: sign-up with Google switched off needs about 1040px of viewport before the roomy spacing fits without a scroll. The form column centres itself while there is room and starts from the top once there is not, so a scroll never hides the heading; if even that cannot fit, a phone in landscape say, the column scrolls on its own rather than the page, so nothing becomes unreachable.
+- The photograph half is presentational only. It is never the way into anything: the form is. Its headline is a `p`, not a heading, so each screen's real `h1` stays first in reading order.
+- Exactly one primary action per section: the email and password form. Its submit button is a pill at least 44px tall, and it is the only primary control in the form half.
+- Fields carry a leading Lucide icon in `--ink-400` — mail on the address, lock on the password — and every password field carries a show/hide toggle: a 44px button, `aria-pressed`, with a label that changes between *"Show password"* and *"Hide password"*.
+- Google is the second way in: a **Continue with Google** button carrying the four-colour Google mark, styled `secondary` and sitting below an "or" divider, so the frame never shows two competing primaries. When `GOOGLE_CLIENT_ID` is unset there is no divider and no button at all, only one plain line under the form saying which way in is available (*"Google sign in is not switched on yet. Use your email address and password."*); an "or" with nothing on the other side reads as a broken promise.
+- Both sign-in and sign-up render the same form. Only the copy differs — signing in with Google creates the account if it does not exist, so the two screens are one flow seen from two directions. Sign-in is headed *"Your account, in one place"* and says *"Sign in to keep your details with us and to reach the kitchen faster."*; sign-up is headed *"One account with the kitchen"* and says the account saves your delivery details and food preference for next time. The brand half's title is *"Your details, always in reach"* (copy in `src/components/CustomerAuth/copy.ts`).
+- Sign-up carries one extra field: a native `<select>` labelled **Food preference (optional)** — no preference, vegetarian, vegan, eggetarian, non-vegetarian — with one line under it (*"The kitchen reads this, and you can change it later."*) explaining the kitchen reads it. It is a native select, not the Radix one, because this form must keep posting without JavaScript. Sign-in never shows it.
+- Password rules are stated up front rather than revealed as errors: a hint under the password field reading *"At least 10 characters."* on both account screens, and again on reset.
+- One quiet line under a hairline below the form, reading like small print rather than a notice: *"We use your email address to keep your account and to send you messages about your orders. Nothing else."*
+- Each account screen links to the other with one quiet line — *"New to UNAVE? **Sign up**"* and *"Already have an account? **Sign in**"* — so neither is a dead end.
+- A forgotten password is one quiet link opposite the password label on sign-in: *"Forgot your password?"*.
+- Errors are one plain line above the form, never a full red banner: *"That sign-in didn't finish. Please try again."* Use the neutral error tone, not the destructive color on a button, because nothing was destroyed. Every failure lands on `/sign-in`, whichever screen started the attempt, because signing in works for a customer who has never signed in before.
+- Field errors are the exception: a rejected email or short password is reported under the field it belongs to, in `--error`, with `role="alert"` and `aria-invalid`, and the field border and focus ring repaint. The rules are one shared Zod schema (`src/auth/password/schema.ts`) used by both the browser and the Payload endpoints, so the two can never disagree about what is acceptable. The form carries `noValidate`, so the browser's own `required` and `type="email"` checks cannot swallow the submit event and hide Zod's messages; a field is also re-checked when it loses focus, and its message clears as soon as the value changes.
+
+**Account (`/account`)**
+
+- Heading is the customer's own greeting, then one line of context: *"Your details, in one place, and how to reach the kitchen."*
+- One tab row under the heading holds the page's three views: **Details**, **Delivery** and **Orders**. Each tab is an icon and one word in a 44px pill; the current one fills `--green-900` with cream text and is marked `aria-current`. The tabs are real links carrying `?tab=` rather than a script, the first view being the plain `/account`, so a view can be shared or bookmarked, it stays open while the delivery form saves, and the page works without JavaScript. The row is a compact pill group rather than a full width bar, and it scrolls sideways rather than wrapping on a narrow phone. Only the chosen panel renders, so the page is one piece of work at a time instead of three stacked cards.
+- **Details** is read only: name, email, sign-in method and the member-since date, plus one quiet line telling a Google-only customer to use *"Forgot your password?"* to set a password.
+- **Delivery** is the one editable view: phone number, address lines 1 and 2, city, state and pincode, then a **Food preference** select beside the pincode. Address and phone are required on save (never store half an address); the preference is optional and explains itself in one line under the field. One **Save details** primary action, per-field errors under the field they belong to from the shared Zod schema (`src/utilities/customerProfile.ts`), and one quiet green *Saved* line when it lands ("Saved. We use these details when you order."). Autofill uses the standard `tel`, `address-line1`, `postal-code` hints.
+- **Orders** is the paid order list described in §6.15, read only when that view is open, and always for the customer the session names. Each row ends with the two request buttons, so stopping or pausing a plan happens where the order is.
+- Two columns from `lg`: the tab row and its panel in the main column, and a 20rem sidebar carrying a **Need a hand?** card linking to *About the kitchen* and *Message us*, with one quiet line pointing at Sign out in the header's menu.
+- **Sign out** is not a control on this page. It lives in the header's account menu, so there is one control in one place rather than two competing ones.
+
+These screens are `noindex, nofollow` and are never cached.
+
+### 6.14 About and contact pages
+
+**About (`/about`)** — static content in a server component, copy in `src/utilities/aboutCopy.ts`:
+
+- Hero: the deep green band with swoosh, gold-accented headline, one CTA to `/contact`, three trust chips. The kitchen photograph (`/images/kitchen.jpg`) runs full-bleed behind it and loads with `priority` as the page's one above-the-fold image.
+- Story: `Why we started UNAVE`, three short paragraphs on a cream band, with the morning-prep photograph beside them from `lg` up (rounded 16px, real alt text — it is content, not decoration; the hero band photos stay decorative with empty alts because the words carry the meaning). Because the story mentions cooking around diabetes, the gold notice block (§6.9, shared `Notice` component) sits directly below it.
+- Values: `What we stand for`, four icon cards on the tint band.
+- How we work: three numbered steps on white, ending on the promise that a person who cooks here answers.
+- Final CTA band: green, one primary (`Message us on WhatsApp`) and one secondary (`Message us`).
+
+**Contact (`/contact`)** — `force-dynamic` (it reads the query string for the form's answer), copy in `src/utilities/contactCopy.ts`:
+
+- Hero: the same green band; when the footer global holds a WhatsApp number, the hero carries one gold **Message us on WhatsApp** button — the page's connect action. The CTA-band photograph (`/images/band-cta.jpg`) sits behind it, `priority` loaded.
+- **Ways to reach us**: up to three cards (WhatsApp, Call the kitchen, Email) built from the footer global's contact group — the same place the footer's contact column reads, so the kitchen edits the details once. Each card is one large link showing the raw number or address, a plain note, and a verb CTA line (`Message us on WhatsApp`, `Call the kitchen`, `Write to us`). Only configured ways render; with none the whole section disappears and the form is the way. The address, if set, is a quiet line under the cards.
+- **Send a message**: the enquiry form (§6.10 fields: name, phone optional, email, message), a plain HTML `method="post"` form that works without JavaScript. Labels above inputs; the auth screens' field styles. One primary action (`Send message`). Under it: *"We use these details only to answer you, and never pass them on."*
+- The form's honeypot is visually hidden and skipped by keyboard and screen readers; a script that fills it gets the success redirect and sends nothing.
+- On `?sent=1` the form section is replaced by the confirmation state: `Thank you — we have it`, the reply promise, and the WhatsApp CTA again. On `?error=` the form renders one plain sentence (`contactError` maps the endpoint's codes), never a field-by-field wall.
+
+Enquiries are stored in the `enquiries` collection (staff read in the admin, one row per message, an `Answered` checkbox to triage) and the kitchen is emailed through `sendSystemMail` with the enquirer's address as reply-to. A failed or unconfigured mail never fails the enquiry.
+
+### 6.15 Store (products, checkout, orders)
+
+Added with the products and payments feature (spec 0007). Copy lives beside each page (`productsCopy.ts`, `productsCategoryCopy.ts`, `cartCopy.ts`, `checkout/copy.ts`, `order-placed/copy.ts`); money is always shown through the shared `formatPaise` paise formatter, never hand formatted. The store pages read live data on every request, so nothing in this section is ever cached.
+
+- **Products (`/products`)** — the deep green hero band with swoosh, gold-accented headline, and one primary pill (*Browse the products*, anchored to the grid). The grid is photo-first cards, almost chromeless: the photo fills the whole card edge-to-edge at 4:3 in a soft rounded frame with no border, and the name — in the heading serif, cream — and the cheapest per-day rate (*From ₹59 a day*, floored to whole rupees so the lead never promises more precision than the totals carry) sit on a deep green gradient band along the photo's bottom edge. The audience (Kids, Adults, Special) rides as a frosted deep-green pill — `green-900` at 70% with cream text and a hairline cream ring, so it stays legible over any photo — on the photo's top-left, and a paused product gains a gold **Paused** pill (`gold-400`, `green-900` text) beside it, its lead price still readable and nothing to add. The whole card is one stretched link to the product's own page — the band's words let clicks fall through to it, and the card's focus ring is drawn by the card itself — so open and buy stay two separate controls: one gold **Add to cart** pill (44px, the on-dark variant) sits in the band adding the record's first duration through the same POST `/api/cart/add` flow and the same polite confirmation line as the product page, revealed on hover or focus on a fine pointer (the `.card-reveal` utility in `globals.css`) and always visible on touch, the confirmation sharing the price's line so nothing shifts. The photo is the product record's `image`; when the kitchen has not uploaded one, the card falls back to a branded placeholder (`/images/product-placeholder.jpg`, the gold wordmark on deep green), so a card is never a blank box. The gold notice block (§6.9) sits under the grid explaining what *paused* means: a paused product keeps its place in every sort rather than being hidden, and every sort leads with the products to buy. Above the grid sits the shelf's search bar — search, filters, price and sort — and above the cards one quiet line says where in the shelf the page sits (*Showing 1–12 of 30 products*); twelve products to a page, with the blog's numbered pager (§10.4) under them. All of it reads and writes the address, so any view of the shelf can be linked, bookmarked and reloaded (§6.19). Two empty states, so the words never lie — one when the filters matched nothing, offering *Clear all*, and one when the shelf has nothing on it, a quiet card with a **Message us on WhatsApp** secondary action, never a dead end. A three-step *How a product works* list sits on the tint band, and the closing band carries the final CTA.
+- **Product page (`/products/<slug>`)** — two columns on desktop. The photo is large on the left at 4:3, in a soft rounded frame with a medium shadow, and stays pinned beside the reading (`lg:sticky`); a paused product carries a gold **Paused** chip on its top-left corner. The right column reads top to bottom as the story of the product. First the chips — the category chip (a light green link back to that category's page), the audience chip (hairline ring) and the subcategory chip (gold-100) — then the name as the page heading in green-900, on the light page rather than over the photo, so it reads clearly whatever the photo shows. A combo adds one quiet line under the name (*2 items in one combo*). A hairline, then the bare buy panel, no box: the chosen duration's per day price leads in bold Nunito with a quiet *a day* beside it and the total in one line under it, a hairline, one native radio chip per duration carrying its label and total so every duration and price renders without JavaScript, another hairline, one full width **Add to cart** pill that posts the product slug and the chosen duration label to `/api/cart/add`, and a secondary **Message us on WhatsApp** pill. The description follows, then each further group behind its own hairline under a bold body-size heading: **Included in this combo** on a combo, then the check-marked points (**What you get**), then the notice. Prices stay in the body font, where the rupee sign reads clearly. The breadcrumb ends with the product's own name as the current page.
+- **A combo shows what is inside it with pictures.** Each item is a row card: its own photo at 96px (the branded placeholder when it has none), its name, its kind and duration (*Meal plan · One week, 5 days*), and an arrow; the whole row links to that item's own page. When the combo has no photo of its own but two or more of its items do, the main frame becomes a collage of those photos — two side by side, three as one tall and two stacked, four as a grid — instead of the placeholder. The route reads a combo at depth 2 so its items' photos arrive with it; every other product keeps the lighter depth 1 read.
+- Below the columns, on its own tint band, the rest of the same shelf appears as cards under a **More from the kitchen** heading: up to three related products from the product's own category, newest first, this one left out. On a phone the photo comes first, then the reading column, then the related band. Anyone can look, no account asked for, and live data means a price the kitchen edits is here the moment it saves. A product slug can never be one of the three category values (spec 0008, AC-7), so `/products/<slug>` and `/products/<category>` share the one route without ever colliding, and every product page is listed in the sitemap. A paused product still renders in full with its durations and prices readable and nothing to add, plus the paused notice.
 - **Product category pages (`/products/[category]`)** — one page per category (ready to cook, ready to eat, fresh from produce), served by one dynamic route, reusing the products page's green band and card grid. The shelf is the same one `/products` renders (§6.19), so the page carries the same search, filters, sort and pages — with the category pinned: the page *is* the category, so it is never offered as a filter and the address can never widen the shelf past the page it is on. Both empty states (an empty category, or a filter that matches nothing) are centered cards under the controls.
 - **Header cart control** — always present. Staff may add a link to `/cart` in Site chrome to choose its label and its place in the drawer, and the header recognises that address and renders the live line count beside the label; a header with no such link still shows the control with the default `Cart` label. On the desktop bar it is presented in the right-hand action group, beside the search control, rather than in the middle of the menu; the mobile drawer keeps it as a row of its own (appending one when the menu list has none). The count reads the cart cookie, which is readable by JavaScript on purpose and carries nothing private, so adding a line updates it instantly with no request. Without JavaScript the label still links to the cart; only the number waits for hydration.
 - **Cart (`/cart`)** — `noindex, nofollow`, and no account needed to look. The cookie names a product and a duration per line; every title, day count and price is read from the live product records here. Each line is a row with the product title, duration and days, its price, and a quiet **Remove** pill that posts to `/api/cart/remove`, so the page works without JavaScript. The total sums the usable lines under a rule, and one primary **Go to checkout** pill sits beside a quiet *Keep browsing products* link. An empty cart is one card with a **Browse the products** pill, never a dead end. A line whose product left the menu, is paused or lost its duration is marked **No longer available**, excluded from the total, and blocks checkout until it is removed; the sentence above the list says so.

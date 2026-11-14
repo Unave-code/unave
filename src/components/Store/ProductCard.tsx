@@ -70,9 +70,14 @@ export const ProductCard: React.FC<{
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
   const perDay = isFlatPrice ? null : (storedLead ?? leadPricePaise(product))
-  const planPriceLine = perDay !== null ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}` : undefined
+  const planPriceLine =
+    perDay !== null
+      ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
+      : undefined
   const priceLine = isFlatPrice
-    ? (oneTimePrice >= 1 ? formatPaise(oneTimePrice) : undefined)
+    ? oneTimePrice >= 1
+      ? formatPaise(oneTimePrice)
+      : undefined
     : planPriceLine
 
   const image = product.image && typeof product.image === 'object' ? product.image : null
@@ -99,8 +104,14 @@ export const ProductCard: React.FC<{
         />
       )}
 
-      {product.audience || !isAvailable ? (
+      {product.audience || isCombo || !isAvailable ? (
         <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-wrap gap-2">
+          {isCombo ? (
+            <span className={`${PHOTO_PILL} bg-gold-100 text-green-900 ring-gold-300/70`}>
+              Combo · {product.components?.length ?? 0} items
+            </span>
+          ) : null}
+
           {product.audience ? (
             <span className={`${PHOTO_PILL} bg-green-900/70 text-cream ring-cream/25`}>
               {AUDIENCE_LABEL[product.audience]}
@@ -108,7 +119,9 @@ export const ProductCard: React.FC<{
           ) : null}
 
           {!isAvailable ? (
-            <span className={`${PHOTO_PILL} bg-gold-400 text-green-900 ring-gold-300/70`}>Paused</span>
+            <span className={`${PHOTO_PILL} bg-gold-400 text-green-900 ring-gold-300/70`}>
+              Paused
+            </span>
           ) : null}
         </div>
       ) : null}

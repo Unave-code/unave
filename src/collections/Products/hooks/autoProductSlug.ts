@@ -91,9 +91,7 @@ export const autoProductSlug: FieldHook = ({ data, operation, originalDoc, req, 
   const base = slugifyTitle(title) || 'product'
 
   const selfId =
-    operation === 'update'
-      ? (originalDoc as { id?: number | string } | undefined)?.id
-      : undefined
+    operation === 'update' ? (originalDoc as { id?: number | string } | undefined)?.id : undefined
 
   return firstFreeSlug(req.payload, base, selfId)
 }

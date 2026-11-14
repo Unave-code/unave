@@ -46,7 +46,7 @@ describe('homepage subcategory tiles', () => {
     expect(screen.queryByText('1 meal type currently available.')).toBeNull()
   })
 
-  it('renders five compact mobile columns that wrap without horizontal scrolling', async () => {
+  it('renders three readable mobile columns that wrap without horizontal scrolling', async () => {
     getSubcategories.mockResolvedValue([
       { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
     ])
@@ -54,14 +54,14 @@ describe('homepage subcategory tiles', () => {
     render(await ProductShelf({}))
 
     const list = screen.getByRole('list', { name: 'Meal subcategories' })
-    expect(list.className).toContain('grid-cols-5')
+    expect(list.className).toContain('grid-cols-3')
     expect(list.className).toContain('sm:flex-wrap')
     expect(list.className).not.toContain('overflow-x-auto')
     expect(list.getAttribute('tabindex')).toBeNull()
 
     const link = screen.getByRole('link', { name: 'Browse Greens products' })
-    expect(link.className).toContain('min-h-16')
-    expect(link.className).toContain('sm:size-40')
+    expect(link.className).toContain('min-h-32')
+    expect(link.className).toContain('sm:w-40')
     expect(link.className).toContain('rounded-2xl')
     expect(link.className).toContain('border-gold-300')
     expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-6')

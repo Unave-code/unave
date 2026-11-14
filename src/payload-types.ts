@@ -928,7 +928,7 @@ export interface Customer {
   collection: 'customers';
 }
 /**
- * The meal products sold on the site. Turn `available` off to pause a product without deleting it; prices are entered and shown in rupees.
+ * The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
@@ -937,13 +937,13 @@ export interface Product {
   id: number;
   title: string;
   /**
-   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
-   */
-  slug: string;
-  /**
    * A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.
    */
   type: 'plan' | 'one-time' | 'combo';
+  /**
+   * The photo on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
+   */
+  image?: (number | null) | Media;
   description?: {
     root: {
       type: string;
@@ -960,7 +960,7 @@ export interface Product {
     [k: string]: unknown;
   } | null;
   /**
-   * Up to five short lines shown on the product card, under the description. For example "Delivered in an insulated tiffin".
+   * Up to five short lines shown on the product page under What you get, and matched by the shop search. For example "Delivered in an insulated tiffin".
    */
   points?:
     | {
@@ -968,10 +968,6 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
-  /**
-   * The photo shown at the top of the product card on the shelf. Leave it empty and a branded placeholder is used instead.
-   */
-  image?: (number | null) | Media;
   /**
    * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
    */
@@ -994,6 +990,14 @@ export interface Product {
    */
   price?: number | null;
   /**
+   * Optional reference price for a one-time product. It must be higher than the current price.
+   */
+  compareAtPrice?: number | null;
+  /**
+   * Optional display text for a one-time product, for example 260 g.
+   */
+  packSize?: string | null;
+  /**
    * Choose two to ten different products. A meal plan needs one of its current durations.
    */
   components?:
@@ -1009,18 +1013,6 @@ export interface Product {
       }[]
     | null;
   /**
-   * Optional reference price for a one-time product. It must be higher than the current price.
-   */
-  compareAtPrice?: number | null;
-  /**
-   * Optional display text for a one-time product, for example 260 g.
-   */
-  packSize?: string | null;
-  /**
-   * Derived on every save: the cheapest per-day rate for a plan, or the flat price for a one-time product or combo, in paise.
-   */
-  fromPrice?: number | null;
-  /**
    * How the meal reaches the customer. Shown as a label on the product card.
    */
   category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
@@ -1033,6 +1025,10 @@ export interface Product {
    */
   audience: 'kids' | 'adults' | 'special';
   /**
+   * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
+   */
+  slug: string;
+  /**
    * Off means the product shows a paused label and cannot be bought.
    */
   available?: boolean | null;
@@ -1040,6 +1036,10 @@ export interface Product {
    * On puts this product on the homepage shelf first. Paused products are never shown there, and if fewer than four are featured the newest open products fill the rest.
    */
   featured?: boolean | null;
+  /**
+   * Worked out on every save: the cheapest rate a day for a plan, or the price of a one-time product or combo. The shelf sorts and filters by it.
+   */
+  fromPrice?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2074,8 +2074,8 @@ export interface OrderRequestsSelect<T extends boolean = true> {
  */
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
   type?: T;
+  image?: T;
   description?: T;
   points?:
     | T
@@ -2083,7 +2083,6 @@ export interface ProductsSelect<T extends boolean = true> {
         point?: T;
         id?: T;
       };
-  image?: T;
   durations?:
     | T
     | {
@@ -2093,6 +2092,8 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   price?: T;
+  compareAtPrice?: T;
+  packSize?: T;
   components?:
     | T
     | {
@@ -2102,14 +2103,13 @@ export interface ProductsSelect<T extends boolean = true> {
         durationLabel?: T;
         id?: T;
       };
-  compareAtPrice?: T;
-  packSize?: T;
-  fromPrice?: T;
   category?: T;
   subcategory?: T;
   audience?: T;
+  slug?: T;
   available?: T;
   featured?: T;
+  fromPrice?: T;
   updatedAt?: T;
   createdAt?: T;
 }

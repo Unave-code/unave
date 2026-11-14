@@ -90,9 +90,11 @@ describe('a product page', () => {
     render(<ProductDetail product={openProduct} whatsapp="+919000000000" />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Lunch plan' })).toBeTruthy()
-    expect(screen.getByText('Weekly plans')).toBeTruthy()
+    // The subcategory reads under the name and again in the details table.
+    expect(screen.getAllByText(/Weekly plans/).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: 'Browse Ready to cook products' })).toBeTruthy()
-    expect(screen.getByText('Kids')).toBeTruthy()
+    // The audience is a chip and a row in the details table.
+    expect(screen.getAllByText('Kids').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Add to cart' })).toBeTruthy()
     expect(screen.getByTestId('rich-text')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'What you get' })).toBeTruthy()
@@ -147,9 +149,9 @@ describe('a product page', () => {
   it('lists what a combo includes and keeps the required notice beside it', () => {
     render(<ProductDetail product={comboProduct} />)
 
-    expect(screen.getByRole('heading', { name: 'Included in this combo' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
     expect(screen.getByText('Lunch plan')).toBeTruthy()
-    expect(screen.getByText('One week, 5 days')).toBeTruthy()
+    expect(screen.getByText(/One week, 5 days/)).toBeTruthy()
     expect(screen.getByText('Phulka box')).toBeTruthy()
     expect(screen.getByText('A note on our meals')).toBeTruthy()
     expect(
@@ -168,8 +170,9 @@ describe('a product page', () => {
     )
 
     expect(screen.getByText('Paused')).toBeTruthy()
-    expect(screen.getByText('₹990')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Included in this combo' })).toBeTruthy()
+    // The price leads the middle column and the buy box.
+    expect(screen.getAllByText('₹990').length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Add to cart' })).toBeNull()
   })
 

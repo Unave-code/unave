@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
 import type { Product, User } from '@/payload-types'
+import { sweepRun } from '../helpers/sweepRun'
 
 // The dev database is remote, so a single test can make several slow round trips.
 vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
@@ -160,6 +161,8 @@ afterAll(async () => {
   } catch {
     // Best effort cleanup.
   }
+
+  await sweepRun(payload, run)
 })
 
 describe('saving a combo', () => {

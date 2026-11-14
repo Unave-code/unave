@@ -59,7 +59,13 @@ export const Section: React.FC<Props> = ({
           sizes="100vw"
           src={image.src}
         />
-        {overlay ? <div aria-hidden="true" className={cn('absolute inset-0', overlay)} /> : null}
+        {overlay ? (
+          <div aria-hidden="true" className={cn('absolute inset-0', overlay)} />
+        ) : tone === 'green' ? (
+          // A photograph under a green band always carries the brand scrim, so the
+          // navbar, headline and lead keep their contrast whatever the photo shows.
+          <div aria-hidden="true" className="photo-scrim absolute inset-0" />
+        ) : null}
       </>
     ) : null}
 

@@ -7,6 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { createOrderEndpoint, verifyOrderEndpoint } from '../../src/collections/Orders/endpoints'
 import config from '@/payload.config'
 import type { CheckoutIntent, Customer, Order, Product } from '@/payload-types'
+import { sweepRun } from '../helpers/sweepRun'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -393,6 +394,8 @@ afterAll(async () => {
       bestEffort(() => payload.delete({ collection: 'customers', id, overrideAccess: true })),
     ),
   )
+
+  await sweepRun(payload, run)
 })
 
 describe('POST /api/orders/create', () => {

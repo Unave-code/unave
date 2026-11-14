@@ -58,6 +58,16 @@ export const PRODUCTS_EMPTY_BODY =
 export const SHELF_FILTER_ALL = 'All'
 export const SHELF_FILTER_CATEGORY = 'Category'
 export const SHELF_FILTER_AUDIENCE = 'Audience'
+export const SHELF_FILTER_KIND = 'Kind'
+
+/** The three kinds of product, as the shelf's Kind filter offers them. */
+export const PRODUCT_KIND_ORDER = ['plan', 'one-time', 'combo'] as const
+export type ProductKindValue = (typeof PRODUCT_KIND_ORDER)[number]
+export const PRODUCT_KIND_FILTER_LABEL: Record<ProductKindValue, string> = {
+  combo: 'Combos',
+  'one-time': 'Single items',
+  plan: 'Meal plans',
+}
 
 export const SHELF_SEARCH_LABEL = 'Search the shelf'
 export const SHELF_SEARCH_PLACEHOLDER = 'A name or a point, for example "dal"'

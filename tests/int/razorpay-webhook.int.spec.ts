@@ -55,6 +55,7 @@ vi.mock('../../src/collections/Orders/mail', () => ({
 }))
 
 import { POST } from '../../src/app/(frontend)/api/razorpay/webhook/route'
+import { sweepRun } from '../helpers/sweepRun'
 
 let payload: Payload
 
@@ -298,6 +299,8 @@ afterAll(async () => {
       // Best effort cleanup.
     }
   }
+
+  await sweepRun(payload, run)
 })
 
 describe('the Razorpay webhook', () => {

@@ -111,9 +111,21 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
     return <ProductCategoryView category={slug} searchParams={await props.searchParams} />
   }
 
-  const product = await findProduct(slug)
+  const found = await findProduct(slug)
 
-  if (!product) notFound()
+  if (!found) notFound()
+
+  /* A combo shows a photo of each thing inside it, and those photos sit one
+     level deeper than the product read above, so a combo is read again with
+     its items' images populated. Every other product keeps the lighter read. */
+  const product =
+    found.type === 'combo'
+      ? await (await getPayload({ config: configPromise })).findByID({
+          collection: 'products',
+          depth: 2,
+          id: found.id,
+        })
+      : found
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null

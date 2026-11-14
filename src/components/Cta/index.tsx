@@ -11,7 +11,7 @@ import { cn } from '@/utilities/ui'
  * allows anywhere.
  */
 export const CTA_BASE =
-  'inline-flex h-13 items-center justify-center gap-2 rounded-pill px-7 text-button font-bold whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none'
+  'inline-flex h-13 items-center justify-center gap-2 rounded-pill px-7 text-button font-bold whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-200 ease-out active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none'
 
 /** Height and padding overrides; `cn` merges these over CTA_BASE. */
 export const CTA_SIZES = {

@@ -28,3 +28,7 @@ node_modules/
 tmp-dev.log
 devserver.log
 tmp-*.png
+
+# local agent scratch
+.superpowers/
+.lavish/

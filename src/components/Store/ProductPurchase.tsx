@@ -82,7 +82,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
     return (
       <div>
         <div aria-live="polite">
-          <p className="text-h2 text-green-700">{formatPaise(oneTimePrice)}</p>
+          <p className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">{formatPaise(oneTimePrice)}</p>
           <p className="text-ink-600 mt-2 text-sm">
             {combo
               ? 'A fixed price combo. Adding it again raises the quantity, up to ten.'
@@ -137,7 +137,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
     <div>
       <div aria-live="polite">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-h2 text-green-700">
+          <span className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">
             {formatPaise(perDay ?? duration.price)}
           </span>
           {perDay !== null ? <span className="text-ink-600 text-sm">a day</span> : null}

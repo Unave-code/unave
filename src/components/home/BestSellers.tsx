@@ -8,6 +8,7 @@ import { BestSellerAddButton } from '@/components/home/BestSellerAddButton'
 import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
 import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
+import { isProductSellable } from '@/utilities/combos'
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { BEST_SELLERS_EMPTY, BEST_SELLERS_HEADING, BEST_SELLERS_INTRO } from '@/utilities/homeCopy'
 import { formatPaise } from '@/utilities/money'
@@ -20,13 +21,16 @@ import { Section } from './Section'
 const BestSellerCard: React.FC<{ product: Product }> = ({ product }) => {
   const image = product.image && typeof product.image === 'object' ? product.image : null
   const isOneTime = product.type === 'one-time'
+  /* A one-time product and a combo both sell at one flat price, added through
+     the reserved one-time line; only a meal plan leads with a rate a day. */
+  const isFlatPrice = isOneTime || product.type === 'combo'
   const oneTimePrice =
-    isOneTime && typeof product.price === 'number' && Number.isFinite(product.price)
+    isFlatPrice && typeof product.price === 'number' && Number.isFinite(product.price)
       ? product.price
       : null
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
-  const perDay = isOneTime ? null : (storedLead ?? leadPricePaise(product))
+  const perDay = isFlatPrice ? null : (storedLead ?? leadPricePaise(product))
   const price =
     oneTimePrice !== null && oneTimePrice >= 1
       ? formatPaise(oneTimePrice)
@@ -44,11 +48,11 @@ const BestSellerCard: React.FC<{ product: Product }> = ({ product }) => {
     compareAtPrice !== null && oneTimePrice !== null
       ? Math.floor(((compareAtPrice - oneTimePrice) / compareAtPrice) * 100)
       : 0
-  const durationLabel = isOneTime ? ONE_TIME_DURATION : product.durations?.[0]?.label
-  const canAdd = product.available && price && durationLabel
+  const durationLabel = isFlatPrice ? ONE_TIME_DURATION : product.durations?.[0]?.label
+  const canAdd = isProductSellable(product) && price && durationLabel
 
   return (
-    <article className="group bg-card overflow-hidden rounded-lg p-2 shadow-sm transition-shadow duration-200 hover:shadow-md motion-reduce:transition-none">
+    <article className="group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-shadow duration-200 hover:shadow-md motion-reduce:transition-none">
       <Link
         aria-label={`View ${product.title}`}
         className="focus-visible:outline-green-700 bg-green-50 relative block aspect-square overflow-hidden rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -74,7 +78,7 @@ const BestSellerCard: React.FC<{ product: Product }> = ({ product }) => {
         )}
       </Link>
 
-      <div className="flex flex-col px-2 pt-3 pb-0">
+      <div className="flex flex-1 flex-col px-2 pt-3 pb-1">
         <h3 className="text-body text-ink-900 line-clamp-2 font-semibold leading-snug">
           {product.title}
         </h3>
@@ -102,10 +106,10 @@ const BestSellerCard: React.FC<{ product: Product }> = ({ product }) => {
         ) : null}
 
         {canAdd ? (
-          <div className="mt-3">
+          <div className="mt-auto pt-3">
             <BestSellerAddButton
               durationLabel={durationLabel}
-              oneTime={isOneTime}
+              oneTime={isFlatPrice}
               productSlug={product.slug}
               productTitle={product.title}
             />
@@ -127,10 +131,10 @@ export const BestSellers: React.FC = async () => {
       {products.length > 0 ? (
         <ul
           aria-label="Best sellers"
-          className="mt-8 grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-5"
+          className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
         >
           {products.map((product) => (
-            <li key={product.id}>
+            <li className="min-w-0" key={product.id}>
               <BestSellerCard product={product} />
             </li>
           ))}

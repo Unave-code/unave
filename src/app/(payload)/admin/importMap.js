@@ -23,6 +23,7 @@ import { PaymentModeNotice as PaymentModeNotice_65c80ffd05597db004a61c0c63892b65
 import { RupeeField as RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27 } from '@/components/Admin/RupeeField'
 import { RupeeCell as RupeeCell_bd976b46085bdf8ab53e7abd04517138 } from '@/components/Admin/RupeeCell'
 import { ComboDurationField as ComboDurationField_17ccd7bf0b9f7b4f79d7963d0a92d0db } from '@/components/Admin/ComboDurationField'
+import { ComboHealth as ComboHealth_53753c658e0cecc754671eb37b68bf73 } from '@/components/Admin/ComboHealth'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
@@ -68,6 +69,7 @@ export const importMap = {
   "@/components/Admin/RupeeField#RupeeField": RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27,
   "@/components/Admin/RupeeCell#RupeeCell": RupeeCell_bd976b46085bdf8ab53e7abd04517138,
   "@/components/Admin/ComboDurationField#ComboDurationField": ComboDurationField_17ccd7bf0b9f7b4f79d7963d0a92d0db,
+  "@/components/Admin/ComboHealth#ComboHealth": ComboHealth_53753c658e0cecc754671eb37b68bf73,
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
