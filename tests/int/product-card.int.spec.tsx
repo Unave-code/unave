@@ -45,13 +45,13 @@ const product = {
 } as unknown as Product
 
 describe('the product card', () => {
-  it('links the name to the product page and shows the audience pill and per-day lead', () => {
+  it('links the name to the product page and shows its lead price, with no audience badge', () => {
     render(<ProductCard product={product} />)
 
     const link = screen.getByRole('link', { name: 'Lunch plan' })
     expect(link.getAttribute('href')).toBe('/products/lunch-plan')
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
-    expect(screen.getByText('Kids')).toBeTruthy()
+    expect(screen.queryByText('Kids')).toBeNull()
 
     // A plan leads with its cheapest duration's price: ₹499 beats ₹1,799.
     expect(screen.getByText('From ₹499')).toBeTruthy()

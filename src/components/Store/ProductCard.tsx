@@ -17,7 +17,7 @@ import {
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { productPhotos } from '@/utilities/productPhotos'
-import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
+import { productHref } from '@/utilities/productsCategoryCopy'
 import {
   PRODUCT_CHOOSE_PLAN,
   PRODUCT_CHOOSE_SIZE,
@@ -39,7 +39,7 @@ const KIND_DOT: Record<Product['type'], string> = {
   plan: 'bg-green-700',
 }
 
-const SAVE_PILL = 'rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900'
+const SAVE_PILL = 'rounded-pill bg-gold-100 px-2 py-0.5 text-[11px] font-bold text-green-900'
 
 /**
  * One product, anywhere the site lists products (design.md §6.15).
@@ -163,16 +163,9 @@ export const ProductCard: React.FC<{
           />
         ) : null}
 
-        {!isAvailable || product.audience ? (
-          <span className="absolute top-2 left-2 flex flex-wrap gap-1.5">
-            {!isAvailable ? (
-              <span className={`${PHOTO_PILL} bg-gold-400 text-green-900`}>Paused</span>
-            ) : null}
-            {product.audience ? (
-              <span className={`${PHOTO_PILL} text-cream bg-green-900/75 backdrop-blur-sm`}>
-                {AUDIENCE_LABEL[product.audience]}
-              </span>
-            ) : null}
+        {!isAvailable ? (
+          <span className={`${PHOTO_PILL} bg-gold-400 absolute top-2 left-2 text-green-900`}>
+            Paused
           </span>
         ) : null}
       </Link>
@@ -199,9 +192,7 @@ export const ProductCard: React.FC<{
         ) : null}
 
         {isOneTime && !sizedProduct && product.packSize ? (
-          <span className="rounded-pill mt-2 inline-flex self-start bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800">
-            {product.packSize}
-          </span>
+          <p className="text-ink-600 mt-0.5 text-xs">{product.packSize}</p>
         ) : null}
 
         {sizedProduct ? (
@@ -211,22 +202,16 @@ export const ProductCard: React.FC<{
         ) : null}
 
         {price ? (
-          <div className="mt-1.5">
-            <p className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-body font-bold text-green-700 tabular-nums">{price}</span>
-              {struckPrice !== null ? (
-                <del className="text-ink-600 text-xs tabular-nums">{formatPaise(struckPrice)}</del>
-              ) : null}
-            </p>
-            {discount >= 1 ? (
-              <span className={cn(SAVE_PILL, 'mt-1 inline-block')}>{discount}% OFF</span>
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-body font-bold text-green-700 tabular-nums">{price}</span>
+            {struckPrice !== null ? (
+              <del className="text-ink-600 text-xs tabular-nums">{formatPaise(struckPrice)}</del>
             ) : null}
+            {discount >= 1 ? <span className={SAVE_PILL}>{discount}% OFF</span> : null}
             {comboSaving > 0 ? (
-              <span className={cn(SAVE_PILL, 'mt-1 inline-block tabular-nums')}>
-                Save {formatPaise(comboSaving)}
-              </span>
+              <span className={cn(SAVE_PILL, 'tabular-nums')}>Save {formatPaise(comboSaving)}</span>
             ) : null}
-          </div>
+          </p>
         ) : null}
 
         {isAvailable && choosesOnPage && price ? (
