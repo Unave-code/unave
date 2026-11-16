@@ -81,7 +81,7 @@ describe('each kind keeps only its own fields', () => {
 describe('the lead price survives a partial save', () => {
   it('reads the stored durations when the update does not carry them', () => {
     const out = run(setLeadPrice, { available: false }, { durations: plan.durations, type: 'plan' })
-    expect(out.fromPrice).toBe(30000)
+    expect(out.fromPrice).toBe(150000)
   })
 
   it('uses the new price when the update carries one', () => {

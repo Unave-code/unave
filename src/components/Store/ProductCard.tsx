@@ -22,7 +22,6 @@ import {
   PRODUCT_CHOOSE_PLAN,
   PRODUCT_CHOOSE_SIZE,
   PRODUCT_KIND_LABEL,
-  PRODUCTS_CARD_A_DAY,
   PRODUCTS_CARD_FROM,
 } from '@/utilities/productsCopy'
 import { cn } from '@/utilities/ui'
@@ -48,7 +47,7 @@ const SAVE_PILL = 'rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-g
  * A white card: the photo (the second photo fades in on hover), the kind of
  * product as a small label, the name, then what each kind needs:
  *
- * - **Meal plan** — the cheapest rate a day and one **Choose plan** button to
+ * - **Meal plan** — its cheapest duration's price and one **Choose plan** button to
  *   its page, where the duration is chosen; nothing is added on the shopper's
  *   behalf.
  * - **One-time purchase** — the price, with any old price and % off, and Add to
@@ -90,10 +89,10 @@ export const ProductCard: React.FC<{
   /* The price each kind leads with. */
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
-  const perDay = isPlan ? (storedLead ?? leadPricePaise(product)) : null
+  const planLead = isPlan ? (leadPricePaise(product) ?? storedLead) : null
   const price = isPlan
-    ? perDay !== null
-      ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
+    ? planLead !== null
+      ? `${PRODUCTS_CARD_FROM} ${formatPaise(planLead)}`
       : undefined
     : flatPrice !== null
       ? sizedProduct

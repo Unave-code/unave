@@ -712,7 +712,7 @@ export const Products: CollectionConfig = {
           Field: '@/components/Admin/RupeeField#RupeeField',
         },
         description:
-          'Worked out on every save: the cheapest rate a day for a plan, or the price of a one-time product or combo. The shelf sorts and filters by it.',
+          'Worked out on every save: the cheapest duration price for a plan, or the price of a one-time product or combo. The shelf sorts and filters by it.',
         position: 'sidebar',
         readOnly: true,
       },

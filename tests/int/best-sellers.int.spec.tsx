@@ -110,7 +110,7 @@ describe('the homepage Best sellers shelf', () => {
 
     await renderBestSellers([product])
 
-    expect(screen.getByText('From ₹50 a day')).toBeTruthy()
+    expect(screen.getByText('From ₹350')).toBeTruthy()
     expect(screen.queryByText('₹70')).toBeNull()
     expect(screen.queryByText('Should not display')).toBeNull()
 

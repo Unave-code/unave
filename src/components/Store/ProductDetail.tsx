@@ -203,7 +203,7 @@ export const ProductDetail: React.FC<{
       return formatPaise(Number(item.price))
     }
     const lead = typeof item.fromPrice === 'number' && item.fromPrice > 0 ? item.fromPrice : null
-    return lead !== null ? `From ${formatPaise(lead)} a day` : null
+    return lead !== null ? `From ${formatPaise(lead)}` : null
   }
 
   const alsoBought = (related ?? []).slice(0, 4)
@@ -334,16 +334,6 @@ export const ProductDetail: React.FC<{
                   className={cn('size-2 rounded-full', isAvailable ? 'bg-success' : 'bg-gold-500')}
                 />
                 {isAvailable ? 'Available to order' : 'Paused for now'}
-              </span>
-              <span aria-hidden="true">·</span>
-              <span>
-                {PRODUCT_KIND_LABEL[product.type]}
-                {subcategory ? (
-                  <>
-                    {' · '}
-                    <span className="wrap-anywhere">{subcategory}</span>
-                  </>
-                ) : null}
               </span>
               {product.packSize ? (
                 <>

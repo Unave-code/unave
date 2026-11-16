@@ -23,12 +23,10 @@ export const PRODUCTS_CTA_BROWSE = 'Browse the products'
 export const PRODUCTS_CTA_MESSAGE = WHATSAPP_CTA_LABEL
 
 /**
- * The lead price line on a product card: the cheapest per-day rate across the
- * product's durations, so a shopper comparing plans sees the running cost
- * before any duration is chosen. Composed as `From ₹60 a day`.
+ * The lead price line on a product card: a plan's cheapest duration price,
+ * so a shopper comparing plans sees where they start. Composed as `From ₹1,200`.
  */
 export const PRODUCTS_CARD_FROM = 'From'
-export const PRODUCTS_CARD_A_DAY = 'a day'
 
 /**
  * The label a one-time purchase carries wherever a plan shows a duration: on
@@ -84,7 +82,7 @@ export const PRODUCT_KIND_FILTER_LABEL: Record<ProductKindValue, string> = {
 export const SHELF_SEARCH_LABEL = 'Search the shelf'
 export const SHELF_SEARCH_PLACEHOLDER = 'A name or a point, for example "dal"'
 
-export const SHELF_PRICE_LABEL = 'Price a day (₹)'
+export const SHELF_PRICE_LABEL = 'Price (₹)'
 export const SHELF_PRICE_FROM = 'From'
 export const SHELF_PRICE_TO = 'To'
 

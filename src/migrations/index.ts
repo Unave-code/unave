@@ -34,6 +34,7 @@ import * as migration_20261114_102751_home_gallery_links from './20261114_102751
 import * as migration_20261114_140000_testimonials_global from './20261114_140000_testimonials_global';
 import * as migration_20261116_120000_product_gallery from './20261116_120000_product_gallery';
 import * as migration_20261116_160000_product_sizes_plan_text from './20261116_160000_product_sizes_plan_text';
+import * as migration_20261116_180000_plan_lead_total from './20261116_180000_plan_lead_total';
 
 export const migrations = [
   {
@@ -215,5 +216,10 @@ export const migrations = [
     up: migration_20261116_160000_product_sizes_plan_text.up,
     down: migration_20261116_160000_product_sizes_plan_text.down,
     name: '20261116_160000_product_sizes_plan_text',
+  },
+  {
+    up: migration_20261116_180000_plan_lead_total.up,
+    down: migration_20261116_180000_plan_lead_total.down,
+    name: '20261116_180000_plan_lead_total',
   },
 ];

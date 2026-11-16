@@ -65,13 +65,13 @@ export interface ShelfState {
   category: null | ProductCategoryValue
   /** Meal plans, single items or combos. */
   kind: null | ProductKindValue
-  /** The low end of the price range, in whole rupees a day. */
+  /** The low end of the price range, in whole rupees. */
   from: null | number
   page: number
   q: string
   sort: ShelfSortKey
   subcategory: null | string
-  /** The high end of the price range, in whole rupees a day. */
+  /** The high end of the price range, in whole rupees. */
   to: null | number
 }
 

@@ -13,7 +13,6 @@ import {
   CART_QUANTITY_REMOVE_ONE,
 } from '@/utilities/cartCopy'
 import { CART_MAX_QTY, ONE_TIME_DURATION } from '@/utilities/cart'
-import { perDayPaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { cn } from '@/utilities/ui'
 import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
@@ -75,24 +74,34 @@ const daysText = (days: number) => `${days} ${days === 1 ? 'day' : 'days'}`
  * so the choice reads at a glance. The radio underneath stays native.
  */
 const OPTION_TILE = cn(
-  'relative flex h-full min-h-20 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-green-200 bg-green-50 px-3 py-3 text-center text-green-900 shadow-sm',
+  // An outline pill: white with a brand-green border.
+  'rounded-pill relative isolate inline-flex min-h-12 items-center gap-2 overflow-hidden border-2 border-green-700 bg-white px-4 py-2 whitespace-nowrap text-green-900',
   'transition-[background-color,border-color,color,box-shadow,translate] duration-200 ease-out',
-  'hover:-translate-y-0.5 hover:border-green-500 hover:bg-green-100',
+  // The overlay: a soft green wash that sweeps in from the left on hover.
+  "before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:bg-green-700/12 before:transition-transform before:duration-300 before:ease-out before:content-['']",
+  'hover:-translate-y-0.5 hover:shadow-sm hover:before:scale-x-100',
+  'motion-reduce:before:transition-none',
   'peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-checked:shadow-md',
   'peer-checked:[&_.tile-price]:text-gold-300 peer-checked:[&_.tile-sub]:text-white/80 peer-checked:[&_.tile-check]:flex',
   'peer-focus-visible:ring-[3px] peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2',
   'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
 )
-const TILE_PRICE = 'tile-price text-base font-extrabold text-green-700 tabular-nums'
-const TILE_SUB = 'tile-sub text-caption text-ink-600 tabular-nums'
+const TILE_PRICE = 'tile-price text-sm font-extrabold text-green-700 tabular-nums'
+const TILE_SUB = 'tile-sub text-xs text-ink-600 tabular-nums'
+/** The quiet dot between a tile's parts. */
+const TileDot = () => (
+  <span aria-hidden="true" className="tile-sub text-ink-600 text-xs">
+    ·
+  </span>
+)
 
 /** The gold check on the chosen tile; hidden until its radio is checked. */
 const TileCheck = () => (
   <span
     aria-hidden="true"
-    className="tile-check bg-gold-400 absolute -top-2 -right-2 hidden size-6 items-center justify-center rounded-full text-green-900 shadow-sm"
+    className="tile-check bg-gold-400 hidden size-5 shrink-0 items-center justify-center rounded-full text-green-900"
   >
-    <Check className="size-3.5" strokeWidth={3} />
+    <Check className="size-3" strokeWidth={3} />
   </span>
 )
 
@@ -133,10 +142,6 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
   if (!isOneTime && !duration) return null
 
-  // A per-day rate only says something new when the option spans several
-  // days; on a one-day option it would just repeat the price.
-  const perDay =
-    !isOneTime && duration && duration.days > 1 ? perDayPaise(duration.price, duration.days) : null
   const hasSaving = isOneTime && typeof shownCompare === 'number' && shownCompare > shownPrice
   const clamp = (value: number) => Math.min(CART_MAX_QTY, Math.max(1, value || 1))
 
@@ -146,11 +151,8 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
       <div aria-live="polite">
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-[32px] leading-none font-extrabold tracking-[-0.01em] text-green-900 tabular-nums">
-            {isOneTime ? formatPaise(shownPrice) : formatPaise(perDay ?? duration!.price)}
+            {formatPaise(isOneTime ? shownPrice : duration!.price)}
           </span>
-          {!isOneTime && perDay !== null ? (
-            <span className="text-ink-600 text-sm">a day</span>
-          ) : null}
           {hasSaving ? (
             <>
               <del className="text-ink-600 text-body tabular-nums">
@@ -162,15 +164,13 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             </>
           ) : null}
         </p>
-        {isOneTime || perDay !== null ? (
-          <p className="text-ink-600 mt-2 text-sm">
-            {isOneTime
-              ? combo
-                ? 'One fixed price for the whole combo.'
-                : 'Cooked fresh and delivered once.'
-              : `${daysText(duration!.days)} of meals, ${formatPaise(duration!.price)} in all`}
-          </p>
-        ) : null}
+        <p className="text-ink-600 mt-2 text-sm">
+          {isOneTime
+            ? combo
+              ? 'One fixed price for the whole combo.'
+              : 'Cooked fresh and delivered once.'
+            : `${duration!.label}, ${daysText(duration!.days)} of meals`}
+        </p>
       </div>
 
       <form action="/api/cart/add" className="mt-6" method="post" onSubmit={onSubmit}>
@@ -187,7 +187,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
               Choose a size<span className="sr-only"> of {productTitle}</span>
             </legend>
 
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-3 flex flex-wrap gap-2.5">
               {sizes.map((option, index) => (
                 <label className="cursor-pointer" key={`${option.label}-${index}`}>
                   <input
@@ -203,6 +203,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
                   >
                     <TileCheck />
                     <span className="text-sm font-bold">{option.label}</span>
+                    <TileDot />
                     <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
                     {option.compareAtPrice !== null ? (
                       <del className={TILE_SUB}>
@@ -223,11 +224,8 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
               Choose your plan<span className="sr-only"> for {productTitle}</span>
             </legend>
 
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-3 flex flex-wrap gap-2.5">
               {durations.map((option, index) => {
-                const optionPerDay =
-                  option.days > 1 ? perDayPaise(option.price, option.days) : null
-
                 return (
                   <label className="cursor-pointer" key={`${option.label}-${index}`}>
                     <input
@@ -243,12 +241,10 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
                     >
                       <TileCheck />
                       <span className="text-sm font-bold">{option.label}</span>
+                      <TileDot />
                       <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
-                      {optionPerDay !== null ? (
-                        <span className={TILE_SUB}>
-                          {formatPaise(optionPerDay)} a day
-                        </span>
-                      ) : null}
+                      <TileDot />
+                      <span className={TILE_SUB}>{daysText(option.days)}</span>
                     </span>
                   </label>
                 )

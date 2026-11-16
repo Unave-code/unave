@@ -53,12 +53,11 @@ describe('the product card', () => {
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
     expect(screen.getByText('Kids')).toBeTruthy()
 
-    // The lead price is the cheapest per-day rate floored to whole rupees:
-    // ₹499 over 7 days floors to ₹71, ₹1,799 over 30 to ₹59, so ₹59 leads.
-    expect(screen.getByText('From ₹59 a day')).toBeTruthy()
+    // A plan leads with its cheapest duration's price: ₹499 beats ₹1,799.
+    expect(screen.getByText('From ₹499')).toBeTruthy()
 
-    // The durations and their totals live on the product page, not the card.
-    expect(screen.queryByText('₹499')).toBeNull()
+    // No rate a day, and the other durations live on the product page.
+    expect(screen.queryByText(/a day/)).toBeNull()
     expect(screen.queryByText('₹1,799')).toBeNull()
     expect(screen.queryByText('Weekly plans')).toBeNull()
     expect(screen.queryByText('One week')).toBeNull()
@@ -178,14 +177,14 @@ describe('the product card', () => {
 
     expect(screen.queryByRole('link', { name: /Choose plan/ })).toBeNull()
     expect(screen.getByText('Paused')).toBeTruthy()
-    expect(screen.getByText('From ₹59 a day')).toBeTruthy()
+    expect(screen.getByText('From ₹499')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Lunch plan' })).toBeTruthy()
   })
 
   it('shows no price and no buy control when the product has no durations', () => {
     render(<ProductCard product={{ ...product, durations: [] } as unknown as Product} />)
 
-    expect(screen.queryByText(/a day/)).toBeNull()
+    expect(screen.queryByText(/From ₹/)).toBeNull()
     expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Lunch plan' })).toBeTruthy()
   })
