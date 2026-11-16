@@ -64,6 +64,31 @@ describe('the product card', () => {
     expect(screen.queryByText('One week')).toBeNull()
   })
 
+  it('layers the second photo over the first, hidden until the card is pointed at', () => {
+    const photo = (id: number) => ({
+      alt: `Photo ${id}`,
+      filename: `p${id}.jpg`,
+      height: 800,
+      id,
+      mimeType: 'image/jpeg',
+      updatedAt: '2026-11-16T00:00:00.000Z',
+      url: `/media/p${id}.jpg`,
+      width: 800,
+    })
+    const withPhotos = {
+      ...product,
+      gallery: [{ id: 'g1', image: photo(2) }],
+      image: photo(1),
+    } as unknown as Product
+
+    const { container } = render(<ProductCard product={withPhotos} />)
+    const sources = [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'))
+
+    expect(sources.some((src) => src?.includes('p1.jpg'))).toBe(true)
+    expect(sources.some((src) => src?.includes('p2.jpg'))).toBe(true)
+    expect(container.querySelector('.group-hover\\:opacity-100')).toBeTruthy()
+  })
+
   it('renders the placeholder image when the record has no photo', () => {
     const { container } = render(<ProductCard product={product} />)
 

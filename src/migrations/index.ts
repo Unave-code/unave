@@ -32,6 +32,7 @@ import * as migration_20261112_180000_announcement_messages from './20261112_180
 import * as migration_20261113_130000_locked_document_relations from './20261113_130000_locked_document_relations';
 import * as migration_20261114_102751_home_gallery_links from './20261114_102751_home_gallery_links';
 import * as migration_20261114_140000_testimonials_global from './20261114_140000_testimonials_global';
+import * as migration_20261116_120000_product_gallery from './20261116_120000_product_gallery';
 
 export const migrations = [
   {
@@ -203,5 +204,10 @@ export const migrations = [
     up: migration_20261114_140000_testimonials_global.up,
     down: migration_20261114_140000_testimonials_global.down,
     name: '20261114_140000_testimonials_global',
+  },
+  {
+    up: migration_20261116_120000_product_gallery.up,
+    down: migration_20261116_120000_product_gallery.down,
+    name: '20261116_120000_product_gallery',
   },
 ];

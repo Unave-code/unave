@@ -224,6 +224,13 @@ describe('adding and removing lines', () => {
     expect(result.lines).toHaveLength(1)
   })
 
+  it('adds the stepper quantity at once, capped at the most one order holds', () => {
+    expect(addOneTimeCartLine([], 'phulka-box', 3).lines[0].qty).toBe(3)
+
+    const cart = [{ duration: ONE_TIME_DURATION, product: 'phulka-box', qty: 8 }]
+    expect(addOneTimeCartLine(cart, 'phulka-box', 5).lines[0].qty).toBe(CART_MAX_QTY)
+  })
+
   it('refuses a one-time add at the quantity cap', () => {
     const cart = [{ duration: ONE_TIME_DURATION, product: 'phulka-box', qty: CART_MAX_QTY }]
 

@@ -134,9 +134,22 @@ describe('a product page', () => {
     const add = screen.getByRole('button', { name: 'Add to cart' })
     expect(add.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
+    // Related products show twice: compactly under the photos on a wide
+    // screen, and as the full shelf below the page on smaller ones.
+    expect(screen.getByRole('heading', { name: 'People also bought' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'More from the kitchen' })).toBeTruthy()
     expect(screen.getAllByTestId('related-card')).toHaveLength(2)
-    expect(screen.getByText('Weekly thali')).toBeTruthy()
+    expect(screen.getAllByText('Weekly thali')).toHaveLength(2)
+  })
+
+  it('offers Buy now in the same form as Add to cart', () => {
+    render(<ProductDetail product={openProduct} />)
+
+    const buyNow = screen.getByRole('button', { name: 'Buy now' })
+    expect(buyNow.getAttribute('name')).toBe('buyNow')
+    expect(buyNow.closest('form')).toBe(
+      screen.getByRole('button', { name: 'Add to cart' }).closest('form'),
+    )
   })
 
   it('offers no related shelf when none is passed', () => {

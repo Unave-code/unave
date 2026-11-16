@@ -337,9 +337,18 @@ export interface Product {
    */
   type: 'plan' | 'one-time' | 'combo';
   /**
-   * The photo on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
+   * The main photo: first on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
    */
   image?: (number | null) | Media;
+  /**
+   * Up to four more photos, so a product shows five in all. They follow the main photo on the product page, in this order, and the first one shows when a shopper points at the product card.
+   */
+  gallery?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   description?: {
     root: {
       type: string;
@@ -1693,6 +1702,12 @@ export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   type?: T;
   image?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
   description?: T;
   points?:
     | T

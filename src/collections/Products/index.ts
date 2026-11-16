@@ -99,8 +99,29 @@ export const Products: CollectionConfig = {
               relationTo: 'media',
               admin: {
                 description:
-                  'The photo on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.',
+                  'The main photo: first on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.',
               },
+            },
+            {
+              name: 'gallery',
+              type: 'array',
+              label: 'More photos',
+              labels: { plural: 'Photos', singular: 'Photo' },
+              maxRows: 4,
+              admin: {
+                description:
+                  'Up to four more photos, so a product shows five in all. They follow the main photo on the product page, in this order, and the first one shows when a shopper points at the product card.',
+                initCollapsed: false,
+              },
+              fields: [
+                {
+                  name: 'image',
+                  type: 'upload',
+                  label: 'Photo',
+                  relationTo: 'media',
+                  required: true,
+                },
+              ],
             },
             {
               name: 'description',

@@ -50,8 +50,9 @@ export async function POST(request: Request): Promise<Response> {
   const durationLabel = String(form.get('duration') ?? '')
     .trim()
     .slice(0, 80)
-  const returnPath = safeReturnPath(form.get('return')) ?? '/products'
   const buyNow = form.get('buyNow') === 'true'
+  // Buy now always continues to checkout, whichever form its button sits in.
+  const returnPath = buyNow ? '/checkout' : (safeReturnPath(form.get('return')) ?? '/products')
 
   if (!productSlug || !durationLabel) return back('/cart?notice=unknown')
 
@@ -75,7 +76,9 @@ export async function POST(request: Request): Promise<Response> {
   if (product.type === 'one-time' || product.type === 'combo') {
     if (durationLabel !== ONE_TIME_DURATION) return back('/cart?notice=changed')
 
-    const result = addOneTimeCartLine(cart, product.slug)
+    // The product page's stepper may send a quantity; the card never does.
+    const qty = Number.parseInt(String(form.get('qty') ?? '1'), 10)
+    const result = addOneTimeCartLine(cart, product.slug, Number.isFinite(qty) ? qty : 1)
 
     if (!result.ok) {
       return buyNow && result.reason === 'quantity' ? back(returnPath) : noticeBack(result.reason)

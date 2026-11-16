@@ -8,6 +8,7 @@ import { ONE_TIME_DURATION } from '@/utilities/cart'
 import { isProductSellable } from '@/utilities/combos'
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
+import { productPhotos } from '@/utilities/productPhotos'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
 import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
 
@@ -43,7 +44,7 @@ export const ProductCard: React.FC<{
   returnPath = '/products',
   sizes = '(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 45vw',
 }) => {
-  const image = product.image && typeof product.image === 'object' ? product.image : null
+  const [image = null, hoverImage = null] = productPhotos(product)
   const href = productHref(product.slug)
   const isOneTime = product.type === 'one-time'
   const isCombo = product.type === 'combo'
@@ -94,6 +95,7 @@ export const ProductCard: React.FC<{
             alt=""
             fill
             imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            pictureClassName="absolute inset-0"
             resource={image}
             size={sizes}
           />
@@ -107,6 +109,20 @@ export const ProductCard: React.FC<{
             src={PRODUCT_PLACEHOLDER}
           />
         )}
+
+        {/* The second photo waits on top, hidden, and fades in while the card
+            is pointed at or focused, so hover shows the product another way. */}
+        {image?.url && hoverImage?.url ? (
+          <Media
+            alt=""
+            className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
+            fill
+            imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            pictureClassName="absolute inset-0"
+            resource={hoverImage}
+            size={sizes}
+          />
+        ) : null}
 
         {hasPills ? (
           <span className="absolute top-2 left-2 flex flex-wrap gap-1.5">

@@ -8,6 +8,7 @@ import RichText from '@/components/RichText'
 import { Section } from '@/components/home/Section'
 import type { Media as MediaDoc, Product } from '@/payload-types'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { productPhotos } from '@/utilities/productPhotos'
 import { formatPaise } from '@/utilities/money'
 import { comboSeparatePrice, isProductSellable, selectedComboDuration } from '@/utilities/combos'
 import {
@@ -130,19 +131,16 @@ export const ProductDetail: React.FC<{
       ? product.subcategory.title
       : null
 
-  /* The gallery: the product's own photo first, then on a combo a photo of
-     each item that has one, captioned with the item's name. */
-  const ownImage = mediaOf(product.image)
+  /* The gallery: the product's own photos first (the main photo and up to
+     four more), then on a combo a photo of each item that has one, captioned
+     with the item's name. */
+  const ownPhotos = productPhotos(product)
   const gallery: GalleryImage[] = [
-    ...(ownImage
-      ? [
-          {
-            alt: ownImage.alt?.trim() || product.title,
-            caption: product.title,
-            src: srcOf(ownImage),
-          },
-        ]
-      : []),
+    ...ownPhotos.map((photo, index) => ({
+      alt: photo.alt?.trim() || `${product.title}, photo ${index + 1}`,
+      caption: isCombo ? product.title : undefined,
+      src: srcOf(photo),
+    })),
     ...comboItems.flatMap((item) =>
       item.image
         ? [
@@ -183,6 +181,17 @@ export const ProductDetail: React.FC<{
 
   const hasReading = Boolean(product.description) || isCombo || !isAvailable
 
+  /** A related product's lead price, said the way its card says it. */
+  const priceOf = (item: Product): null | string => {
+    if ((item.type === 'one-time' || item.type === 'combo') && Number(item.price) >= 1) {
+      return formatPaise(Number(item.price))
+    }
+    const lead = typeof item.fromPrice === 'number' && item.fromPrice > 0 ? item.fromPrice : null
+    return lead !== null ? `From ${formatPaise(lead)} a day` : null
+  }
+
+  const alsoBought = (related ?? []).slice(0, 4)
+
   return (
     <main>
       <Section className="pt-6 md:pt-10" tone="white">
@@ -217,50 +226,87 @@ export const ProductDetail: React.FC<{
         </nav>
 
         <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-12">
-          {/* The photos, pinned while the column beside them scrolls. */}
-          <div className="min-w-0 md:sticky md:top-28 lg:col-span-7">
+          {/* Left: the photos (thumbnails beside the main photo on a wide
+              screen), then a compact "People also bought" list under them. */}
+          <div className="min-w-0 lg:col-span-7">
             <ProductGallery images={gallery} paused={!isAvailable} />
+
+            {alsoBought.length > 0 ? (
+              <section aria-labelledby="also-bought-heading" className="mt-10 hidden lg:block">
+                <h2 className="text-h3 text-green-900" id="also-bought-heading">
+                  People also bought
+                </h2>
+                <span aria-hidden="true" className="bg-gold-400 mt-2 block h-1 w-12 rounded-full" />
+                <ul className="mt-5 grid grid-cols-2 gap-3">
+                  {alsoBought.map((item) => {
+                    const photo = productPhotos(item)[0]
+                    const itemPrice = priceOf(item)
+
+                    return (
+                      <li className="min-w-0" key={item.id}>
+                        <Link
+                          className="group border-line flex items-center gap-3 rounded-lg border bg-white p-2 pr-3 transition-[border-color,box-shadow] hover:border-green-500 hover:shadow-sm focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none"
+                          href={productHref(item.slug)}
+                        >
+                          <span className="relative size-20 shrink-0 overflow-hidden rounded-md bg-green-50">
+                            <Image
+                              alt=""
+                              className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
+                              fill
+                              sizes="80px"
+                              src={photo ? srcOf(photo) : PRODUCT_PLACEHOLDER}
+                            />
+                          </span>
+                          <span className="flex min-w-0 flex-col gap-1">
+                            <span className="text-ink-900 line-clamp-2 text-sm leading-snug font-semibold group-hover:text-green-700">
+                              {item.title}
+                            </span>
+                            {itemPrice ? (
+                              <span className="text-sm font-bold text-green-700 tabular-nums">
+                                {itemPrice}
+                              </span>
+                            ) : null}
+                          </span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ) : null}
           </div>
 
-          {/* Everything needed to choose and buy, in reading order: what it
-              is, whether it can be ordered, the price and the choice, then
-              what you get and, on a combo, what is inside. */}
+          {/* Right, in reading order: what it is, the price and the choice,
+              the buy row, then the description and, on a combo, its items. */}
           <div className="min-w-0 lg:col-span-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {product.category ? (
-                <Link
-                  aria-label={categoryBadgeAriaLabel(product.category)}
-                  data-hit-area="44"
-                  className={cn(
-                    CHIP,
-                    'relative bg-green-100 text-green-800 transition-colors hover:bg-green-200 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none after:absolute after:-inset-y-2 after:inset-x-0',
-                  )}
-                  href={productCategoryHref(product.category)}
-                >
-                  {CATEGORY_LABEL[product.category]}
-                </Link>
-              ) : null}
-              {product.audience ? (
-                <span className={cn(CHIP, 'ring-line text-ink-600 ring-1 ring-inset')}>
-                  {AUDIENCE_LABEL[product.audience]}
-                </span>
-              ) : null}
-            </div>
+            {product.category || product.audience ? (
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                {product.category ? (
+                  <Link
+                    aria-label={categoryBadgeAriaLabel(product.category)}
+                    data-hit-area="44"
+                    className={cn(
+                      CHIP,
+                      'relative bg-green-100 text-green-800 transition-colors hover:bg-green-200 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none after:absolute after:-inset-y-2 after:inset-x-0',
+                    )}
+                    href={productCategoryHref(product.category)}
+                  >
+                    {CATEGORY_LABEL[product.category]}
+                  </Link>
+                ) : null}
+                {product.audience ? (
+                  <span className={cn(CHIP, 'ring-line text-ink-600 ring-1 ring-inset')}>
+                    {AUDIENCE_LABEL[product.audience]}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
 
-            <h1 className="mt-4 text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[36px]">
+            <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[34px]">
               {product.title}
             </h1>
 
-            <p className="text-caption text-ink-600 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span>
-                {KIND_LABEL[product.type]}
-                {subcategory ? (
-                  <>
-                    {' · '}
-                    <span className="wrap-anywhere">{subcategory}</span>
-                  </>
-                ) : null}
-              </span>
+            <p className="text-caption text-ink-600 mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span
                 className={cn(
                   'inline-flex items-center gap-1.5 font-bold',
@@ -273,6 +319,22 @@ export const ProductDetail: React.FC<{
                 />
                 {isAvailable ? 'Available to order' : 'Paused for now'}
               </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                {KIND_LABEL[product.type]}
+                {subcategory ? (
+                  <>
+                    {' · '}
+                    <span className="wrap-anywhere">{subcategory}</span>
+                  </>
+                ) : null}
+              </span>
+              {product.packSize ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{product.packSize}</span>
+                </>
+              ) : null}
             </p>
 
             {comboSaving >= 100 && separate !== null ? (
@@ -286,7 +348,7 @@ export const ProductDetail: React.FC<{
               </p>
             ) : null}
 
-            <section aria-label="Buy" className="border-line mt-6 border-t pt-6">
+            <section aria-label="Buy" className="border-line mt-5 border-t pt-5">
               {isAvailable && buyableOneTime ? (
                 <ProductPurchase
                   combo={isCombo}
@@ -339,32 +401,42 @@ export const ProductDetail: React.FC<{
               )}
             </section>
 
-            {points.length > 0 ? (
+            {/* The description straight under the buy row, as a shop reads. */}
+            {hasReading ? (
               <section
-                aria-labelledby="product-points-heading"
-                className="border-line mt-5 border-t pt-5"
+                aria-labelledby="product-description-heading"
+                className="border-line mt-6 border-t pt-6"
               >
-                <ColumnHeading id="product-points-heading">{PRODUCT_POINTS_HEADING}</ColumnHeading>
-                <ul className="mt-3 flex flex-col gap-2.5">
-                  {points.map((point, index) => (
-                    <li className="flex items-start gap-3" key={`${point}-${index}`}>
-                      <span
-                        aria-hidden="true"
-                        className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"
-                      >
-                        <Check className="size-3" strokeWidth={2.5} />
-                      </span>
-                      <span className="text-ink-900 text-sm leading-6">{point}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h2 className="sr-only" id="product-description-heading">
+                  Product description
+                </h2>
+                {product.description ? (
+                  <RichText
+                    className="text-body text-ink-600 mx-0 max-w-[68ch]"
+                    data={product.description}
+                    enableGutter={false}
+                  />
+                ) : null}
+
+                {isCombo ? (
+                  <Notice className={product.description ? 'mt-6' : ''} title="A note on our meals">
+                    Our meals are food options and are not a substitute for medical or nutritional
+                    advice.
+                  </Notice>
+                ) : null}
+
+                {!isAvailable ? (
+                  <Notice className="mt-6" title={PRODUCTS_PAUSED_NOTE_TITLE}>
+                    {PRODUCTS_PAUSED_NOTE_BODY}
+                  </Notice>
+                ) : null}
               </section>
             ) : null}
 
             {isCombo && comboItems.length > 0 ? (
               <section
                 aria-labelledby="combo-contents-heading"
-                className="border-line mt-5 border-t pt-5"
+                className="border-line mt-6 border-t pt-6"
               >
                 <ColumnHeading id="combo-contents-heading">
                   Included in this combo ({comboItems.length})
@@ -433,41 +505,35 @@ export const ProductDetail: React.FC<{
           </div>
         </div>
 
-        {/* Full width under the columns: the description and the details. */}
+        {/* Full width under the columns: what you get and the details. */}
         <div className="border-line mt-12 grid gap-10 border-t pt-10 lg:grid-cols-12">
-          {hasReading ? (
-            <div className="min-w-0 lg:col-span-7">
-              {product.description ? (
-                <section aria-labelledby="product-description-heading">
-                  <h2 className="text-h2" id="product-description-heading">
-                    Product description
-                  </h2>
-                  <RichText
-                    className="text-body text-ink-600 mx-0 mt-6 max-w-[68ch]"
-                    data={product.description}
-                    enableGutter={false}
-                  />
-                </section>
-              ) : null}
-
-              {isCombo ? (
-                <Notice className={product.description ? 'mt-8' : ''} title="A note on our meals">
-                  Our meals are food options and are not a substitute for medical or nutritional
-                  advice.
-                </Notice>
-              ) : null}
-
-              {!isAvailable ? (
-                <Notice className="mt-8" title={PRODUCTS_PAUSED_NOTE_TITLE}>
-                  {PRODUCTS_PAUSED_NOTE_BODY}
-                </Notice>
-              ) : null}
-            </div>
+          {points.length > 0 ? (
+            <section aria-labelledby="product-points-heading" className="min-w-0 lg:col-span-7">
+              <h2 className="text-h2" id="product-points-heading">
+                {PRODUCT_POINTS_HEADING}
+              </h2>
+              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                {points.map((point, index) => (
+                  <li
+                    className="flex items-start gap-3 rounded-lg bg-green-50 p-4"
+                    key={`${point}-${index}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-green-700 text-white"
+                    >
+                      <Check className="size-3.5" strokeWidth={2.5} />
+                    </span>
+                    <span className="text-ink-900 text-sm leading-6">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
 
           <section
             aria-labelledby="product-details-heading"
-            className={cn('min-w-0', hasReading ? 'lg:col-span-5' : 'lg:col-span-7')}
+            className={cn('min-w-0', points.length > 0 ? 'lg:col-span-5' : 'lg:col-span-7')}
           >
             <h2 className="text-h2" id="product-details-heading">
               Product details
@@ -487,8 +553,11 @@ export const ProductDetail: React.FC<{
         </div>
       </Section>
 
+      {/* The full related shelf with its buy buttons. On a wide screen the
+          compact list under the photos already shows up to four, so the band
+          is kept there only when the shelf has more than that. */}
       {related && related.length > 0 ? (
-        <Section tone="tint">
+        <Section className={related.length <= alsoBought.length ? 'lg:hidden' : ''} tone="tint">
           <h2 className="text-h2">{PRODUCTS_RELATED_HEADING}</h2>
 
           <ul

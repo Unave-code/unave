@@ -47,6 +47,11 @@ export const useAddToCart = (line: CartLineIdentity, options?: { oneTime?: boole
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     if (typeof window === 'undefined' || typeof window.fetch !== 'function') return
 
+    // Buy now shares the form but leaves the page: let it post natively and
+    // follow the redirect to checkout.
+    const submitter = (event.nativeEvent as SubmitEvent).submitter
+    if (submitter?.getAttribute('name') === 'buyNow') return
+
     event.preventDefault()
 
     const cart = readCartFromHeaders(document.cookie)
