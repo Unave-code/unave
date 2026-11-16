@@ -351,7 +351,7 @@ export const ProductDetail: React.FC<{
                   Included in this combo ({comboItems.length})
                 </ColumnHeading>
 
-                <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {comboItems.map((item, index) => {
                     const meta = [
                       item.type ? PRODUCT_KIND_LABEL[item.type] : null,
@@ -369,7 +369,7 @@ export const ProductDetail: React.FC<{
                             alt={item.image ? item.image.alt?.trim() || item.title : ''}
                             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
                             fill
-                            sizes="(min-width: 64rem) 12vw, 40vw"
+                            sizes="(min-width: 64rem) 9vw, 30vw"
                             src={item.image ? srcOf(item.image) : PRODUCT_PLACEHOLDER}
                           />
                         </span>
