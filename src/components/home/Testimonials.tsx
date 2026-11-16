@@ -66,10 +66,15 @@ export const Testimonials: React.FC = async () => {
   if (!items.length) return null
 
   const featureIndex = items.findIndex((item) => item.kind !== 'video')
-  /* The feature tile stands two rows tall only on three columns and only
-     beside a video, which is two rows tall itself; anywhere else a tall
-     tile would just be empty green under a short quote. */
-  const tallFeature = items.some((item) => item.kind === 'video')
+  /* Beside a two-row video, the space under the one-row feature tile is
+     filled by the other quotes. Only when there is no other quote does the
+     feature stand two rows tall itself, so the grid never shows a hole, nor a
+     tall green tile with a short quote floating in it. */
+  const hasVideo = items.some((item) => item.kind === 'video')
+  const otherQuotes = items.filter(
+    (item, index) => item.kind !== 'video' && index !== featureIndex,
+  ).length
+  const tallFeature = hasVideo && otherQuotes === 0
   let lightTile = 0
 
   /* How many grid cells each tile fills: on two columns (md) a video is one
