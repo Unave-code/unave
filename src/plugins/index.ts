@@ -1,4 +1,5 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
+import { guardFormSubmission } from '@/hooks/guardFormSubmission'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -64,6 +65,7 @@ export const plugins: Plugin[] = [
       admin: { group: 'Settings' },
       hooks: {
         afterChange: [emailFormSubmission],
+        beforeChange: [guardFormSubmission],
       },
     },
     formOverrides: {

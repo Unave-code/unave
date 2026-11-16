@@ -3,6 +3,7 @@
  */
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { issueFormStamp } from '@/utilities/formGuard'
 
 import { authenticateCustomerToken } from '../../src/auth/customerSession'
 import { customerLogoutEndpoint } from '../../src/auth/google/endpoints'
@@ -75,7 +76,10 @@ const makeRequest = (
     headers,
     logger: payload.logger,
     payload,
-    text: async () => new URLSearchParams(fields).toString(),
+    // A stamp drawn a few seconds ago, as a real page would carry, unless the
+    // test supplies its own.
+    text: async () =>
+      new URLSearchParams({ form_stamp: issueFormStamp(Date.now() - 5000), ...fields }).toString(),
   }
 }
 
@@ -223,6 +227,43 @@ describe('the sign-in form posting to /api/customers/login', () => {
     expect(locationOf(response)).toBe('http://localhost:3000/sign-in?error=session')
     expect(response.headers.getSetCookie()).toHaveLength(0)
   })
+
+  it('refuses a post with no form stamp, as a script posting straight at the route sends', async () => {
+    const account = await createCustomer(true)
+
+    const response = await customerLoginEndpoint.handler(
+      makeRequest({ email: account.email, form_stamp: '', password: PASSWORD }) as never,
+    )
+
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-in?error=expired')
+    expect(response.headers.getSetCookie()).toHaveLength(0)
+  })
+
+  it('refuses a form sent faster than a person can fill it', async () => {
+    const account = await createCustomer(true)
+
+    const response = await customerLoginEndpoint.handler(
+      makeRequest({
+        email: account.email,
+        form_stamp: issueFormStamp(),
+        password: PASSWORD,
+      }) as never,
+    )
+
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-in?error=fast')
+    expect(response.headers.getSetCookie()).toHaveLength(0)
+  })
+
+  it('treats a filled honeypot as a wrong password', async () => {
+    const account = await createCustomer(true)
+
+    const response = await customerLoginEndpoint.handler(
+      makeRequest({ email: account.email, password: PASSWORD, website: 'spam' }) as never,
+    )
+
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-in?error=credentials')
+    expect(response.headers.getSetCookie()).toHaveLength(0)
+  })
 })
 
 describe('the sign-up form posting to /api/customers/register', () => {
@@ -313,6 +354,25 @@ describe('the sign-up form posting to /api/customers/register', () => {
     )
 
     expect(locationOf(response)).toBe('http://localhost:3000/sign-up?error=session')
+
+    const found = await payload.find({
+      collection: 'customers',
+      depth: 0,
+      overrideAccess: true,
+      where: { email: { equals: email } },
+    })
+
+    expect(found.docs).toHaveLength(0)
+  })
+
+  it('tells a filled honeypot it worked and creates nothing', async () => {
+    const email = uniqueEmail()
+
+    const response = await customerRegisterEndpoint.handler(
+      makeRequest({ email, name: NAME, password: PASSWORD, phone: PHONE, website: 'x' }) as never,
+    )
+
+    expect(locationOf(response)).toBe('http://localhost:3000/sign-in?registered=1')
 
     const found = await payload.find({
       collection: 'customers',

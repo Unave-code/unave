@@ -87,7 +87,11 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,
-  token: z.string().min(1, { message: 'Ask for a new link.' }),
+  token: z
+    .string()
+    .min(1, { message: 'Ask for a new link.' })
+    .max(200, { message: 'Ask for a new link.' })
+    .regex(/^[A-Za-z0-9_-]+$/, { message: 'Ask for a new link.' }),
 })
 
 export const customerAuthSchemas = {

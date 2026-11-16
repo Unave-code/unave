@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { issueFormStamp } from '@/utilities/formGuard'
 import { cn } from '@/utilities/ui'
 
 import { AuthShell } from './AuthShell'
@@ -59,6 +60,7 @@ export const ResetPassword: React.FC<Props> = ({ error, notice, token }) => {
             idPrefix="reset"
             intent="reset"
             password={{ autoComplete: 'new-password', label: CUSTOMER_AUTH_NEW_PASSWORD_LABEL }}
+            stamp={issueFormStamp()}
             submit={RESET_COPY.submit}
           >
             <input name="token" type="hidden" value={token} />

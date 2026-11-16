@@ -91,6 +91,32 @@ export const checkAccountMailIpLimit = (
     : consumeRateLimit('account-mail-ip', ip, ACCOUNT_MAIL_IP_LIMIT, ACCOUNT_MAIL_IP_WINDOW_MS, now)
 
 /**
+ * Finishing a password reset. The token is long and random, so this is not
+ * what stops guessing; it bounds how much hashing an anonymous caller can ask
+ * for, since every attempt with a valid-looking body hashes a new password.
+ */
+export const RESET_IP_LIMIT = 10
+export const RESET_IP_WINDOW_MS = 10 * MINUTE
+
+export const checkResetIpLimit = (ip: string | null, now: number = Date.now()): RateLimitResult =>
+  ip === null ? { limited: false } : consumeRateLimit('reset-ip', ip, RESET_IP_LIMIT, RESET_IP_WINDOW_MS, now)
+
+/**
+ * Public form-builder submissions (the Form block on CMS pages). Same reasoning
+ * as the contact form: a stored row and an email for every post.
+ */
+export const FORM_SUBMISSION_IP_LIMIT = 5
+export const FORM_SUBMISSION_IP_WINDOW_MS = HOUR
+
+export const checkFormSubmissionIpLimit = (
+  ip: string | null,
+  now: number = Date.now(),
+): RateLimitResult =>
+  ip === null
+    ? { limited: false }
+    : consumeRateLimit('form-submission-ip', ip, FORM_SUBMISSION_IP_LIMIT, FORM_SUBMISSION_IP_WINDOW_MS, now)
+
+/**
  * The public contact form. It writes a row and mails the kitchen, which is worth
  * more to a spam script than to a visitor. Five an hour from one address is plenty
  * for a person with several questions and starves the scripts.

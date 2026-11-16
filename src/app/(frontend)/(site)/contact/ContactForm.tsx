@@ -2,12 +2,11 @@ import React from 'react'
 
 import { AUTH_INPUT, AUTH_LABEL, AUTH_PROBLEM } from '@/components/CustomerAuth/styles'
 import { Button } from '@/components/ui/button'
-import { ENQUIRY_HONEYPOT_FIELD } from '@/collections/Enquiries/schema'
+import { FormGuardFields } from '@/components/FormGuardFields'
 import { cn } from '@/utilities/ui'
 import {
   CONTACT_EMAIL_LABEL,
   CONTACT_FORM_NOTE,
-  CONTACT_HONEYPOT_LABEL,
   CONTACT_MESSAGE_LABEL,
   CONTACT_MESSAGE_PLACEHOLDER,
   CONTACT_NAME_LABEL,
@@ -24,8 +23,8 @@ import {
  * never loses typed text; the server validates again with the same rules and
  * answers a crafted post with one plain error line instead of the form.
  */
-export const ContactForm: React.FC<{ error?: string }> = ({ error }) => (
-  <form action="/api/enquiries/send" className="flex flex-col gap-6" method="post">
+export const ContactForm: React.FC<{ error?: string; stamp?: string }> = ({ error, stamp }) => (
+  <form action="/api/enquiries/send" className="relative flex flex-col gap-6" method="post">
     {error ? (
       <p className={AUTH_PROBLEM} role="alert">
         {error}
@@ -94,20 +93,7 @@ export const ContactForm: React.FC<{ error?: string }> = ({ error }) => (
       />
     </div>
 
-    {/*
-      The honeypot: visually hidden and skipped by keyboard and screen readers.
-      A script that fills it is answered with success and sends nothing.
-    */}
-    <div aria-hidden="true" className="hidden">
-      <label htmlFor="contact-website">{CONTACT_HONEYPOT_LABEL}</label>
-      <input
-        autoComplete="off"
-        id="contact-website"
-        name={ENQUIRY_HONEYPOT_FIELD}
-        tabIndex={-1}
-        type="text"
-      />
-    </div>
+    <FormGuardFields idPrefix="contact" stamp={stamp} />
 
     <div>
       <Button type="submit">{CONTACT_SUBMIT}</Button>

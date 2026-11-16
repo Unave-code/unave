@@ -106,6 +106,8 @@ export const CUSTOMER_AUTH_ERRORS: Record<string, string> = {
   exists:
     'That email address already has an account. Sign in instead, or use Forgot your password to set a new one.',
   exchange: 'That sign-in did not finish. Please try again.',
+  expired: 'That form was open for a long time. Please try again now that the page is fresh.',
+  fast: 'That was sent a little too quickly. Please wait a second and try again.',
   locked: 'Too many attempts on that account. Please wait a few minutes and try again.',
   mail: 'We could not send that email just now. Please try again in a moment.',
   name: 'Please enter your name.',

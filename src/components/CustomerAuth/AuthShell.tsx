@@ -93,7 +93,7 @@ export const AuthShell: React.FC<Props> = ({ children }) => (
       <div className="flex shrink-0 items-center justify-between gap-4 px-6 py-5 sm:px-10 short:py-3 lg:justify-end">
         <Link
           aria-label="UNAVE home"
-          className="text-green-900 focus-visible:ring-green-500 transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:outline-none lg:hidden motion-reduce:transition-none"
+          className="text-green-900 focus-visible:ring-green-500 inline-flex min-h-11 items-center transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:outline-none lg:hidden motion-reduce:transition-none"
           href="/"
         >
           <Logo />

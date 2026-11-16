@@ -2,6 +2,8 @@ import Link from 'next/link'
 import React from 'react'
 
 import { CTA_BASE, CTA_VARIANTS, Cta } from '@/components/Cta'
+import { FormGuardFields } from '@/components/FormGuardFields'
+import { issueFormStamp } from '@/utilities/formGuard'
 import { cn } from '@/utilities/ui'
 import { isCustomerSignInConfigured } from '@/utilities/customerSession'
 
@@ -86,6 +88,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
   const message = customerAuthError(error)
   const confirmation = customerAuthNotice(notice)
   const configured = isCustomerSignInConfigured()
+  const stamp = issueFormStamp()
 
   return (
     <AuthShell>
@@ -145,6 +148,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
             label={CUSTOMER_AUTH_EMAIL_LABEL}
             name="email"
           />
+          <FormGuardFields idPrefix="resend" stamp={stamp} />
           <button className={cn(CTA_BASE, CTA_VARIANTS.secondary, 'w-full')} type="submit">
             {CUSTOMER_AUTH_RESEND}
           </button>
@@ -161,7 +165,10 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
           password={{
             action:
               mode === 'sign-in' ? (
-                <Link className={cn(AUTH_INLINE_LINK, 'text-sm')} href="/forgot-password">
+                <Link
+                  className={cn(AUTH_INLINE_LINK, 'inline-flex min-h-11 items-center text-sm')}
+                  href="/forgot-password"
+                >
                   {CUSTOMER_AUTH_FORGOT}
                 </Link>
               ) : undefined,
@@ -170,6 +177,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
             label:
               mode === 'sign-up' ? CUSTOMER_AUTH_CHOOSE_PASSWORD : CUSTOMER_AUTH_PASSWORD_LABEL,
           }}
+          stamp={stamp}
           submit={copy.submit}
         >
           {mode === 'sign-in' && returnTo ? (

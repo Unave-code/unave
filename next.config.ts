@@ -13,7 +13,37 @@ const NEXT_PUBLIC_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : 'http://localhost:3000'
 
+/**
+ * Headers on every response. Kept to the ones that cannot break a page:
+ * the site is never framed by another origin (the admin's live preview frames
+ * it from the same origin), the browser never guesses a content type, other
+ * sites get the origin and not the full address, and the device features this
+ * site never uses are off. HSTS is production only, so `next dev` over plain
+ * http keeps working.
+ */
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), usb=(), browsing-topics=()',
+  },
+  ...(process.env.NODE_ENV === 'production'
+    ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' }]
+    : []),
+]
+
 const nextConfig: NextConfig = {
+  // Do not advertise the framework in every response.
+  poweredByHeader: false,
+  async headers() {
+    return [{ headers: securityHeaders, source: '/:path*' }]
+  },
   // A self contained server.js for the Docker image (docs/deploy.md). `next
   // start` and `next dev` are unaffected.
   output: 'standalone',

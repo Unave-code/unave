@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProductShelf } from '@/components/home/Products'
 
-const getSubcategories = vi.hoisted(() => vi.fn())
+const getHeader = vi.hoisted(() => vi.fn())
 
-vi.mock('@/utilities/products', () => ({
-  getHomeSubcategories: () => getSubcategories,
+vi.mock('@/utilities/getGlobals', () => ({
+  getCachedGlobal: () => getHeader,
 }))
 
 vi.mock('next/image', () => ({
@@ -19,14 +19,16 @@ vi.mock('next/image', () => ({
     React.createElement('img', rest),
 }))
 
+const navLink = (label: string, url: string) => ({ link: { label, type: 'custom', url } })
+
 afterEach(() => {
   cleanup()
-  getSubcategories.mockReset()
+  getHeader.mockReset()
 })
 
-describe('homepage subcategory tiles', () => {
+describe('homepage category tiles', () => {
   it('centers the section heading without the product shelf action', async () => {
-    getSubcategories.mockResolvedValue([])
+    getHeader.mockResolvedValue({ navItems: [] })
 
     render(await ProductShelf({}))
 
@@ -35,49 +37,52 @@ describe('homepage subcategory tiles', () => {
     expect(screen.queryByRole('link', { name: 'See every product' })).toBeNull()
   })
 
-  it('omits the intro and available-meal count', async () => {
-    getSubcategories.mockResolvedValue([
-      { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
-    ])
+  it('shows only the main categories the menu links to, in menu order', async () => {
+    getHeader.mockResolvedValue({
+      navItems: [
+        navLink('About', '/about'),
+        navLink('Ready to eat', '/products/ready-to-eat'),
+        navLink('Fresh', '/products/fresh-from-produce'),
+        navLink('Some product', '/products/garlic-podi'),
+      ],
+    })
 
     render(await ProductShelf({}))
 
-    expect(screen.queryByText('Explore the available meal types, or see every product.')).toBeNull()
-    expect(screen.queryByText('1 meal type currently available.')).toBeNull()
+    const links = screen.getAllByRole('link')
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/products/ready-to-eat',
+      '/products/fresh-from-produce',
+    ])
+    expect(screen.getByRole('link', { name: 'Browse Fresh products' })).toBeTruthy()
+  })
+
+  it('falls back to all three categories when the menu links none', async () => {
+    getHeader.mockResolvedValue({ navItems: [navLink('About', '/about')] })
+
+    render(await ProductShelf({}))
+
+    expect(screen.getAllByRole('link')).toHaveLength(3)
   })
 
   it('renders three readable mobile columns that wrap without horizontal scrolling', async () => {
-    getSubcategories.mockResolvedValue([
-      { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
-    ])
+    getHeader.mockResolvedValue({
+      navItems: [navLink('Fresh from produce', '/products/fresh-from-produce')],
+    })
 
     render(await ProductShelf({}))
 
-    const list = screen.getByRole('list', { name: 'Meal subcategories' })
+    const list = screen.getByRole('list', { name: 'Product categories' })
     expect(list.className).toContain('grid-cols-3')
     expect(list.className).toContain('sm:flex-wrap')
     expect(list.className).not.toContain('overflow-x-auto')
-    expect(list.getAttribute('tabindex')).toBeNull()
 
-    const link = screen.getByRole('link', { name: 'Browse Greens products' })
+    const link = screen.getByRole('link', { name: 'Browse Fresh from produce products' })
     expect(link.className).toContain('min-h-32')
     expect(link.className).toContain('sm:w-40')
     expect(link.className).toContain('rounded-2xl')
     expect(link.className).toContain('border-gold-300')
     expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-6')
     expect(link.querySelector('h3')?.className).toContain('wrap-anywhere')
-    expect(link.querySelector('img')).toBeNull()
-  })
-
-  it('opens the category shelf filtered by the subcategory slug', async () => {
-    getSubcategories.mockResolvedValue([
-      { category: 'fresh-from-produce', id: 45, slug: 'greens', title: 'Greens' },
-    ])
-
-    render(await ProductShelf({}))
-
-    expect(screen.getByRole('link', { name: 'Browse Greens products' }).getAttribute('href')).toBe(
-      '/products/fresh-from-produce?subcategory=greens',
-    )
   })
 })

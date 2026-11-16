@@ -11,6 +11,9 @@ import type { DefaultTypedEditorState } from '@payloadcms/richtext-lexical'
 import { fields } from './fields'
 import { getClientSideURL } from '@/utilities/getURL'
 
+/** Not a field any CMS form defines, and tempting to a form-filling script. */
+const HONEYPOT_NAME = 'website_url'
+
 export type FormBlockType = {
   blockName?: string
   blockType?: 'formBlock'
@@ -46,11 +49,23 @@ export const FormBlock: React.FC<
   const [error, setError] = useState<{ message: string; status?: string } | undefined>()
   const router = useRouter()
 
+  /* The honeypot sits outside react-hook-form so it never reaches the
+     submission. A person leaves it empty; a script that fills it is shown the
+     confirmation and nothing is sent. */
   const onSubmit = useCallback(
-    (data: FormFieldBlock[]) => {
+    (data: FormFieldBlock[], event?: React.BaseSyntheticEvent) => {
+      const formElement = event?.target instanceof HTMLFormElement ? event.target : null
+      const trap = formElement?.elements.namedItem(HONEYPOT_NAME)
+      const trapped = trap instanceof HTMLInputElement && trap.value.trim() !== ''
+
       let loadingTimerID: ReturnType<typeof setTimeout>
       const submitForm = async () => {
         setError(undefined)
+
+        if (trapped) {
+          setHasSubmitted(true)
+          return
+        }
 
         const dataToSend = Object.entries(data).map(([name, value]) => ({
           field: name,
@@ -126,7 +141,20 @@ export const FormBlock: React.FC<
           {isLoading && !hasSubmitted && <p>Loading, please wait...</p>}
           {error && <div>{`${error.status || '500'}: ${error.message || ''}`}</div>}
           {!hasSubmitted && (
-            <form id={formID} onSubmit={handleSubmit(onSubmit)}>
+            <form className="relative" id={formID} onSubmit={handleSubmit(onSubmit)}>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
+              >
+                <label htmlFor={`${formID}-website`}>Leave this field empty</label>
+                <input
+                  autoComplete="off"
+                  id={`${formID}-website`}
+                  name={HONEYPOT_NAME}
+                  tabIndex={-1}
+                  type="text"
+                />
+              </div>
               <div className="mb-4 last:mb-0">
                 {formFromProps &&
                   formFromProps.fields &&

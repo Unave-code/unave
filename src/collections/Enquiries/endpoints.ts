@@ -7,10 +7,11 @@ import {
   seeOther,
   withParams,
 } from '@/utilities/formPost'
+import { checkFormGuard } from '@/utilities/formGuard'
 import { checkEnquiryIpLimit, getClientIp } from '@/utilities/rateLimit'
 
 import { sendEnquiryNotice } from './mail'
-import { ENQUIRY_HONEYPOT_FIELD, enquirySchema } from './schema'
+import { enquirySchema } from './schema'
 
 const CONTACT_PATH = '/contact'
 
@@ -41,9 +42,15 @@ export const enquiryEndpoint: Endpoint = {
 
     const fields = await readFormFields(req)
 
-    if ((fields[ENQUIRY_HONEYPOT_FIELD] ?? '').trim() !== '') {
+    const guard = checkFormGuard(fields)
+
+    if (guard === 'honeypot') {
       req.payload.logger.info({ msg: 'enquiry_honeypot_ignored' })
       return seeOther(withParams(CONTACT_PATH, { sent: '1' }))
+    }
+
+    if (guard !== 'ok') {
+      return backWithError(CONTACT_PATH, guard === 'too-fast' ? 'fast' : 'expired')
     }
 
     const parsed = enquirySchema.safeParse({

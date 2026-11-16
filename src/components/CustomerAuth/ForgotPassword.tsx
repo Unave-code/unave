@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { issueFormStamp } from '@/utilities/formGuard'
 import { cn } from '@/utilities/ui'
 
 import { AuthShell } from './AuthShell'
@@ -51,6 +52,7 @@ export const ForgotPassword: React.FC<Props> = ({ error, sent }) => {
           idPrefix="forgot"
           intent="forgot"
           password={false}
+          stamp={issueFormStamp()}
           submit={FORGOT_COPY.submit}
         />
       </div>

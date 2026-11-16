@@ -3,6 +3,7 @@
  */
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { issueFormStamp } from '@/utilities/formGuard'
 
 import { enquiryEndpoint } from '../../src/collections/Enquiries/endpoints'
 import { enquiryMailContent } from '../../src/collections/Enquiries/mail'
@@ -66,7 +67,10 @@ const makeRequest = (
     headers,
     logger: payload.logger,
     payload,
-    text: async () => new URLSearchParams(fields).toString(),
+    // A stamp drawn a few seconds ago, as a real page would carry, unless the
+    // test supplies its own.
+    text: async () =>
+      new URLSearchParams({ form_stamp: issueFormStamp(Date.now() - 5000), ...fields }).toString(),
   }
 }
 

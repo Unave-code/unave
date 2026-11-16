@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
+import { FormGuardFields } from '@/components/FormGuardFields'
 import {
   type CustomerAuthIntent,
   type FieldErrors,
@@ -49,6 +50,8 @@ interface Props {
   fields?: TextFieldProps[]
   /** `false` for the forgot-password card, which asks only for an address. */
   password?: PasswordSpec | false
+  /** The signed fill-time stamp from `issueFormStamp`, drawn by the page. */
+  stamp?: string
   submit: string
 }
 
@@ -78,6 +81,7 @@ export const PasswordForm: React.FC<Props> = ({
     autoComplete: 'current-password',
     label: 'Password',
   },
+  stamp,
   submit,
 }) => {
   const formRef = useRef<HTMLFormElement>(null)
@@ -182,6 +186,8 @@ export const PasswordForm: React.FC<Props> = ({
       ) : null}
 
       {children}
+
+      <FormGuardFields idPrefix={idPrefix} stamp={stamp} />
 
       <button
         className={cn(CTA_BASE, CTA_VARIANTS.primary, 'mt-2 short:mt-1 w-full')}

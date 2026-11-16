@@ -18,10 +18,12 @@ import {
   seeOther,
   withParams,
 } from '@/utilities/formPost'
+import { checkFormGuard, type FormGuardResult } from '@/utilities/formGuard'
 import {
   checkAccountMailIpLimit,
   checkLoginEmailLimit,
   checkLoginIpLimit,
+  checkResetIpLimit,
   getClientIp,
 } from '@/utilities/rateLimit'
 
@@ -69,6 +71,14 @@ const FORGOT_PATH = '/forgot-password'
 const RESET_PATH = '/reset-password'
 const ACCOUNT_PATH = '/account'
 
+/**
+ * The error code a person sees when the form guard (honeypot and fill-time
+ * stamp, `src/utilities/formGuard.ts`) refuses a post. A filled honeypot is a
+ * script, so each route decides separately what a script is told.
+ */
+const guardCode = (result: Exclude<FormGuardResult, 'ok'>): string =>
+  result === 'too-fast' ? 'fast' : 'expired'
+
 /** The name Payload puts on its errors, used to choose the plain sentence to show. */
 const errorName = (error: unknown): string =>
   error && typeof error === 'object' && typeof (error as { name?: unknown }).name === 'string'
@@ -93,6 +103,13 @@ export const customerLoginEndpoint: Endpoint = {
     if (!isSameOriginPost(req)) {
       req.payload.logger.warn({ msg: 'customer_login_cross_site_rejected' })
       return backWithError(SIGN_IN_PATH, 'session', keep)
+    }
+
+    const guard = checkFormGuard(fields)
+
+    if (guard !== 'ok') {
+      req.payload.logger.info({ guard, msg: 'customer_login_guard_rejected' })
+      return backWithError(SIGN_IN_PATH, guard === 'honeypot' ? 'credentials' : guardCode(guard), keep)
     }
 
     const parsed = signInSchema.safeParse({ email: fields.email, password: fields.password })
@@ -185,6 +202,16 @@ export const customerRegisterEndpoint: Endpoint = {
     }
 
     const fields = await readFields(req)
+    const guard = checkFormGuard(fields)
+
+    if (guard === 'honeypot') {
+      // Told it worked, so the script learns nothing; nothing is created.
+      req.payload.logger.info({ msg: 'customer_register_honeypot_ignored' })
+      return seeOther(withParams(SIGN_IN_PATH, { registered: '1' }))
+    }
+
+    if (guard !== 'ok') return backWithError(SIGN_UP_PATH, guardCode(guard))
+
     const parsed = signUpSchema.safeParse(fields)
 
     if (!parsed.success) {
@@ -274,8 +301,13 @@ export const customerResendVerificationEndpoint: Endpoint = {
       return backWithError(SIGN_IN_PATH, 'session')
     }
 
-    const parsed = emailSchema.safeParse((await readFields(req)).email)
+    const fields = await readFields(req)
+    const parsed = emailSchema.safeParse(fields.email)
     const answer = seeOther(withParams(SIGN_IN_PATH, { resent: '1' }))
+    const guard = checkFormGuard(fields)
+
+    if (guard === 'honeypot') return answer
+    if (guard !== 'ok') return backWithError(SIGN_IN_PATH, guardCode(guard))
 
     if (!parsed.success) return answer
     if (checkAccountMailIpLimit(getClientIp(req.headers)).limited) return answer
@@ -339,10 +371,13 @@ export const customerForgotPasswordEndpoint: Endpoint = {
       return backWithError(FORGOT_PATH, 'session')
     }
 
-    const parsed = forgotPasswordSchema.safeParse({
-      email: (await readFields(req)).email,
-    })
+    const fields = await readFields(req)
+    const parsed = forgotPasswordSchema.safeParse({ email: fields.email })
     const answer = seeOther(withParams(FORGOT_PATH, { sent: '1' }))
+    const guard = checkFormGuard(fields)
+
+    if (guard === 'honeypot') return answer
+    if (guard !== 'ok') return backWithError(FORGOT_PATH, guardCode(guard))
 
     if (!parsed.success) return answer
     if (checkAccountMailIpLimit(getClientIp(req.headers)).limited) return answer
@@ -389,11 +424,21 @@ export const customerForgotPasswordEndpoint: Endpoint = {
 export const customerResetPasswordEndpoint: Endpoint = {
   handler: async (req) => {
     const fields = await readFields(req)
-    const rawToken = typeof fields.token === 'string' ? fields.token : ''
+    const rawToken = typeof fields.token === 'string' ? fields.token.slice(0, 200) : ''
     const keep: Record<string, string> = rawToken ? { token: rawToken } : {}
 
     if (!isSameOriginPost(req)) {
       return backWithError(RESET_PATH, 'session', keep)
+    }
+
+    const guard = checkFormGuard(fields)
+
+    if (guard !== 'ok') {
+      return backWithError(RESET_PATH, guard === 'honeypot' ? 'token' : guardCode(guard), keep)
+    }
+
+    if (checkResetIpLimit(getClientIp(req.headers)).limited) {
+      return backWithError(RESET_PATH, 'slow', keep)
     }
 
     const parsed = resetPasswordSchema.safeParse({ password: fields.password, token: rawToken })
