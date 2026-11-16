@@ -5,6 +5,7 @@ import type { Media, Testimonial as TestimonialsGlobal } from '@/payload-types'
 
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { planTestimonialWidths, type TestimonialTile } from '@/utilities/testimonialLayout'
 import { TESTIMONIALS_HEADING } from '@/utilities/homeCopy'
 import { cn } from '@/utilities/ui'
 
@@ -17,6 +18,14 @@ const asMedia = (value: Item['video']): Media | null =>
 
 /** A quote longer than this takes two columns so it never reads as a tall strip. */
 const LONG_QUOTE = 160
+
+/* Column spans by width, written out so Tailwind keeps every class. */
+const MD_SPAN: Record<number, string> = { 1: 'md:col-span-1', 2: 'md:col-span-2' }
+const LG_SPAN: Record<number, string> = {
+  1: 'lg:col-span-1',
+  2: 'lg:col-span-2',
+  3: 'lg:col-span-3',
+}
 
 /* Light tiles take turns between three calm surfaces so a full grid has
    rhythm without a new colour. */
@@ -77,23 +86,21 @@ export const Testimonials: React.FC = async () => {
   const tallFeature = hasVideo && otherQuotes === 0
   let lightTile = 0
 
-  /* How many grid cells each tile fills: on two columns (md) a video is one
-     tile; on three (lg) it stands two rows tall. When the cells do not fill
-     the last row, the last plain quote widens to close it, so the grid never
-     ends on a gap. */
   const isLongQuote = (item: Item) => (item.quote?.trim().length ?? 0) > LONG_QUOTE
-  const cells = (columns: 2 | 3) =>
-    items.reduce((sum, item, index) => {
-      if (index === featureIndex) return sum + (columns === 3 && tallFeature ? 4 : 2)
-      if (item.kind === 'video') return sum + (columns === 3 ? 2 : 1)
-      return sum + (isLongQuote(item) ? 2 : 1)
-    }, 0)
-  const lastPlain = items.reduce(
-    (last, item, index) => (item.kind !== 'video' && index !== featureIndex ? index : last),
-    -1,
+
+  const tiles: TestimonialTile[] = items.map((item, index) =>
+    index === featureIndex
+      ? 'feature'
+      : item.kind === 'video'
+        ? 'video'
+        : isLongQuote(item)
+          ? 'long'
+          : 'short',
   )
-  const mdGap = cells(2) % 2
-  const lgGap = (3 - (cells(3) % 3)) % 3
+  const mdWidths = planTestimonialWidths(tiles, 2)
+  const lgWidths = planTestimonialWidths(tiles, 3, tallFeature)
+  const spanClasses = (index: number) =>
+    cn(MD_SPAN[mdWidths[index]], LG_SPAN[lgWidths[index]])
 
   return (
     <Section id="testimonials">
@@ -111,7 +118,7 @@ export const Testimonials: React.FC = async () => {
             const poster = asMedia(item.poster)
 
             return (
-              <li className="min-w-0 lg:row-span-2" key={key}>
+              <li className={cn('min-w-0 lg:row-span-2', spanClasses(index))} key={key}>
                 <figure className="tile-lift bg-card flex h-full flex-col rounded-lg p-3 shadow-sm">
                   <video
                     aria-label={`Video testimonial from ${item.name}`}
@@ -136,7 +143,10 @@ export const Testimonials: React.FC = async () => {
 
           if (index === featureIndex) {
             return (
-              <li className={cn('min-w-0 md:col-span-2', tallFeature && 'lg:row-span-2')} key={key}>
+              <li
+                className={cn('min-w-0', spanClasses(index), tallFeature && 'lg:row-span-2')}
+                key={key}
+              >
                 <figure className="tile-lift flex h-full flex-col justify-center rounded-lg bg-green-900 p-8 shadow-md md:p-12">
                   <Quote aria-hidden="true" className="text-gold-400 size-9" strokeWidth={2} />
                   <blockquote className="text-cream mt-6 max-w-[34ch] text-[22px] leading-[1.45] font-semibold tracking-[-0.01em] text-balance md:text-[28px] lg:text-[32px]">
@@ -149,22 +159,9 @@ export const Testimonials: React.FC = async () => {
           }
 
           const tone = LIGHT_TONES[lightTile++ % LIGHT_TONES.length]
-          const isLong = isLongQuote(item)
-          const isLast = index === lastPlain
-          const mdSpan = isLong || (isLast && mdGap) ? 2 : 1
-          const lgSpan = (isLong ? 2 : 1) + (isLast ? lgGap : 0)
 
           return (
-            <li
-              className={cn(
-                'min-w-0',
-                mdSpan === 2 && 'md:col-span-2',
-                lgSpan === 1 && 'lg:col-span-1',
-                lgSpan === 2 && 'lg:col-span-2',
-                lgSpan >= 3 && 'lg:col-span-3',
-              )}
-              key={key}
-            >
+            <li className={cn('min-w-0', spanClasses(index))} key={key}>
               <figure
                 className={cn(
                   'tile-lift flex h-full flex-col rounded-lg p-6',
