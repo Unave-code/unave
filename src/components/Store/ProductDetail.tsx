@@ -195,7 +195,7 @@ export const ProductDetail: React.FC<{
       : []),
   ]
 
-  const hasReading = Boolean(product.description) || isCombo || !isAvailable
+  const hasReading = Boolean(product.description) || !isAvailable
 
   /** A related product's lead price, said the way its card says it. */
   const priceOf = (item: Product): null | string => {
@@ -527,13 +527,6 @@ export const ProductDetail: React.FC<{
                     data={product.description}
                     enableGutter={false}
                   />
-                ) : null}
-
-                {isCombo ? (
-                  <Notice className={product.description ? 'mt-6' : ''} title="A note on our meals">
-                    Our meals are food options and are not a substitute for medical or nutritional
-                    advice.
-                  </Notice>
                 ) : null}
 
                 {!isAvailable ? (

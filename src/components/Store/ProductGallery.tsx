@@ -34,7 +34,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
   return (
     <div className={cn('flex flex-col gap-3', hasStrip && 'lg:flex-row-reverse lg:items-start')}>
       <figure className="min-w-0 flex-1">
-        <div className="bg-green-50 relative aspect-square w-full mx-auto max-w-[30rem] overflow-hidden rounded-lg shadow-md">
+        <div className="bg-green-50 relative aspect-square w-full mx-auto max-w-[24rem] overflow-hidden rounded-lg shadow-md">
           {current ? (
             <Image
               alt={current.alt}
@@ -42,7 +42,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               fill
               key={current.src}
               priority
-              sizes="(max-width: 480px) 100vw, 480px"
+              sizes="(max-width: 384px) 100vw, 384px"
               src={current.src}
             />
           ) : (
@@ -52,7 +52,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               className="object-cover"
               fill
               priority
-              sizes="(max-width: 480px) 100vw, 480px"
+              sizes="(max-width: 384px) 100vw, 384px"
               src={PRODUCT_PLACEHOLDER}
             />
           )}
@@ -74,7 +74,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
       {hasStrip ? (
         <ul
           aria-label="Product photos"
-          className="flex gap-2 overflow-x-auto pb-1 lg:max-h-[32rem] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0"
+          className="flex gap-2 overflow-x-auto pb-1 lg:max-h-[24rem] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0"
         >
           {images.map((image, index) => (
             <li className="shrink-0" key={`${image.src}-${index}`}>
