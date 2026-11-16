@@ -76,7 +76,7 @@ export const ProductCategoryView: React.FC<{
         </div>
       </Section>
 
-      <Section id="products" tone="white">
+      <Section id="products" tone="tint">
         <ProductShelf
           basePath={productCategoryHref(category)}
           category={category}
@@ -103,7 +103,7 @@ export const ProductCategoryView: React.FC<{
         </div>
       </Section>
 
-      <Section tone="tint">
+      <Section tone="white">
         <div className="max-w-[52ch]">
           <h2 className="text-h2">{PRODUCTS_CATEGORY_FINAL_HEADING}</h2>
           <p className="text-body text-ink-600 mt-3">{PRODUCTS_CATEGORY_FINAL_BODY}</p>

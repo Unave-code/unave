@@ -89,8 +89,10 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
   if (!isOneTime && !duration) return null
 
+  // A per-day rate only says something new when the option spans several
+  // days; on a one-day option it would just repeat the price.
   const perDay =
-    !isOneTime && duration && duration.days > 0 ? perDayPaise(duration.price, duration.days) : null
+    !isOneTime && duration && duration.days > 1 ? perDayPaise(duration.price, duration.days) : null
   const hasSaving =
     isOneTime && typeof compareAtPrice === 'number' && compareAtPrice > oneTimePrice
   const clamp = (value: number) => Math.min(CART_MAX_QTY, Math.max(1, value || 1))
@@ -117,13 +119,15 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             </>
           ) : null}
         </p>
-        <p className="text-ink-600 mt-2 text-sm">
-          {isOneTime
-            ? combo
-              ? 'One fixed price for the whole combo.'
-              : 'Cooked fresh and delivered once.'
-            : `${daysText(duration!.days)} of meals, ${formatPaise(duration!.price)} in all`}
-        </p>
+        {isOneTime || perDay !== null ? (
+          <p className="text-ink-600 mt-2 text-sm">
+            {isOneTime
+              ? combo
+                ? 'One fixed price for the whole combo.'
+                : 'Cooked fresh and delivered once.'
+              : `${daysText(duration!.days)} of meals, ${formatPaise(duration!.price)} in all`}
+          </p>
+        ) : null}
       </div>
 
       <form action="/api/cart/add" className="mt-6" method="post" onSubmit={onSubmit}>
@@ -141,7 +145,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {durations.map((option, index) => {
                 const optionPerDay =
-                  option.days > 0 ? perDayPaise(option.price, option.days) : null
+                  option.days > 1 ? perDayPaise(option.price, option.days) : null
 
                 return (
                   <label className="cursor-pointer" key={`${option.label}-${index}`}>
@@ -166,11 +170,11 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
                       <span className="text-sm font-bold text-green-700 tabular-nums">
                         {formatPaise(option.price)}
                       </span>
-                      <span className="text-caption text-ink-600 tabular-nums">
-                        {optionPerDay !== null
-                          ? `${formatPaise(optionPerDay)} a day`
-                          : daysText(option.days)}
-                      </span>
+                      {optionPerDay !== null ? (
+                        <span className="text-caption text-ink-600 tabular-nums">
+                          {formatPaise(optionPerDay)} a day
+                        </span>
+                      ) : null}
                     </span>
                   </label>
                 )

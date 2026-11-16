@@ -228,7 +228,7 @@ export const ProductDetail: React.FC<{
         <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-12">
           {/* Left: the photos (thumbnails beside the main photo on a wide
               screen), then a compact "People also bought" list under them. */}
-          <div className="min-w-0 lg:col-span-7">
+          <div className="min-w-0 lg:col-span-6">
             <ProductGallery images={gallery} paused={!isAvailable} />
 
             {alsoBought.length > 0 ? (
@@ -278,7 +278,7 @@ export const ProductDetail: React.FC<{
 
           {/* Right, in reading order: what it is, the price and the choice,
               the buy row, then the description and, on a combo, its items. */}
-          <div className="min-w-0 lg:col-span-5">
+          <div className="min-w-0 lg:col-span-6">
             {product.category || product.audience ? (
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 {product.category ? (

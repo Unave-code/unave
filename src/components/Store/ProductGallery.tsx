@@ -34,7 +34,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
   return (
     <div className={cn('flex flex-col gap-3', hasStrip && 'lg:flex-row-reverse lg:items-start')}>
       <figure className="min-w-0 flex-1">
-        <div className="bg-green-50 relative aspect-square w-full overflow-hidden rounded-lg shadow-md">
+        <div className="bg-green-50 relative aspect-square w-full mx-auto max-w-[30rem] overflow-hidden rounded-lg shadow-md">
           {current ? (
             <Image
               alt={current.alt}
@@ -42,7 +42,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               fill
               key={current.src}
               priority
-              sizes="(max-width: 1024px) 100vw, 40vw"
+              sizes="(max-width: 480px) 100vw, 480px"
               src={current.src}
             />
           ) : (
@@ -52,7 +52,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               className="object-cover"
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 40vw"
+              sizes="(max-width: 480px) 100vw, 480px"
               src={PRODUCT_PLACEHOLDER}
             />
           )}
