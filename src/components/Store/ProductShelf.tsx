@@ -44,9 +44,11 @@ export const ProductShelf: React.FC<{
   /** Set on a category page, where the category is the page and not a filter. */
   category?: ProductCategoryValue
   result: ShelfResult
+  /** Category pages browse by subcategory tiles instead of the filter bar. */
+  showControls?: boolean
   state: ShelfState
   whatsapp: null | string
-}> = ({ basePath, category, result, state, whatsapp }) => {
+}> = ({ basePath, category, result, showControls = true, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
   const pausedOnPage = result.docs.some((product) => !product.available)
 
@@ -55,7 +57,9 @@ export const ProductShelf: React.FC<{
 
   return (
     <div>
-      <ProductShelfControls basePath={basePath} fixedCategory={category} state={state} />
+      {showControls ? (
+        <ProductShelfControls basePath={basePath} fixedCategory={category} state={state} />
+      ) : null}
 
       {result.docs.length > 0 ? (
         <>

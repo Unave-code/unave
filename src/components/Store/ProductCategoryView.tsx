@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
 import { Section } from '@/components/home/Section'
 import { ProductShelf } from '@/components/Store/ProductShelf'
@@ -9,10 +10,13 @@ import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
+  EMPTY_SHELF,
   fetchProductShelf,
   parseShelfState,
+  shelfHref,
   type ShelfSearchParams,
 } from '@/utilities/productShelf'
+import { fetchCategorySubcategories } from '@/utilities/products'
 import {
   CATEGORY_LABEL,
   PRODUCTS_CATEGORY_CTA_BROWSE,
@@ -31,11 +35,10 @@ import { whatsappHref } from '@/utilities/whatsapp'
  * rendered by the one `/products/[slug]` route when the slug is a category.
  *
  * The shelf reads live product rows of exactly one category, paused ones
- * included with nothing to buy, and it carries the same search, filters, sort
- * and pages `/products` does. The category itself is the page rather than a
- * filter, so it is pinned here and never offered as a choice; every other
- * control writes the address, so a filtered category shelf can be linked and
- * reloaded like any other view.
+ * included with nothing to buy. In place of the filter bar the page offers its
+ * subcategories as the same round tiles the homepage uses for categories; a
+ * tile writes `?subcategory=` into the address, so a narrowed shelf can be
+ * linked and reloaded like any other view, and "All" clears it.
  */
 export const ProductCategoryView: React.FC<{
   category: ProductCategoryValue
@@ -43,7 +46,38 @@ export const ProductCategoryView: React.FC<{
 }> = async ({ category, searchParams = {} }) => {
   const state = parseShelfState(searchParams)
 
-  const result = await fetchProductShelf(state, category)
+  /* Only the subcategory travels on a category page now that the filter bar is
+     gone, so a stale filter in an old link cannot hide products with no way
+     to clear it. The page number is kept. */
+  const shelfState = { ...EMPTY_SHELF, page: state.page, subcategory: state.subcategory }
+  const basePath = productCategoryHref(category)
+
+  const [result, categorySubcategories] = await Promise.all([
+    fetchProductShelf(shelfState, category),
+    fetchCategorySubcategories(category),
+  ])
+
+  const subcategories = categorySubcategories.filter((item) => item.slug)
+  const tiles: CategoryTile[] =
+    subcategories.length > 0
+      ? [
+          {
+            category,
+            current: !shelfState.subcategory,
+            href: basePath,
+            key: 'all',
+            title: 'All',
+          },
+          ...subcategories.map((item) => ({
+            category,
+            current: shelfState.subcategory === item.slug,
+            href: shelfHref(basePath, { ...EMPTY_SHELF, subcategory: item.slug ?? null }),
+            image: item.image && typeof item.image === 'object' ? item.image : null,
+            key: item.id,
+            title: item.title,
+          })),
+        ]
+      : []
 
   const copy = PRODUCT_CATEGORY_COPY[category]
   const otherCategories = (
@@ -77,11 +111,14 @@ export const ProductCategoryView: React.FC<{
       </Section>
 
       <Section id="products" tone="tint">
+        <CategoryTiles className="mb-8 md:mb-10" label={`${CATEGORY_LABEL[category]} subcategories`} tiles={tiles} />
+
         <ProductShelf
-          basePath={productCategoryHref(category)}
+          basePath={basePath}
           category={category}
           result={result}
-          state={state}
+          showControls={false}
+          state={shelfState}
           whatsapp={whatsapp}
         />
 

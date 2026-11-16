@@ -38,22 +38,24 @@ export const getFeaturedHomeProducts = (limit = HOME_BEST_SELLER_COUNT) =>
     },
   )
 
-const findHomeSubcategories = async (): Promise<Subcategory[]> => {
+/**
+ * A category's subcategories for its page, read live like the rest of that
+ * page so a tile the kitchen adds is there the moment it saves.
+ */
+export const fetchCategorySubcategories = async (
+  category: Subcategory['category'],
+): Promise<Subcategory[]> => {
   const payload = await getPayload({ config: configPromise })
   const result = await payload.find({
     collection: 'subcategories',
     depth: 1,
     limit: 100,
     sort: 'title',
+    where: { category: { equals: category } },
   })
 
   return result.docs
 }
-
-export const getHomeSubcategories = () =>
-  unstable_cache(findHomeSubcategories, ['home-subcategories'], {
-    tags: ['subcategories'],
-  })
 
 /** How many related products a product page offers under its points. */
 export const RELATED_PRODUCT_COUNT = 3
