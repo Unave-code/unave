@@ -34,13 +34,31 @@ export const normalizeProductShape: CollectionBeforeChangeHook<Product> = ({
     clear('compareAtPrice', null)
     clear('packSize', null)
     clear('components', [])
+    clear('sizes', [])
   } else if (type === 'one-time') {
     clear('durations', [])
     clear('components', [])
+    clear('howItWorks', null)
+
+    /* Sold in sizes: the product's own price becomes the cheapest size, so the
+       lead price, the shelf's price sort and its filters keep working, and the
+       single-size old price and pack size step aside. */
+    const sizes = 'sizes' in data ? data.sizes : originalDoc?.sizes
+    const prices = (sizes ?? [])
+      .map((size) => Number(size?.price))
+      .filter((price) => Number.isSafeInteger(price) && price >= 1)
+
+    if (prices.length > 0) {
+      data.price = Math.min(...prices)
+      data.compareAtPrice = null
+      data.packSize = null
+    }
   } else if (type === 'combo') {
     clear('durations', [])
     clear('compareAtPrice', null)
     clear('packSize', null)
+    clear('sizes', [])
+    clear('howItWorks', null)
   }
 
   return data

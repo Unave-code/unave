@@ -26,12 +26,28 @@ export const orderComponentsLabel = (
     .join(', ')
 }
 
+/**
+ * Whether an order item was a one-time purchase: the reserved one-time label,
+ * or a size of a product sold in sizes (a label with no days and no combo).
+ * A meal plan always carries one day or more.
+ */
+export const isOneTimeOrderItem = (item: {
+  components?: null | OrderComponentDisplay[]
+  days?: null | number
+  durationLabel?: null | string
+}): boolean =>
+  !item.components?.length &&
+  (item.durationLabel === ONE_TIME_DURATION || !(Number(item.days) > 0))
+
 export const orderItemKind = (item: {
   components?: null | OrderComponentDisplay[]
+  days?: null | number
   durationLabel?: null | string
-}): string =>
-  item.components?.length
-    ? 'Meal combo'
-    : item.durationLabel === ONE_TIME_DURATION
-      ? PRODUCT_ONE_TIME_LABEL
-      : (item.durationLabel ?? '')
+}): string => {
+  if (item.components?.length) return 'Meal combo'
+  if (item.durationLabel === ONE_TIME_DURATION) return PRODUCT_ONE_TIME_LABEL
+  if (isOneTimeOrderItem(item) && item.durationLabel?.trim()) {
+    return `${PRODUCT_ONE_TIME_LABEL} · ${item.durationLabel.trim()}`
+  }
+  return item.durationLabel ?? ''
+}

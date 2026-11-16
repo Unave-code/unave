@@ -39,6 +39,17 @@ export const prepareComboComponents: CollectionBeforeChangeHook<Product> = async
       }
 
       const selectedLabel = component.durationLabel?.trim().toLowerCase()
+
+      // No duration named: the plan joins the combo without one.
+      if (!selectedLabel) {
+        return {
+          ...component,
+          durationLabel: '',
+          durationDaysSnapshot: null,
+          productTitleSnapshot: product.title,
+        }
+      }
+
       const matches = (product.durations ?? []).filter(
         (duration) => duration.label.trim().toLowerCase() === selectedLabel,
       )

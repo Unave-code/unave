@@ -152,6 +152,45 @@ describe('a product page', () => {
     )
   })
 
+  it('explains how a plan works, preferring the plan’s own text, and the start-date call', () => {
+    const { unmount } = render(
+      <ProductDetail planHowItWorks={'Pay once\nWe call you'} product={openProduct} />,
+    )
+    expect(screen.getByRole('heading', { name: 'How your plan works' })).toBeTruthy()
+    expect(screen.getByText('We call you')).toBeTruthy()
+    expect(screen.getByText(/our team calls you to confirm when your plan begins/)).toBeTruthy()
+    unmount()
+
+    render(
+      <ProductDetail
+        planHowItWorks={'Pay once\nWe call you'}
+        product={{ ...openProduct, howItWorks: 'Our own first step' } as Product}
+      />,
+    )
+    expect(screen.getByText('Our own first step')).toBeTruthy()
+    expect(screen.queryByText('We call you')).toBeNull()
+  })
+
+  it('offers each size of a sized one-time product as a tile', () => {
+    const sized = {
+      ...openProduct,
+      durations: [],
+      price: 9900,
+      sizes: [
+        { compareAtPrice: 12000, id: 's1', label: '250 g', price: 9900 },
+        { id: 's2', label: '500 g', price: 18000 },
+      ],
+      type: 'one-time',
+    } as unknown as Product
+    render(<ProductDetail product={sized} />)
+
+    const small = screen.getByRole('radio', { name: /250 g/ })
+    expect(small.getAttribute('name')).toBe('duration')
+    expect(small.getAttribute('value')).toBe('250 g')
+    expect(screen.getByRole('radio', { name: /500 g/ })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'How your plan works' })).toBeNull()
+  })
+
   it('offers no related shelf when none is passed', () => {
     render(<ProductDetail product={openProduct} />)
 

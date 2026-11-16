@@ -98,22 +98,85 @@ describe('the product card', () => {
     expect(image?.getAttribute('src')).toContain('product-placeholder.jpg')
   })
 
-  it('offers one Add to cart control that posts the default duration', () => {
+  it('sends a meal plan to its page to choose a duration, adding nothing itself', () => {
     render(<ProductCard product={product} returnPath="/" />)
 
-    const form = screen.getByRole('button', { name: 'Add Lunch plan to cart' }).closest('form')
+    const choose = screen.getByRole('link', { name: 'Choose plan for Lunch plan' })
+    expect(choose.getAttribute('href')).toBe('/products/lunch-plan')
+    expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
+    expect(screen.getByText('Meal plan')).toBeTruthy()
+  })
 
-    expect(form?.getAttribute('action')).toBe('/api/cart/add')
-    expect(form?.querySelector('input[name="product"]')?.getAttribute('value')).toBe('lunch-plan')
-    expect(form?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('One week')
-    expect(form?.querySelector('input[name="return"]')?.getAttribute('value')).toBe('/')
-    expect(screen.getByRole('button', { name: 'Buy Lunch plan now' })).toBeTruthy()
+  it('adds a one-time product straight from the card', () => {
+    const oneTime = {
+      ...product,
+      durations: [],
+      price: 4900,
+      slug: 'phulka-box',
+      title: 'Phulka box',
+      type: 'one-time',
+    } as unknown as Product
+    render(<ProductCard product={oneTime} returnPath="/" />)
+
+    const form = screen.getByRole('button', { name: 'Add Phulka box to cart' }).closest('form')
+    expect(form?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('one-time')
+    expect(screen.getByRole('button', { name: 'Buy Phulka box now' })).toBeTruthy()
+    expect(screen.getByText('One-time purchase')).toBeTruthy()
+  })
+
+  it('leads a sized product with its cheapest size and sends it to choose one', () => {
+    const sized = {
+      ...product,
+      durations: [],
+      price: 9900,
+      sizes: [
+        { id: 's1', label: '250 g', price: 9900 },
+        { id: 's2', label: '500 g', price: 18000 },
+      ],
+      slug: 'sambar-podi',
+      title: 'Sambar podi',
+      type: 'one-time',
+    } as unknown as Product
+    render(<ProductCard product={sized} />)
+
+    expect(screen.getByText('From ₹99')).toBeTruthy()
+    expect(screen.getByText('250 g · 500 g')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Choose size for Sambar podi' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
+  })
+
+  it('shows a combo’s items, its separate price struck through and the saving', () => {
+    const plan = {
+      ...product,
+      durations: [{ days: 7, id: 'w', label: 'One week', price: 50000 }],
+      id: 11,
+      type: 'plan',
+    }
+    const box = { ...product, durations: [], id: 12, price: 10000, title: 'Phulka box', type: 'one-time' }
+    const combo = {
+      ...product,
+      components: [
+        { durationLabel: 'One week', id: 'c1', product: plan },
+        { id: 'c2', product: box },
+      ],
+      durations: [],
+      price: 52000,
+      slug: 'family-combo',
+      title: 'Family combo',
+      type: 'combo',
+    } as unknown as Product
+    render(<ProductCard product={combo} />)
+
+    expect(screen.getByText('Lunch plan + Phulka box')).toBeTruthy()
+    expect(screen.getByText('₹600')).toBeTruthy()
+    expect(screen.getByText('Save ₹80')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Add Family combo to cart' })).toBeTruthy()
   })
 
   it('offers no Add to cart control on a paused product, but keeps its lead price', () => {
     render(<ProductCard product={{ ...product, available: false } as unknown as Product} />)
 
-    expect(screen.queryByRole('button', { name: /to cart/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Choose plan/ })).toBeNull()
     expect(screen.getByText('Paused')).toBeTruthy()
     expect(screen.getByText('From ₹59 a day')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Lunch plan' })).toBeTruthy()

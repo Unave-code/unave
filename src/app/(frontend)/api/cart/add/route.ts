@@ -8,7 +8,7 @@ import {
   ONE_TIME_DURATION,
   readCartFromHeaders,
 } from '@/utilities/cart'
-import { productDuration } from '@/utilities/cartLines'
+import { productDuration, productSize, productSizes } from '@/utilities/cartLines'
 import { isProductSellable } from '@/utilities/combos'
 import { isSameOriginRequest, safeReturnPath, seeOther } from '@/utilities/formPost'
 
@@ -74,11 +74,23 @@ export async function POST(request: Request): Promise<Response> {
   // A one-time product has no durations to choose: its line carries the
   // reserved duration label exactly, and the quantity carries the rest.
   if (product.type === 'one-time' || product.type === 'combo') {
-    if (durationLabel !== ONE_TIME_DURATION) return back('/cart?notice=changed')
+    /* A product sold in sizes takes the chosen size's label as its line's
+       duration; anything else takes the reserved one-time label. */
+    const sized = product.type === 'one-time' && productSizes(product).length > 0
+    const size = sized ? productSize(product, durationLabel) : null
+
+    if (sized ? !size : durationLabel !== ONE_TIME_DURATION) {
+      return back('/cart?notice=changed')
+    }
 
     // The product page's stepper may send a quantity; the card never does.
     const qty = Number.parseInt(String(form.get('qty') ?? '1'), 10)
-    const result = addOneTimeCartLine(cart, product.slug, Number.isFinite(qty) ? qty : 1)
+    const result = addOneTimeCartLine(
+      cart,
+      product.slug,
+      Number.isFinite(qty) ? qty : 1,
+      size?.label ?? ONE_TIME_DURATION,
+    )
 
     if (!result.ok) {
       return buyNow && result.reason === 'quantity' ? back(returnPath) : noticeBack(result.reason)

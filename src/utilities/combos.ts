@@ -59,6 +59,11 @@ export const comboComponents = (product: Product): ComboComponentSnapshot[] | nu
     seen.add(String(id))
 
     if (source.type === 'plan') {
+      // The duration is optional: a plan with none named joins as itself.
+      if (!component.durationLabel?.trim()) {
+        snapshots.push({ product: source.id, productTitle: source.title })
+        continue
+      }
       const duration = selectedComboDuration(source, component.durationLabel)
       if (!duration) return null
       snapshots.push({
@@ -83,7 +88,8 @@ export const isProductSellable = (product: Product): boolean =>
  * What a combo's items would cost bought one by one, in paise: each one-time
  * item at its price and each meal plan at the duration the combo names. The
  * items must be populated (depth 1 or more). Answers `null` when any item can
- * no longer be priced, so a saving is never worked out from half a combo.
+ * no longer be priced, so a saving is never worked out from half a combo —
+ * including a meal plan left without a duration, which has no single price.
  */
 export const comboSeparatePrice = (product: Product): null | number => {
   if (product.type !== 'combo') return null
@@ -111,6 +117,27 @@ export const comboSeparatePrice = (product: Product): null | number => {
 
   return sum
 }
+
+/**
+ * How much a combo saves against buying its items one by one, in paise, or 0
+ * when it saves less than a rupee or the saving cannot be worked out.
+ */
+export const comboSavingPaise = (product: Product): number => {
+  const separate = comboSeparatePrice(product)
+  const price = Number(product.price)
+  if (separate === null || !Number.isFinite(price) || price < 1) return 0
+  const saving = separate - price
+  return saving >= 100 ? saving : 0
+}
+
+/** The names of what a combo holds, in order, for a one-line summary. */
+export const comboItemTitles = (product: Product): string[] =>
+  (product.components ?? [])
+    .map((component) => {
+      const source = componentProduct(component.product)
+      return (source?.title ?? component.productTitleSnapshot ?? '').trim()
+    })
+    .filter((title) => title.length > 0)
 
 /**
  * Why a combo cannot be sold right now, in the kitchen's words, or an empty
@@ -144,7 +171,11 @@ export const comboProblems = (product: Product): string[] => {
     if (source.type === 'combo')
       problems.push(`${name} is a combo; a combo cannot hold another combo.`)
     if (!source.available) problems.push(`${name} is paused, so the combo cannot be bought.`)
-    if (source.type === 'plan' && !selectedComboDuration(source, component.durationLabel)) {
+    if (
+      source.type === 'plan' &&
+      component.durationLabel?.trim() &&
+      !selectedComboDuration(source, component.durationLabel)
+    ) {
       problems.push(
         `${name} no longer has the duration "${component.durationLabel ?? ''}". Choose one of its current durations.`,
       )

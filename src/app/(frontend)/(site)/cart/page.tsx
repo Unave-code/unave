@@ -173,7 +173,9 @@ export default async function CartPage({
                         {line.type === 'combo'
                           ? 'Meal combo'
                           : line.type === 'one-time'
-                            ? PRODUCT_ONE_TIME_LABEL
+                            ? line.size
+                              ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
+                              : PRODUCT_ONE_TIME_LABEL
                             : line.duration}
                         {line.days !== null && line.days > 0
                           ? `, ${line.days} ${line.days === 1 ? 'day' : 'days'}`

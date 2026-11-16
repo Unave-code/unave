@@ -18,6 +18,8 @@ import { formatPaise } from '@/utilities/money'
 import { cn } from '@/utilities/ui'
 import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
+import type { ProductSize } from '@/utilities/cartLines'
+
 import { useAddToCart } from './useAddToCart'
 
 /**
@@ -55,12 +57,44 @@ export type ProductPurchaseProps = {
   oneTimePrice?: number
   productSlug: string
   productTitle: string
+  /**
+   * A one-time product's sizes, when it is sold in sizes. Each size is a tile
+   * with its own price and old price, and the chosen size is the cart line.
+   */
+  sizes?: ProductSize[]
   /** Where a plain form post returns to, so the shopper stays put. */
   returnPath?: string
   whatsapp?: null | string
 }
 
 const daysText = (days: number) => `${days} ${days === 1 ? 'day' : 'days'}`
+
+/**
+ * One option tile (a plan's duration or a product's size): a soft green button
+ * that turns solid brand green with a gold price and a gold check once chosen,
+ * so the choice reads at a glance. The radio underneath stays native.
+ */
+const OPTION_TILE = cn(
+  'relative flex h-full min-h-20 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-green-200 bg-green-50 px-3 py-3 text-center text-green-900 shadow-sm',
+  'transition-[background-color,border-color,color,box-shadow,translate] duration-200 ease-out',
+  'hover:-translate-y-0.5 hover:border-green-500 hover:bg-green-100',
+  'peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-checked:shadow-md',
+  'peer-checked:[&_.tile-price]:text-gold-300 peer-checked:[&_.tile-sub]:text-white/80 peer-checked:[&_.tile-check]:flex',
+  'peer-focus-visible:ring-[3px] peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2',
+  'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+)
+const TILE_PRICE = 'tile-price text-base font-extrabold text-green-700 tabular-nums'
+const TILE_SUB = 'tile-sub text-caption text-ink-600 tabular-nums'
+
+/** The gold check on the chosen tile; hidden until its radio is checked. */
+const TileCheck = () => (
+  <span
+    aria-hidden="true"
+    className="tile-check bg-gold-400 absolute -top-2 -right-2 hidden size-6 items-center justify-center rounded-full text-green-900 shadow-sm"
+  >
+    <Check className="size-3.5" strokeWidth={3} />
+  </span>
+)
 
 const STEP_BUTTON =
   'flex size-11 shrink-0 items-center justify-center text-green-700 transition-colors hover:bg-green-50 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent motion-reduce:transition-none'
@@ -73,6 +107,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   productSlug,
   productTitle,
   returnPath = '/products',
+  sizes = [],
   whatsapp,
 }) => {
   const [selected, setSelected] = useState(0)
@@ -80,10 +115,19 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
   const duration = durations[selected] ?? durations[0]
   const isOneTime = typeof oneTimePrice === 'number' && oneTimePrice >= 1
+  /* Sold in sizes: the chosen size sets the price, the old price and the
+     line that goes into the cart. */
+  const sized = isOneTime && sizes.length > 0
+  const size = sized ? (sizes[selected] ?? sizes[0]) : null
+  const shownPrice = size?.price ?? oneTimePrice ?? 0
+  const shownCompare = sized ? (size?.compareAtPrice ?? null) : compareAtPrice
+  const lineDuration = isOneTime
+    ? (size?.label ?? ONE_TIME_DURATION)
+    : (duration?.label ?? '')
 
   // Hooks run before the early return below, so the hook order never changes.
   const { added, message, onSubmit, pending } = useAddToCart(
-    { duration: isOneTime ? ONE_TIME_DURATION : (duration?.label ?? ''), product: productSlug },
+    { duration: lineDuration, product: productSlug },
     { oneTime: isOneTime },
   )
 
@@ -93,8 +137,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   // days; on a one-day option it would just repeat the price.
   const perDay =
     !isOneTime && duration && duration.days > 1 ? perDayPaise(duration.price, duration.days) : null
-  const hasSaving =
-    isOneTime && typeof compareAtPrice === 'number' && compareAtPrice > oneTimePrice
+  const hasSaving = isOneTime && typeof shownCompare === 'number' && shownCompare > shownPrice
   const clamp = (value: number) => Math.min(CART_MAX_QTY, Math.max(1, value || 1))
 
   return (
@@ -103,7 +146,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
       <div aria-live="polite">
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-[32px] leading-none font-extrabold tracking-[-0.01em] text-green-900 tabular-nums">
-            {isOneTime ? formatPaise(oneTimePrice) : formatPaise(perDay ?? duration!.price)}
+            {isOneTime ? formatPaise(shownPrice) : formatPaise(perDay ?? duration!.price)}
           </span>
           {!isOneTime && perDay !== null ? (
             <span className="text-ink-600 text-sm">a day</span>
@@ -111,10 +154,10 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
           {hasSaving ? (
             <>
               <del className="text-ink-600 text-body tabular-nums">
-                {formatPaise(compareAtPrice)}
+                {formatPaise(shownCompare)}
               </del>
               <span className="rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900">
-                {Math.floor(((compareAtPrice - oneTimePrice) / compareAtPrice) * 100)}% OFF
+                {Math.floor(((shownCompare - shownPrice) / shownCompare) * 100)}% OFF
               </span>
             </>
           ) : null}
@@ -133,7 +176,45 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
       <form action="/api/cart/add" className="mt-6" method="post" onSubmit={onSubmit}>
         <input name="product" type="hidden" value={productSlug} />
         <input name="return" type="hidden" value={returnPath} />
-        {isOneTime ? <input name="duration" type="hidden" value={ONE_TIME_DURATION} /> : null}
+        {isOneTime && !sized ? (
+          <input name="duration" type="hidden" value={ONE_TIME_DURATION} />
+        ) : null}
+
+        {/* Sizes as tiles, each with its own price. Native radios. */}
+        {sized ? (
+          <fieldset className="mb-6">
+            <legend className="text-sm font-bold text-green-900">
+              Choose a size<span className="sr-only"> of {productTitle}</span>
+            </legend>
+
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {sizes.map((option, index) => (
+                <label className="cursor-pointer" key={`${option.label}-${index}`}>
+                  <input
+                    checked={selected === index}
+                    className="peer sr-only"
+                    name="duration"
+                    onChange={() => setSelected(index)}
+                    type="radio"
+                    value={option.label}
+                  />
+                  <span
+                    className={OPTION_TILE}
+                  >
+                    <TileCheck />
+                    <span className="text-sm font-bold">{option.label}</span>
+                    <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
+                    {option.compareAtPrice !== null ? (
+                      <del className={TILE_SUB}>
+                        {formatPaise(option.compareAtPrice)}
+                      </del>
+                    ) : null}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
 
         {/* The options as tiles, like a shop's size choice. Native radios. */}
         {!isOneTime ? (
@@ -158,20 +239,13 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
                       value={option.label}
                     />
                     <span
-                      className={cn(
-                        'border-line flex h-full min-h-20 flex-col items-center justify-center gap-0.5 rounded-lg border-2 bg-white px-3 py-3 text-center transition-colors',
-                        'hover:border-green-500',
-                        'peer-checked:border-green-700 peer-checked:bg-green-50',
-                        'peer-focus-visible:ring-[3px] peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2',
-                        'motion-reduce:transition-none',
-                      )}
+                      className={OPTION_TILE}
                     >
-                      <span className="text-ink-900 text-sm font-bold">{option.label}</span>
-                      <span className="text-sm font-bold text-green-700 tabular-nums">
-                        {formatPaise(option.price)}
-                      </span>
+                      <TileCheck />
+                      <span className="text-sm font-bold">{option.label}</span>
+                      <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
                       {optionPerDay !== null ? (
-                        <span className="text-caption text-ink-600 tabular-nums">
+                        <span className={TILE_SUB}>
                           {formatPaise(optionPerDay)} a day
                         </span>
                       ) : null}

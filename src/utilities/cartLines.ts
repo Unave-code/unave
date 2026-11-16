@@ -43,6 +43,8 @@ export type ResolvedCartLine = {
   productTitle: string
   qty: number
   reason: null | StaleReason
+  /** The size a one-time line names, when the product is sold in sizes. */
+  size?: null | string
   slug: string
   stale: boolean
   /** What the record says the product is. A line with no record reads as a plan. */
@@ -68,6 +70,34 @@ export const productDuration = (product: Product | null, label: string): CartDur
     label: match.label,
     price: Number(match.price),
   }
+}
+
+export type ProductSize = {
+  compareAtPrice: null | number
+  label: string
+  price: number
+}
+
+/** The sizes a one-time product is sold in, cleaned; empty when it has none. */
+export const productSizes = (product: null | Pick<Product, 'sizes'>): ProductSize[] =>
+  (product?.sizes ?? [])
+    .map((size) => ({
+      compareAtPrice:
+        typeof size?.compareAtPrice === 'number' && size.compareAtPrice > Number(size.price)
+          ? size.compareAtPrice
+          : null,
+      label: String(size?.label ?? '').trim(),
+      price: Number(size?.price),
+    }))
+    .filter((size) => size.label && Number.isSafeInteger(size.price) && size.price >= 1)
+
+/** One size of a one-time product, found by its label (case-insensitive). */
+export const productSize = (
+  product: null | Pick<Product, 'sizes'>,
+  label: string,
+): null | ProductSize => {
+  const wanted = label.trim().toLowerCase()
+  return productSizes(product).find((size) => size.label.toLowerCase() === wanted) ?? null
 }
 
 /** A quantity a page or a sum can trust, whatever the caller handed over. */
@@ -106,8 +136,15 @@ export const resolveCartLines = async ({
     const components = product?.type === 'combo' ? comboComponents(product) : null
 
     const duration = type === 'plan' ? productDuration(product, line.duration) : null
-    const flatPrice =
-      type !== 'plan' && line.duration === ONE_TIME_DURATION ? Number(product?.price) : Number.NaN
+    /* A one-time product sold in sizes prices the size the line names; any
+       other one-time product or combo prices the reserved one-time line. */
+    const sized = type === 'one-time' && productSizes(product).length > 0
+    const size = sized ? productSize(product, line.duration) : null
+    const flatPrice = sized
+      ? (size?.price ?? Number.NaN)
+      : type !== 'plan' && line.duration === ONE_TIME_DURATION
+        ? Number(product?.price)
+        : Number.NaN
 
     let price: null | number
     let days: null | number
@@ -141,6 +178,7 @@ export const resolveCartLines = async ({
       productTitle: product?.title ?? line.product,
       qty,
       reason,
+      size: size?.label ?? null,
       slug: line.product,
       stale: reason !== null,
       type,

@@ -174,19 +174,24 @@ export const addCartLine = (lines: CartLine[], line: CartLineIdentity): CartAddR
  * what is already there bumps it by `qty` (one unless the product page's
  * stepper says otherwise), up to the cap; at the cap the add is refused with
  * `quantity` so the cart can say so in one sentence.
+ *
+ * A product sold in sizes passes the chosen size's label as `duration`, so
+ * each size is its own line with its own quantity.
  */
 export const addOneTimeCartLine = (
   lines: CartLine[],
   product: string,
   qty: number = 1,
+  duration: string = ONE_TIME_DURATION,
 ): CartAddResult => {
   const slug = clean(product, MAX_SLUG)
+  const label = clean(duration, MAX_DURATION) || ONE_TIME_DURATION
   const amount = clampQty(qty)
 
   if (!slug) return { lines, ok: false, reason: 'full' }
 
   const existing = lines.find(
-    (line) => line.product === slug && line.duration === ONE_TIME_DURATION,
+    (line) => line.product === slug && line.duration === label,
   )
 
   if (existing) {
@@ -205,7 +210,7 @@ export const addOneTimeCartLine = (
   if (lines.length >= CART_MAX_LINES) return { lines, ok: false, reason: 'full' }
 
   return {
-    lines: [...lines, { duration: ONE_TIME_DURATION, product: slug, qty: amount }],
+    lines: [...lines, { duration: label, product: slug, qty: amount }],
     ok: true,
   }
 }

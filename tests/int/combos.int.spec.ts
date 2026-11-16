@@ -122,8 +122,17 @@ describe('comboComponents', () => {
     ).toBeNull()
   })
 
-  it('refuses a plan with no current duration, or a one-time product carrying one', () => {
-    expect(comboComponents(combo([{ product: oneTime }, { product: plan }]))).toBeNull()
+  it('takes a plan with no duration named, as itself', () => {
+    expect(comboComponents(combo([{ product: oneTime }, { product: plan }]))).toEqual([
+      { product: oneTime.id, productTitle: oneTime.title },
+      { product: plan.id, productTitle: plan.title },
+    ])
+  })
+
+  it('refuses a duration the plan no longer has, or a one-time product carrying one', () => {
+    expect(
+      comboComponents(combo([{ product: oneTime }, { durationLabel: 'Two weeks', product: plan }])),
+    ).toBeNull()
     expect(
       comboComponents(
         combo([{ durationLabel: 'One week', product: oneTime }, { product: plan, durationLabel: 'One week' }]),
@@ -142,7 +151,11 @@ describe('isProductSellable', () => {
     const healthy = combo([{ product: oneTime }, { product: plan, durationLabel: 'One week' }])
     expect(isProductSellable(healthy)).toBe(true)
 
-    expect(isProductSellable(combo([{ product: oneTime }, { product: plan }]))).toBe(false)
+    // A plan without a duration is fine; one naming a stale duration is not.
+    expect(isProductSellable(combo([{ product: oneTime }, { product: plan }]))).toBe(true)
+    expect(
+      isProductSellable(combo([{ product: oneTime }, { durationLabel: 'Gone', product: plan }])),
+    ).toBe(false)
     expect(isProductSellable({ ...healthy, available: false } as Product)).toBe(false)
   })
 })

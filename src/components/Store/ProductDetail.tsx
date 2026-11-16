@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import React from 'react'
-import { ArrowUpRight, Check } from 'lucide-react'
+import { Check, Phone } from 'lucide-react'
 import Image from 'next/image'
 
 import { Notice } from '@/components/Notice'
@@ -10,14 +10,21 @@ import type { Media as MediaDoc, Product } from '@/payload-types'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { productPhotos } from '@/utilities/productPhotos'
 import { formatPaise } from '@/utilities/money'
-import { comboSeparatePrice, isProductSellable, selectedComboDuration } from '@/utilities/combos'
+import { productSizes } from '@/utilities/cartLines'
+import {
+  comboSavingPaise,
+  comboSeparatePrice,
+  isProductSellable,
+  selectedComboDuration,
+} from '@/utilities/combos'
 import {
   PRODUCT_BACK_LABEL,
   PRODUCT_PAUSED_INLINE,
   PRODUCT_POINTS_HEADING,
 } from '@/utilities/productPageCopy'
 import {
-  PRODUCT_ONE_TIME_LABEL,
+  PRODUCT_KIND_LABEL,
+  PRODUCT_START_DATE_NOTE,
   PRODUCTS_PAUSED_NOTE_BODY,
   PRODUCTS_PAUSED_NOTE_TITLE,
   PRODUCTS_RELATED_HEADING,
@@ -39,11 +46,6 @@ import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 const CHIP =
   'rounded-pill inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase'
 
-const KIND_LABEL: Record<Product['type'], string> = {
-  combo: 'Meal combo',
-  'one-time': PRODUCT_ONE_TIME_LABEL,
-  plan: 'Meal plan',
-}
 
 type ComboItem = {
   days?: null | number
@@ -92,8 +94,10 @@ export const ProductDetail: React.FC<{
   product: Product
   /** The rest of the same shelf, newest first, this product left out. */
   related?: Product[]
+  /** The shared "How your plan works" lines, one step per line. */
+  planHowItWorks?: null | string
   whatsapp?: null | string
-}> = ({ product, related, whatsapp }) => {
+}> = ({ planHowItWorks, product, related, whatsapp }) => {
   const durations: ProductDuration[] = (product.durations ?? []).map((duration) => ({
     days: Number(duration.days),
     label: duration.label,
@@ -164,16 +168,28 @@ export const ProductDetail: React.FC<{
   /* A combo's value: what its items cost bought one by one. Shown only when
      the combo really is cheaper, worked out from the live item prices. */
   const separate = isCombo ? comboSeparatePrice(product) : null
-  const comboSaving = separate !== null && oneTimePrice >= 1 ? separate - oneTimePrice : 0
+  const comboSaving = isCombo ? comboSavingPaise(product) : 0
+
+  /* A one-time product sold in sizes: each size has its own price. */
+  const sizeOptions = isOneTime ? productSizes(product) : []
+
+  /* "How your plan works": the plan's own lines, else the shared lines. */
+  const howItWorksSteps = (product.howItWorks?.trim() || planHowItWorks || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 
   const details: [string, string][] = [
-    ['Kind', KIND_LABEL[product.type]],
+    ['Kind', PRODUCT_KIND_LABEL[product.type]],
     ...(product.category
       ? [['Category', CATEGORY_LABEL[product.category]] as [string, string]]
       : []),
     ...(subcategory ? [['Type', subcategory] as [string, string]] : []),
     ...(product.audience ? [['For', AUDIENCE_LABEL[product.audience]] as [string, string]] : []),
     ...(product.packSize ? [['Pack size', product.packSize] as [string, string]] : []),
+    ...(sizeOptions.length > 0
+      ? [['Sizes', sizeOptions.map((size) => size.label).join(', ')] as [string, string]]
+      : []),
     ...(isCombo && comboItems.length > 0
       ? [['Items', `${comboItems.length} in one combo`] as [string, string]]
       : []),
@@ -321,7 +337,7 @@ export const ProductDetail: React.FC<{
               </span>
               <span aria-hidden="true">·</span>
               <span>
-                {KIND_LABEL[product.type]}
+                {PRODUCT_KIND_LABEL[product.type]}
                 {subcategory ? (
                   <>
                     {' · '}
@@ -337,7 +353,69 @@ export const ProductDetail: React.FC<{
               ) : null}
             </p>
 
-            {comboSaving >= 100 && separate !== null ? (
+            {/* A combo shows what is inside first, as photo cards, before
+                its price: what you get decides whether the price is good. */}
+            {isCombo && comboItems.length > 0 ? (
+              <section aria-labelledby="combo-contents-heading" className="mt-5">
+                <ColumnHeading id="combo-contents-heading">
+                  Included in this combo ({comboItems.length})
+                </ColumnHeading>
+
+                <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {comboItems.map((item, index) => {
+                    const meta = [
+                      item.type ? PRODUCT_KIND_LABEL[item.type] : null,
+                      item.durationLabel
+                        ? [item.durationLabel, daysText(item.days)].filter(Boolean).join(', ')
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+
+                    const body = (
+                      <>
+                        <span className="relative block aspect-square overflow-hidden rounded-md bg-green-50">
+                          <Image
+                            alt={item.image ? item.image.alt?.trim() || item.title : ''}
+                            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
+                            fill
+                            sizes="(min-width: 64rem) 12vw, 40vw"
+                            src={item.image ? srcOf(item.image) : PRODUCT_PLACEHOLDER}
+                          />
+                        </span>
+                        <span className="mt-2 flex min-w-0 flex-col gap-0.5 px-1 pb-1">
+                          <span className="text-ink-900 line-clamp-2 text-sm leading-snug font-semibold group-hover:text-green-700">
+                            {item.title}
+                          </span>
+                          {meta ? <span className="text-caption text-ink-600">{meta}</span> : null}
+                        </span>
+                      </>
+                    )
+                    const card = 'group border-line block h-full rounded-lg border bg-white p-1.5'
+
+                    return (
+                      <li className="min-w-0" key={`${item.title}-${index}`}>
+                        {item.slug ? (
+                          <Link
+                            className={cn(
+                              card,
+                              'transition-[border-color,box-shadow] hover:border-green-500 hover:shadow-sm focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none',
+                            )}
+                            href={productHref(item.slug)}
+                          >
+                            {body}
+                          </Link>
+                        ) : (
+                          <div className={card}>{body}</div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ) : null}
+
+            {comboSaving > 0 && separate !== null ? (
               <p className="mt-4 flex flex-wrap items-center gap-2 text-sm">
                 <span className="text-ink-600">
                   Bought separately <del className="tabular-nums">{formatPaise(separate)}</del>
@@ -358,6 +436,7 @@ export const ProductDetail: React.FC<{
                   productSlug={product.slug}
                   productTitle={product.title}
                   returnPath={productHref(product.slug)}
+                  sizes={sizeOptions}
                   whatsapp={whatsapp}
                 />
               ) : isAvailable && !isOneTime && !isCombo && durations.length > 0 ? (
@@ -370,7 +449,18 @@ export const ProductDetail: React.FC<{
                 />
               ) : (
                 <div>
-                  {buyableOneTime ? (
+                  {sizeOptions.length > 0 ? (
+                    <ul className="divide-line divide-y">
+                      {sizeOptions.map((size) => (
+                        <li className="flex items-center justify-between gap-4 py-3" key={size.label}>
+                          <p className="text-sm leading-tight font-bold">{size.label}</p>
+                          <p className="text-green-700 text-sm font-bold tabular-nums">
+                            {formatPaise(size.price)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : buyableOneTime ? (
                     <p className="text-[30px] leading-none font-extrabold text-green-900 tabular-nums">
                       {formatPaise(oneTimePrice)}
                     </p>
@@ -399,7 +489,38 @@ export const ProductDetail: React.FC<{
                   </p>
                 </div>
               )}
+
+              {!isOneTime && !isCombo ? (
+                <p className="text-ink-600 mt-3 flex items-start gap-2 text-sm leading-6">
+                  <Phone aria-hidden="true" className="mt-1 size-4 shrink-0 text-green-700" strokeWidth={2} />
+                  {PRODUCT_START_DATE_NOTE}
+                </p>
+              ) : null}
             </section>
+
+            {/* A meal plan's "How your plan works": the plan's own text, or
+                the shared text from Catalogue → Product page. */}
+            {!isOneTime && !isCombo && howItWorksSteps.length > 0 ? (
+              <section
+                aria-labelledby="plan-how-heading"
+                className="mt-6 rounded-lg border border-green-200 bg-green-50 p-5"
+              >
+                <ColumnHeading id="plan-how-heading">How your plan works</ColumnHeading>
+                <ol className="mt-3 flex flex-col gap-3">
+                  {howItWorksSteps.map((step, index) => (
+                    <li className="flex items-start gap-3" key={`${index}-${step}`}>
+                      <span
+                        aria-hidden="true"
+                        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-green-700 text-xs font-bold text-white"
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="text-ink-900 text-sm leading-6">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ) : null}
 
             {/* The description straight under the buy row, as a shop reads. */}
             {hasReading ? (
@@ -430,76 +551,6 @@ export const ProductDetail: React.FC<{
                     {PRODUCTS_PAUSED_NOTE_BODY}
                   </Notice>
                 ) : null}
-              </section>
-            ) : null}
-
-            {isCombo && comboItems.length > 0 ? (
-              <section
-                aria-labelledby="combo-contents-heading"
-                className="border-line mt-6 border-t pt-6"
-              >
-                <ColumnHeading id="combo-contents-heading">
-                  Included in this combo ({comboItems.length})
-                </ColumnHeading>
-
-                <ul className="mt-3 flex flex-col gap-2">
-                  {comboItems.map((item, index) => {
-                    const meta = [
-                      item.type ? KIND_LABEL[item.type] : null,
-                      item.durationLabel
-                        ? [item.durationLabel, daysText(item.days)].filter(Boolean).join(', ')
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-
-                    const body = (
-                      <>
-                        <span className="bg-green-50 relative size-16 shrink-0 overflow-hidden rounded-md">
-                          <Image
-                            alt={item.image ? item.image.alt?.trim() || item.title : ''}
-                            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
-                            fill
-                            sizes="64px"
-                            src={item.image ? srcOf(item.image) : PRODUCT_PLACEHOLDER}
-                          />
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <span className="text-sm text-ink-900 line-clamp-2 font-semibold leading-snug">
-                            {item.title}
-                          </span>
-                          {meta ? <span className="text-caption text-ink-600">{meta}</span> : null}
-                        </span>
-                        {item.slug ? (
-                          <ArrowUpRight
-                            aria-hidden="true"
-                            className="text-green-700 size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"
-                            strokeWidth={2}
-                          />
-                        ) : null}
-                      </>
-                    )
-                    const row = 'group flex items-center gap-3 rounded-md p-1.5 pr-3'
-
-                    return (
-                      <li key={`${item.title}-${index}`}>
-                        {item.slug ? (
-                          <Link
-                            className={cn(
-                              row,
-                              'transition-colors hover:bg-green-50 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none',
-                            )}
-                            href={productHref(item.slug)}
-                          >
-                            {body}
-                          </Link>
-                        ) : (
-                          <div className={row}>{body}</div>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
               </section>
             ) : null}
           </div>

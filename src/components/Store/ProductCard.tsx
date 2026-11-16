@@ -1,16 +1,31 @@
+import { ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
+import { CTA_BASE, CTA_SIZES, CTA_VARIANTS } from '@/components/Cta'
 import { Media } from '@/components/Media'
 import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
-import { isProductSellable } from '@/utilities/combos'
+import { productSizes } from '@/utilities/cartLines'
+import {
+  comboItemTitles,
+  comboSavingPaise,
+  comboSeparatePrice,
+  isProductSellable,
+} from '@/utilities/combos'
 import { leadPricePaise } from '@/utilities/leadPrice'
 import { formatPaise } from '@/utilities/money'
 import { productPhotos } from '@/utilities/productPhotos'
 import { AUDIENCE_LABEL, productHref } from '@/utilities/productsCategoryCopy'
-import { PRODUCTS_CARD_A_DAY, PRODUCTS_CARD_FROM } from '@/utilities/productsCopy'
+import {
+  PRODUCT_CHOOSE_PLAN,
+  PRODUCT_CHOOSE_SIZE,
+  PRODUCT_KIND_LABEL,
+  PRODUCTS_CARD_A_DAY,
+  PRODUCTS_CARD_FROM,
+} from '@/utilities/productsCopy'
+import { cn } from '@/utilities/ui'
 
 import { ProductCardActions } from './ProductCardActions'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
@@ -18,20 +33,32 @@ import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 const PHOTO_PILL =
   'rounded-pill inline-flex items-center px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase shadow-sm'
 
+/** Each kind's own colour, carried by the dot beside its label. */
+const KIND_DOT: Record<Product['type'], string> = {
+  combo: 'bg-gold-500',
+  'one-time': 'bg-green-500',
+  plan: 'bg-green-700',
+}
+
+const SAVE_PILL = 'rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900'
+
 /**
- * One product, anywhere the site lists products (design.md §6.15): the home
- * page's best sellers, every shelf, and the related row under a product page.
+ * One product, anywhere the site lists products (design.md §6.15).
  *
- * A white card with a square photo on a soft green frame, the name, the price
- * it leads with, and the two buy controls pinned to the foot so a row of cards
- * keeps its buttons on one line. The price is the flat price for a one-time
- * product or a combo, or the cheapest per-day rate for a meal plan; a one-time
- * product on offer also shows the old price struck through and the saving.
- * The audience, a combo's item count and a pause ride as small pills on the
- * photo. A paused product keeps its price readable and has nothing to add.
+ * A white card: the photo (the second photo fades in on hover), the kind of
+ * product as a small label, the name, then what each kind needs:
  *
- * The photo and the name both open the product's own page; only the name is a
- * tab stop, so a keyboard visits each card once before its buttons.
+ * - **Meal plan** — the cheapest rate a day and one **Choose plan** button to
+ *   its page, where the duration is chosen; nothing is added on the shopper's
+ *   behalf.
+ * - **One-time purchase** — the price, with any old price and % off, and Add to
+ *   cart / Buy now. Sold in sizes, it leads with the cheapest size and offers
+ *   **Choose size** instead.
+ * - **Meal combo** — what is inside, the price with the bought-separately
+ *   total struck through and the saving, and Add to cart / Buy now.
+ *
+ * A paused product keeps its price readable and has nothing to add. The photo
+ * and the name both open the product's page; only the name is a tab stop.
  */
 export const ProductCard: React.FC<{
   product: Product
@@ -46,41 +73,54 @@ export const ProductCard: React.FC<{
 }) => {
   const [image = null, hoverImage = null] = productPhotos(product)
   const href = productHref(product.slug)
-  const isOneTime = product.type === 'one-time'
-  const isCombo = product.type === 'combo'
+  // A record without a kind reads as a meal plan, as it does in the cart.
+  const kind: Product['type'] = product.type ?? 'plan'
+  const isPlan = kind === 'plan'
+  const isOneTime = kind === 'one-time'
+  const isCombo = kind === 'combo'
   const isAvailable = isProductSellable(product)
 
-  /* A one-time product and a combo both sell at one flat price, added through
-     the reserved one-time line; only a meal plan leads with a rate a day. */
-  const isFlatPrice = isOneTime || isCombo
   const flatPrice =
-    isFlatPrice && typeof product.price === 'number' && Number.isFinite(product.price)
+    !isPlan && typeof product.price === 'number' && Number.isFinite(product.price) && product.price >= 1
       ? product.price
       : null
+  const sizeOptions = isOneTime ? productSizes(product) : []
+  const sizedProduct = sizeOptions.length > 0
+
+  /* The price each kind leads with. */
   const storedLead =
     typeof product.fromPrice === 'number' && product.fromPrice > 0 ? product.fromPrice : null
-  const perDay = isFlatPrice ? null : (storedLead ?? leadPricePaise(product))
-  const price =
-    flatPrice !== null && flatPrice >= 1
-      ? formatPaise(flatPrice)
-      : perDay !== null
-        ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
-        : undefined
-  const compareAtPrice =
-    isOneTime &&
-    flatPrice !== null &&
-    typeof product.compareAtPrice === 'number' &&
-    product.compareAtPrice > flatPrice
-      ? product.compareAtPrice
-      : null
-  const discount =
-    compareAtPrice !== null && flatPrice !== null
-      ? Math.floor(((compareAtPrice - flatPrice) / compareAtPrice) * 100)
-      : 0
-  const durationLabel = isFlatPrice ? ONE_TIME_DURATION : product.durations?.[0]?.label
-  const canAdd = isAvailable && price && durationLabel
+  const perDay = isPlan ? (storedLead ?? leadPricePaise(product)) : null
+  const price = isPlan
+    ? perDay !== null
+      ? `${PRODUCTS_CARD_FROM} ${formatPaise(perDay)} ${PRODUCTS_CARD_A_DAY}`
+      : undefined
+    : flatPrice !== null
+      ? sizedProduct
+        ? `${PRODUCTS_CARD_FROM} ${formatPaise(flatPrice)}`
+        : formatPaise(flatPrice)
+      : undefined
 
-  const hasPills = Boolean(product.audience) || isCombo || !isAvailable
+  /* What the price is struck against: a one-time product's old price, or what
+     a combo's items cost bought one by one. */
+  const struckPrice =
+    flatPrice === null || sizedProduct
+      ? null
+      : isOneTime && typeof product.compareAtPrice === 'number' && product.compareAtPrice > flatPrice
+        ? product.compareAtPrice
+        : isCombo && comboSavingPaise(product) > 0
+          ? comboSeparatePrice(product)
+          : null
+  const discount =
+    isOneTime && struckPrice !== null && flatPrice !== null
+      ? Math.floor(((struckPrice - flatPrice) / struckPrice) * 100)
+      : 0
+  const comboSaving = isCombo ? comboSavingPaise(product) : 0
+  const comboItems = isCombo ? comboItemTitles(product) : []
+
+  /* Plans and sized products are chosen on their page; the rest add here. */
+  const choosesOnPage = isPlan || sizedProduct
+  const canAddHere = isAvailable && !choosesOnPage && flatPrice !== null
 
   return (
     <article className="group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-[box-shadow,translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
@@ -124,15 +164,10 @@ export const ProductCard: React.FC<{
           />
         ) : null}
 
-        {hasPills ? (
+        {!isAvailable || product.audience ? (
           <span className="absolute top-2 left-2 flex flex-wrap gap-1.5">
             {!isAvailable ? (
               <span className={`${PHOTO_PILL} bg-gold-400 text-green-900`}>Paused</span>
-            ) : null}
-            {isCombo ? (
-              <span className={`${PHOTO_PILL} bg-gold-100 text-green-900`}>
-                Combo · {product.components?.length ?? 0} items
-              </span>
             ) : null}
             {product.audience ? (
               <span className={`${PHOTO_PILL} text-cream bg-green-900/75 backdrop-blur-sm`}>
@@ -144,7 +179,12 @@ export const ProductCard: React.FC<{
       </Link>
 
       <div className="flex flex-1 flex-col px-2 pt-3 pb-1">
-        <h3 className="text-body text-ink-900 line-clamp-2 leading-snug font-semibold">
+        <p className="text-ink-600 flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase">
+          <span aria-hidden="true" className={cn('size-1.5 rounded-full', KIND_DOT[kind])} />
+          {PRODUCT_KIND_LABEL[kind]}
+        </p>
+
+        <h3 className="text-body text-ink-900 mt-1 line-clamp-2 leading-snug font-semibold">
           <Link
             className="rounded-sm underline-offset-4 hover:text-green-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
             href={href}
@@ -153,35 +193,59 @@ export const ProductCard: React.FC<{
           </Link>
         </h3>
 
-        {isOneTime && product.packSize ? (
+        {comboItems.length > 0 ? (
+          <p className="text-ink-600 mt-1 line-clamp-2 text-xs leading-5">
+            {comboItems.join(' + ')}
+          </p>
+        ) : null}
+
+        {isOneTime && !sizedProduct && product.packSize ? (
           <span className="rounded-pill mt-2 inline-flex self-start bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800">
             {product.packSize}
           </span>
         ) : null}
 
+        {sizedProduct ? (
+          <p className="text-ink-600 mt-1 line-clamp-1 text-xs">
+            {sizeOptions.map((size) => size.label).join(' · ')}
+          </p>
+        ) : null}
+
         {price ? (
-          <div className="mt-1">
-            <p className="text-body font-bold text-green-700 tabular-nums">{price}</p>
-            {compareAtPrice !== null ? (
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <del className="text-ink-600 text-xs tabular-nums">
-                  {formatPaise(compareAtPrice)}
-                </del>
-                {discount >= 1 ? (
-                  <span className="rounded-pill bg-gold-100 px-2.5 py-1 text-xs font-bold text-green-900">
-                    {discount}% OFF
-                  </span>
-                ) : null}
-              </div>
+          <div className="mt-1.5">
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-body font-bold text-green-700 tabular-nums">{price}</span>
+              {struckPrice !== null ? (
+                <del className="text-ink-600 text-xs tabular-nums">{formatPaise(struckPrice)}</del>
+              ) : null}
+            </p>
+            {discount >= 1 ? (
+              <span className={cn(SAVE_PILL, 'mt-1 inline-block')}>{discount}% OFF</span>
+            ) : null}
+            {comboSaving > 0 ? (
+              <span className={cn(SAVE_PILL, 'mt-1 inline-block tabular-nums')}>
+                Save {formatPaise(comboSaving)}
+              </span>
             ) : null}
           </div>
         ) : null}
 
-        {canAdd ? (
+        {isAvailable && choosesOnPage && price ? (
+          <div className="mt-auto pt-3">
+            <Link
+              aria-label={`${isPlan ? PRODUCT_CHOOSE_PLAN : PRODUCT_CHOOSE_SIZE} for ${product.title}`}
+              className={cn(CTA_BASE, CTA_SIZES.small, CTA_VARIANTS.primary, 'w-full px-1 text-xs uppercase')}
+              href={href}
+            >
+              {isPlan ? PRODUCT_CHOOSE_PLAN : PRODUCT_CHOOSE_SIZE}
+              <ArrowRight aria-hidden="true" className="size-4" strokeWidth={2} />
+            </Link>
+          </div>
+        ) : canAddHere ? (
           <div className="mt-auto pt-3">
             <ProductCardActions
-              durationLabel={durationLabel}
-              oneTime={isFlatPrice}
+              durationLabel={ONE_TIME_DURATION}
+              oneTime
               productSlug={product.slug}
               productTitle={product.title}
               returnPath={returnPath}

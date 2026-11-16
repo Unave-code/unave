@@ -33,6 +33,7 @@ import * as migration_20261113_130000_locked_document_relations from './20261113
 import * as migration_20261114_102751_home_gallery_links from './20261114_102751_home_gallery_links';
 import * as migration_20261114_140000_testimonials_global from './20261114_140000_testimonials_global';
 import * as migration_20261116_120000_product_gallery from './20261116_120000_product_gallery';
+import * as migration_20261116_160000_product_sizes_plan_text from './20261116_160000_product_sizes_plan_text';
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20261116_120000_product_gallery.up,
     down: migration_20261116_120000_product_gallery.down,
     name: '20261116_120000_product_gallery',
+  },
+  {
+    up: migration_20261116_160000_product_sizes_plan_text.up,
+    down: migration_20261116_160000_product_sizes_plan_text.down,
+    name: '20261116_160000_product_sizes_plan_text',
   },
 ];

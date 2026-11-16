@@ -38,13 +38,25 @@ export const PRODUCTS_CARD_A_DAY = 'a day'
  */
 export const PRODUCT_ONE_TIME_LABEL = 'One-time purchase'
 
+/** What each kind of product is called on its card and its page. */
+export const PRODUCT_KIND_LABEL = {
+  combo: 'Meal combo',
+  'one-time': PRODUCT_ONE_TIME_LABEL,
+  plan: 'Meal plan',
+} as const
+
+export const PRODUCT_CHOOSE_PLAN = 'Choose plan'
+export const PRODUCT_CHOOSE_SIZE = 'Choose size'
+export const PRODUCT_START_DATE_NOTE =
+  'No start date to pick: after you order, our team calls you to confirm when your plan begins.'
+
 export const PRODUCTS_FINAL_HEADING = 'Ready when you are'
 export const PRODUCTS_FINAL_BODY =
   'Add the products and durations you want to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'
 
 export const PRODUCTS_GRID_HEADING = 'The products'
 export const PRODUCTS_GRID_INTRO =
-  'Every product is cooked fresh in our own kitchen and delivered on the days you choose. Pick a duration on the card and add it to your cart; take more than one if the week needs it, then pay once at checkout.'
+  'Every product is cooked fresh in our own kitchen. Add a one-time item or a combo straight from its card, or open a meal plan to choose how long it runs, then pay once at checkout.'
 
 export const PRODUCTS_EMPTY_HEADING = 'No products are open right now'
 export const PRODUCTS_EMPTY_BODY =

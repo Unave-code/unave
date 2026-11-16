@@ -211,17 +211,21 @@ describe('saving a combo', () => {
     expect(message).toMatch(/between two and ten/i)
   })
 
-  it('refuses a meal plan without a current duration', async () => {
-    const message = await failure(
-      payload.create({
-        collection: 'products',
-        data: comboData([{ product: oneTimeId }, { product: planId }]),
-        depth: 0,
-        ...staffOptions(),
-      }),
-    )
+  it('saves a meal plan with no duration named, since the duration is optional', async () => {
+    const saved = (await payload.create({
+      collection: 'products',
+      data: comboData([{ product: oneTimeId }, { product: planId }]),
+      depth: 0,
+      ...staffOptions(),
+    })) as Product
+    productIDs.unshift(saved.id)
 
-    expect(message).toMatch(/duration/i)
+    const planRow = saved.components?.find((row) => {
+      const id = typeof row.product === 'object' ? row.product?.id : row.product
+      return id === planId
+    })
+    expect(planRow?.durationLabel ?? '').toBe('')
+    expect(planRow?.durationDaysSnapshot ?? null).toBeNull()
   })
 
   it('refuses a duration the plan no longer has', async () => {

@@ -198,7 +198,9 @@ export default async function CheckoutPage() {
                     {line.type === 'combo'
                       ? 'Meal combo'
                       : line.type === 'one-time'
-                        ? PRODUCT_ONE_TIME_LABEL
+                        ? line.size
+                          ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
+                          : PRODUCT_ONE_TIME_LABEL
                         : `${line.duration}, ${line.days} ${line.days === 1 ? 'day' : 'days'}`}
                   </p>
                 </div>

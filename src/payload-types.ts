@@ -133,6 +133,7 @@ export interface Config {
     footer: Footer;
     hero: Hero;
     testimonials: Testimonial;
+    'product-page': ProductPage;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
@@ -141,6 +142,7 @@ export interface Config {
     footer: FooterSelect<false> | FooterSelect<true>;
     hero: HeroSelect<false> | HeroSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -374,6 +376,10 @@ export interface Product {
       }[]
     | null;
   /**
+   * Optional. Replaces the shared text (Catalogue → Product page) on this plan’s page only. One step per line. Leave empty to use the shared text.
+   */
+  howItWorks?: string | null;
+  /**
    * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
    */
   durations?:
@@ -391,6 +397,23 @@ export interface Product {
       }[]
     | null;
   /**
+   * Optional. Sell this product in sizes, for example 250 g, 500 g and 1 kg, each with its own price. Leave empty to sell one size at the price below. The card leads with the cheapest size.
+   */
+  sizes?:
+    | {
+        /**
+         * For example 500 g.
+         */
+        label: string;
+        price: number;
+        /**
+         * Optional. Must be higher than the price.
+         */
+        compareAtPrice?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * The fixed price for one item or combo, in rupees. You can enter up to two decimal places.
    */
   price?: number | null;
@@ -403,7 +426,7 @@ export interface Product {
    */
   packSize?: string | null;
   /**
-   * Choose two to ten different products. A meal plan needs one of its current durations.
+   * Choose two to ten different products. A meal plan can name one of its current durations, or leave it open.
    */
   components?:
     | {
@@ -411,7 +434,7 @@ export interface Product {
         productTitleSnapshot?: string | null;
         durationDaysSnapshot?: number | null;
         /**
-         * Choose a current duration when the selected product is a meal plan.
+         * Optional. Choose a current duration to fix how long the meal plan runs in this combo, or leave it blank.
          */
         durationLabel?: string | null;
         id?: string | null;
@@ -1715,12 +1738,21 @@ export interface ProductsSelect<T extends boolean = true> {
         point?: T;
         id?: T;
       };
+  howItWorks?: T;
   durations?:
     | T
     | {
         label?: T;
         days?: T;
         price?: T;
+        id?: T;
+      };
+  sizes?:
+    | T
+    | {
+        label?: T;
+        price?: T;
+        compareAtPrice?: T;
         id?: T;
       };
   price?: T;
@@ -2648,6 +2680,21 @@ export interface Testimonial {
   createdAt?: string | null;
 }
 /**
+ * Text shared by every product page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-page".
+ */
+export interface ProductPage {
+  id: number;
+  /**
+   * Shown on every meal plan’s page under the buy buttons. Write one step per line. A plan can replace this with its own text on the product. Leave empty to hide the box.
+   */
+  planHowItWorks?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2841,6 +2888,16 @@ export interface TestimonialsSelect<T extends boolean = true> {
         poster?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-page_select".
+ */
+export interface ProductPageSelect<T extends boolean = true> {
+  planHowItWorks?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

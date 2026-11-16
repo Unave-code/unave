@@ -131,5 +131,23 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
   const whatsapp = footer?.contact?.whatsapp ?? null
   const related = await fetchRelatedProducts(product)
 
-  return <ProductDetail product={product} related={related} whatsapp={whatsapp} />
+  /* A meal plan's "How your plan works" falls back to the shared text, so
+     only a plan reads the Product page global. */
+  const planHowItWorks =
+    product.type === 'plan'
+      ? ((
+          await (await getPayload({ config: configPromise }))
+            .findGlobal({ depth: 0, slug: 'product-page' })
+            .catch(() => null)
+        )?.planHowItWorks ?? null)
+      : null
+
+  return (
+    <ProductDetail
+      planHowItWorks={planHowItWorks}
+      product={product}
+      related={related}
+      whatsapp={whatsapp}
+    />
+  )
 }

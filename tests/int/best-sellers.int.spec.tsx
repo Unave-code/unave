@@ -94,7 +94,7 @@ describe('the homepage Best sellers shelf', () => {
     expect(buyForm?.querySelector('input[name="buyNow"]')?.getAttribute('value')).toBe('true')
   })
 
-  it('keeps plan cards on their lead price and first duration', async () => {
+  it('keeps plan cards on their lead price and sends them to choose a duration', async () => {
     const product = {
       available: true,
       compareAtPrice: 7000,
@@ -114,8 +114,9 @@ describe('the homepage Best sellers shelf', () => {
     expect(screen.queryByText('₹70')).toBeNull()
     expect(screen.queryByText('Should not display')).toBeNull()
 
-    const form = screen.getByRole('button', { name: 'Add Weekly plan to cart' }).closest('form')
-    expect(form?.querySelector('input[name="duration"]')?.getAttribute('value')).toBe('One week')
+    expect(
+      screen.getByRole('link', { name: 'Choose plan for Weekly plan' }).getAttribute('href'),
+    ).toBe('/products/weekly-plan')
   })
 
   it('shows a higher old price without a zero percent badge', async () => {

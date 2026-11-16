@@ -11,6 +11,12 @@ import { normalizeProductShape } from './hooks/normalizeProductShape'
 import { prepareComboComponents } from './hooks/prepareComboComponents'
 import { validateCompareAtPrice } from './validateCompareAtPrice'
 
+type PricingData = { sizes?: unknown; type?: null | string } | undefined
+
+/** A one-time product sold in sizes prices each size, not the product. */
+const soldBySize = (data: PricingData): boolean =>
+  data?.type === 'one-time' && Array.isArray(data.sizes) && data.sizes.length > 0
+
 /**
  * A product the kitchen sells on the site (spec 0007).
  *
@@ -146,6 +152,18 @@ export const Products: CollectionConfig = {
                 },
               ],
             },
+            {
+              name: 'howItWorks',
+              type: 'textarea',
+              label: 'How your plan works (this plan only)',
+              admin: {
+                condition: (data) =>
+                  (data as { type?: null | string } | undefined)?.type === 'plan',
+                description:
+                  'Optional. Replaces the shared text (Catalogue → Product page) on this plan’s page only. One step per line. Leave empty to use the shared text.',
+                rows: 5,
+              },
+            },
           ],
         },
         {
@@ -235,6 +253,88 @@ export const Products: CollectionConfig = {
               },
             },
             {
+              name: 'sizes',
+              type: 'array',
+              label: 'Sizes',
+              labels: { plural: 'Sizes', singular: 'Size' },
+              maxRows: 6,
+              admin: {
+                condition: (data) =>
+                  (data as { type?: null | string } | undefined)?.type === 'one-time',
+                description:
+                  'Optional. Sell this product in sizes, for example 250 g, 500 g and 1 kg, each with its own price. Leave empty to sell one size at the price below. The card leads with the cheapest size.',
+                initCollapsed: false,
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'label',
+                      label: 'Size',
+                      type: 'text',
+                      required: true,
+                      admin: { width: '34%', description: 'For example 500 g.' },
+                    },
+                    {
+                      name: 'price',
+                      label: 'Price (₹)',
+                      type: 'number',
+                      required: true,
+                      min: 1,
+                      admin: {
+                        width: '33%',
+                        components: {
+                          Field: '@/components/Admin/RupeeField#RupeeField',
+                        },
+                      },
+                    },
+                    {
+                      name: 'compareAtPrice',
+                      label: 'Old price (₹)',
+                      type: 'number',
+                      min: 1,
+                      admin: {
+                        width: '33%',
+                        components: {
+                          Field: '@/components/Admin/RupeeField#RupeeField',
+                        },
+                        description: 'Optional. Must be higher than the price.',
+                      },
+                      validate: (
+                        value: unknown,
+                        { siblingData }: { siblingData: { price?: null | number } },
+                      ) => validateCompareAtPrice(value, siblingData.price),
+                    },
+                  ],
+                },
+              ],
+              validate: (
+                value: unknown,
+                { siblingData }: { siblingData: { type?: null | string } },
+              ) => {
+                if (siblingData.type !== 'one-time' || !Array.isArray(value)) return true
+
+                // The cart finds a size by its label, so each must be distinct.
+                const labels = value.map((row) =>
+                  String((row as { label?: unknown })?.label ?? '')
+                    .trim()
+                    .toLowerCase(),
+                )
+                const repeated = labels.find(
+                  (label, index) => label && labels.indexOf(label) !== index,
+                )
+                if (repeated) {
+                  return `Two sizes are called "${repeated}". Give each size its own name.`
+                }
+                if (labels.includes('one-time')) {
+                  return '"one-time" is reserved. Name the size by its weight or volume.'
+                }
+
+                return true
+              },
+            },
+            {
               type: 'row',
               fields: [
                 {
@@ -244,10 +344,12 @@ export const Products: CollectionConfig = {
                   min: 1,
                   admin: {
                     width: '33%',
-                    condition: (data) =>
-                      ['one-time', 'combo'].includes(
-                        (data as { type?: null | string } | undefined)?.type ?? '',
-                      ),
+                    condition: (data) => {
+                      const type = (data as PricingData)?.type
+                      return (
+                        type === 'combo' || (type === 'one-time' && !soldBySize(data as PricingData))
+                      )
+                    },
                     components: {
                       Field: '@/components/Admin/RupeeField#RupeeField',
                     },
@@ -256,11 +358,13 @@ export const Products: CollectionConfig = {
                   },
                   validate: (
                     value: unknown,
-                    { siblingData }: { siblingData: { type?: null | string } },
+                    { siblingData }: { siblingData: { sizes?: unknown; type?: null | string } },
                   ) => {
                     const type = siblingData.type
 
                     if (type !== 'one-time' && type !== 'combo') return true
+                    // A sized product takes its price from the cheapest size.
+                    if (soldBySize(siblingData)) return true
 
                     if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
                       return 'Enter a price with at most two decimal places.'
@@ -277,7 +381,7 @@ export const Products: CollectionConfig = {
                   admin: {
                     width: '33%',
                     condition: (data) =>
-                      (data as { type?: null | string } | undefined)?.type === 'one-time',
+                      (data as PricingData)?.type === 'one-time' && !soldBySize(data as PricingData),
                     components: {
                       Field: '@/components/Admin/RupeeField#RupeeField',
                     },
@@ -288,9 +392,11 @@ export const Products: CollectionConfig = {
                     value: unknown,
                     {
                       siblingData,
-                    }: { siblingData: { price?: null | number; type?: null | string } },
+                    }: {
+                      siblingData: { price?: null | number; sizes?: unknown; type?: null | string }
+                    },
                   ) => {
-                    if (siblingData.type !== 'one-time') return true
+                    if (siblingData.type !== 'one-time' || soldBySize(siblingData)) return true
 
                     return validateCompareAtPrice(value, siblingData.price)
                   },
@@ -302,7 +408,7 @@ export const Products: CollectionConfig = {
                   admin: {
                     width: '33%',
                     condition: (data) =>
-                      (data as { type?: null | string } | undefined)?.type === 'one-time',
+                      (data as PricingData)?.type === 'one-time' && !soldBySize(data as PricingData),
                     description: 'Optional display text for a one-time product, for example 260 g.',
                   },
                 },
@@ -318,7 +424,7 @@ export const Products: CollectionConfig = {
                 condition: (data) =>
                   (data as { type?: null | string } | undefined)?.type === 'combo',
                 description:
-                  'Choose two to ten different products. A meal plan needs one of its current durations.',
+                  'Choose two to ten different products. A meal plan can name one of its current durations, or leave it open.',
               },
               fields: [
                 {
@@ -349,7 +455,7 @@ export const Products: CollectionConfig = {
                       Field: '@/components/Admin/ComboDurationField#ComboDurationField',
                     },
                     description:
-                      'Choose a current duration when the selected product is a meal plan.',
+                      'Optional. Choose a current duration to fix how long the meal plan runs in this combo, or leave it blank.',
                   },
                 },
               ],
@@ -417,8 +523,10 @@ export const Products: CollectionConfig = {
                       (duration) => duration.label.trim().toLowerCase() === label,
                     )
 
-                    if (!label || matches.length !== 1) {
-                      return 'Choose one current, uniquely named duration for each meal plan.'
+                    // The duration is optional; when one is named it must
+                    // still be one of the plan's current durations.
+                    if (label && matches.length !== 1) {
+                      return 'Choose one of the meal plan’s current durations, or leave it blank.'
                     }
                   } else if (typeof row.durationLabel === 'string' && row.durationLabel.trim()) {
                     return 'A one-time product does not have a meal plan duration.'

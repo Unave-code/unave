@@ -94,7 +94,7 @@ export const ComboDurationField: TextFieldClientComponent = ({ field, path }) =>
           onChange={(event) => setValue(event.target.value)}
           value={typeof value === 'string' && options.includes(value) ? value : ''}
         >
-          <option value="">{loading ? 'Loading durations' : 'Choose a duration'}</option>
+          <option value="">{loading ? 'Loading durations' : 'No set duration (optional)'}</option>
           {options.map((label) => (
             <option key={label} value={label}>
               {label}

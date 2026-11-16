@@ -9,7 +9,11 @@ import React from 'react'
 import { Cta } from '@/components/Cta'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
-import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
+import {
+  isOneTimeOrderItem,
+  orderComponentsLabel,
+  orderItemKind,
+} from '@/utilities/orderDisplay'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 
 import {
@@ -102,7 +106,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
               typeof item.qty === 'number' && Number.isInteger(item.qty) && item.qty >= 1
                 ? item.qty
                 : 1
-            const isOneTime = item.durationLabel === 'one-time'
+            const isOneTime = isOneTimeOrderItem(item)
             const unitPrice = Number(item.unitPrice)
             const components = orderComponentsLabel(item.components)
 
