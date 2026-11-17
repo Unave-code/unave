@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import React from 'react'
-import { Check, Phone } from 'lucide-react'
+import { CookingPot, Flame, Leaf, Phone, Sparkles, Sun, Wheat, type LucideIcon } from 'lucide-react'
 import Image from 'next/image'
 
 import { Notice } from '@/components/Notice'
 import RichText from '@/components/RichText'
+import { Faq } from '@/components/home/Faq'
 import { Section } from '@/components/home/Section'
 import type { Media as MediaDoc, Product } from '@/payload-types'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
@@ -27,7 +28,6 @@ import {
   PRODUCT_START_DATE_NOTE,
   PRODUCTS_PAUSED_NOTE_BODY,
   PRODUCTS_PAUSED_NOTE_TITLE,
-  PRODUCTS_RELATED_HEADING,
 } from '@/utilities/productsCopy'
 import {
   AUDIENCE_LABEL,
@@ -42,6 +42,9 @@ import { ProductCard } from './ProductCard'
 import { ProductGallery, type GalleryImage } from './ProductGallery'
 import { ProductPurchase, type ProductDuration } from './ProductPurchase'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
+
+/** Decorative icons for the benefit cards, taken in turn. */
+const POINT_ICONS: LucideIcon[] = [Leaf, Sparkles, Wheat, Sun, CookingPot, Flame]
 
 const CHIP =
   'rounded-pill inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase'
@@ -73,17 +76,16 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
 /**
  * One product's own page (design.md §6.15), laid out as a shop page.
  *
- * Two columns from `md`: the photo gallery on the left (seven of twelve
- * columns from `lg`), pinned while the page scrolls, and beside it everything
- * needed to choose and buy, in reading order — the chips, the name, its kind
- * and whether it can be ordered, a combo's saving, then the buy panel (the
- * price shown once, the durations as comparable rows, add to cart), then what
- * you get and, on a combo, what is inside it with a photo of each. On a phone
- * it all stacks, gallery first.
+ * Two equal columns from `md`: the large photo with its thumbnails under it on
+ * the left, and beside it everything needed to choose and buy, in reading
+ * order — the chips, the name, whether it is in stock, on a combo what is
+ * inside it and its saving, the buy panel (price, options, quantity, Add to
+ * cart and Buy now), the key facts as a short list, then the description. On
+ * a phone it all stacks, gallery first.
  *
- * Below the columns, full width: the description and a details table built
- * only from the record's own fields, then the rest of the same shelf on its own
- * tint band. Nothing here is invented — no ratings, no delivery promises.
+ * Below the columns, full width bands: what you get as a row of icon cards,
+ * the shared FAQ, then "people also bought" from the same shelf. Nothing here
+ * is invented — no ratings, no delivery promises.
  *
  * A paused product still renders in full — the kitchen can pause a product
  * without hiding it — with its durations and prices readable and nothing to
@@ -197,17 +199,6 @@ export const ProductDetail: React.FC<{
 
   const hasReading = Boolean(product.description) || !isAvailable
 
-  /** A related product's lead price, said the way its card says it. */
-  const priceOf = (item: Product): null | string => {
-    if ((item.type === 'one-time' || item.type === 'combo') && Number(item.price) >= 1) {
-      return formatPaise(Number(item.price))
-    }
-    const lead = typeof item.fromPrice === 'number' && item.fromPrice > 0 ? item.fromPrice : null
-    return lead !== null ? `From ${formatPaise(lead)}` : null
-  }
-
-  const alsoBought = (related ?? []).slice(0, 4)
-
   return (
     <main>
       <Section className="pt-6 md:pt-10" tone="white">
@@ -241,60 +232,16 @@ export const ProductDetail: React.FC<{
           </ol>
         </nav>
 
-        <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-12">
-          {/* Left: the photos (thumbnails beside the main photo on a wide
-              screen), then a compact "People also bought" list under them. */}
-          <div className="min-w-0 lg:col-span-6">
+        <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:gap-14">
+          {/* Left: the large photo with its thumbnails underneath. */}
+          <div className="min-w-0">
             <ProductGallery images={gallery} paused={!isAvailable} />
-
-            {alsoBought.length > 0 ? (
-              <section aria-labelledby="also-bought-heading" className="mt-10 hidden lg:block">
-                <h2 className="text-h3 text-green-900" id="also-bought-heading">
-                  People also bought
-                </h2>
-                <span aria-hidden="true" className="bg-gold-400 mt-2 block h-1 w-12 rounded-full" />
-                <ul className="mt-5 grid grid-cols-2 gap-3">
-                  {alsoBought.map((item) => {
-                    const photo = productPhotos(item)[0]
-                    const itemPrice = priceOf(item)
-
-                    return (
-                      <li className="min-w-0" key={item.id}>
-                        <Link
-                          className="group border-line flex items-center gap-3 rounded-lg border bg-white p-2 pr-3 transition-[border-color,box-shadow] hover:border-green-500 hover:shadow-sm focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none"
-                          href={productHref(item.slug)}
-                        >
-                          <span className="relative size-20 shrink-0 overflow-hidden rounded-md bg-green-50">
-                            <Image
-                              alt=""
-                              className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
-                              fill
-                              sizes="80px"
-                              src={photo ? srcOf(photo) : PRODUCT_PLACEHOLDER}
-                            />
-                          </span>
-                          <span className="flex min-w-0 flex-col gap-1">
-                            <span className="text-ink-900 line-clamp-2 text-sm leading-snug font-semibold group-hover:text-green-700">
-                              {item.title}
-                            </span>
-                            {itemPrice ? (
-                              <span className="text-sm font-bold text-green-700 tabular-nums">
-                                {itemPrice}
-                              </span>
-                            ) : null}
-                          </span>
-                        </Link>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </section>
-            ) : null}
           </div>
 
-          {/* Right, in reading order: what it is, the price and the choice,
-              the buy row, then the description and, on a combo, its items. */}
-          <div className="min-w-0 lg:col-span-6">
+          {/* Right, in reading order: the name, whether it can be ordered,
+              the price and the choice, the buy row, the key facts, then the
+              description. */}
+          <div className="min-w-0">
             {product.category || product.audience ? (
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 {product.category ? (
@@ -318,7 +265,7 @@ export const ProductDetail: React.FC<{
               </div>
             ) : null}
 
-            <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[34px]">
+            <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 capitalize md:text-[36px]">
               {product.title}
             </h1>
 
@@ -333,7 +280,7 @@ export const ProductDetail: React.FC<{
                   aria-hidden="true"
                   className={cn('size-2 rounded-full', isAvailable ? 'bg-success' : 'bg-gold-500')}
                 />
-                {isAvailable ? 'Available to order' : 'Paused for now'}
+                {isAvailable ? 'In stock' : 'Paused for now'}
               </span>
               {product.packSize ? (
                 <>
@@ -488,6 +435,21 @@ export const ProductDetail: React.FC<{
               ) : null}
             </section>
 
+            {/* The key facts as a short list, read straight from the record. */}
+            <section aria-labelledby="product-details-heading" className="border-line mt-5 border-t pt-5">
+              <h2 className="sr-only" id="product-details-heading">
+                Product details
+              </h2>
+              <dl className="grid gap-y-2 text-sm">
+                {details.map(([term, value]) => (
+                  <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3" key={term}>
+                    <dt className="text-ink-900 font-bold">{term}:</dt>
+                    <dd className="text-ink-600 wrap-anywhere">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
             {/* A meal plan's "How your plan works": the plan's own text, or
                 the shared text from Catalogue → Product page. */}
             {!isOneTime && !isCombo && howItWorksSteps.length > 0 ? (
@@ -512,18 +474,18 @@ export const ProductDetail: React.FC<{
               </section>
             ) : null}
 
-            {/* The description straight under the buy row, as a shop reads. */}
+            {/* The description under the buy row and the facts, as a shop reads. */}
             {hasReading ? (
               <section
                 aria-labelledby="product-description-heading"
                 className="border-line mt-6 border-t pt-6"
               >
-                <h2 className="sr-only" id="product-description-heading">
-                  Product description
+                <h2 className="text-body font-bold text-green-900" id="product-description-heading">
+                  Description
                 </h2>
                 {product.description ? (
                   <RichText
-                    className="text-body text-ink-600 mx-0 max-w-[68ch]"
+                    className="text-body text-ink-600 mx-0 mt-2 max-w-[68ch]"
                     data={product.description}
                     enableGutter={false}
                   />
@@ -539,71 +501,65 @@ export const ProductDetail: React.FC<{
           </div>
         </div>
 
-        {/* Full width under the columns: what you get and the details. */}
-        <div className="border-line mt-12 grid gap-10 border-t pt-10 lg:grid-cols-12">
-          {points.length > 0 ? (
-            <section aria-labelledby="product-points-heading" className="min-w-0 lg:col-span-7">
-              <h2 className="text-h2" id="product-points-heading">
-                {PRODUCT_POINTS_HEADING}
-              </h2>
-              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                {points.map((point, index) => (
-                  <li
-                    className="flex items-start gap-3 rounded-lg bg-green-50 p-4"
-                    key={`${point}-${index}`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-green-700 text-white"
-                    >
-                      <Check className="size-3.5" strokeWidth={2.5} />
-                    </span>
-                    <span className="text-ink-900 text-sm leading-6">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          <section
-            aria-labelledby="product-details-heading"
-            className={cn('min-w-0', points.length > 0 ? 'lg:col-span-5' : 'lg:col-span-7')}
-          >
-            <h2 className="text-h2" id="product-details-heading">
-              Product details
-            </h2>
-            <dl className="border-line mt-6 overflow-hidden rounded-lg border">
-              {details.map(([term, value]) => (
-                <div
-                  className="border-line grid grid-cols-[8rem_minmax(0,1fr)] border-b last:border-b-0"
-                  key={term}
-                >
-                  <dt className="bg-green-50 text-ink-900 px-4 py-3 text-sm font-bold">{term}</dt>
-                  <dd className="text-ink-600 px-4 py-3 text-sm wrap-anywhere">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        </div>
       </Section>
 
-      {/* The full related shelf with its buy buttons. On a wide screen the
-          compact list under the photos already shows up to four, so the band
-          is kept there only when the shelf has more than that. */}
+      {/* What you get, as a row of benefit cards: an icon over each point. */}
+      {points.length > 0 ? (
+        <Section tone="tint">
+          <div className="text-center">
+            <h2 className="text-h2" id="product-points-heading">
+              {PRODUCT_POINTS_HEADING}
+            </h2>
+            <span aria-hidden="true" className="bg-gold-400 mx-auto mt-3 block h-1 w-12 rounded-full" />
+          </div>
+          <ul
+            aria-labelledby="product-points-heading"
+            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center"
+          >
+            {points.map((point, index) => {
+              const Icon = POINT_ICONS[index % POINT_ICONS.length]
+
+              return (
+                <li
+                  className="border-line flex flex-col items-center gap-3 rounded-xl border bg-white p-5 text-center shadow-sm lg:w-52"
+                  key={`${point}-${index}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex size-14 items-center justify-center rounded-full bg-green-100 text-green-700"
+                  >
+                    <Icon className="size-7" strokeWidth={1.75} />
+                  </span>
+                  <span className="text-ink-900 text-sm leading-6 font-semibold">{point}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </Section>
+      ) : null}
+
+      <Faq />
+
+      {/* People also bought: the rest of the same shelf with its buy buttons. */}
       {related && related.length > 0 ? (
-        <Section className={related.length <= alsoBought.length ? 'lg:hidden' : ''} tone="tint">
-          <h2 className="text-h2">{PRODUCTS_RELATED_HEADING}</h2>
+        <Section tone="tint">
+          <div className="text-center">
+            <h2 className="text-h2" id="also-bought-heading">
+              People also bought
+            </h2>
+            <span aria-hidden="true" className="bg-gold-400 mx-auto mt-3 block h-1 w-12 rounded-full" />
+          </div>
 
           <ul
-            aria-label={PRODUCTS_RELATED_HEADING}
-            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+            aria-labelledby="also-bought-heading"
+            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
           >
-            {related.map((item) => (
+            {related.slice(0, 5).map((item) => (
               <li className="min-w-0" key={item.id}>
                 <ProductCard
                   product={item}
                   returnPath={productHref(product.slug)}
-                  sizes="(min-width: 64rem) 25vw, (min-width: 48rem) 30vw, 45vw"
+                  sizes="(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 45vw"
                 />
               </li>
             ))}

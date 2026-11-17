@@ -30,8 +30,8 @@ export interface CategoryTile {
 
 /**
  * The round-icon category tiles (design.md §10.1): compact mobile tiles and
- * 160px desktop tiles in a wrapping layout. The homepage uses them for the main
- * categories and each category page for its subcategories.
+ * 160px desktop tiles in a wrapping layout, each with a green border and a
+ * large shadow. Each category page uses them for its subcategories.
  */
 export const CategoryTiles: React.FC<{
   className?: string
@@ -86,8 +86,8 @@ export const CategoryTiles: React.FC<{
           </>
         )
         const className = cn(
-          'group relative flex h-full min-h-32 w-full min-w-0 flex-col items-center justify-start gap-3 overflow-hidden rounded-2xl border bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-2 pt-4 pb-3 text-center shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-md focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:min-h-44 sm:w-40 sm:shrink-0 sm:gap-4 sm:px-3 sm:pt-6 sm:pb-4',
-          item.current ? 'border-gold-400 shadow-md' : 'border-transparent',
+          'group relative flex h-full min-h-32 w-full min-w-0 flex-col items-center justify-start gap-3 overflow-hidden rounded-2xl border-2 bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-2 pt-4 pb-3 text-center shadow-lg transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-[0_20px_48px_rgba(26,75,54,0.2)] focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:min-h-44 sm:w-40 sm:shrink-0 sm:gap-4 sm:px-3 sm:pt-6 sm:pb-4',
+          item.current ? 'border-gold-400' : 'border-green-200',
         )
 
         return (

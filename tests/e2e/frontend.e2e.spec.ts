@@ -17,7 +17,7 @@ test.describe('Frontend', () => {
     await expect(offerAction).toHaveAttribute('href', '/contact')
     await expect(page.locator('.hero-carousel').getByRole('link')).toHaveCount(0)
     await expect(offerAction.locator('xpath=following::h2[1]')).toHaveText(
-      'Browse our current selection',
+      'Best sellers',
     )
 
     for (const heading of ['What makes us different', 'What we cook', 'How it works']) {

@@ -115,9 +115,6 @@ export const BEST_SELLERS_HEADING = 'Best sellers'
 export const BEST_SELLERS_INTRO = 'Products selected by the kitchen.'
 export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
 
-/** 6b. Category browsing. */
-export const PRODUCTS_SECTION_HEADING = 'Browse our current selection'
-
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */
 export const NOTICE_TITLE = 'A note on your goals'
 export const NOTICE_BODY =

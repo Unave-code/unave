@@ -16,8 +16,7 @@ export type GalleryImage = {
 
 /**
  * The product page's photo gallery (design.md §6.15): one large square photo
- * and, when there is more than one, a strip of thumbnails — down the left on a
- * wide screen, along the bottom on a phone. Pointing at a thumbnail or choosing
+ * and, when there is more than one, a strip of thumbnails under it. Pointing at a thumbnail or choosing
  * it shows that photo; the thumbnails are real buttons, so the keyboard reaches
  * them and the choice is announced.
  *
@@ -32,9 +31,9 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
   const hasStrip = images.length > 1
 
   return (
-    <div className={cn('flex flex-col gap-3', hasStrip && 'lg:flex-row-reverse lg:items-start')}>
-      <figure className="min-w-0 flex-1">
-        <div className="bg-green-50 relative aspect-square w-full mx-auto max-w-[30rem] overflow-hidden rounded-lg shadow-md">
+    <div className="mx-auto flex w-full max-w-[36rem] flex-col gap-3">
+      <figure className="min-w-0">
+        <div className="bg-green-50 border-line relative aspect-square w-full overflow-hidden rounded-xl border shadow-md">
           {current ? (
             <Image
               alt={current.alt}
@@ -42,7 +41,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               fill
               key={current.src}
               priority
-              sizes="(max-width: 480px) 100vw, 480px"
+              sizes="(min-width: 48rem) 576px, 100vw"
               src={current.src}
             />
           ) : (
@@ -52,7 +51,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
               className="object-cover"
               fill
               priority
-              sizes="(max-width: 480px) 100vw, 480px"
+              sizes="(min-width: 48rem) 576px, 100vw"
               src={PRODUCT_PLACEHOLDER}
             />
           )}
@@ -74,7 +73,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
       {hasStrip ? (
         <ul
           aria-label="Product photos"
-          className="flex gap-2 overflow-x-auto pb-1 lg:max-h-[32rem] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0"
+          className="flex gap-2.5 overflow-x-auto p-1"
         >
           {images.map((image, index) => (
             <li className="shrink-0" key={`${image.src}-${index}`}>
@@ -82,7 +81,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
                 aria-label={`Show photo ${index + 1}: ${image.caption ?? image.alt}`}
                 aria-pressed={index === active}
                 className={cn(
-                  'bg-green-50 relative block size-16 overflow-hidden rounded-md ring-offset-2 transition-[box-shadow,opacity] duration-150 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none sm:size-[4.5rem]',
+                  'bg-green-50 relative block size-16 overflow-hidden rounded-lg ring-offset-2 transition-[box-shadow,opacity] duration-150 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none sm:size-20',
                   index === active
                     ? 'ring-gold-400 ring-2'
                     : 'ring-line opacity-80 ring-1 hover:opacity-100 hover:ring-green-500',
@@ -92,7 +91,7 @@ export const ProductGallery: React.FC<{ images: GalleryImage[]; paused?: boolean
                 onMouseEnter={() => setActive(index)}
                 type="button"
               >
-                <Image alt="" className="object-cover" fill sizes="72px" src={image.src} />
+                <Image alt="" className="object-cover" fill sizes="80px" src={image.src} />
               </button>
             </li>
           ))}
