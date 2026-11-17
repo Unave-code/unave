@@ -43,14 +43,14 @@ import { ProductPurchase, type ProductDuration } from './ProductPurchase'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
 /**
- * A dark green paint-brush stroke drawn behind each benefit: ragged top and
+ * A light green paint-brush stroke drawn behind each benefit: ragged top and
  * bottom edges, frayed ends and a few dry-brush streaks. It stretches to fit
  * its box; every other one is mirrored so neighbours do not look stamped.
  */
 const BrushStroke: React.FC<{ flip?: boolean }> = ({ flip }) => (
   <svg
     aria-hidden="true"
-    className={cn('absolute inset-0 -z-10 size-full text-green-800', flip && '-scale-x-100')}
+    className={cn('absolute inset-0 -z-10 size-full text-green-100', flip && '-scale-x-100')}
     preserveAspectRatio="none"
     viewBox="0 0 400 160"
   >
@@ -100,7 +100,7 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
  * cart and Buy now), what you get as a checklist, the key facts as a short
  * list, then the description. On a phone it all stacks, gallery first.
  *
- * Below the columns, full width bands: the product's benefits on dark green brush
+ * Below the columns, full width bands: the product's benefits on light green brush
  * strokes, then "people also bought" from the same
  * shelf. Nothing here is invented — no ratings, no delivery promises.
  *
@@ -541,12 +541,12 @@ export const ProductDetail: React.FC<{
 
       </Section>
 
-      {/* Benefits: each title and line, in white, on a dark green brush stroke. */}
+      {/* Benefits: each title and line, in dark green, on a light green brush stroke. */}
       {benefits.length > 0 ? (
         <Section className="py-0.5 md:py-0.5" tone="white">
           <div className="text-center">
             <h2 className="text-h2" id="product-benefits-heading">
-              Benefits
+              Benefits of <span className="capitalize">{product.title}</span>
             </h2>
             <span aria-hidden="true" className="bg-gold-400 mx-auto mt-3 block h-1 w-12 rounded-full" />
           </div>
@@ -560,11 +560,11 @@ export const ProductDetail: React.FC<{
                 key={benefit.id ?? `${benefit.title}-${index}`}
               >
                 <BrushStroke flip={index % 2 === 1} />
-                <h3 className="text-lg font-extrabold tracking-wide text-white uppercase md:text-xl">
+                <h3 className="text-lg font-extrabold tracking-wide text-green-900 uppercase md:text-xl">
                   {benefit.title}
                 </h3>
                 {benefit.description ? (
-                  <p className="max-w-[28ch] text-base leading-6 text-white">{benefit.description}</p>
+                  <p className="max-w-[28ch] text-base leading-6 text-green-800">{benefit.description}</p>
                 ) : null}
               </li>
             ))}

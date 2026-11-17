@@ -154,7 +154,7 @@ describe('a product page', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { name: 'Benefits' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /^Benefits of / })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Gut health' })).toBeTruthy()
     expect(screen.getByText('Easy on the stomach.')).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'FAQ' })).toBeNull()
