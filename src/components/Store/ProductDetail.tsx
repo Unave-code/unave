@@ -1,22 +1,6 @@
 import Link from 'next/link'
 import React from 'react'
-import {
-  Apple,
-  Check,
-  CookingPot,
-  Droplet,
-  Flame,
-  Heart,
-  Leaf,
-  Phone,
-  ShieldCheck,
-  Sparkles,
-  Sprout,
-  Sun,
-  Wheat,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react'
+import { Check, Phone } from 'lucide-react'
 import Image from 'next/image'
 
 import { Notice } from '@/components/Notice'
@@ -58,21 +42,13 @@ import { ProductGallery, type GalleryImage } from './ProductGallery'
 import { ProductPurchase, type ProductDuration } from './ProductPurchase'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
-/** The icon each benefit card can carry, keyed by the value the admin stores. */
-const BENEFIT_ICONS: Record<NonNullable<Product['benefits']>[number]['icon'], LucideIcon> = {
-  apple: Apple,
-  'cooking-pot': CookingPot,
-  droplet: Droplet,
-  flame: Flame,
-  heart: Heart,
-  leaf: Leaf,
-  shield: ShieldCheck,
-  sparkles: Sparkles,
-  sprout: Sprout,
-  sun: Sun,
-  wheat: Wheat,
-  zap: Zap,
-}
+/** Organic blob outlines for the benefits, taken in turn so neighbours differ. */
+const BLOB_SHAPES = [
+  'rounded-[58%_42%_63%_37%/45%_55%_45%_55%]',
+  'rounded-[40%_60%_45%_55%/60%_40%_60%_40%]',
+  'rounded-[63%_37%_54%_46%/55%_48%_52%_45%]',
+  'rounded-[45%_55%_38%_62%/52%_60%_40%_48%]',
+]
 
 const CHIP =
   'rounded-pill inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase'
@@ -111,8 +87,8 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
  * cart and Buy now), what you get as a checklist, the key facts as a short
  * list, then the description. On a phone it all stacks, gallery first.
  *
- * Below the columns, full width bands: the product's benefits as an open row of
- * icons, then "people also bought" from the same
+ * Below the columns, full width bands: the product's benefits on soft green blobs,
+ * then "people also bought" from the same
  * shelf. Nothing here is invented — no ratings, no delivery promises.
  *
  * A paused product still renders in full — the kitchen can pause a product
@@ -552,10 +528,9 @@ export const ProductDetail: React.FC<{
 
       </Section>
 
-      {/* Benefits, as an open row: a large icon, a title and one line each,
-          no boxes, split by thin rules on a wide screen. */}
+      {/* Benefits: each title and line sits on its own soft green blob. */}
       {benefits.length > 0 ? (
-        <Section tone="white">
+        <Section className="py-0.5 md:py-0.5" tone="white">
           <div className="text-center">
             <h2 className="text-h2" id="product-benefits-heading">
               Benefits
@@ -564,24 +539,22 @@ export const ProductDetail: React.FC<{
           </div>
           <ul
             aria-labelledby="product-benefits-heading"
-            className="lg:divide-line mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center lg:gap-0 lg:divide-x"
+            className="mt-10 grid grid-cols-1 gap-6 min-[420px]:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center"
           >
-            {benefits.map((benefit, index) => {
-              const Icon = BENEFIT_ICONS[benefit.icon] ?? Leaf
-
-              return (
-                <li
-                  className="flex flex-col items-center gap-3 text-center lg:w-56 lg:px-6"
-                  key={benefit.id ?? `${benefit.title}-${index}`}
-                >
-                  <Icon aria-hidden="true" className="size-14 text-green-700" strokeWidth={1.25} />
-                  <h3 className="text-body font-bold text-green-900">{benefit.title}</h3>
-                  {benefit.description ? (
-                    <p className="text-ink-600 max-w-[28ch] text-sm leading-6">{benefit.description}</p>
-                  ) : null}
-                </li>
-              )
-            })}
+            {benefits.map((benefit, index) => (
+              <li
+                className={cn(
+                  'flex min-h-44 flex-col items-center justify-center gap-2 bg-green-100 px-8 py-10 text-center lg:w-60',
+                  BLOB_SHAPES[index % BLOB_SHAPES.length],
+                )}
+                key={benefit.id ?? `${benefit.title}-${index}`}
+              >
+                <h3 className="text-body font-bold text-green-900">{benefit.title}</h3>
+                {benefit.description ? (
+                  <p className="max-w-[26ch] text-sm leading-6 text-green-800">{benefit.description}</p>
+                ) : null}
+              </li>
+            ))}
           </ul>
         </Section>
       ) : null}

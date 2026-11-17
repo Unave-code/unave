@@ -160,13 +160,15 @@ export const Products: CollectionConfig = {
               maxRows: 6,
               admin: {
                 description:
-                  'Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach."',
+                  'Up to six cards shown on the product page under Benefits, each with a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach."',
               },
               fields: [
                 {
                   name: 'icon',
                   type: 'select',
                   label: 'Icon',
+                  // No longer shown on the page; kept so stored rows stay valid.
+                  admin: { hidden: true },
                   defaultValue: 'leaf',
                   required: true,
                   options: [
