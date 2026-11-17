@@ -140,6 +140,27 @@ describe('a product page', () => {
     expect(screen.getAllByTestId('related-card')).toHaveLength(2)
   })
 
+  it('shows benefit cards with the notice block, and no FAQ', () => {
+    render(
+      <ProductDetail
+        product={
+          {
+            ...openProduct,
+            benefits: [
+              { description: 'Easy on the stomach.', icon: 'leaf', id: 'b1', title: 'Gut health' },
+            ],
+          } as Product
+        }
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Benefits' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Gut health' })).toBeTruthy()
+    expect(screen.getByText('Easy on the stomach.')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'A note on your goals' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'FAQ' })).toBeNull()
+  })
+
   it('offers Buy now in the same form as Add to cart', () => {
     render(<ProductDetail product={openProduct} />)
 

@@ -1,11 +1,26 @@
 import Link from 'next/link'
 import React from 'react'
-import { CookingPot, Flame, Leaf, Phone, Sparkles, Sun, Wheat, type LucideIcon } from 'lucide-react'
+import {
+  Apple,
+  Check,
+  CookingPot,
+  Droplet,
+  Flame,
+  Heart,
+  Leaf,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+  Sprout,
+  Sun,
+  Wheat,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
 import Image from 'next/image'
 
 import { Notice } from '@/components/Notice'
 import RichText from '@/components/RichText'
-import { Faq } from '@/components/home/Faq'
 import { Section } from '@/components/home/Section'
 import type { Media as MediaDoc, Product } from '@/payload-types'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
@@ -42,9 +57,23 @@ import { ProductCard } from './ProductCard'
 import { ProductGallery, type GalleryImage } from './ProductGallery'
 import { ProductPurchase, type ProductDuration } from './ProductPurchase'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
+import { NOTICE_BODY, NOTICE_TITLE } from '@/utilities/homeCopy'
 
-/** Decorative icons for the benefit cards, taken in turn. */
-const POINT_ICONS: LucideIcon[] = [Leaf, Sparkles, Wheat, Sun, CookingPot, Flame]
+/** The icon each benefit card can carry, keyed by the value the admin stores. */
+const BENEFIT_ICONS: Record<NonNullable<Product['benefits']>[number]['icon'], LucideIcon> = {
+  apple: Apple,
+  'cooking-pot': CookingPot,
+  droplet: Droplet,
+  flame: Flame,
+  heart: Heart,
+  leaf: Leaf,
+  shield: ShieldCheck,
+  sparkles: Sparkles,
+  sprout: Sprout,
+  sun: Sun,
+  wheat: Wheat,
+  zap: Zap,
+}
 
 const CHIP =
   'rounded-pill inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase'
@@ -80,12 +109,12 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
  * the left, and beside it everything needed to choose and buy, in reading
  * order — the chips, the name, whether it is in stock, on a combo what is
  * inside it and its saving, the buy panel (price, options, quantity, Add to
- * cart and Buy now), the key facts as a short list, then the description. On
- * a phone it all stacks, gallery first.
+ * cart and Buy now), what you get as a checklist, the key facts as a short
+ * list, then the description. On a phone it all stacks, gallery first.
  *
- * Below the columns, full width bands: what you get as a row of icon cards,
- * the shared FAQ, then "people also bought" from the same shelf. Nothing here
- * is invented — no ratings, no delivery promises.
+ * Below the columns, full width bands: the product's benefits as icon cards
+ * with the notice block under them, then "people also bought" from the same
+ * shelf. Nothing here is invented — no ratings, no delivery promises.
  *
  * A paused product still renders in full — the kitchen can pause a product
  * without hiding it — with its durations and prices readable and nothing to
@@ -131,6 +160,8 @@ export const ProductDetail: React.FC<{
   const points = (product.points ?? [])
     .map((entry) => entry.point?.trim() ?? '')
     .filter((point) => point.length > 0)
+
+  const benefits = (product.benefits ?? []).filter((benefit) => benefit.title?.trim())
 
   const subcategory =
     product.subcategory && typeof product.subcategory === 'object'
@@ -435,6 +466,25 @@ export const ProductDetail: React.FC<{
               ) : null}
             </section>
 
+            {/* What you get, as a short checklist under the buy row. */}
+            {points.length > 0 ? (
+              <section aria-labelledby="product-points-heading" className="border-line mt-5 border-t pt-5">
+                <ColumnHeading id="product-points-heading">{PRODUCT_POINTS_HEADING}</ColumnHeading>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {points.map((point, index) => (
+                    <li className="flex items-start gap-2.5" key={`${point}-${index}`}>
+                      <Check
+                        aria-hidden="true"
+                        className="mt-1 size-4 shrink-0 text-green-700"
+                        strokeWidth={2.5}
+                      />
+                      <span className="text-ink-900 text-sm leading-6">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
             {/* The key facts as a short list, read straight from the record. */}
             <section aria-labelledby="product-details-heading" className="border-line mt-5 border-t pt-5">
               <h2 className="sr-only" id="product-details-heading">
@@ -503,42 +553,43 @@ export const ProductDetail: React.FC<{
 
       </Section>
 
-      {/* What you get, as a row of benefit cards: an icon over each point. */}
-      {points.length > 0 ? (
+      {/* Benefits, as a row of cards: a large icon, a title and one line.
+          They read as health claims, so the notice block sits under them
+          (design.md §6.11). */}
+      {benefits.length > 0 ? (
         <Section tone="tint">
           <div className="text-center">
-            <h2 className="text-h2" id="product-points-heading">
-              {PRODUCT_POINTS_HEADING}
+            <h2 className="text-h2" id="product-benefits-heading">
+              Benefits
             </h2>
             <span aria-hidden="true" className="bg-gold-400 mx-auto mt-3 block h-1 w-12 rounded-full" />
           </div>
           <ul
-            aria-labelledby="product-points-heading"
+            aria-labelledby="product-benefits-heading"
             className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center"
           >
-            {points.map((point, index) => {
-              const Icon = POINT_ICONS[index % POINT_ICONS.length]
+            {benefits.map((benefit, index) => {
+              const Icon = BENEFIT_ICONS[benefit.icon] ?? Leaf
 
               return (
                 <li
-                  className="border-line flex flex-col items-center gap-3 rounded-xl border bg-white p-5 text-center shadow-sm lg:w-52"
-                  key={`${point}-${index}`}
+                  className="border-line flex flex-col items-center gap-3 rounded-xl border bg-white px-4 py-6 text-center shadow-sm lg:w-56"
+                  key={benefit.id ?? `${benefit.title}-${index}`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-14 items-center justify-center rounded-full bg-green-100 text-green-700"
-                  >
-                    <Icon className="size-7" strokeWidth={1.75} />
-                  </span>
-                  <span className="text-ink-900 text-sm leading-6 font-semibold">{point}</span>
+                  <Icon aria-hidden="true" className="size-12 text-green-700" strokeWidth={1.5} />
+                  <h3 className="text-body font-bold text-green-900">{benefit.title}</h3>
+                  {benefit.description ? (
+                    <p className="text-ink-600 text-sm leading-6">{benefit.description}</p>
+                  ) : null}
                 </li>
               )
             })}
           </ul>
+          <Notice className="mx-auto mt-8 max-w-3xl" title={NOTICE_TITLE}>
+            {NOTICE_BODY}
+          </Notice>
         </Section>
       ) : null}
-
-      <Faq />
 
       {/* People also bought: the rest of the same shelf with its buy buttons. */}
       {related && related.length > 0 ? (

@@ -7,20 +7,19 @@ import type { Media as MediaDoc } from '@/payload-types'
 import type { ProductCategoryValue } from '@/utilities/productsCategoryCopy'
 import { cn } from '@/utilities/ui'
 
-/** Each shelf gets its own icon and tint, so a tile without a photo still says
- *  which kind of food it leads to (design.md §3.4). */
-export const CATEGORY_LOOK: Record<ProductCategoryValue | 'fallback', { Icon: LucideIcon; tint: string }> =
-  {
-    'fresh-from-produce': { Icon: Leaf, tint: 'bg-cat-healthy-tint' },
-    'ready-to-cook': { Icon: CookingPot, tint: 'bg-cat-nutrition-tint' },
-    'ready-to-eat': { Icon: UtensilsCrossed, tint: 'bg-cat-diet-tint' },
-    fallback: { Icon: Leaf, tint: 'bg-green-100' },
-  }
+/** Each shelf gets its own icon, so a tile without a photo still says which
+ *  kind of food it leads to (design.md §3.4). */
+export const CATEGORY_LOOK: Record<ProductCategoryValue | 'fallback', { Icon: LucideIcon }> = {
+  'fresh-from-produce': { Icon: Leaf },
+  'ready-to-cook': { Icon: CookingPot },
+  'ready-to-eat': { Icon: UtensilsCrossed },
+  fallback: { Icon: Leaf },
+}
 
 export interface CategoryTile {
   /** Marks the tile for the view the customer is already on. */
   current?: boolean
-  /** Which shelf's icon and tint to show when there is no photo. */
+  /** Which shelf's icon to show when there is no photo. */
   category?: ProductCategoryValue
   href: null | string
   image?: MediaDoc | null
@@ -29,8 +28,8 @@ export interface CategoryTile {
 }
 
 /**
- * The round-icon category tiles (design.md §10.1): compact mobile tiles and
- * 160px desktop tiles in a wrapping layout, each with a green border and a
+ * The category tiles (design.md §10.1): small tiles in a wrapping layout, 128px
+ * wide from `sm`, each with a large bare icon (no circle), a green border and a
  * large shadow. Each category page uses them for its subcategories.
  */
 export const CategoryTiles: React.FC<{
@@ -50,17 +49,12 @@ export const CategoryTiles: React.FC<{
     >
       {tiles.map((item) => {
         const image = item.image?.url ? item.image : null
-        const { Icon, tint } = CATEGORY_LOOK[item.category ?? 'fallback'] ?? CATEGORY_LOOK.fallback
+        const { Icon } = CATEGORY_LOOK[item.category ?? 'fallback'] ?? CATEGORY_LOOK.fallback
         const tile = (
           <>
             <span
               aria-hidden="true"
-              className={cn(
-                'relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full ring-4 ring-card shadow-sm transition-[background-color,box-shadow,transform] duration-300 ease-out group-hover:shadow-md sm:size-20',
-                image
-                  ? 'bg-green-50'
-                  : [tint, 'group-hover:bg-green-700 group-focus-visible:bg-green-700'],
-              )}
+              className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:size-14"
             >
               {image ? (
                 <Media
@@ -68,17 +62,17 @@ export const CategoryTiles: React.FC<{
                   fill
                   imgClassName="object-cover transition-transform duration-500 ease-out group-hover:scale-110 motion-reduce:group-hover:scale-100"
                   resource={image}
-                  size="80px"
+                  size="56px"
                 />
               ) : (
                 <Icon
-                  className="size-6 text-green-700 transition-[color,transform] duration-300 group-hover:text-gold-400 group-focus-visible:text-gold-400 ease-out group-hover:scale-110 motion-reduce:group-hover:scale-100 sm:size-9"
+                  className="size-11 text-green-700 transition-[color,transform] duration-300 ease-out group-hover:scale-110 group-hover:text-green-800 motion-reduce:group-hover:scale-100 sm:size-12"
                   strokeWidth={1.5}
                 />
               )}
             </span>
             <h3
-              className="text-caption text-green-900 line-clamp-2 w-full wrap-anywhere font-semibold leading-tight sm:text-body sm:leading-snug"
+              className="text-caption text-green-900 line-clamp-2 w-full wrap-anywhere font-semibold leading-tight"
               title={item.title}
             >
               {item.title}
@@ -86,7 +80,7 @@ export const CategoryTiles: React.FC<{
           </>
         )
         const className = cn(
-          'group relative flex h-full min-h-32 w-full min-w-0 flex-col items-center justify-start gap-3 overflow-hidden rounded-2xl border-2 bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-2 pt-4 pb-3 text-center shadow-lg transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-[0_20px_48px_rgba(26,75,54,0.2)] focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:min-h-44 sm:w-40 sm:shrink-0 sm:gap-4 sm:px-3 sm:pt-6 sm:pb-4',
+          'group relative flex h-full min-h-28 w-full min-w-0 flex-col items-center justify-start gap-2 overflow-hidden rounded-xl border-2 bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-2 pt-3 pb-3 text-center shadow-lg transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-[0_20px_48px_rgba(26,75,54,0.2)] focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-32 sm:shrink-0',
           item.current ? 'border-gold-400' : 'border-green-200',
         )
 

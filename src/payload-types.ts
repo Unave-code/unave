@@ -376,6 +376,29 @@ export interface Product {
       }[]
     | null;
   /**
+   * Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach." A health note is shown beside them automatically.
+   */
+  benefits?:
+    | {
+        icon:
+          | 'leaf'
+          | 'heart'
+          | 'sparkles'
+          | 'shield'
+          | 'wheat'
+          | 'sun'
+          | 'droplet'
+          | 'flame'
+          | 'sprout'
+          | 'apple'
+          | 'zap'
+          | 'cooking-pot';
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Optional. Replaces the shared text (Catalogue → Product page) on this plan’s page only. One step per line. Leave empty to use the shared text.
    */
   howItWorks?: string | null;
@@ -1736,6 +1759,14 @@ export interface ProductsSelect<T extends boolean = true> {
     | T
     | {
         point?: T;
+        id?: T;
+      };
+  benefits?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
         id?: T;
       };
   howItWorks?: T;

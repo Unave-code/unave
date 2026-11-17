@@ -153,6 +153,53 @@ export const Products: CollectionConfig = {
               ],
             },
             {
+              name: 'benefits',
+              type: 'array',
+              label: 'Benefits',
+              labels: { plural: 'Benefits', singular: 'Benefit' },
+              maxRows: 6,
+              admin: {
+                description:
+                  'Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach." A health note is shown beside them automatically.',
+              },
+              fields: [
+                {
+                  name: 'icon',
+                  type: 'select',
+                  label: 'Icon',
+                  defaultValue: 'leaf',
+                  required: true,
+                  options: [
+                    { label: 'Leaf', value: 'leaf' },
+                    { label: 'Heart', value: 'heart' },
+                    { label: 'Sparkles', value: 'sparkles' },
+                    { label: 'Shield', value: 'shield' },
+                    { label: 'Wheat', value: 'wheat' },
+                    { label: 'Sun', value: 'sun' },
+                    { label: 'Droplet', value: 'droplet' },
+                    { label: 'Flame', value: 'flame' },
+                    { label: 'Sprout', value: 'sprout' },
+                    { label: 'Apple', value: 'apple' },
+                    { label: 'Energy', value: 'zap' },
+                    { label: 'Cooking pot', value: 'cooking-pot' },
+                  ],
+                },
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Title',
+                  required: true,
+                  maxLength: 40,
+                },
+                {
+                  name: 'description',
+                  type: 'textarea',
+                  label: 'One line',
+                  maxLength: 140,
+                },
+              ],
+            },
+            {
               name: 'howItWorks',
               type: 'textarea',
               label: 'How your plan works (this plan only)',
