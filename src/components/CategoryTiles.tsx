@@ -44,7 +44,7 @@ export const CategoryTiles: React.FC<{
     <ul
       aria-label={label}
       className={cn(
-        'grid w-full grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center md:gap-4',
+        'grid w-full grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:justify-center md:gap-4',
         className,
       )}
     >

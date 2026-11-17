@@ -111,7 +111,7 @@ export const ProductCategoryView: React.FC<{
       </Section>
 
       <Section id="products" tone="tint">
-        <CategoryTiles className="mb-8 md:mb-10" label={`${CATEGORY_LABEL[category]} subcategories`} tiles={tiles} />
+        <CategoryTiles className="mb-8 px-6 md:mb-10" label={`${CATEGORY_LABEL[category]} subcategories`} tiles={tiles} />
 
         <ProductShelf
           basePath={basePath}
