@@ -160,7 +160,7 @@ export const Products: CollectionConfig = {
               maxRows: 6,
               admin: {
                 description:
-                  'Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach." A health note is shown beside them automatically.',
+                  'Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach."',
               },
               fields: [
                 {

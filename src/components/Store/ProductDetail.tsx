@@ -57,7 +57,6 @@ import { ProductCard } from './ProductCard'
 import { ProductGallery, type GalleryImage } from './ProductGallery'
 import { ProductPurchase, type ProductDuration } from './ProductPurchase'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
-import { NOTICE_BODY, NOTICE_TITLE } from '@/utilities/homeCopy'
 
 /** The icon each benefit card can carry, keyed by the value the admin stores. */
 const BENEFIT_ICONS: Record<NonNullable<Product['benefits']>[number]['icon'], LucideIcon> = {
@@ -112,8 +111,8 @@ const ColumnHeading: React.FC<{ children: React.ReactNode; id: string }> = ({ ch
  * cart and Buy now), what you get as a checklist, the key facts as a short
  * list, then the description. On a phone it all stacks, gallery first.
  *
- * Below the columns, full width bands: the product's benefits as icon cards
- * with the notice block under them, then "people also bought" from the same
+ * Below the columns, full width bands: the product's benefits as an open row of
+ * icons, then "people also bought" from the same
  * shelf. Nothing here is invented — no ratings, no delivery promises.
  *
  * A paused product still renders in full — the kitchen can pause a product
@@ -553,11 +552,10 @@ export const ProductDetail: React.FC<{
 
       </Section>
 
-      {/* Benefits, as a row of cards: a large icon, a title and one line.
-          They read as health claims, so the notice block sits under them
-          (design.md §6.11). */}
+      {/* Benefits, as an open row: a large icon, a title and one line each,
+          no boxes, split by thin rules on a wide screen. */}
       {benefits.length > 0 ? (
-        <Section tone="tint">
+        <Section tone="white">
           <div className="text-center">
             <h2 className="text-h2" id="product-benefits-heading">
               Benefits
@@ -566,28 +564,25 @@ export const ProductDetail: React.FC<{
           </div>
           <ul
             aria-labelledby="product-benefits-heading"
-            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center"
+            className="lg:divide-line mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center lg:gap-0 lg:divide-x"
           >
             {benefits.map((benefit, index) => {
               const Icon = BENEFIT_ICONS[benefit.icon] ?? Leaf
 
               return (
                 <li
-                  className="border-line flex flex-col items-center gap-3 rounded-xl border bg-white px-4 py-6 text-center shadow-sm lg:w-56"
+                  className="flex flex-col items-center gap-3 text-center lg:w-56 lg:px-6"
                   key={benefit.id ?? `${benefit.title}-${index}`}
                 >
-                  <Icon aria-hidden="true" className="size-12 text-green-700" strokeWidth={1.5} />
+                  <Icon aria-hidden="true" className="size-14 text-green-700" strokeWidth={1.25} />
                   <h3 className="text-body font-bold text-green-900">{benefit.title}</h3>
                   {benefit.description ? (
-                    <p className="text-ink-600 text-sm leading-6">{benefit.description}</p>
+                    <p className="text-ink-600 max-w-[28ch] text-sm leading-6">{benefit.description}</p>
                   ) : null}
                 </li>
               )
             })}
           </ul>
-          <Notice className="mx-auto mt-8 max-w-3xl" title={NOTICE_TITLE}>
-            {NOTICE_BODY}
-          </Notice>
         </Section>
       ) : null}
 

@@ -140,7 +140,7 @@ describe('a product page', () => {
     expect(screen.getAllByTestId('related-card')).toHaveLength(2)
   })
 
-  it('shows benefit cards with the notice block, and no FAQ', () => {
+  it('shows the benefits, and no FAQ', () => {
     render(
       <ProductDetail
         product={
@@ -157,7 +157,6 @@ describe('a product page', () => {
     expect(screen.getByRole('heading', { name: 'Benefits' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Gut health' })).toBeTruthy()
     expect(screen.getByText('Easy on the stomach.')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'A note on your goals' })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'FAQ' })).toBeNull()
   })
 
