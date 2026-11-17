@@ -44,7 +44,7 @@ export const CategoryTiles: React.FC<{
     <ul
       aria-label={label}
       className={cn(
-        'grid w-full grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:justify-center md:gap-4',
+        'grid w-full grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center md:gap-4',
         className,
       )}
     >
@@ -81,7 +81,7 @@ export const CategoryTiles: React.FC<{
           </>
         )
         const className = cn(
-          'group relative flex h-full min-h-28 w-full min-w-0 flex-col items-center justify-start gap-2 overflow-hidden rounded-xl border-2 bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-4 pt-3 pb-3 text-center shadow-lg transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-[0_20px_48px_rgba(26,75,54,0.2)] focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:min-w-32 sm:max-w-48 sm:shrink-0 sm:px-6',
+          'group relative flex h-full min-h-28 w-full min-w-0 flex-col items-center justify-start gap-2 overflow-hidden rounded-xl border-2 bg-gradient-to-b from-green-50 from-0% via-card via-45% to-card px-5 pt-3 pb-3 text-center shadow-lg transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-1 hover:border-gold-300 hover:shadow-[0_20px_48px_rgba(26,75,54,0.2)] focus-visible:ring-green-500 focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:min-w-32 sm:max-w-48 sm:shrink-0',
           item.current ? 'border-gold-400' : 'border-green-200',
         )
 
