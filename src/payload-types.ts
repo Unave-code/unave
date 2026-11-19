@@ -74,6 +74,7 @@ export interface Config {
     customers: Customer;
     products: Product;
     subcategories: Subcategory;
+    audiences: Audience;
     media: Media;
     pages: Page;
     posts: Post;
@@ -105,6 +106,7 @@ export interface Config {
     customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
+    audiences: AudiencesSelect<false> | AudiencesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -326,7 +328,7 @@ export interface Customer {
   collection: 'customers';
 }
 /**
- * The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.
+ * The meal products sold on the site. Turn Available off to hide a product from the site without deleting it. Prices are entered and shown in rupees.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
@@ -376,7 +378,7 @@ export interface Product {
       }[]
     | null;
   /**
-   * Up to six cards shown on the product page under Benefits, each with an icon, a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach." A health note is shown beside them automatically.
+   * Up to six cards shown on the product page under Benefits, each with a short title and one line. For example "Gut health" — "Fermented the slow way, easy on the stomach."
    */
   benefits?:
     | {
@@ -449,7 +451,7 @@ export interface Product {
    */
   packSize?: string | null;
   /**
-   * Choose two to ten different products. A meal plan can name one of its current durations, or leave it open.
+   * Choose one to ten different products. A meal plan can name one of its current durations, or leave it open.
    */
   components?:
     | {
@@ -472,15 +474,15 @@ export interface Product {
    */
   subcategory?: (number | null) | Subcategory;
   /**
-   * Who the product is for. Shown as a label on the product card, next to the category.
+   * Who the product is for. Manage the list under Catalogue → Audiences.
    */
-  audience: 'kids' | 'adults' | 'special';
+  audience?: (number | null) | Audience;
   /**
    * Left empty, it fills itself from the title: lowercase, dashes instead of spaces. It anchors the product on /products and travels in checkout links, so changing it moves the page.
    */
   slug: string;
   /**
-   * Off means the product shows a paused label and cannot be bought.
+   * Off hides the product from the website and it cannot be bought.
    */
   available?: boolean | null;
   /**
@@ -637,6 +639,29 @@ export interface Subcategory {
    * Optional image for this subcategory.
    */
   image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who a product is for, for example Kids or Adults. Every product picks one, and shoppers can filter the products page by it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audiences".
+ */
+export interface Audience {
+  id: number;
+  /**
+   * Shown on the product page and in the products filter, for example "Kids".
+   */
+  title: string;
+  /**
+   * Left empty, it fills itself from the name. It is the word the products filter puts in the web address.
+   */
+  slug: string;
+  /**
+   * Lower numbers come first in the products filter.
+   */
+  position?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1519,6 +1544,10 @@ export interface PayloadLockedDocument {
         value: number | Subcategory;
       } | null)
     | ({
+        relationTo: 'audiences';
+        value: number | Audience;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -1817,6 +1846,17 @@ export interface SubcategoriesSelect<T extends boolean = true> {
   slug?: T;
   category?: T;
   image?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audiences_select".
+ */
+export interface AudiencesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  position?: T;
   updatedAt?: T;
   createdAt?: T;
 }
