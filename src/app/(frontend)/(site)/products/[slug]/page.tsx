@@ -50,10 +50,9 @@ const findProduct = async (slug: string): Promise<null | Product> => {
     collection: 'products',
     depth: 1,
     limit: 1,
+    /* A paused product (Available off) is not on the site, so its page is not found. */
     where: {
-      slug: {
-        equals: slugifyTitle(slug),
-      },
+      and: [{ available: { equals: true } }, { slug: { equals: slugifyTitle(slug) } }],
     },
   })
 

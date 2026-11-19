@@ -46,16 +46,12 @@ export const SHELF_SORT_LABEL: Record<ShelfSortKey, string> = {
   'price-desc': 'Price, high to low',
 }
 
-/**
- * What each sort asks the database for. `-available` leads every one of them,
- * so a paused product stays under the products to buy however the shelf is
- * sorted: the label is a footnote, not a reason to lead.
- */
+/** What each sort asks the database for. */
 const SHELF_SORT_QUERY: Record<ShelfSortKey, string[]> = {
-  name: ['-available', 'title'],
-  newest: ['-available', '-createdAt'],
-  'price-asc': ['-available', 'fromPrice', '-createdAt'],
-  'price-desc': ['-available', '-fromPrice', '-createdAt'],
+  name: ['title'],
+  newest: ['-createdAt'],
+  'price-asc': ['fromPrice', '-createdAt'],
+  'price-desc': ['-fromPrice', '-createdAt'],
 }
 
 /* ------------------------------------------------------------------- state */
@@ -213,7 +209,8 @@ export const shelfWhere = (
   fixedCategory?: ProductCategoryValue,
   subcategoryId?: number,
 ): Where => {
-  const and: Where[] = []
+  /* A paused product (Available off) is left off the site altogether. */
+  const and: Where[] = [{ available: { equals: true } }]
   const category = fixedCategory ?? state.category
 
   if (category) and.push({ category: { equals: category } })
@@ -232,7 +229,7 @@ export const shelfWhere = (
     })
   }
 
-  return and.length > 0 ? { and } : {}
+  return { and }
 }
 
 export interface ShelfResult {

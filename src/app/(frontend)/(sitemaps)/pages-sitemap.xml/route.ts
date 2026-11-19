@@ -37,6 +37,7 @@ const getPagesSitemap = unstable_cache(
       depth: 0,
       limit: 1000,
       pagination: false,
+      where: { available: { equals: true } },
       select: {
         slug: true,
         updatedAt: true,

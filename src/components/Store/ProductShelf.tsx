@@ -1,5 +1,4 @@
 import { Cta } from '@/components/Cta'
-import { Notice } from '@/components/Notice'
 import { Pagination } from '@/components/Pagination'
 import { ProductCard } from '@/components/Store/ProductCard'
 import { ProductShelfControls } from '@/components/Store/ProductShelfControls'
@@ -17,8 +16,6 @@ import {
   PRODUCTS_CTA_MESSAGE,
   PRODUCTS_EMPTY_BODY,
   PRODUCTS_EMPTY_HEADING,
-  PRODUCTS_PAUSED_NOTE_BODY,
-  PRODUCTS_PAUSED_NOTE_TITLE,
   SHELF_CLEAR,
   SHELF_EMPTY_BODY,
   SHELF_EMPTY_HEADING,
@@ -50,7 +47,6 @@ export const ProductShelf: React.FC<{
   whatsapp: null | string
 }> = ({ basePath, category, result, showControls = true, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
-  const pausedOnPage = result.docs.some((product) => !product.available)
 
   const first = result.totalDocs === 0 ? 0 : (result.page - 1) * SHELF_PER_PAGE + 1
   const last = Math.min(result.page * SHELF_PER_PAGE, result.totalDocs)
@@ -116,13 +112,6 @@ export const ProductShelf: React.FC<{
         hrefFor={(page) => shelfHref(basePath, state, { page })}
         page={result.page}
         totalPages={result.totalPages}
-      />
-
-      {pausedOnPage ? (
-        <Notice className="mt-10 max-w-[70ch]" title={PRODUCTS_PAUSED_NOTE_TITLE}>
-          {PRODUCTS_PAUSED_NOTE_BODY}
-        </Notice>
-      ) : null}
-    </div>
+      />    </div>
   )
 }

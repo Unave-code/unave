@@ -33,8 +33,8 @@ const soldBySize = (data: PricingData): boolean =>
  * gateway speak, so no conversion ever happens on the way to a payment. The
  * admin shows and accepts rupees through the shared money field, which is the
  * only place the two units meet. Turning `available` off pauses a product: it
- * still renders on `/products` with a paused label, but it cannot enter a new
- * order. Turning `featured` on puts a product at the front of the homepage
+ * disappears from the site (shelf, related products, its own page and the
+ * sitemap) and cannot enter a new order. Turning `featured` on puts a product at the front of the homepage
  * shelf, so staff choose what the front page leads with instead of relying on
  * whatever was added last.
  */
@@ -58,7 +58,7 @@ export const Products: CollectionConfig = {
       'updatedAt',
     ],
     description:
-      'The meal products sold on the site. Turn Available off to pause a product without deleting it. Prices are entered and shown in rupees.',
+      'The meal products sold on the site. Turn Available off to hide a product from the site without deleting it. Prices are entered and shown in rupees.',
     group: 'Catalogue',
     listSearchableFields: ['title', 'slug'],
     pagination: { defaultLimit: 25 },
@@ -735,7 +735,7 @@ export const Products: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        description: 'Off means the product shows a paused label and cannot be bought.',
+        description: 'Off hides the product from the website and it cannot be bought.',
         position: 'sidebar',
       },
     },
