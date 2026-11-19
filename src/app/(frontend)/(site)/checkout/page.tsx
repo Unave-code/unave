@@ -206,13 +206,7 @@ export default async function CheckoutPage() {
                 </div>
 
                 <p className="shrink-0 text-right text-sm font-bold text-green-900 tabular-nums">
-                  {formatPaise(line.lineTotal)}
-                  {line.type !== 'plan' && line.qty > 1 ? (
-                    <span className="text-ink-600 mt-0.5 block text-xs font-medium">
-                      {line.qty} &times; {formatPaise(line.price ?? 0)}
-                    </span>
-                  ) : null}
-                </p>
+                  {formatPaise(line.lineTotal)}                </p>
               </li>
             ))}
           </ul>

@@ -1,3 +1,4 @@
+import { hasComboItems } from '@/utilities/productKind'
 import type { Metadata } from 'next'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
@@ -118,7 +119,7 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
      level deeper than the product read above, so a combo is read again with
      its items' images populated. Every other product keeps the lighter read. */
   const product =
-    found.type === 'combo'
+    hasComboItems(found)
       ? await (await getPayload({ config: configPromise })).findByID({
           collection: 'products',
           depth: 2,

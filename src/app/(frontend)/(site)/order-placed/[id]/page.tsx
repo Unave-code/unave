@@ -129,13 +129,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                 </div>
 
                 <p className="shrink-0 text-right text-sm font-bold">
-                  {formatPaise(unitPrice * qty)}
-                  {qty > 1 ? (
-                    <span className="text-ink-600 mt-0.5 block text-xs font-medium">
-                      {qty} &times; {formatPaise(unitPrice)}
-                    </span>
-                  ) : null}
-                </p>
+                  {formatPaise(unitPrice * qty)}                </p>
               </li>
             )
           })}

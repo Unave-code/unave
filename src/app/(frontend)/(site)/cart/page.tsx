@@ -265,17 +265,7 @@ export default async function CartPage({
                     </div>
 
                     <p className="shrink-0 text-base font-bold text-green-900 tabular-nums sm:text-right">
-                      {line.price !== null ? formatPaise(line.lineTotal) : '—'}
-
-                      {!line.stale &&
-                      line.type !== 'plan' &&
-                      line.qty > 1 &&
-                      line.price !== null ? (
-                        <span className="text-ink-600 mt-0.5 block text-xs font-medium">
-                          {line.qty} &times; {formatPaise(line.price)}
-                        </span>
-                      ) : null}
-                    </p>
+                      {line.price !== null ? formatPaise(line.lineTotal) : '—'}                    </p>
                   </div>
                 </li>
               ))}
