@@ -6,25 +6,30 @@ import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/product
 
 import { revalidateProducts, revalidateProductsDelete } from './hooks/revalidateProducts'
 import { autoProductSlug } from './hooks/autoProductSlug'
+import { deriveProductKind } from './hooks/deriveProductKind'
 import { setLeadPrice } from './hooks/leadPrice'
 import { normalizeProductShape } from './hooks/normalizeProductShape'
 import { prepareComboComponents } from './hooks/prepareComboComponents'
 import { validateCompareAtPrice } from './validateCompareAtPrice'
+import { hasComboItems, isMealPlan, isSingleItem } from '../../utilities/productKind'
 
-type PricingData = { sizes?: unknown; type?: null | string } | undefined
+type PricingData =
+  | { combo?: boolean | null; mealPlan?: boolean | null; sizes?: unknown; type?: null | string }
+  | undefined
 
-/** A one-time product sold in sizes prices each size, not the product. */
+/** A single item sold in sizes prices each size, not the product. */
 const soldBySize = (data: PricingData): boolean =>
-  data?.type === 'one-time' && Array.isArray(data.sizes) && data.sizes.length > 0
+  isSingleItem(data) && Array.isArray(data?.sizes) && data.sizes.length > 0
 
 /**
  * A product the kitchen sells on the site (spec 0007).
  *
- * A product is either a meal plan — a duration of meals, a week or a month,
- * paid once, upfront — or a one-time purchase: a single food item with one
- * price, bought in a quantity of one to ten. The `type` field decides which,
- * and it decides the shape below it: a plan carries durations, a one-time
- * purchase carries a single price, and each hides the other in the admin.
+ * Two ticks decide its shape. **Combo** puts single items inside it; **Meal
+ * plan** sells it by duration — a week or a month, paid once, upfront — each
+ * with its own price. Neither makes it a single item with one price (or
+ * sizes), bought in a quantity of one to ten. Both make a meal plan that lists
+ * what it includes. The hidden `type` is worked out from the ticks on every
+ * save (`deriveProductKind`) and is what the cart and checkout price by.
  * Staff own the catalogue: titles, images, prices and availability are all
  * edited in the admin, never in code. Anyone can read a product, because
  * browsing is open to everybody; only staff can change one.
@@ -50,7 +55,8 @@ export const Products: CollectionConfig = {
     defaultColumns: [
       'image',
       'title',
-      'type',
+      'mealPlan',
+      'combo',
       'category',
       'fromPrice',
       'available',
@@ -83,18 +89,45 @@ export const Products: CollectionConfig = {
               required: true,
             },
             {
+              type: 'row',
+              fields: [
+                {
+                  name: 'combo',
+                  type: 'checkbox',
+                  label: 'Combo',
+                  defaultValue: false,
+                  admin: {
+                    width: '50%',
+                    description:
+                      'Tick to put other products inside this one. Choose them under Pricing → Combo contents.',
+                  },
+                },
+                {
+                  name: 'mealPlan',
+                  type: 'checkbox',
+                  label: 'Meal plan',
+                  defaultValue: false,
+                  admin: {
+                    width: '50%',
+                    description:
+                      'Tick to sell it by duration, for example One week or One month, each with its own price.',
+                  },
+                },
+              ],
+            },
+            {
+              // Worked out from the two ticks on every save (deriveProductKind):
+              // plan when Meal plan is ticked, combo when only Combo is, one-time
+              // otherwise. The cart, checkout and shelf read it for pricing.
               name: 'type',
               type: 'select',
-              label: 'Type',
+              label: 'Kind',
               required: true,
-              defaultValue: 'plan',
-              admin: {
-                description:
-                  'A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.',
-              },
+              defaultValue: 'one-time',
+              admin: { hidden: true },
               options: [
                 { label: 'Meal plan', value: 'plan' },
-                { label: 'One-time purchase', value: 'one-time' },
+                { label: 'Single item', value: 'one-time' },
                 { label: 'Meal combo', value: 'combo' },
               ],
             },
@@ -206,8 +239,7 @@ export const Products: CollectionConfig = {
               type: 'textarea',
               label: 'How your plan works (this plan only)',
               admin: {
-                condition: (data) =>
-                  (data as { type?: null | string } | undefined)?.type === 'plan',
+                condition: (data) => isMealPlan(data as PricingData),
                 description:
                   'Optional. Replaces the shared text (Catalogue → Product page) on this plan’s page only. One step per line. Leave empty to use the shared text.',
                 rows: 5,
@@ -218,17 +250,16 @@ export const Products: CollectionConfig = {
         {
           label: 'Pricing',
           description:
-            'What it costs. A meal plan is priced by duration; a one-time product or a combo has one price. Prices are in rupees.',
+            'What it costs. A meal plan is priced by duration; a single item or a combo has one price. Prices are in rupees.',
           fields: [
             {
               name: 'durations',
               type: 'array',
               label: 'Durations',
               admin: {
-                condition: (data) =>
-                  (data as { type?: null | string } | undefined)?.type === 'plan',
+                condition: (data) => isMealPlan(data as PricingData),
                 description:
-                  'What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.',
+                  'What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Shown when Meal plan is ticked.',
               },
               fields: [
                 {
@@ -266,13 +297,8 @@ export const Products: CollectionConfig = {
               // Required for a meal plan, absent for a one-time purchase — which is
               // exactly the split the validate holds, since a static `required` would
               // block a one-time product from saving without rows it must not have.
-              validate: (
-                value: unknown,
-                { siblingData }: { siblingData: { type?: null | string } },
-              ) => {
-                const type = siblingData.type
-
-                if (type !== 'plan') return true
+              validate: (value: unknown, { siblingData }: { siblingData: PricingData }) => {
+                if (!isMealPlan(siblingData)) return true
 
                 if (!Array.isArray(value) || value.length === 0) {
                   return 'Add at least one duration — a label, days and a price.'
@@ -308,8 +334,7 @@ export const Products: CollectionConfig = {
               labels: { plural: 'Sizes', singular: 'Size' },
               maxRows: 6,
               admin: {
-                condition: (data) =>
-                  (data as { type?: null | string } | undefined)?.type === 'one-time',
+                condition: (data) => isSingleItem(data as PricingData),
                 description:
                   'Optional. Sell this product in sizes, for example 250 g, 500 g and 1 kg, each with its own price. Leave empty to sell one size at the price below. The card leads with the cheapest size.',
                 initCollapsed: false,
@@ -358,11 +383,8 @@ export const Products: CollectionConfig = {
                   ],
                 },
               ],
-              validate: (
-                value: unknown,
-                { siblingData }: { siblingData: { type?: null | string } },
-              ) => {
-                if (siblingData.type !== 'one-time' || !Array.isArray(value)) return true
+              validate: (value: unknown, { siblingData }: { siblingData: PricingData }) => {
+                if (!isSingleItem(siblingData) || !Array.isArray(value)) return true
 
                 // The cart finds a size by its label, so each must be distinct.
                 const labels = value.map((row) =>
@@ -393,25 +415,16 @@ export const Products: CollectionConfig = {
                   min: 1,
                   admin: {
                     width: '33%',
-                    condition: (data) => {
-                      const type = (data as PricingData)?.type
-                      return (
-                        type === 'combo' || (type === 'one-time' && !soldBySize(data as PricingData))
-                      )
-                    },
+                    condition: (data) =>
+                      !isMealPlan(data as PricingData) && !soldBySize(data as PricingData),
                     components: {
                       Field: '@/components/Admin/RupeeField#RupeeField',
                     },
                     description:
                       'The fixed price for one item or combo, in rupees. You can enter up to two decimal places.',
                   },
-                  validate: (
-                    value: unknown,
-                    { siblingData }: { siblingData: { sizes?: unknown; type?: null | string } },
-                  ) => {
-                    const type = siblingData.type
-
-                    if (type !== 'one-time' && type !== 'combo') return true
+                  validate: (value: unknown, { siblingData }: { siblingData: PricingData }) => {
+                    if (isMealPlan(siblingData)) return true
                     // A sized product takes its price from the cheapest size.
                     if (soldBySize(siblingData)) return true
 
@@ -430,22 +443,22 @@ export const Products: CollectionConfig = {
                   admin: {
                     width: '33%',
                     condition: (data) =>
-                      (data as PricingData)?.type === 'one-time' && !soldBySize(data as PricingData),
+                      isSingleItem(data as PricingData) && !soldBySize(data as PricingData),
                     components: {
                       Field: '@/components/Admin/RupeeField#RupeeField',
                     },
                     description:
-                      'Optional reference price for a one-time product. It must be higher than the current price.',
+                      'Optional reference price for a single item. It must be higher than the current price.',
                   },
                   validate: (
                     value: unknown,
                     {
                       siblingData,
                     }: {
-                      siblingData: { price?: null | number; sizes?: unknown; type?: null | string }
+                      siblingData: NonNullable<PricingData> & { price?: null | number }
                     },
                   ) => {
-                    if (siblingData.type !== 'one-time' || soldBySize(siblingData)) return true
+                    if (!isSingleItem(siblingData) || soldBySize(siblingData)) return true
 
                     return validateCompareAtPrice(value, siblingData.price)
                   },
@@ -457,8 +470,8 @@ export const Products: CollectionConfig = {
                   admin: {
                     width: '33%',
                     condition: (data) =>
-                      (data as PricingData)?.type === 'one-time' && !soldBySize(data as PricingData),
-                    description: 'Optional display text for a one-time product, for example 260 g.',
+                      isSingleItem(data as PricingData) && !soldBySize(data as PricingData),
+                    description: 'Optional display text for a single item, for example 260 g.',
                   },
                 },
               ],
@@ -470,10 +483,9 @@ export const Products: CollectionConfig = {
               minRows: 1,
               maxRows: 10,
               admin: {
-                condition: (data) =>
-                  (data as { type?: null | string } | undefined)?.type === 'combo',
+                condition: (data) => hasComboItems(data as PricingData),
                 description:
-                  'Choose one to ten different products. A meal plan can name one of its current durations, or leave it open.',
+                  'Choose one to ten different single items. Shown when Combo is ticked.',
               },
               fields: [
                 {
@@ -481,8 +493,9 @@ export const Products: CollectionConfig = {
                   type: 'relationship',
                   relationTo: 'products',
                   required: false,
+                  // Only single items go inside a combo.
                   filterOptions: {
-                    type: { not_equals: 'combo' },
+                    type: { equals: 'one-time' },
                   },
                 },
                 {
@@ -496,16 +509,11 @@ export const Products: CollectionConfig = {
                   admin: { hidden: true, readOnly: true },
                 },
                 {
+                  // From when a meal plan could sit inside a combo; kept so old
+                  // rows stay readable, never shown or set any more.
                   name: 'durationLabel',
                   type: 'text',
-                  label: 'Meal plan duration',
-                  admin: {
-                    components: {
-                      Field: '@/components/Admin/ComboDurationField#ComboDurationField',
-                    },
-                    description:
-                      'Optional. Choose a current duration to fix how long the meal plan runs in this combo, or leave it blank.',
-                  },
+                  admin: { hidden: true, readOnly: true },
                 },
               ],
               validate: async (
@@ -515,10 +523,10 @@ export const Products: CollectionConfig = {
                   siblingData,
                 }: {
                   req: PayloadRequest
-                  siblingData: { id?: number | string; type?: null | string }
+                  siblingData: NonNullable<PricingData> & { id?: number | string }
                 },
               ) => {
-                if (siblingData.type !== 'combo') return true
+                if (!hasComboItems(siblingData)) return true
                 if (!Array.isArray(value) || value.length < 1 || value.length > 10) {
                   return 'Add between one and ten products to this combo.'
                 }
@@ -557,28 +565,9 @@ export const Products: CollectionConfig = {
 
                 for (let index = 0; index < ids.length; index += 1) {
                   const product = productsById.get(String(ids[index]))
-                  const row = value[index] as { durationLabel?: unknown }
 
-                  if (!product || product.type === 'combo') {
-                    return 'Each combo row must point to an existing one-time product or meal plan.'
-                  }
-
-                  if (product.type === 'plan') {
-                    const label =
-                      typeof row.durationLabel === 'string'
-                        ? row.durationLabel.trim().toLowerCase()
-                        : ''
-                    const matches = (product.durations ?? []).filter(
-                      (duration) => duration.label.trim().toLowerCase() === label,
-                    )
-
-                    // The duration is optional; when one is named it must
-                    // still be one of the plan's current durations.
-                    if (label && matches.length !== 1) {
-                      return 'Choose one of the meal plan’s current durations, or leave it blank.'
-                    }
-                  } else if (typeof row.durationLabel === 'string' && row.durationLabel.trim()) {
-                    return 'A one-time product does not have a meal plan duration.'
+                  if (!product || !isSingleItem(product)) {
+                    return 'Each combo row must be a single item, not a combo or a meal plan.'
                   }
                 }
 
@@ -727,7 +716,7 @@ export const Products: CollectionConfig = {
         components: {
           Field: '@/components/Admin/ComboHealth#ComboHealth',
         },
-        condition: (data) => (data as { type?: null | string } | undefined)?.type === 'combo',
+        condition: (data) => hasComboItems(data as PricingData),
         position: 'sidebar',
       },
     },
@@ -773,6 +762,7 @@ export const Products: CollectionConfig = {
     afterChange: [revalidateProducts],
     afterDelete: [revalidateProductsDelete],
     beforeChange: [normalizeProductShape, prepareComboComponents, setLeadPrice],
+    beforeValidate: [deriveProductKind],
   },
   labels: {
     plural: 'Products',

@@ -8,6 +8,8 @@ import type { Product } from '@/payload-types'
 import { comboProblems, comboSeparatePrice } from '@/utilities/combos'
 import { formatPaise } from '@/utilities/money'
 
+import { hasComboItems } from '@/utilities/productKind'
+
 import './ComboHealth.scss'
 
 const relationId = (value: unknown): null | number | string => {
@@ -35,7 +37,7 @@ const relationId = (value: unknown): null | number | string => {
 export const ComboHealth: React.FC = () => {
   const [fields] = useAllFormFields()
   const values = useMemo(() => reduceFieldsToValues(fields, true) as Partial<Product>, [fields])
-  const isCombo = values.type === 'combo'
+  const isCombo = hasComboItems(values)
   const rows = useMemo(
     () => (isCombo ? (values.components ?? []) : []),
     [isCombo, values.components],

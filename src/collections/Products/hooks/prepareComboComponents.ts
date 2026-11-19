@@ -1,15 +1,25 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
 import type { Product } from '@/payload-types'
+import { hasComboItems, isMealPlan } from '@/utilities/productKind'
 
+/**
+ * Snapshots each combo item's name, so an order or a deleted item still reads
+ * as what was sold. Only single items go inside a combo, so no item carries a
+ * duration of its own.
+ */
 export const prepareComboComponents: CollectionBeforeChangeHook<Product> = async ({
   data,
   originalDoc,
   req,
 }) => {
-  const type = data.type ?? originalDoc?.type
+  const kind = {
+    combo: data.combo ?? originalDoc?.combo,
+    mealPlan: data.mealPlan ?? originalDoc?.mealPlan,
+    type: data.type ?? originalDoc?.type,
+  }
   const rows = data.components ?? originalDoc?.components
-  if (type !== 'combo' || !Array.isArray(rows)) return data
+  if (!hasComboItems(kind) || !Array.isArray(rows)) return data
 
   const components = await Promise.all(
     rows.map(async (component) => {
@@ -27,38 +37,10 @@ export const prepareComboComponents: CollectionBeforeChangeHook<Product> = async
         overrideAccess: true,
       })
 
-      if (product.type === 'combo') return component
-
-      if (product.type !== 'plan') {
-        return {
-          ...component,
-          durationLabel: '',
-          durationDaysSnapshot: null,
-          productTitleSnapshot: product.title,
-        }
-      }
-
-      const selectedLabel = component.durationLabel?.trim().toLowerCase()
-
-      // No duration named: the plan joins the combo without one.
-      if (!selectedLabel) {
-        return {
-          ...component,
-          durationLabel: '',
-          durationDaysSnapshot: null,
-          productTitleSnapshot: product.title,
-        }
-      }
-
-      const matches = (product.durations ?? []).filter(
-        (duration) => duration.label.trim().toLowerCase() === selectedLabel,
-      )
-      const duration = matches.length === 1 ? matches[0] : undefined
-
       return {
         ...component,
-        durationLabel: duration?.label ?? component.durationLabel,
-        durationDaysSnapshot: duration?.days ?? component.durationDaysSnapshot,
+        durationLabel: '',
+        durationDaysSnapshot: null,
         productTitleSnapshot: product.title,
       }
     }),
@@ -68,7 +50,8 @@ export const prepareComboComponents: CollectionBeforeChangeHook<Product> = async
     ...data,
     compareAtPrice: null,
     components,
-    durations: [],
+    // A meal plan combo is priced by its durations; a plain combo has none.
+    ...(isMealPlan(kind) ? {} : { durations: [] }),
     packSize: null,
   }
 }

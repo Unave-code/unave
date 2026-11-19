@@ -35,6 +35,7 @@ import {
   productCategoryHref,
   productHref,
 } from '@/utilities/productsCategoryCopy'
+import { hasComboItems } from '@/utilities/productKind'
 import { cn } from '@/utilities/ui'
 
 import { ProductCard } from './ProductCard'
@@ -131,10 +132,14 @@ export const ProductDetail: React.FC<{
   }))
 
   const isOneTime = product.type === 'one-time'
-  const isCombo = product.type === 'combo'
+  /* Combo: the items inside show (a meal plan can hold items too). Meal plan:
+     bought by duration. A plain combo has one price, like a single item. */
+  const isCombo = hasComboItems(product)
+  // A record without a kind reads as a meal plan, as it does in the cart.
+  const isPlan = product.type !== 'one-time' && product.type !== 'combo'
   const isAvailable = isProductSellable(product)
   const oneTimePrice = Number(product.price)
-  const buyableOneTime = (isOneTime || isCombo) && oneTimePrice >= 1
+  const buyableOneTime = !isPlan && oneTimePrice >= 1
 
   const comboItems: ComboItem[] = (product.components ?? []).map((component) => {
     const source =
@@ -393,7 +398,7 @@ export const ProductDetail: React.FC<{
             <section aria-label="Buy" className="border-line mt-5 border-t pt-5">
               {isAvailable && buyableOneTime ? (
                 <ProductPurchase
-                  combo={isCombo}
+                  combo={product.type === 'combo'}
                   compareAtPrice={compareAt}
                   durations={[]}
                   oneTimePrice={oneTimePrice}
@@ -403,7 +408,7 @@ export const ProductDetail: React.FC<{
                   sizes={sizeOptions}
                   whatsapp={whatsapp}
                 />
-              ) : isAvailable && !isOneTime && !isCombo && durations.length > 0 ? (
+              ) : isAvailable && isPlan && durations.length > 0 ? (
                 <ProductPurchase
                   durations={durations}
                   productSlug={product.slug}
@@ -457,7 +462,7 @@ export const ProductDetail: React.FC<{
                 </div>
               )}
 
-              {!isOneTime && !isCombo ? (
+              {isPlan ? (
                 <p className="text-ink-600 mt-3 flex items-start gap-2 text-sm leading-6">
                   <Phone
                     aria-hidden="true"
@@ -511,7 +516,7 @@ export const ProductDetail: React.FC<{
 
             {/* A meal plan's "How your plan works": the plan's own text, or
                 the shared text from Catalogue → Product page. */}
-            {!isOneTime && !isCombo && howItWorksSteps.length > 0 ? (
+            {isPlan && howItWorksSteps.length > 0 ? (
               <section
                 aria-labelledby="plan-how-heading"
                 className="mt-6 rounded-lg border border-green-200 bg-green-50 p-5"

@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
 import type { Product } from '@/payload-types'
+import { hasComboItems } from '@/utilities/productKind'
 
 /**
  * Each kind of product keeps only its own fields.
@@ -29,15 +30,24 @@ export const normalizeProductShape: CollectionBeforeChangeHook<Product> = ({
     }
   }
 
+  /* The Combo tick decides whether items stay, separately from how the product
+     is priced, so a meal plan can hold items too. */
+  const combo = hasComboItems({
+    combo: 'combo' in data ? data.combo : originalDoc?.combo,
+    type,
+  })
+  const comboChanged = Boolean(
+    originalDoc && 'combo' in data && Boolean(data.combo) !== Boolean(originalDoc.combo),
+  )
+  if (!combo && (comboChanged || kindChanged || 'components' in data)) data.components = []
+
   if (type === 'plan') {
     clear('price', null)
     clear('compareAtPrice', null)
     clear('packSize', null)
-    clear('components', [])
     clear('sizes', [])
   } else if (type === 'one-time') {
     clear('durations', [])
-    clear('components', [])
     clear('howItWorks', null)
 
     /* Sold in sizes: the product's own price becomes the cheapest size, so the

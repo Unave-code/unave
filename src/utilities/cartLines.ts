@@ -1,3 +1,4 @@
+import { hasComboItems } from '@/utilities/productKind'
 import type { Payload } from 'payload'
 
 import type { Product } from '@/payload-types'
@@ -133,7 +134,7 @@ export const resolveCartLines = async ({
     const type: 'combo' | 'one-time' | 'plan' =
       product?.type === 'combo' ? 'combo' : product?.type === 'one-time' ? 'one-time' : 'plan'
     const qty = safeQty(line.qty)
-    const components = product?.type === 'combo' ? comboComponents(product) : null
+    const components = product && hasComboItems(product) ? comboComponents(product) : null
 
     const duration = type === 'plan' ? productDuration(product, line.duration) : null
     /* A one-time product sold in sizes prices the size the line names; any

@@ -62,15 +62,7 @@ const comboProduct = {
   category: 'ready-to-eat',
   components: [
     {
-      durationDaysSnapshot: 5,
-      durationLabel: 'One week',
-      product: {
-        available: true,
-        durations: [{ days: 5, id: 'd1', label: 'One week', price: 150000 }],
-        id: 12,
-        title: 'Lunch plan',
-        type: 'plan',
-      },
+      product: { available: true, id: 12, price: 2500, title: 'Dal tin', type: 'one-time' },
     },
     {
       product: { available: true, id: 34, price: 4900, title: 'Phulka box', type: 'one-time' },
@@ -220,8 +212,7 @@ describe('a product page', () => {
     render(<ProductDetail product={comboProduct} />)
 
     expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
-    expect(screen.getByText('Lunch plan')).toBeTruthy()
-    expect(screen.getByText(/One week, 5 days/)).toBeTruthy()
+    expect(screen.getByText('Dal tin')).toBeTruthy()
     expect(screen.getByText('Phulka box')).toBeTruthy()
     expect(screen.getByText('A note on our meals')).toBeTruthy()
     expect(
@@ -230,6 +221,28 @@ describe('a product page', () => {
       ),
     ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Add to cart' })).toBeTruthy()
+  })
+
+  it('sells a meal plan with items by duration and lists its items', () => {
+    render(
+      <ProductDetail
+        product={
+          {
+            ...comboProduct,
+            combo: true,
+            durations: [{ days: 5, id: 'w', label: 'One week', price: 120000 }],
+            mealPlan: true,
+            price: null,
+            type: 'plan',
+          } as unknown as Product
+        }
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
+    expect(screen.getByText('Phulka box')).toBeTruthy()
+    expect(screen.getAllByText(/One week/).length).toBeGreaterThan(0)
+    expect(screen.queryByText('₹990')).toBeNull()
   })
 
   it('shows a paused combo in full, with nothing to add', () => {

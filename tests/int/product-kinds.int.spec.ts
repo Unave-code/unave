@@ -6,7 +6,7 @@ import type { Product } from '@/payload-types'
 import { comboProblems, comboSeparatePrice } from '@/utilities/combos'
 
 /**
- * The three kinds of product — meal plan, one-time purchase, combo — stay
+ * The kinds of product — meal plan, single item, combo, or a meal plan with items — stay
  * coherent: each keeps only its own fields, the lead price survives a partial
  * save, and a combo can say why it cannot be sold and what it saves.
  */
@@ -27,6 +27,14 @@ const oneTime = {
   id: 34,
   price: 4900,
   title: 'Phulka box',
+  type: 'one-time',
+} as unknown as Product
+
+const dal = {
+  available: true,
+  id: 35,
+  price: 2500,
+  title: 'Dal tin',
   type: 'one-time',
 } as unknown as Product
 
@@ -91,17 +99,19 @@ describe('the lead price survives a partial save', () => {
 })
 
 describe('a combo’s value and health', () => {
-  const items = [{ durationLabel: 'One week', product: plan }, { product: oneTime }]
+  const items = [{ product: oneTime }, { product: dal }]
 
   it('adds up what the items cost bought one by one', () => {
-    expect(comboSeparatePrice(combo(items))).toBe(154900)
+    expect(comboSeparatePrice(combo(items))).toBe(7400)
   })
 
   it('cannot price a combo with an item it can no longer price', () => {
+    expect(comboSeparatePrice(combo([{ product: plan }, { product: oneTime }]))).toBeNull()
+  })
+
+  it('does not work out a saving for a meal plan combo, which is priced by duration', () => {
     expect(
-      comboSeparatePrice(
-        combo([{ durationLabel: 'Two weeks', product: plan }, { product: oneTime }]),
-      ),
+      comboSeparatePrice({ ...combo(items), combo: true, mealPlan: true, type: 'plan' } as Product),
     ).toBeNull()
   })
 
@@ -109,16 +119,16 @@ describe('a combo’s value and health', () => {
     expect(comboProblems(combo(items))).toEqual([])
   })
 
-  it('names a paused item, a lost duration and a missing item', () => {
+  it('names a meal plan inside, a paused item and a missing item', () => {
     const problems = comboProblems(
       combo([
-        { durationLabel: 'Two weeks', product: plan },
+        { product: plan },
         { product: { ...oneTime, available: false } },
         { product: null, productTitleSnapshot: 'Old dal' },
       ]),
     )
     expect(problems).toEqual([
-      'Lunch plan no longer has the duration "Two weeks". Choose one of its current durations.',
+      'Lunch plan is a meal plan; only single items go inside a combo.',
       'Phulka box is paused, so the combo cannot be bought.',
       'Old dal no longer exists. Remove it or pick another product.',
     ])

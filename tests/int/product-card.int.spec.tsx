@@ -145,17 +145,19 @@ describe('the product card', () => {
   })
 
   it('shows a combo’s items, its separate price struck through and the saving', () => {
-    const plan = {
+    const dal = {
       ...product,
-      durations: [{ days: 7, id: 'w', label: 'One week', price: 50000 }],
+      durations: [],
       id: 11,
-      type: 'plan',
+      price: 50000,
+      title: 'Dal tin',
+      type: 'one-time',
     }
     const box = { ...product, durations: [], id: 12, price: 10000, title: 'Phulka box', type: 'one-time' }
     const combo = {
       ...product,
       components: [
-        { durationLabel: 'One week', id: 'c1', product: plan },
+        { id: 'c1', product: dal },
         { id: 'c2', product: box },
       ],
       durations: [],
@@ -166,7 +168,7 @@ describe('the product card', () => {
     } as unknown as Product
     render(<ProductCard product={combo} />)
 
-    expect(screen.getByText('Lunch plan + Phulka box')).toBeTruthy()
+    expect(screen.getByText('Dal tin + Phulka box')).toBeTruthy()
     expect(screen.getByText('₹600')).toBeTruthy()
     expect(screen.getByText('Save ₹80')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Add Family combo to cart' })).toBeTruthy()

@@ -34,6 +34,15 @@ const oneTime = {
   type: 'one-time',
 } as unknown as Product
 
+const dal = {
+  available: true,
+  id: 35,
+  price: 2500,
+  slug: 'dal-tin',
+  title: 'Dal tin',
+  type: 'one-time',
+} as unknown as Product
+
 const combo = (components: unknown[], overrides: Record<string, unknown> = {}) =>
   ({
     available: true,
@@ -71,19 +80,11 @@ describe('selectedComboDuration', () => {
 })
 
 describe('comboComponents', () => {
-  it('reads a one-time product and a plan with its chosen duration', () => {
-    const components = comboComponents(
-      combo([{ product: oneTime }, { durationLabel: 'One week', product: plan }]),
-    )
-
-    expect(components).toHaveLength(2)
-    expect(components?.[0]).toEqual({ product: 34, productTitle: 'Phulka box' })
-    expect(components?.[1]).toEqual({
-      days: 5,
-      durationLabel: 'One week',
-      product: 12,
-      productTitle: 'Lunch plan',
-    })
+  it('reads its single items, in order', () => {
+    expect(comboComponents(combo([{ product: oneTime }, { product: dal }]))).toEqual([
+      { product: 34, productTitle: 'Phulka box' },
+      { product: 35, productTitle: 'Dal tin' },
+    ])
   })
 
   it('accepts a single product and refuses none or more than ten', () => {
@@ -117,11 +118,8 @@ describe('comboComponents', () => {
     expect(comboComponents(combo([{ product: combo([]) }, { product: oneTime }]))).toBeNull()
   })
 
-  it('takes a plan with no duration named, as itself', () => {
-    expect(comboComponents(combo([{ product: oneTime }, { product: plan }]))).toEqual([
-      { product: oneTime.id, productTitle: oneTime.title },
-      { product: plan.id, productTitle: plan.title },
-    ])
+  it('refuses a meal plan inside a combo, since only single items go in', () => {
+    expect(comboComponents(combo([{ product: oneTime }, { product: plan }]))).toBeNull()
   })
 
   it('refuses a duration the plan no longer has, or a one-time product carrying one', () => {
@@ -146,13 +144,20 @@ describe('isProductSellable', () => {
   })
 
   it('is true for a healthy combo and false for a broken one', () => {
-    const healthy = combo([{ product: oneTime }, { product: plan, durationLabel: 'One week' }])
+    const healthy = combo([{ product: oneTime }, { product: dal }])
     expect(isProductSellable(healthy)).toBe(true)
 
-    // A plan without a duration is fine; one naming a stale duration is not.
-    expect(isProductSellable(combo([{ product: oneTime }, { product: plan }]))).toBe(true)
+    // Only single items go inside a combo.
+    expect(isProductSellable(combo([{ product: oneTime }, { product: plan }]))).toBe(false)
+
+    // A meal plan with items is sold by duration but still needs sellable items.
+    const planCombo = { ...healthy, combo: true, mealPlan: true, type: 'plan' } as Product
+    expect(isProductSellable(planCombo)).toBe(true)
     expect(
-      isProductSellable(combo([{ product: oneTime }, { durationLabel: 'Gone', product: plan }])),
+      isProductSellable({
+        ...planCombo,
+        components: [{ product: { ...oneTime, available: false } }],
+      } as Product),
     ).toBe(false)
     expect(isProductSellable({ ...healthy, available: false } as Product)).toBe(false)
   })

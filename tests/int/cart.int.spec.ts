@@ -67,7 +67,10 @@ const oneTimeProduct = {
 
 const comboProduct = {
   available: true,
-  components: [{ product: oneTimeProduct }, { durationLabel: 'One week', product }],
+  components: [
+    { product: oneTimeProduct },
+    { product: { ...oneTimeProduct, id: 77, slug: 'dal-tin', title: 'Dal tin' } },
+  ],
   durations: [],
   id: 5,
   price: 99000,
@@ -427,6 +430,28 @@ describe('resolving the cart against the live records', () => {
     })
     expect(result.usable[0]?.components).toHaveLength(2)
     expect(result.total).toBe(198000)
+  })
+
+  it('sells a meal plan with items by its duration and keeps its items', async () => {
+    const planCombo = {
+      ...comboProduct,
+      combo: true,
+      durations: [{ days: 5, id: 'w', label: 'One week', price: 120000 }],
+      id: 8,
+      mealPlan: true,
+      price: null,
+      slug: 'plan-combo',
+      title: 'Plan combo',
+      type: 'plan',
+    } as unknown as Product
+
+    const result = await resolveCartLines({
+      lines: [{ duration: 'One week', product: 'plan-combo', qty: 1 }],
+      payload: payloadServing([planCombo]),
+    })
+
+    expect(result.usable[0]).toMatchObject({ days: 5, price: 120000, stale: false, type: 'plan' })
+    expect(result.usable[0]?.components).toHaveLength(2)
   })
 
   it('marks a combo stale when a product inside it is paused or the line carries another duration', async () => {

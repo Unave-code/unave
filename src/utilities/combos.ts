@@ -1,4 +1,5 @@
 import type { Product } from '@/payload-types'
+import { hasComboItems, isSingleItem } from '@/utilities/productKind'
 
 export type ComboComponentSnapshot = {
   days?: number
@@ -54,42 +55,25 @@ export const comboComponents = (product: Product): ComboComponentSnapshot[] | nu
   for (const component of components) {
     const source = componentProduct(component.product)
     const id = relationId(component.product)
-    if (!source || id === null || source.type === 'combo' || !source.available) return null
+    // Only single items go inside a combo.
+    if (!source || id === null || !isSingleItem(source) || !source.available) return null
     if (seen.has(String(id))) return null
     seen.add(String(id))
 
-    if (source.type === 'plan') {
-      // The duration is optional: a plan with none named joins as itself.
-      if (!component.durationLabel?.trim()) {
-        snapshots.push({ product: source.id, productTitle: source.title })
-        continue
-      }
-      const duration = selectedComboDuration(source, component.durationLabel)
-      if (!duration) return null
-      snapshots.push({
-        days: Number(duration.days),
-        durationLabel: duration.label,
-        product: source.id,
-        productTitle: source.title,
-      })
-    } else {
-      if (component.durationLabel?.trim()) return null
-      snapshots.push({ product: source.id, productTitle: source.title })
-    }
+    snapshots.push({ product: source.id, productTitle: source.title })
   }
 
   return snapshots
 }
 
 export const isProductSellable = (product: Product): boolean =>
-  product.available === true && (product.type !== 'combo' || comboComponents(product) !== null)
+  product.available === true && (!hasComboItems(product) || comboComponents(product) !== null)
 
 /**
- * What a combo's items would cost bought one by one, in paise: each one-time
- * item at its price and each meal plan at the duration the combo names. The
- * items must be populated (depth 1 or more). Answers `null` when any item can
- * no longer be priced, so a saving is never worked out from half a combo —
- * including a meal plan left without a duration, which has no single price.
+ * What a combo's items would cost bought one by one, in paise. The items must
+ * be populated (depth 1 or more). Answers `null` for a meal plan combo, which
+ * is priced by duration, and when any item can no longer be priced, so a
+ * saving is never worked out from half a combo.
  */
 export const comboSeparatePrice = (product: Product): null | number => {
   if (product.type !== 'combo') return null
@@ -101,18 +85,11 @@ export const comboSeparatePrice = (product: Product): null | number => {
 
   for (const component of components) {
     const source = componentProduct(component.product)
-    if (!source || source.type === 'combo') return null
+    if (!source || !isSingleItem(source)) return null
 
-    if (source.type === 'plan') {
-      const duration = selectedComboDuration(source, component.durationLabel)
-      const price = Number(duration?.price)
-      if (!duration || !Number.isFinite(price) || price < 1) return null
-      sum += price
-    } else {
-      const price = Number(source.price)
-      if (!Number.isFinite(price) || price < 1) return null
-      sum += price
-    }
+    const price = Number(source.price)
+    if (!Number.isFinite(price) || price < 1) return null
+    sum += price
   }
 
   return sum
@@ -146,7 +123,7 @@ export const comboItemTitles = (product: Product): string[] =>
  * admin, so a combo never goes quiet without anyone knowing why.
  */
 export const comboProblems = (product: Product): string[] => {
-  if (product.type !== 'combo') return []
+  if (!hasComboItems(product)) return []
 
   const components = product.components ?? []
   const problems: string[] = []
@@ -168,18 +145,11 @@ export const comboProblems = (product: Product): string[] => {
     if (seen.has(String(id))) problems.push(`${name} is in the combo twice.`)
     seen.add(String(id))
 
-    if (source.type === 'combo')
+    if (hasComboItems(source))
       problems.push(`${name} is a combo; a combo cannot hold another combo.`)
+    else if (!isSingleItem(source))
+      problems.push(`${name} is a meal plan; only single items go inside a combo.`)
     if (!source.available) problems.push(`${name} is paused, so the combo cannot be bought.`)
-    if (
-      source.type === 'plan' &&
-      component.durationLabel?.trim() &&
-      !selectedComboDuration(source, component.durationLabel)
-    ) {
-      problems.push(
-        `${name} no longer has the duration "${component.durationLabel ?? ''}". Choose one of its current durations.`,
-      )
-    }
   })
 
   return problems

@@ -337,8 +337,13 @@ export interface Product {
   id: number;
   title: string;
   /**
-   * A meal plan is bought as a duration. A one-time purchase is a single item. A combo is a fixed price group of products.
+   * Tick to put other products inside this one. Choose them under Pricing → Combo contents.
    */
+  combo?: boolean | null;
+  /**
+   * Tick to sell it by duration, for example One week or One month, each with its own price.
+   */
+  mealPlan?: boolean | null;
   type: 'plan' | 'one-time' | 'combo';
   /**
    * The main photo: first on the product card and the product page. A combo also shows it in its gallery. Leave it empty and a branded placeholder is used instead.
@@ -405,7 +410,7 @@ export interface Product {
    */
   howItWorks?: string | null;
   /**
-   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Hidden on a one-time purchase, which has no durations.
+   * What a customer chooses: a label, how many days of meals it covers, and the price in rupees. Shown when Meal plan is ticked.
    */
   durations?:
     | {
@@ -443,24 +448,21 @@ export interface Product {
    */
   price?: number | null;
   /**
-   * Optional reference price for a one-time product. It must be higher than the current price.
+   * Optional reference price for a single item. It must be higher than the current price.
    */
   compareAtPrice?: number | null;
   /**
-   * Optional display text for a one-time product, for example 260 g.
+   * Optional display text for a single item, for example 260 g.
    */
   packSize?: string | null;
   /**
-   * Choose one to ten different products. A meal plan can name one of its current durations, or leave it open.
+   * Choose one to ten different single items. Shown when Combo is ticked.
    */
   components?:
     | {
         product?: (number | null) | Product;
         productTitleSnapshot?: string | null;
         durationDaysSnapshot?: number | null;
-        /**
-         * Optional. Choose a current duration to fix how long the meal plan runs in this combo, or leave it blank.
-         */
         durationLabel?: string | null;
         id?: string | null;
       }[]
@@ -1775,6 +1777,8 @@ export interface CustomersSelect<T extends boolean = true> {
  */
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
+  combo?: T;
+  mealPlan?: T;
   type?: T;
   image?: T;
   gallery?:

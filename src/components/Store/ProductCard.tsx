@@ -1,3 +1,4 @@
+import { hasComboItems } from '@/utilities/productKind'
 import { ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -115,7 +116,8 @@ export const ProductCard: React.FC<{
       ? Math.floor(((struckPrice - flatPrice) / struckPrice) * 100)
       : 0
   const comboSaving = isCombo ? comboSavingPaise(product) : 0
-  const comboItems = isCombo ? comboItemTitles(product) : []
+  // A meal plan can hold items too, so the items follow the Combo tick.
+  const comboItems = hasComboItems(product) ? comboItemTitles(product) : []
 
   /* Plans and sized products are chosen on their page; the rest add here. */
   const choosesOnPage = isPlan || sizedProduct
