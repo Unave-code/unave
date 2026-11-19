@@ -57,7 +57,15 @@ const renderControls = (
   props: Partial<React.ComponentProps<typeof ProductShelfControls>> = {},
 ) =>
   render(
-    <ProductShelfControls basePath="/products" state={{ ...EMPTY_SHELF, ...state }} {...props} />,
+    <ProductShelfControls
+      audiences={[
+        { label: 'Kids', value: 'kids' },
+        { label: 'Adults', value: 'adults' },
+      ]}
+      basePath="/products"
+      state={{ ...EMPTY_SHELF, ...state }}
+      {...props}
+    />,
   )
 
 describe('reading the address', () => {
@@ -94,7 +102,7 @@ describe('reading the address', () => {
   it('drops anything it cannot believe rather than failing the page', () => {
     expect(
       parseShelfState({
-        audience: 'aliens',
+        audience: 'Not a slug!',
         category: 'lunch-plan',
         from: 'cheap',
         page: '0',
@@ -255,7 +263,7 @@ describe('the query the shelf reads by', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, audience: 'kids', from: 50, to: 150 })).toEqual({
       and: [
         { available: { equals: true } },
-        { audience: { equals: 'kids' } },
+        { 'audience.slug': { equals: 'kids' } },
         { fromPrice: { greater_than_equal: 5000 } },
         { fromPrice: { less_than_equal: 15000 } },
       ],

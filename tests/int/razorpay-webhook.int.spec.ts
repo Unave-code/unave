@@ -7,6 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import config from '@/payload.config'
 import type { CheckoutIntent, Customer, Order } from '@/payload-types'
+import { testAudienceId } from '../helpers/audience'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -58,6 +59,7 @@ import { POST } from '../../src/app/(frontend)/api/razorpay/webhook/route'
 import { sweepRun } from '../helpers/sweepRun'
 
 let payload: Payload
+let audienceId: number
 
 const run = `it-hook-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const orderIDs: (number | string)[] = []
@@ -161,9 +163,7 @@ const capturedEvent = (
   return JSON.stringify({
     event: 'payment.captured',
     payload: {
-      ...(options.omitOrder
-        ? {}
-        : { order: { entity: { amount, currency: 'INR', id: orderId } } }),
+      ...(options.omitOrder ? {} : { order: { entity: { amount, currency: 'INR', id: orderId } } }),
       payment: {
         amount,
         currency: 'INR',
@@ -204,6 +204,7 @@ const capturedEventNested = (orderId: string, paymentId: string): string =>
 
 beforeAll(async () => {
   payload = await getPayload({ config })
+  audienceId = await testAudienceId(payload)
 
   const subcategory = await payload.create({
     collection: 'subcategories',
@@ -224,7 +225,7 @@ beforeAll(async () => {
       type: 'plan' as const,
       category: 'ready-to-eat',
       subcategory: subcategoryId as number,
-      audience: 'adults',
+      audience: audienceId,
     },
     depth: 0,
     // The revalidateProducts hook calls Next's revalidateTag, which only exists
@@ -276,7 +277,12 @@ afterAll(async () => {
   }
 
   try {
-    await payload.delete({ collection: 'products', id: productId, overrideAccess: true, context: { disableRevalidate: true } })
+    await payload.delete({
+      collection: 'products',
+      id: productId,
+      overrideAccess: true,
+      context: { disableRevalidate: true },
+    })
   } catch {
     // Best effort cleanup.
   }

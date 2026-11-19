@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { slugifyTitle } from '@/collections/Products/hooks/autoProductSlug'
 import config from '@/payload.config'
 import type { Product, Subcategory } from '@/payload-types'
+import { testAudienceId } from '../helpers/audience'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -25,6 +26,7 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
  */
 
 let payload: Payload
+let audienceId: number
 
 const run = `it-slug-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const productIDs: (number | string)[] = []
@@ -37,7 +39,7 @@ let subcategoryId: number | string
  */
 const createProductWithoutSlug = async (title: string): Promise<Product> => {
   const data = {
-    audience: 'adults' as const,
+    audience: audienceId,
     category: 'ready-to-eat' as const,
     durations: [{ days: 5, label: 'One week', price: 150000 }],
     subcategory: subcategoryId as number,
@@ -63,7 +65,7 @@ const createProduct = async (data: { slug: string; title: string }): Promise<Pro
   const created = (await payload.create({
     collection: 'products',
     data: {
-      audience: 'adults',
+      audience: audienceId,
       category: 'ready-to-eat',
       durations: [{ days: 5, label: 'One week', price: 150000 }],
       slug: data.slug,
@@ -175,6 +177,7 @@ describe('updates', () => {
 
 beforeAll(async () => {
   payload = await getPayload({ config })
+  audienceId = await testAudienceId(payload)
 
   const subcategory = await payload.create({
     collection: 'subcategories',

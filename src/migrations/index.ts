@@ -36,6 +36,7 @@ import * as migration_20261116_120000_product_gallery from './20261116_120000_pr
 import * as migration_20261116_160000_product_sizes_plan_text from './20261116_160000_product_sizes_plan_text';
 import * as migration_20261116_180000_plan_lead_total from './20261116_180000_plan_lead_total';
 import * as migration_20261117_120000_product_benefits from './20261117_120000_product_benefits';
+import * as migration_20261119_120000_audiences_collection from './20261119_120000_audiences_collection';
 
 export const migrations = [
   {
@@ -227,5 +228,10 @@ export const migrations = [
     up: migration_20261117_120000_product_benefits.up,
     down: migration_20261117_120000_product_benefits.down,
     name: '20261117_120000_product_benefits',
+  },
+  {
+    up: migration_20261119_120000_audiences_collection.up,
+    down: migration_20261119_120000_audiences_collection.down,
+    name: '20261119_120000_audiences_collection',
   },
 ];

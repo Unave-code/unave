@@ -28,8 +28,8 @@ import {
   PRODUCTS_PAUSED_NOTE_BODY,
   PRODUCTS_PAUSED_NOTE_TITLE,
 } from '@/utilities/productsCopy'
+import { audienceTitle } from '@/utilities/audiences'
 import {
-  AUDIENCE_LABEL,
   CATEGORY_LABEL,
   categoryBadgeAriaLabel,
   productCategoryHref,
@@ -58,14 +58,21 @@ const BrushStroke: React.FC<{ flip?: boolean }> = ({ flip }) => (
       d="M14 50 C34 34 70 27 112 28 C150 20 196 26 236 21 C282 16 330 22 362 24 C376 25 386 30 392 38 L384 44 L397 52 C390 66 396 82 388 96 L398 104 L386 112 C390 124 380 132 362 134 C322 140 282 134 240 139 C196 144 150 136 108 140 C70 143 40 138 20 130 L28 122 L8 114 C16 102 6 90 14 80 L4 72 L16 64 C10 58 10 54 14 50 Z"
       fill="currentColor"
     />
-    <path d="M30 40 C120 30 260 28 380 33 L378 37 C260 33 120 35 32 44 Z" fill="currentColor" opacity="0.55" />
-    <path d="M24 138 C110 146 270 144 372 138 L370 143 C270 150 110 151 26 143 Z" fill="currentColor" opacity="0.45" />
+    <path
+      d="M30 40 C120 30 260 28 380 33 L378 37 C260 33 120 35 32 44 Z"
+      fill="currentColor"
+      opacity="0.55"
+    />
+    <path
+      d="M24 138 C110 146 270 144 372 138 L370 143 C270 150 110 151 26 143 Z"
+      fill="currentColor"
+      opacity="0.45"
+    />
   </svg>
 )
 
 const CHIP =
   'rounded-pill inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase'
-
 
 type ComboItem = {
   days?: null | number
@@ -151,6 +158,7 @@ export const ProductDetail: React.FC<{
 
   const benefits = (product.benefits ?? []).filter((benefit) => benefit.title?.trim())
 
+  const audience = audienceTitle(product.audience)
   const subcategory =
     product.subcategory && typeof product.subcategory === 'object'
       ? product.subcategory.title
@@ -206,7 +214,7 @@ export const ProductDetail: React.FC<{
       ? [['Category', CATEGORY_LABEL[product.category]] as [string, string]]
       : []),
     ...(subcategory ? [['Type', subcategory] as [string, string]] : []),
-    ...(product.audience ? [['For', AUDIENCE_LABEL[product.audience]] as [string, string]] : []),
+    ...(audience ? [['For', audience] as [string, string]] : []),
     ...(product.packSize ? [['Pack size', product.packSize] as [string, string]] : []),
     ...(sizeOptions.length > 0
       ? [['Sizes', sizeOptions.map((size) => size.label).join(', ')] as [string, string]]
@@ -261,7 +269,7 @@ export const ProductDetail: React.FC<{
               the price and the choice, the buy row, the key facts, then the
               description. */}
           <div className="min-w-0">
-            {product.category || product.audience ? (
+            {product.category || audience ? (
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 {product.category ? (
                   <Link
@@ -276,9 +284,9 @@ export const ProductDetail: React.FC<{
                     {CATEGORY_LABEL[product.category]}
                   </Link>
                 ) : null}
-                {product.audience ? (
+                {audience ? (
                   <span className={cn(CHIP, 'ring-line text-ink-600 ring-1 ring-inset')}>
-                    {AUDIENCE_LABEL[product.audience]}
+                    {audience}
                   </span>
                 ) : null}
               </div>
@@ -408,7 +416,10 @@ export const ProductDetail: React.FC<{
                   {sizeOptions.length > 0 ? (
                     <ul className="divide-line divide-y">
                       {sizeOptions.map((size) => (
-                        <li className="flex items-center justify-between gap-4 py-3" key={size.label}>
+                        <li
+                          className="flex items-center justify-between gap-4 py-3"
+                          key={size.label}
+                        >
                           <p className="text-sm leading-tight font-bold">{size.label}</p>
                           <p className="text-green-700 text-sm font-bold tabular-nums">
                             {formatPaise(size.price)}
@@ -448,7 +459,11 @@ export const ProductDetail: React.FC<{
 
               {!isOneTime && !isCombo ? (
                 <p className="text-ink-600 mt-3 flex items-start gap-2 text-sm leading-6">
-                  <Phone aria-hidden="true" className="mt-1 size-4 shrink-0 text-green-700" strokeWidth={2} />
+                  <Phone
+                    aria-hidden="true"
+                    className="mt-1 size-4 shrink-0 text-green-700"
+                    strokeWidth={2}
+                  />
                   {PRODUCT_START_DATE_NOTE}
                 </p>
               ) : null}
@@ -456,7 +471,10 @@ export const ProductDetail: React.FC<{
 
             {/* What you get, as a short checklist under the buy row. */}
             {points.length > 0 ? (
-              <section aria-labelledby="product-points-heading" className="border-line mt-5 border-t pt-5">
+              <section
+                aria-labelledby="product-points-heading"
+                className="border-line mt-5 border-t pt-5"
+              >
                 <ColumnHeading id="product-points-heading">{PRODUCT_POINTS_HEADING}</ColumnHeading>
                 <ul className="mt-3 flex flex-col gap-2">
                   {points.map((point, index) => (
@@ -474,7 +492,10 @@ export const ProductDetail: React.FC<{
             ) : null}
 
             {/* The key facts as a short list, read straight from the record. */}
-            <section aria-labelledby="product-details-heading" className="border-line mt-5 border-t pt-5">
+            <section
+              aria-labelledby="product-details-heading"
+              className="border-line mt-5 border-t pt-5"
+            >
               <h2 className="sr-only" id="product-details-heading">
                 Product details
               </h2>
@@ -538,7 +559,6 @@ export const ProductDetail: React.FC<{
             ) : null}
           </div>
         </div>
-
       </Section>
 
       {/* Benefits: each title and line, in dark green, on a gold brush stroke. */}
@@ -563,7 +583,9 @@ export const ProductDetail: React.FC<{
                   {benefit.title}
                 </h3>
                 {benefit.description ? (
-                  <p className="max-w-[28ch] text-base leading-6 text-green-800">{benefit.description}</p>
+                  <p className="max-w-[28ch] text-base leading-6 text-green-800">
+                    {benefit.description}
+                  </p>
                 ) : null}
               </li>
             ))}

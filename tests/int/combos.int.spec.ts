@@ -73,10 +73,7 @@ describe('selectedComboDuration', () => {
 describe('comboComponents', () => {
   it('reads a one-time product and a plan with its chosen duration', () => {
     const components = comboComponents(
-      combo([
-        { product: oneTime },
-        { durationLabel: 'One week', product: plan },
-      ]),
+      combo([{ product: oneTime }, { durationLabel: 'One week', product: plan }]),
     )
 
     expect(components).toHaveLength(2)
@@ -93,22 +90,21 @@ describe('comboComponents', () => {
     expect(comboComponents(combo([{ product: oneTime }]))).toHaveLength(1)
     expect(comboComponents(combo([]))).toBeNull()
     expect(
-      comboComponents(
-        combo(Array.from({ length: 11 }, () => ({ product: oneTime }))),
-      ),
+      comboComponents(combo(Array.from({ length: 11 }, () => ({ product: oneTime })))),
     ).toBeNull()
   })
 
   it('refuses a repeated product', () => {
-    expect(
-      comboComponents(combo([{ product: oneTime }, { product: oneTime }])),
-    ).toBeNull()
+    expect(comboComponents(combo([{ product: oneTime }, { product: oneTime }]))).toBeNull()
   })
 
   it('refuses a paused or missing product', () => {
     expect(
       comboComponents(
-        combo([{ product: { ...oneTime, available: false } }, { product: plan, durationLabel: 'One week' }]),
+        combo([
+          { product: { ...oneTime, available: false } },
+          { product: plan, durationLabel: 'One week' },
+        ]),
       ),
     ).toBeNull()
 
@@ -118,9 +114,7 @@ describe('comboComponents', () => {
   })
 
   it('refuses another combo inside a combo', () => {
-    expect(
-      comboComponents(combo([{ product: combo([]) }, { product: oneTime }])),
-    ).toBeNull()
+    expect(comboComponents(combo([{ product: combo([]) }, { product: oneTime }]))).toBeNull()
   })
 
   it('takes a plan with no duration named, as itself', () => {
@@ -136,7 +130,10 @@ describe('comboComponents', () => {
     ).toBeNull()
     expect(
       comboComponents(
-        combo([{ durationLabel: 'One week', product: oneTime }, { product: plan, durationLabel: 'One week' }]),
+        combo([
+          { durationLabel: 'One week', product: oneTime },
+          { product: plan, durationLabel: 'One week' },
+        ]),
       ),
     ).toBeNull()
   })

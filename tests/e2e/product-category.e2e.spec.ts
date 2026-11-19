@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { getPayload } from 'payload'
 
 import config from '../../src/payload.config.js'
+import { testAudienceId } from '../helpers/audience'
 
 /**
  * The category pages, in a real browser (spec 0008).
@@ -94,7 +95,7 @@ test.beforeAll(async () => {
     context: { disableRevalidate: true },
     data: {
       ...OPEN_PRODUCT,
-      audience: 'kids',
+      audience: await testAudienceId(payload, 'kids'),
       points: [{ point: 'Prepped and ready' }],
       subcategory: breakfastId,
     },
@@ -105,7 +106,7 @@ test.beforeAll(async () => {
     context: { disableRevalidate: true },
     data: {
       ...PAUSED_PRODUCT,
-      audience: 'adults',
+      audience: await testAudienceId(payload, 'adults'),
       points: [{ point: 'Still on the list' }],
       subcategory: dinnerId,
     },
@@ -157,7 +158,9 @@ test.describe('a category page', () => {
       'href',
       `/products/${OPEN_PRODUCT.slug}`,
     )
-    await expect(card(page, 'Category E2E cook').getByRole('button', { name: 'Add to cart' })).toBeVisible()
+    await expect(
+      card(page, 'Category E2E cook').getByRole('button', { name: 'Add to cart' }),
+    ).toBeVisible()
 
     await expect(card(page, 'Category E2E paused')).toHaveCount(0)
   })
@@ -198,7 +201,9 @@ test.describe('a category page', () => {
     await expect(card(page, 'Category E2E paused')).toHaveCount(0)
   })
 
-  test('answers an empty category and an empty filter with words and WhatsApp (AC-3)', async ({ page }) => {
+  test('answers an empty category and an empty filter with words and WhatsApp (AC-3)', async ({
+    page,
+  }) => {
     await page.goto(`${BASE}/products/fresh-from-produce`)
     await expect(page.getByText('No products are open right now')).toBeVisible()
     await expect(page.locator('a[href*="wa.me"]').first()).toBeVisible()
@@ -212,7 +217,9 @@ test.describe('a category page', () => {
     await expect(page.locator('a[href*="wa.me"]').first()).toBeVisible()
   })
 
-  test('serves a product page for a product slug and refuses anything else (AC-4)', async ({ page }) => {
+  test('serves a product page for a product slug and refuses anything else (AC-4)', async ({
+    page,
+  }) => {
     const productPage = await page.goto(`${BASE}/products/${OPEN_PRODUCT.slug}`)
     expect(productPage?.status()).toBe(200)
     await expect(page.getByRole('heading', { level: 1, name: OPEN_PRODUCT.title })).toBeVisible()
@@ -221,7 +228,9 @@ test.describe('a category page', () => {
     expect(nonsense?.status()).toBe(404)
   })
 
-  test('is reached from a product page, and links to the other shelves (AC-5)', async ({ page }) => {
+  test('is reached from a product page, and links to the other shelves (AC-5)', async ({
+    page,
+  }) => {
     await page.goto(`${BASE}/products/${OPEN_PRODUCT.slug}`)
     const badge = page.getByRole('link', { name: 'Browse Ready to cook products' })
     await expect(badge).toBeVisible()
@@ -239,7 +248,10 @@ test.describe('a category page', () => {
 
     await page.goto(`${BASE}/products/ready-to-cook`)
     await expect(page).toHaveTitle(/Ready to cook products/i)
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/products\/ready-to-cook$/)
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /\/products\/ready-to-cook$/,
+    )
 
     const sitemap = await page.request.get(`${BASE}/pages-sitemap.xml`)
     const xml = await sitemap.text()

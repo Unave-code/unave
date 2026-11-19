@@ -4,6 +4,7 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { Audiences } from './collections/Audiences'
 import { Categories } from './collections/Categories'
 import { CheckoutIntents } from './collections/CheckoutIntents'
 import { Customers } from './collections/Customers'
@@ -174,6 +175,7 @@ export default buildConfig({
     Customers,
     Products,
     Subcategories,
+    Audiences,
     Media,
     Pages,
     Posts,

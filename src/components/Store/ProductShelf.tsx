@@ -1,7 +1,7 @@
 import { Cta } from '@/components/Cta'
 import { Pagination } from '@/components/Pagination'
 import { ProductCard } from '@/components/Store/ProductCard'
-import { ProductShelfControls } from '@/components/Store/ProductShelfControls'
+import { ProductShelfControls, type FacetOption } from '@/components/Store/ProductShelfControls'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { ProductCategoryValue } from '@/utilities/productsCategoryCopy'
 import {
@@ -37,6 +37,8 @@ import { whatsappHref } from '@/utilities/whatsapp'
  * when the shelf genuinely has nothing to show.
  */
 export const ProductShelf: React.FC<{
+  /** The audience filter's choices, read from the admin's list. */
+  audiences?: FacetOption[]
   basePath: string
   /** Set on a category page, where the category is the page and not a filter. */
   category?: ProductCategoryValue
@@ -45,7 +47,7 @@ export const ProductShelf: React.FC<{
   showControls?: boolean
   state: ShelfState
   whatsapp: null | string
-}> = ({ basePath, category, result, showControls = true, state, whatsapp }) => {
+}> = ({ audiences, basePath, category, result, showControls = true, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
 
   const first = result.totalDocs === 0 ? 0 : (result.page - 1) * SHELF_PER_PAGE + 1
@@ -54,9 +56,13 @@ export const ProductShelf: React.FC<{
   return (
     <div>
       {showControls ? (
-        <ProductShelfControls basePath={basePath} fixedCategory={category} state={state} />
+        <ProductShelfControls
+          audiences={audiences}
+          basePath={basePath}
+          fixedCategory={category}
+          state={state}
+        />
       ) : null}
-
       {result.docs.length > 0 ? (
         <>
           <p className="text-ink-600 mt-6 text-sm font-semibold">
@@ -107,11 +113,11 @@ export const ProductShelf: React.FC<{
           </div>
         </div>
       )}
-
       <Pagination
         hrefFor={(page) => shelfHref(basePath, state, { page })}
         page={result.page}
         totalPages={result.totalPages}
-      />    </div>
+      />{' '}
+    </div>
   )
 }

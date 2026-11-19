@@ -8,6 +8,7 @@ import { createOrderEndpoint, verifyOrderEndpoint } from '../../src/collections/
 import config from '@/payload.config'
 import type { CheckoutIntent, Customer, Order, Product } from '@/payload-types'
 import { sweepRun } from '../helpers/sweepRun'
+import { testAudienceId } from '../helpers/audience'
 
 // The dev database is remote, so a single test can make several slow round trips,
 // and the first `getPayload` in a worker pulls the schema from it.
@@ -34,8 +35,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('../../src/utilities/razorpay', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('../../src/utilities/razorpay')>()
+  const actual = await importOriginal<typeof import('../../src/utilities/razorpay')>()
 
   return {
     ...actual,
@@ -53,6 +53,7 @@ vi.mock('../../src/collections/Orders/mail', () => ({
 }))
 
 let payload: Payload
+let audienceId: number
 
 const run = `it-order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const productIDs: (number | string)[] = []
@@ -154,7 +155,7 @@ const createProduct = async (overrides: Partial<{ available: boolean; title: str
       type: 'plan' as const,
       category: 'ready-to-eat',
       subcategory: readyToEatSubcategoryId as number,
-      audience: 'adults',
+      audience: audienceId,
       ...overrides,
     },
     depth: 0,
@@ -305,6 +306,7 @@ const stageGatewayOrder = async (
 
 beforeAll(async () => {
   payload = await getPayload({ config })
+  audienceId = await testAudienceId(payload)
 
   // Every product carries a subcategory from its own category (spec 0008, AC-9).
   const subcategory = await payload.create({
@@ -586,10 +588,7 @@ describe('POST /api/orders/create', () => {
     }))
 
     const response = (await createOrderEndpoint.handler(
-      createRequest(
-        { delivery },
-        { cart: lines, cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
-      ),
+      createRequest({ delivery }, { cart: lines, cookies: `${CUSTOMER_COOKIE}=${customer.token}` }),
     )) as Response
 
     expect(response.status).toBe(422)
@@ -867,12 +866,8 @@ describe('POST /api/orders/verify', () => {
 
     const options = { cookies: `${CUSTOMER_COOKIE}=${customer.token}` }
 
-    const first = (await verifyOrderEndpoint.handler(
-      createRequest(body, options),
-    )) as Response
-    const second = (await verifyOrderEndpoint.handler(
-      createRequest(body, options),
-    )) as Response
+    const first = (await verifyOrderEndpoint.handler(createRequest(body, options))) as Response
+    const second = (await verifyOrderEndpoint.handler(createRequest(body, options))) as Response
 
     const firstBody = (await first.json()) as { orderId: number }
     const secondBody = (await second.json()) as { orderId: number }
@@ -913,7 +908,9 @@ describe('the orders collection', () => {
           state: 'Maharashtra',
         },
         gatewayOrderId,
-        items: [{ days: 5, durationLabel: 'One week', productTitle: 'Lunch plan', unitPrice: 150000 }],
+        items: [
+          { days: 5, durationLabel: 'One week', productTitle: 'Lunch plan', unitPrice: 150000 },
+        ],
         subtotal: 150000,
         total: 150000,
       },

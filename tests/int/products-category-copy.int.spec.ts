@@ -4,9 +4,6 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  AUDIENCE_FILTER_LABEL,
-  AUDIENCE_FILTER_ORDER,
-  AUDIENCE_LABEL,
   CATEGORY_LABEL,
   categoryBadgeAriaLabel,
   PRODUCTS_CATEGORY_CTA_BROWSE,
@@ -67,22 +64,10 @@ describe('the route values', () => {
 })
 
 describe('the label maps', () => {
-  it('name every category and audience', () => {
+  it('name every category', () => {
     expect(CATEGORY_LABEL['ready-to-cook']).toBe('Ready to cook')
     expect(CATEGORY_LABEL['ready-to-eat']).toBe('Ready to eat')
     expect(CATEGORY_LABEL['fresh-from-produce']).toBe('Fresh from produce')
-
-    expect(AUDIENCE_LABEL.kids).toBe('Kids')
-    expect(AUDIENCE_LABEL.adults).toBe('Adults')
-    expect(AUDIENCE_LABEL.special).toBe('Special')
-  })
-
-  it('give the filter pills All plus every audience, in order', () => {
-    expect(AUDIENCE_FILTER_ORDER).toEqual(['all', 'kids', 'adults', 'special'])
-    expect(AUDIENCE_FILTER_LABEL.all).toBe('All')
-    expect(AUDIENCE_FILTER_LABEL.kids).toBe(AUDIENCE_LABEL.kids)
-    expect(AUDIENCE_FILTER_LABEL.adults).toBe(AUDIENCE_LABEL.adults)
-    expect(AUDIENCE_FILTER_LABEL.special).toBe(AUDIENCE_LABEL.special)
   })
 
   it('name the badge links after the category page they open', () => {

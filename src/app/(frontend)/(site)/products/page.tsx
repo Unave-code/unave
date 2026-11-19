@@ -1,3 +1,4 @@
+import { fetchAudiences } from '@/utilities/audiences'
 import type { Metadata } from 'next'
 import React from 'react'
 
@@ -75,17 +76,14 @@ export default async function ProductsPage({
 }) {
   const state = parseShelfState(await searchParams)
 
-  const result = await fetchProductShelf(state)
+  const [result, audiences] = await Promise.all([fetchProductShelf(state), fetchAudiences()])
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const whatsapp = footer?.contact?.whatsapp ?? null
 
   return (
     <main>
-      <Section
-        className="opening-band relative overflow-hidden bg-green-900 md:py-20"
-        tone="green"
-      >
+      <Section className="opening-band relative overflow-hidden bg-green-900 md:py-20" tone="green">
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
 
         <div className="relative max-w-[46rem]">
@@ -113,6 +111,7 @@ export default async function ProductsPage({
         <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{PRODUCTS_GRID_INTRO}</p>
 
         <ProductShelf
+          audiences={audiences.map((audience) => ({ label: audience.title, value: audience.slug }))}
           basePath="/products"
           result={result}
           state={state}

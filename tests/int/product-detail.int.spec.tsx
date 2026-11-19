@@ -45,7 +45,7 @@ afterEach(cleanup)
 
 const openProduct = {
   available: true,
-  audience: 'kids',
+  audience: { id: 1, slug: 'kids', title: 'Kids' },
   category: 'ready-to-cook',
   description: { root: { children: [] } },
   durations: [{ days: 7, id: 'd1', label: 'One week', price: 49900 }],
@@ -58,7 +58,7 @@ const openProduct = {
 
 const comboProduct = {
   available: true,
-  audience: 'adults',
+  audience: { id: 2, slug: 'adults', title: 'Adults' },
   category: 'ready-to-eat',
   components: [
     {

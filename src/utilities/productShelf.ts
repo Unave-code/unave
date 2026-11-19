@@ -4,12 +4,7 @@ import type { Where } from 'payload'
 
 import type { Product } from '@/payload-types'
 import { PRODUCT_KIND_ORDER, type ProductKindValue } from '@/utilities/productsCopy'
-import {
-  AUDIENCE_FILTER_ORDER,
-  isProductCategory,
-  type ProductAudienceFilterValue,
-  type ProductCategoryValue,
-} from '@/utilities/productsCategoryCopy'
+import { isProductCategory, type ProductCategoryValue } from '@/utilities/productsCategoryCopy'
 
 /**
  * The shelf: one set of search, filter, sort and page rules (design.md §6.19).
@@ -57,7 +52,8 @@ const SHELF_SORT_QUERY: Record<ShelfSortKey, string[]> = {
 /* ------------------------------------------------------------------- state */
 
 export interface ShelfState {
-  audience: null | ProductAudienceFilterValue
+  /** An audience's slug, as staff named it in the admin. */
+  audience: null | string
   category: null | ProductCategoryValue
   /** Meal plans, single items or combos. */
   kind: null | ProductKindValue
@@ -97,6 +93,9 @@ const firstValue = (value: string | string[] | undefined): undefined | string =>
   return value
 }
 
+/** The shape of every slug the site writes: lowercase words joined by dashes. */
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
 /** A whole number of rupees, or nothing. `0` is a real low end; "abc" is not. */
 const wholeRupees = (raw: undefined | string): null | number => {
   if (raw === undefined || raw.trim() === '') return null
@@ -126,11 +125,7 @@ export const parseShelfState = (raw: ShelfSearchParams = {}): ShelfState => {
 
   return {
     audience:
-      audienceRaw &&
-      audienceRaw !== 'all' &&
-      (AUDIENCE_FILTER_ORDER as readonly string[]).includes(audienceRaw)
-        ? (audienceRaw as ProductAudienceFilterValue)
-        : null,
+      audienceRaw && audienceRaw !== 'all' && SLUG_PATTERN.test(audienceRaw) ? audienceRaw : null,
     category: categoryRaw && isProductCategory(categoryRaw) ? categoryRaw : null,
     kind:
       kindRaw && (PRODUCT_KIND_ORDER as readonly string[]).includes(kindRaw)
@@ -216,7 +211,7 @@ export const shelfWhere = (
   if (category) and.push({ category: { equals: category } })
   if (subcategoryId !== undefined) and.push({ subcategory: { equals: subcategoryId } })
   if (state.kind) and.push({ type: { equals: state.kind } })
-  if (state.audience) and.push({ audience: { equals: state.audience } })
+  if (state.audience) and.push({ 'audience.slug': { equals: state.audience } })
   if (state.from !== null) and.push({ fromPrice: { greater_than_equal: state.from * 100 } })
   if (state.to !== null) and.push({ fromPrice: { less_than_equal: state.to * 100 } })
 

@@ -3,9 +3,8 @@
  *
  * One shared source, by rule of spec 0008: the three category route values,
  * their display labels, and the words on each category page all live here, so
- * a label never says one thing on a product card and another on its page. The
- * audience labels live here too, for the same reason: the badge on a card and
- * the filter tile on a category page must agree.
+ * a label never says one thing on a product card and another on its page. Audience
+ * names are not here: staff manage them in the admin (Catalogue → Audiences).
  *
  * The products themselves stay CMS data. Only these words are code, like every
  * other page in this site.
@@ -14,7 +13,11 @@
 import type { Product } from '@/payload-types'
 
 /** The three category values, which are also the three route slugs. */
-export const PRODUCT_CATEGORY_VALUES = ['ready-to-cook', 'ready-to-eat', 'fresh-from-produce'] as const
+export const PRODUCT_CATEGORY_VALUES = [
+  'ready-to-cook',
+  'ready-to-eat',
+  'fresh-from-produce',
+] as const
 
 export type ProductCategoryValue = (typeof PRODUCT_CATEGORY_VALUES)[number]
 
@@ -22,7 +25,8 @@ export const isProductCategory = (value: string): value is ProductCategoryValue 
   (PRODUCT_CATEGORY_VALUES as readonly string[]).includes(value)
 
 /** The web address of a category page, the one route map every link uses. */
-export const productCategoryHref = (category: ProductCategoryValue): string => `/products/${category}`
+export const productCategoryHref = (category: ProductCategoryValue): string =>
+  `/products/${category}`
 
 /**
  * The web address of a product's own page. Products share the `/products/<slug>`
@@ -37,25 +41,6 @@ export const CATEGORY_LABEL: Record<Product['category'], string> = {
   'fresh-from-produce': 'Fresh from produce',
   'ready-to-cook': 'Ready to cook',
   'ready-to-eat': 'Ready to eat',
-}
-
-/** Label map shared by the product card badges and the filter tiles. */
-export const AUDIENCE_LABEL: Record<Product['audience'], string> = {
-  adults: 'Adults',
-  kids: 'Kids',
-  special: 'Special',
-}
-
-/** The filter tiles: every audience, plus All, which is the default. */
-export const AUDIENCE_FILTER_ORDER = ['all', 'kids', 'adults', 'special'] as const
-
-export type ProductAudienceFilterValue = (typeof AUDIENCE_FILTER_ORDER)[number]
-
-export const AUDIENCE_FILTER_LABEL: Record<ProductAudienceFilterValue, string> = {
-  adults: AUDIENCE_LABEL.adults,
-  all: 'All',
-  kids: AUDIENCE_LABEL.kids,
-  special: AUDIENCE_LABEL.special,
 }
 
 /** Accessible name for the category badge turned link on a product's page. */

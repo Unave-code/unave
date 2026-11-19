@@ -667,19 +667,21 @@ export const Products: CollectionConfig = {
                 },
                 {
                   name: 'audience',
-                  type: 'select',
+                  type: 'relationship',
                   label: 'Audience',
-                  required: true,
+                  relationTo: 'audiences',
+                  // Nullable in the database, like the subcategory, so a product is
+                  // never truncated by a schema push; the validate below still makes
+                  // every save pick one.
+                  required: false,
+                  index: true,
                   admin: {
                     width: '33%',
                     description:
-                      'Who the product is for. Shown as a label on the product card, next to the category.',
+                      'Who the product is for. Manage the list under Catalogue → Audiences.',
                   },
-                  options: [
-                    { label: 'Kids', value: 'kids' },
-                    { label: 'Adults', value: 'adults' },
-                    { label: 'Special', value: 'special' },
-                  ],
+                  validate: (value: unknown) =>
+                    value ? true : 'Pick an audience for this product.',
                 },
               ],
             },

@@ -6,8 +6,6 @@ import { CTA_BASE, CTA_SIZES, CTA_VARIANTS } from '@/components/Cta'
 import { AUTH_INPUT, AUTH_INPUT_LEADING } from '@/components/CustomerAuth/styles'
 import { cn } from '@/utilities/ui'
 import {
-  AUDIENCE_FILTER_LABEL,
-  AUDIENCE_FILTER_ORDER,
   CATEGORY_LABEL,
   PRODUCT_CATEGORY_VALUES,
   type ProductCategoryValue,
@@ -52,7 +50,7 @@ import {
  */
 
 /** One choice in a facet select: the value the address carries and its word. */
-interface FacetOption {
+export interface FacetOption {
   label: string
   value: string
 }
@@ -86,19 +84,17 @@ const FacetSelect: React.FC<{
 
 export const ProductShelfControls: React.FC<{
   /** The shelf's own address, which is also where its form applies to. */
+  /** The audiences staff keep in the admin, as filter choices. */
+  audiences?: FacetOption[]
   basePath: string
   /** Set on a category page, where the category is the page and not a choice. */
   fixedCategory?: ProductCategoryValue
   state: ShelfState
-}> = ({ basePath, fixedCategory, state }) => {
+}> = ({ audiences = [], basePath, fixedCategory, state }) => {
   const categoryOptions: FacetOption[] = PRODUCT_CATEGORY_VALUES.map((value) => ({
     label: CATEGORY_LABEL[value],
     value,
   }))
-
-  const audienceOptions: FacetOption[] = AUDIENCE_FILTER_ORDER.filter(
-    (value) => value !== 'all',
-  ).map((value) => ({ label: AUDIENCE_FILTER_LABEL[value], value }))
 
   const clearHref = shelfHref(basePath, EMPTY_SHELF)
 
@@ -148,12 +144,14 @@ export const ProductShelfControls: React.FC<{
         value={state.kind}
       />
 
-      <FacetSelect
-        label={SHELF_FILTER_AUDIENCE}
-        name="audience"
-        options={audienceOptions}
-        value={state.audience}
-      />
+      {audiences.length > 0 ? (
+        <FacetSelect
+          label={SHELF_FILTER_AUDIENCE}
+          name="audience"
+          options={audiences}
+          value={state.audience}
+        />
+      ) : null}
 
       <div aria-label={SHELF_PRICE_LABEL} className="flex items-center gap-1.5" role="group">
         <input

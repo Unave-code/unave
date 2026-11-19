@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import config from '@/payload.config'
 import type { Product, User } from '@/payload-types'
 import { sweepRun } from '../helpers/sweepRun'
+import { testAudienceId } from '../helpers/audience'
 
 // The dev database is remote, so a single test can make several slow round trips.
 vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
@@ -20,6 +21,7 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
  */
 
 let payload: Payload
+let audienceId: number
 
 const run = `it-combo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 const productIDs: (number | string)[] = []
@@ -43,7 +45,10 @@ const failure = async (promise: Promise<unknown>): Promise<string> => {
   } catch (error) {
     const issues = (error as { data?: { errors?: ValidationIssue[] } }).data?.errors ?? []
 
-    return [error instanceof Error ? error.message : String(error), ...issues.map((issue) => issue.message ?? '')]
+    return [
+      error instanceof Error ? error.message : String(error),
+      ...issues.map((issue) => issue.message ?? ''),
+    ]
       .filter(Boolean)
       .join(' | ')
   }
@@ -55,7 +60,7 @@ const comboData = (
   components: NonNullable<Product['components']>,
   overrides: Record<string, unknown> = {},
 ) => ({
-  audience: 'adults' as const,
+  audience: audienceId,
   category: 'ready-to-eat' as const,
   components,
   price: 99000,
@@ -68,6 +73,7 @@ const comboData = (
 
 beforeAll(async () => {
   payload = await getPayload({ config })
+  audienceId = await testAudienceId(payload)
 
   const subcategory = await payload.create({
     collection: 'subcategories',
@@ -92,7 +98,7 @@ beforeAll(async () => {
   const plan = (await payload.create({
     collection: 'products',
     data: {
-      audience: 'adults',
+      audience: audienceId,
       available: true,
       category: 'ready-to-eat',
       durations: [{ days: 5, label: 'One week', price: 150000 }],
@@ -111,7 +117,7 @@ beforeAll(async () => {
   const oneTime = (await payload.create({
     collection: 'products',
     data: {
-      audience: 'adults',
+      audience: audienceId,
       available: true,
       category: 'ready-to-eat',
       price: 4900,
