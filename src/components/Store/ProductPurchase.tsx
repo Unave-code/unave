@@ -169,7 +169,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             ? combo
               ? 'One fixed price for the whole combo.'
               : 'Cooked fresh and delivered once.'
-            : `${duration!.label}, ${daysText(duration!.days)} of meals`}
+            : `${daysText(duration!.days)} of meals`}
         </p>
       </div>
 
@@ -240,8 +240,6 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
                       className={OPTION_TILE}
                     >
                       <TileCheck />
-                      <span className="text-sm font-bold">{option.label}</span>
-                      <TileDot />
                       <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
                       <TileDot />
                       <span className={TILE_SUB}>{daysText(option.days)}</span>

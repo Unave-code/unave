@@ -241,7 +241,9 @@ describe('a product page', () => {
 
     expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
     expect(screen.getByText('Phulka box')).toBeTruthy()
-    expect(screen.getAllByText(/One week/).length).toBeGreaterThan(0)
+    // The plan tile shows the amount and the days, not the duration's label.
+    expect(screen.getAllByText('5 days').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('₹1,200').length).toBeGreaterThan(0)
     expect(screen.queryByText('₹990')).toBeNull()
   })
 
