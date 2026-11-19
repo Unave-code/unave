@@ -46,7 +46,7 @@ const componentProduct = (value: unknown): PopulatedProduct | null => {
 
 export const comboComponents = (product: Product): ComboComponentSnapshot[] | null => {
   const components = product.components ?? []
-  if (components.length < 2 || components.length > 10) return null
+  if (components.length < 1 || components.length > 10) return null
 
   const seen = new Set<string>()
   const snapshots: ComboComponentSnapshot[] = []
@@ -95,7 +95,7 @@ export const comboSeparatePrice = (product: Product): null | number => {
   if (product.type !== 'combo') return null
 
   const components = product.components ?? []
-  if (components.length < 2) return null
+  if (components.length < 1) return null
 
   let sum = 0
 
@@ -151,7 +151,7 @@ export const comboProblems = (product: Product): string[] => {
   const components = product.components ?? []
   const problems: string[] = []
 
-  if (components.length < 2) problems.push('A combo needs at least two items.')
+  if (components.length < 1) problems.push('A combo needs at least one item.')
   if (components.length > 10) problems.push('A combo can hold at most ten items.')
 
   const seen = new Set<string>()

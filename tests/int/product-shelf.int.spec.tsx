@@ -208,7 +208,7 @@ describe('what counts as filtered', () => {
 describe('the query the shelf reads by', () => {
   it('narrows to one kind of product', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, kind: 'combo' })).toEqual({
-      and: [{ type: { equals: 'combo' } }],
+      and: [{ available: { equals: true } }, { type: { equals: 'combo' } }],
     })
   })
 
@@ -217,36 +217,44 @@ describe('the query the shelf reads by', () => {
   })
 
   it('asks for nothing at all when nothing is asked', () => {
-    expect(shelfWhere(EMPTY_SHELF)).toEqual({})
+    expect(shelfWhere(EMPTY_SHELF)).toEqual({ and: [{ available: { equals: true } }] })
   })
 
   it('pins a category page to its own category, whatever the address says', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, category: 'ready-to-eat' }, 'ready-to-cook')).toEqual({
-      and: [{ category: { equals: 'ready-to-cook' } }],
+      and: [{ available: { equals: true } }, { category: { equals: 'ready-to-cook' } }],
     })
   })
 
   it('filters by the resolved subcategory document ID', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, subcategory: 'tiffin' }, undefined, 7)).toEqual({
-      and: [{ subcategory: { equals: 7 } }],
+      and: [{ available: { equals: true } }, { subcategory: { equals: 7 } }],
     })
   })
 
   it('reads a price range in rupees as paise, inclusive at both ends', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, from: 50, to: 150 })).toEqual({
-      and: [{ fromPrice: { greater_than_equal: 5000 } }, { fromPrice: { less_than_equal: 15000 } }],
+      and: [
+        { available: { equals: true } },
+        { fromPrice: { greater_than_equal: 5000 } },
+        { fromPrice: { less_than_equal: 15000 } },
+      ],
     })
   })
 
   it('searches the name and the points, because the description is rich text', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, q: 'dal' })).toEqual({
-      and: [{ or: [{ title: { like: 'dal' } }, { 'points.point': { like: 'dal' } }] }],
+      and: [
+        { available: { equals: true } },
+        { or: [{ title: { like: 'dal' } }, { 'points.point': { like: 'dal' } }] },
+      ],
     })
   })
 
   it('reads several facets at once', () => {
     expect(shelfWhere({ ...EMPTY_SHELF, audience: 'kids', from: 50, to: 150 })).toEqual({
       and: [
+        { available: { equals: true } },
         { audience: { equals: 'kids' } },
         { fromPrice: { greater_than_equal: 5000 } },
         { fromPrice: { less_than_equal: 15000 } },
@@ -274,7 +282,7 @@ describe('fetching a subcategory shelf', () => {
       2,
       expect.objectContaining({
         collection: 'products',
-        where: { and: [{ subcategory: { equals: 7 } }] },
+        where: { and: [{ available: { equals: true } }, { subcategory: { equals: 7 } }] },
       }),
     )
   })
@@ -302,7 +310,11 @@ describe('fetching a subcategory shelf', () => {
       2,
       expect.objectContaining({
         where: {
-          and: [{ category: { equals: 'ready-to-cook' } }, { subcategory: { equals: 7 } }],
+          and: [
+            { available: { equals: true } },
+            { category: { equals: 'ready-to-cook' } },
+            { subcategory: { equals: 7 } },
+          ],
         },
       }),
     )
@@ -425,16 +437,6 @@ describe('the shelf', () => {
     expect(screen.getByRole('link', { name: 'Next page' }).getAttribute('href')).toBe(
       '/products?q=dal&page=2',
     )
-  })
-
-  it('says what a paused product means when one is on the page', () => {
-    render(
-      shelf({
-        result: { docs: [{ ...product, available: false }], page: 1, totalDocs: 1, totalPages: 1 },
-      }),
-    )
-
-    expect(screen.getByText('What "paused" means')).toBeTruthy()
   })
 
   it('offers the way back to the whole shelf when the filters matched nothing', () => {

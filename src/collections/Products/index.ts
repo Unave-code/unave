@@ -467,13 +467,13 @@ export const Products: CollectionConfig = {
               name: 'components',
               type: 'array',
               label: 'Combo contents',
-              minRows: 2,
+              minRows: 1,
               maxRows: 10,
               admin: {
                 condition: (data) =>
                   (data as { type?: null | string } | undefined)?.type === 'combo',
                 description:
-                  'Choose two to ten different products. A meal plan can name one of its current durations, or leave it open.',
+                  'Choose one to ten different products. A meal plan can name one of its current durations, or leave it open.',
               },
               fields: [
                 {
@@ -519,8 +519,8 @@ export const Products: CollectionConfig = {
                 },
               ) => {
                 if (siblingData.type !== 'combo') return true
-                if (!Array.isArray(value) || value.length < 2 || value.length > 10) {
-                  return 'Add between two and ten products to this combo.'
+                if (!Array.isArray(value) || value.length < 1 || value.length > 10) {
+                  return 'Add between one and ten products to this combo.'
                 }
 
                 const ids = value.map((row) => {

@@ -147,7 +147,7 @@ test.afterAll(async () => {
 })
 
 test.describe('a category page', () => {
-  test('renders its own shelf, with paused products shown but not buyable (AC-1)', async ({ page }) => {
+  test('renders its own shelf, leaving paused products off it (AC-1)', async ({ page }) => {
     await page.goto(`${BASE}/products/ready-to-cook`)
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/The chopping is done/i)
@@ -159,9 +159,7 @@ test.describe('a category page', () => {
     )
     await expect(card(page, 'Category E2E cook').getByRole('button', { name: 'Add to cart' })).toBeVisible()
 
-    await expect(page.getByRole('heading', { name: 'Category E2E paused' })).toBeVisible()
-    await expect(card(page, 'Category E2E paused').getByRole('button', { name: 'Add to cart' })).toHaveCount(0)
-    await expect(page.getByText(/What "paused" means/i)).toBeVisible()
+    await expect(card(page, 'Category E2E paused')).toHaveCount(0)
   })
 
   test('narrows by audience with icon pills, without leaving the page (AC-2)', async ({ page }) => {
@@ -182,12 +180,12 @@ test.describe('a category page', () => {
     await expect(page).toHaveURL(`${BASE}/products/ready-to-cook`)
 
     await group.getByRole('button', { name: 'Adults' }).click()
-    await expect(card(page, 'Category E2E paused')).toBeVisible()
     await expect(card(page, 'Category E2E cook')).toHaveCount(0)
+    await expect(card(page, 'Category E2E paused')).toHaveCount(0)
 
     await group.getByRole('button', { name: 'All' }).click()
     await expect(card(page, 'Category E2E cook')).toBeVisible()
-    await expect(card(page, 'Category E2E paused')).toBeVisible()
+    await expect(card(page, 'Category E2E paused')).toHaveCount(0)
   })
 
   test('works the same on a phone (AC-2)', async ({ page }) => {

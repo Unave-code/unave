@@ -14,7 +14,7 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
 /**
  * Building a combo in the admin (spec 0010, AC-1, AC-2 and AC-9).
  *
- * A combo is a product with two to ten distinct products inside it. The
+ * A combo is a product with one to ten distinct products inside it. The
  * collection refuses a duplicate, a combo inside a combo, a meal plan without
  * one current duration and a price with more than two decimal places.
  */
@@ -198,17 +198,17 @@ describe('saving a combo', () => {
     expect(message).toMatch(/only once/i)
   })
 
-  it('refuses fewer than two products', async () => {
+  it('refuses a combo with no products', async () => {
     const message = await failure(
       payload.create({
         collection: 'products',
-        data: comboData([{ product: oneTimeId }]),
+        data: comboData([]),
         depth: 0,
         ...staffOptions(),
       }),
     )
 
-    expect(message).toMatch(/between two and ten/i)
+    expect(message).toMatch(/between one and ten/i)
   })
 
   it('saves a meal plan with no duration named, since the duration is optional', async () => {

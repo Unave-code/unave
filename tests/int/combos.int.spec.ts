@@ -6,7 +6,7 @@ import { comboComponents, isProductSellable, selectedComboDuration } from '@/uti
 /**
  * The rules a combo is judged by, without a database (spec 0010, AC-2 and AC-4).
  *
- * A combo is sellable only when it holds two to ten distinct products, every
+ * A combo is sellable only when it holds one to ten distinct products, every
  * one of them exists, is available and is not itself a combo, and every meal
  * plan carries exactly one current duration. The same judgement decides the
  * paused label on a card and whether a cart line is stale, so it lives in one
@@ -89,8 +89,9 @@ describe('comboComponents', () => {
     })
   })
 
-  it('refuses a combo with fewer than two or more than ten products', () => {
-    expect(comboComponents(combo([{ product: oneTime }]))).toBeNull()
+  it('accepts a single product and refuses none or more than ten', () => {
+    expect(comboComponents(combo([{ product: oneTime }]))).toHaveLength(1)
+    expect(comboComponents(combo([]))).toBeNull()
     expect(
       comboComponents(
         combo(Array.from({ length: 11 }, () => ({ product: oneTime }))),
