@@ -6,7 +6,6 @@ import { authenticateCustomerToken } from '@/auth/customerSession'
 import {
   CART_COOKIE,
   CART_MAX_LINES,
-  CART_MAX_QTY,
   clearCartCookie,
   hasDuplicateCartLines,
   isValidCartQuantity,
@@ -29,6 +28,7 @@ import {
 import { recordPaidOrder } from './confirm'
 import { findCheckoutIntent } from './intent'
 import { orderCreateSchema, orderVerifySchema } from './schema'
+import { errorMessage } from '@/utilities/errorMessage'
 
 /**
  * The two order endpoints (spec 0007).
@@ -161,7 +161,7 @@ export const createOrderEndpoint: Endpoint = {
       gateway = await createRazorpayOrder(cart.total, randomUUID())
     } catch (error) {
       req.payload.logger.error({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'razorpay_order_create_failed',
       })
       return json('The payment gateway did not respond. Please try again in a moment.', 503)
@@ -205,7 +205,7 @@ export const createOrderEndpoint: Endpoint = {
       })
     } catch (error) {
       req.payload.logger.error({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         gatewayOrderId: gateway.id,
         msg: 'checkout_intent_save_failed',
       })
@@ -287,7 +287,7 @@ export const verifyOrderEndpoint: Endpoint = {
       razorpayOrder = await fetchRazorpayOrder(razorpay_order_id)
     } catch (error) {
       req.payload.logger.warn({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'order_return_gateway_order_unreadable',
       })
       return json(PAYMENT_UNCONFIRMED, 400)
@@ -299,7 +299,7 @@ export const verifyOrderEndpoint: Endpoint = {
       payment = await fetchRazorpayPayment(razorpay_payment_id)
     } catch (error) {
       req.payload.logger.warn({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'order_return_payment_fetch_failed',
       })
       return json(PAYMENT_UNCONFIRMED, 400)
@@ -311,7 +311,7 @@ export const verifyOrderEndpoint: Endpoint = {
       intent = await findCheckoutIntent(req.payload, razorpay_order_id)
     } catch (error) {
       req.payload.logger.error({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         gatewayOrderId: razorpay_order_id,
         msg: 'checkout_intent_read_failed',
       })
@@ -352,7 +352,7 @@ export const verifyOrderEndpoint: Endpoint = {
       })
     } catch (error) {
       req.payload.logger.error({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'order_return_write_failed',
       })
       return json(ORDER_NOT_SAVED, 500)

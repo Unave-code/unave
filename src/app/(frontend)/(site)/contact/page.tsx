@@ -36,6 +36,7 @@ import {
 } from '@/utilities/contactCopy'
 
 import { ContactForm } from './ContactForm'
+import { firstParam } from '@/utilities/searchParams'
 
 /** The page reads the query string for the form's answer, so it is never static. */
 export const dynamic = 'force-dynamic'
@@ -53,9 +54,6 @@ export const metadata: Metadata = {
 
 type SearchParams = Record<string, string | string[] | undefined>
 
-const firstValue = (value: string | string[] | undefined): string =>
-  (Array.isArray(value) ? value[0] : value) ?? ''
-
 const CARD_BASE =
   'group block rounded-2xl border border-line bg-card p-6 transition-colors hover:border-green-600 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none motion-reduce:transition-none'
 
@@ -70,8 +68,8 @@ const ICON_CHIP = 'bg-green-100 text-green-700 grid size-11 place-items-center r
  */
 export default async function ContactPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
-  const sent = firstValue(params.sent) === '1'
-  const error = contactError(firstValue(params.error) || undefined)
+  const sent = firstParam(params.sent) === '1'
+  const error = contactError(firstParam(params.error) || undefined)
 
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const contact = footer?.contact ?? null

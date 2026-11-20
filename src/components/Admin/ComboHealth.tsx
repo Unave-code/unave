@@ -9,17 +9,9 @@ import { comboProblems, comboSeparatePrice } from '@/utilities/combos'
 import { formatPaise } from '@/utilities/money'
 
 import { hasComboItems } from '@/utilities/productKind'
+import { relationId } from '@/utilities/relationId'
 
 import './ComboHealth.scss'
-
-const relationId = (value: unknown): null | number | string => {
-  if (typeof value === 'number' || typeof value === 'string') return value
-  if (value && typeof value === 'object' && 'id' in value) {
-    const id = (value as { id?: unknown }).id
-    return typeof id === 'number' || typeof id === 'string' ? id : null
-  }
-  return null
-}
 
 /**
  * The combo's health, in the product sidebar (design.md §6.15).

@@ -47,6 +47,7 @@ import { formatPaise } from '@/utilities/money'
 import { productHref } from '@/utilities/productsCategoryCopy'
 import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
 import { cn } from '@/utilities/ui'
+import { firstParam } from '@/utilities/searchParams'
 
 /** The quantity stepper's two halves, inside one outlined pill. */
 const STEPPER_BUTTON =
@@ -85,16 +86,13 @@ type CartSearchParams = {
   notice?: string | string[]
 }
 
-const firstValue = (value?: string | string[]): string =>
-  Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
-
 export default async function CartPage({
   searchParams,
 }: {
   searchParams: Promise<CartSearchParams>
 }) {
   const params = await searchParams
-  const notice = cartNotice(firstValue(params.notice))
+  const notice = cartNotice(firstParam(params.notice))
   const cookieStore = await cookies()
   const lines = readCart(cookieStore.get(CART_COOKIE)?.value)
 

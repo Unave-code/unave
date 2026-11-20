@@ -35,6 +35,7 @@ import {
   signInSchema,
   signUpSchema,
 } from './schema'
+import { errorMessage } from '@/utilities/errorMessage'
 
 /**
  * Put Payload's JWT in the customer cookie.
@@ -172,7 +173,7 @@ export const customerLoginEndpoint: Endpoint = {
       }
 
       req.payload.logger.warn({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'customer_login_rejected',
       })
       return backWithError(SIGN_IN_PATH, 'credentials', keep)

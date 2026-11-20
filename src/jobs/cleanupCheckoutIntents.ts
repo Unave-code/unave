@@ -1,6 +1,7 @@
 import type { TaskConfig } from 'payload'
 
 import { fetchRazorpayOrder } from '@/utilities/razorpay'
+import { errorMessage } from '@/utilities/errorMessage'
 
 const RETENTION_DAYS = 30
 const BATCH_SIZE = 500
@@ -35,7 +36,7 @@ export const cleanupCheckoutIntentsTask: TaskConfig<{
         gatewayOrder = await fetchRazorpayOrder(gatewayOrderId)
       } catch (error) {
         req.payload.logger.warn({
-          err: error instanceof Error ? error.message : String(error),
+          err: errorMessage(error),
           gatewayOrderId,
           msg: 'checkout_intent_cleanup_lookup_failed',
         })
@@ -66,7 +67,7 @@ export const cleanupCheckoutIntentsTask: TaskConfig<{
         deleted += 1
       } catch (error) {
         req.payload.logger.error({
-          err: error instanceof Error ? error.message : String(error),
+          err: errorMessage(error),
           gatewayOrderId,
           msg: 'checkout_intent_cleanup_delete_failed',
         })

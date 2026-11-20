@@ -4,6 +4,7 @@ import type { Order } from '@/payload-types'
 
 import { deleteCheckoutIntent, type OrderIntent } from './intent'
 import { sendOrderMails } from './mail'
+import { errorMessage } from '@/utilities/errorMessage'
 
 /**
  * Writing the paid order, which happens exactly once (spec 0007).
@@ -93,7 +94,7 @@ export const recordPaidOrder = async (
     // sendOrderMails already swallows its own failures; this catch is the belt
     // to that braces. A mail problem must never undo a paid order.
     payload.logger.error({
-      err: error instanceof Error ? error.message : String(error),
+      err: errorMessage(error),
       msg: 'order_mail_send_failed',
       order: order.id,
     })

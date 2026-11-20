@@ -2,6 +2,8 @@ import type { Payload } from 'payload'
 
 import type { CheckoutIntent } from '@/payload-types'
 import { isValidCartQuantity } from '@/utilities/cart'
+import { relationId } from '@/utilities/relationId'
+import { errorMessage } from '@/utilities/errorMessage'
 
 export type OrderIntentComponent = {
   days?: number
@@ -40,14 +42,6 @@ export type OrderIntent = {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-
-const relationId = (value: unknown): number | string | null => {
-  if (typeof value === 'number' || typeof value === 'string') return value
-  if (isRecord(value) && (typeof value.id === 'number' || typeof value.id === 'string')) {
-    return value.id
-  }
-  return null
-}
 
 const numericId = (value: unknown): number | null => {
   const id = relationId(value)
@@ -208,7 +202,7 @@ export const deleteCheckoutIntent = async (
     })
   } catch (error) {
     payload.logger.error({
-      err: error instanceof Error ? error.message : String(error),
+      err: errorMessage(error),
       gatewayOrderId,
       intentId,
       msg: 'checkout_intent_delete_failed',

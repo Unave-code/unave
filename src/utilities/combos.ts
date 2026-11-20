@@ -1,5 +1,6 @@
 import type { Product } from '@/payload-types'
 import { hasComboItems, isSingleItem } from '@/utilities/productKind'
+import { relationId } from './relationId'
 
 export type ComboComponentSnapshot = {
   days?: number
@@ -9,15 +10,6 @@ export type ComboComponentSnapshot = {
 }
 
 type PopulatedProduct = Product & { id: number | string }
-
-const relationId = (value: unknown): number | string | null => {
-  if (typeof value === 'number' || typeof value === 'string') return value
-  if (value && typeof value === 'object' && 'id' in value) {
-    const id = (value as { id?: unknown }).id
-    return typeof id === 'number' || typeof id === 'string' ? id : null
-  }
-  return null
-}
 
 export const selectedComboDuration = (product: Product, label: null | string | undefined) => {
   const normalized = label?.trim().toLowerCase()

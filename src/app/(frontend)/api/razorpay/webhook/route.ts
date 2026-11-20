@@ -5,6 +5,7 @@ import { fetchRazorpayOrder, verifyWebhookSignature } from '@/utilities/razorpay
 
 import { recordPaidOrder } from '@/collections/Orders/confirm'
 import { findCheckoutIntent } from '@/collections/Orders/intent'
+import { errorMessage } from '@/utilities/errorMessage'
 
 /**
  * Razorpay's webhook (spec 0007, AC-6).
@@ -132,7 +133,7 @@ export async function POST(request: Request): Promise<Response> {
       gatewayOrder = { amount: order.amount, currency: order.currency, id: order.id }
     } catch (error) {
       payload.logger.warn({
-        err: error instanceof Error ? error.message : String(error),
+        err: errorMessage(error),
         msg: 'razorpay_webhook_order_unreadable',
         order: captured.orderId,
       })
@@ -154,7 +155,7 @@ export async function POST(request: Request): Promise<Response> {
     intent = await findCheckoutIntent(payload, captured.orderId)
   } catch (error) {
     payload.logger.error({
-      err: error instanceof Error ? error.message : String(error),
+      err: errorMessage(error),
       gatewayOrderId: captured.orderId,
       msg: 'razorpay_webhook_intent_read_failed',
       paymentId: captured.paymentId,
@@ -212,7 +213,7 @@ export async function POST(request: Request): Promise<Response> {
     })
   } catch (error) {
     payload.logger.error({
-      err: error instanceof Error ? error.message : String(error),
+      err: errorMessage(error),
       msg: 'razorpay_webhook_write_failed',
       order: captured.orderId,
     })
