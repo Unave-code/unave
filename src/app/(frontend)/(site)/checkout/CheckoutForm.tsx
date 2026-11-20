@@ -2,12 +2,10 @@
 
 import { Lock, Mail, MapPin } from 'lucide-react'
 import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { orderDeliverySchema } from '@/collections/Orders/schema'
-import { readCreatedOrder } from '@/utilities/orderCreate'
 import { toFieldErrors, type FieldErrors } from '@/auth/password/schema'
 import { cn } from '@/utilities/ui'
 
@@ -15,11 +13,8 @@ import {
   CHECKOUT_ADDRESS_LABEL,
   CHECKOUT_ADDRESS_OPTIONAL_LABEL,
   CHECKOUT_CITY_LABEL,
-  CHECKOUT_CLOSED_MESSAGE,
-  CHECKOUT_CONFIRMING_MESSAGE,
   CHECKOUT_DELIVERY_HEADING,
   CHECKOUT_DELIVERY_INTRO,
-  CHECKOUT_FAILED_MESSAGE,
   CHECKOUT_NAME_LABEL,
   CHECKOUT_NOTE_LABEL,
   CHECKOUT_NOTE_PLACEHOLDER,
@@ -27,9 +22,9 @@ import {
   CHECKOUT_PAY_PENDING,
   CHECKOUT_PHONE_LABEL,
   CHECKOUT_PINCODE_LABEL,
-  CHECKOUT_SCRIPT_FAILED_MESSAGE,
   CHECKOUT_STATE_LABEL,
 } from './copy'
+import { useRazorpayCheckout } from './useRazorpayCheckout'
 
 /**
  * The checkout form (spec 0007, AC-4 and AC-5).
@@ -49,37 +44,37 @@ import {
  * the browser accepts is a value the server accepts too.
  */
 
-type RazorpayHandlerResponse = {
-  razorpay_order_id: string
-  razorpay_payment_id: string
-  razorpay_signature: string
-}
-
-type RazorpayOptions = {
-  amount: number
-  currency: string
-  description: string
-  handler: (response: RazorpayHandlerResponse) => void
-  key: string
-  modal: { ondismiss: () => void }
-  name: string
-  order_id: string
-  prefill: { email: string; name: string; phone: string }
-  theme: { color: string }
-}
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: RazorpayOptions) => { open: () => void }
-  }
-}
-
 const FIELD_LABEL = 'text-ink-900 block text-sm font-semibold'
 const FIELD_ERROR = 'text-error mt-1.5 text-sm'
 const FIELD_INPUT =
   'border-line text-ink-900 hover:border-ink-400 bg-white focus:border-green-700 focus:ring-green-500 mt-2 block h-12 w-full rounded-sm border px-4 text-base transition-colors focus:ring-[3px] focus:outline-none motion-reduce:transition-none'
 
-type Status = 'idle' | 'starting' | 'paying'
+/** One delivery field: its label, the input (id `checkout-<name>`) and its error. */
+const CheckoutField: React.FC<{
+  autoComplete: string
+  defaultValue: string
+  error?: string
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
+  label: string
+  name: string
+  type?: string
+}> = ({ autoComplete, defaultValue, error, inputMode, label, name, type }) => (
+  <div>
+    <label className={FIELD_LABEL} htmlFor={`checkout-${name}`}>
+      {label}
+    </label>
+    <input
+      autoComplete={autoComplete}
+      className={cn(FIELD_INPUT, error && 'border-red-600')}
+      defaultValue={defaultValue}
+      id={`checkout-${name}`}
+      inputMode={inputMode}
+      name={name}
+      type={type}
+    />
+    {error ? <p className={FIELD_ERROR}>{error}</p> : null}
+  </div>
+)
 
 export const CheckoutForm: React.FC<{
   defaults: {
@@ -96,51 +91,14 @@ export const CheckoutForm: React.FC<{
   /** The cart total, already formatted, shown on the pay button. */
   total: string
 }> = ({ defaults, email, total }) => {
-  const router = useRouter()
   const [errors, setErrors] = useState<FieldErrors>({})
-  const [message, setMessage] = useState<string | null>(null)
-  const [status, setStatus] = useState<Status>('idle')
+  const { busy, message, pay } = useRazorpayCheckout(email)
 
   const readValue = (field: string): string =>
     (document.getElementById(`checkout-${field}`) as HTMLInputElement | null)?.value?.trim() ?? ''
 
   const readNote = (): string =>
     (document.getElementById('checkout-note') as HTMLTextAreaElement | null)?.value?.trim() ?? ''
-
-  const verifyAndContinue = async (response: RazorpayHandlerResponse) => {
-    let orderId: number | string | null = null
-
-    try {
-      // The server verifies the payment and writes the order here, so this is
-      // where the order id comes from. A refusal or a dropped connection leaves
-      // the payment to the signed webhook and shows the customer one sentence.
-      const answer = await fetch('/api/orders/verify', {
-        body: JSON.stringify(response),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
-
-      const body = (await answer.json().catch(() => null)) as { orderId?: number | string } | null
-
-      if (
-        answer.ok &&
-        body &&
-        (typeof body.orderId === 'number' || typeof body.orderId === 'string')
-      ) {
-        orderId = body.orderId
-      }
-    } catch {
-      // The sentence below covers it.
-    }
-
-    if (orderId === null) {
-      setStatus('idle')
-      setMessage(CHECKOUT_CONFIRMING_MESSAGE)
-      return
-    }
-
-    router.push(`/order-placed/${orderId}`)
-  }
 
   const startPayment = async () => {
     const delivery = {
@@ -162,110 +120,8 @@ export const CheckoutForm: React.FC<{
     }
 
     setErrors({})
-    setMessage(null)
-    setStatus('starting')
-
-    let created: {
-      amount: number
-      gatewayOrderId: string
-      keyId: string
-    } | null = null
-    let failure: string = CHECKOUT_FAILED_MESSAGE
-
-    try {
-      const answer = await fetch('/api/orders/create', {
-        body: JSON.stringify({
-          delivery: parsed.data,
-          note: readNote(),
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
-
-      const body = (await answer.json().catch(() => null)) as { message?: string } | null
-
-      // The server resolves the live price and opens the gateway order. Accept
-      // its own shape check so a successful create is never mistaken for a
-      // failed one.
-      const candidate = answer.ok ? readCreatedOrder(body) : null
-
-      if (candidate) {
-        created = candidate
-      } else if (body?.message) {
-        failure = body.message
-      }
-    } catch {
-      // The failure sentence below covers it.
-    }
-
-    if (!created) {
-      setStatus('idle')
-      setMessage(failure)
-      return
-    }
-
-    setStatus('paying')
-
-    const openPopup = () => {
-      const Razorpay = window.Razorpay
-
-      if (!Razorpay) {
-        setStatus('idle')
-        setMessage(CHECKOUT_SCRIPT_FAILED_MESSAGE)
-        return
-      }
-
-      try {
-        const checkout = new Razorpay({
-          amount: created.amount,
-          currency: 'INR',
-          description: 'UNAVE meal product',
-          handler: (response) => {
-            void verifyAndContinue(response)
-          },
-          key: created.keyId,
-          modal: {
-            ondismiss: () => {
-              setStatus('idle')
-              setMessage(CHECKOUT_CLOSED_MESSAGE)
-            },
-          },
-          name: 'UNAVE kitchen',
-          order_id: created.gatewayOrderId,
-          prefill: { email, name: parsed.data.name, phone: parsed.data.phone },
-          theme: { color: '#1a4b36' },
-        })
-
-        checkout.open()
-      } catch {
-        setStatus('idle')
-        setMessage(CHECKOUT_SCRIPT_FAILED_MESSAGE)
-      }
-    }
-
-    // The script tag sits above this component; by submit time it is almost
-    // always in. A slow or blocked script gets fifteen seconds, then a sentence
-    // that names the likely cause instead of the generic failure.
-    if (window.Razorpay) {
-      openPopup()
-    } else {
-      const timer = setInterval(() => {
-        if (window.Razorpay) {
-          clearInterval(timer)
-          openPopup()
-        }
-      }, 100)
-      setTimeout(() => {
-        if (!window.Razorpay) {
-          clearInterval(timer)
-          setStatus('idle')
-          setMessage(CHECKOUT_SCRIPT_FAILED_MESSAGE)
-        }
-      }, 15_000)
-    }
+    await pay(parsed, readNote())
   }
-
-  const busy = status !== 'idle'
 
   return (
     <div>
@@ -305,113 +161,22 @@ export const CheckoutForm: React.FC<{
           </p>
         </div>
 
-        <div>
-          <label className={FIELD_LABEL} htmlFor="checkout-name">
-            {CHECKOUT_NAME_LABEL}
-          </label>
-          <input
-            autoComplete="name"
-            className={cn(FIELD_INPUT, errors.name && 'border-red-600')}
-            defaultValue={defaults.name}
-            id="checkout-name"
-            name="name"
-            type="text"
-          />
-          {errors.name ? <p className={FIELD_ERROR}>{errors.name}</p> : null}
-        </div>
+        <CheckoutField autoComplete="name" defaultValue={defaults.name} error={errors.name} label={CHECKOUT_NAME_LABEL} name="name" type="text" />
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className={FIELD_LABEL} htmlFor="checkout-phone">
-              {CHECKOUT_PHONE_LABEL}
-            </label>
-            <input
-              autoComplete="tel"
-              className={cn(FIELD_INPUT, errors.phone && 'border-red-600')}
-              defaultValue={defaults.phone}
-              id="checkout-phone"
-              inputMode="tel"
-              name="phone"
-              type="tel"
-            />
-            {errors.phone ? <p className={FIELD_ERROR}>{errors.phone}</p> : null}
-          </div>
+          <CheckoutField autoComplete="tel" defaultValue={defaults.phone} error={errors.phone} inputMode="tel" label={CHECKOUT_PHONE_LABEL} name="phone" type="tel" />
 
-          <div>
-            <label className={FIELD_LABEL} htmlFor="checkout-pincode">
-              {CHECKOUT_PINCODE_LABEL}
-            </label>
-            <input
-              autoComplete="postal-code"
-              className={cn(FIELD_INPUT, errors.pincode && 'border-red-600')}
-              defaultValue={defaults.pincode}
-              id="checkout-pincode"
-              inputMode="numeric"
-              name="pincode"
-            />
-            {errors.pincode ? <p className={FIELD_ERROR}>{errors.pincode}</p> : null}
-          </div>
+          <CheckoutField autoComplete="postal-code" defaultValue={defaults.pincode} error={errors.pincode} inputMode="numeric" label={CHECKOUT_PINCODE_LABEL} name="pincode" />
         </div>
 
-        <div>
-          <label className={FIELD_LABEL} htmlFor="checkout-line1">
-            {CHECKOUT_ADDRESS_LABEL}
-          </label>
-          <input
-            autoComplete="address-line1"
-            className={cn(FIELD_INPUT, errors.line1 && 'border-red-600')}
-            defaultValue={defaults.line1}
-            id="checkout-line1"
-            name="line1"
-            type="text"
-          />
-          {errors.line1 ? <p className={FIELD_ERROR}>{errors.line1}</p> : null}
-        </div>
+        <CheckoutField autoComplete="address-line1" defaultValue={defaults.line1} error={errors.line1} label={CHECKOUT_ADDRESS_LABEL} name="line1" type="text" />
 
-        <div>
-          <label className={FIELD_LABEL} htmlFor="checkout-line2">
-            {CHECKOUT_ADDRESS_OPTIONAL_LABEL}
-          </label>
-          <input
-            autoComplete="address-line2"
-            className={FIELD_INPUT}
-            defaultValue={defaults.line2}
-            id="checkout-line2"
-            name="line2"
-            type="text"
-          />
-        </div>
+        <CheckoutField autoComplete="address-line2" defaultValue={defaults.line2} label={CHECKOUT_ADDRESS_OPTIONAL_LABEL} name="line2" type="text" />
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className={FIELD_LABEL} htmlFor="checkout-city">
-              {CHECKOUT_CITY_LABEL}
-            </label>
-            <input
-              autoComplete="address-level2"
-              className={cn(FIELD_INPUT, errors.city && 'border-red-600')}
-              defaultValue={defaults.city}
-              id="checkout-city"
-              name="city"
-              type="text"
-            />
-            {errors.city ? <p className={FIELD_ERROR}>{errors.city}</p> : null}
-          </div>
+          <CheckoutField autoComplete="address-level2" defaultValue={defaults.city} error={errors.city} label={CHECKOUT_CITY_LABEL} name="city" type="text" />
 
-          <div>
-            <label className={FIELD_LABEL} htmlFor="checkout-state">
-              {CHECKOUT_STATE_LABEL}
-            </label>
-            <input
-              autoComplete="address-level1"
-              className={cn(FIELD_INPUT, errors.state && 'border-red-600')}
-              defaultValue={defaults.state}
-              id="checkout-state"
-              name="state"
-              type="text"
-            />
-            {errors.state ? <p className={FIELD_ERROR}>{errors.state}</p> : null}
-          </div>
+          <CheckoutField autoComplete="address-level1" defaultValue={defaults.state} error={errors.state} label={CHECKOUT_STATE_LABEL} name="state" type="text" />
         </div>
 
         <div>
