@@ -11,6 +11,7 @@ import { Customers } from './collections/Customers'
 import { LegacyComboAuditLogs } from './collections/LegacyComboAuditLogs'
 import { EmailLog } from './collections/EmailLog'
 import { Enquiries } from './collections/Enquiries'
+import { MealPlans } from './collections/MealPlans'
 import { Media } from './collections/Media'
 import { OrderRequests } from './collections/OrderRequests'
 import { Orders } from './collections/Orders'
@@ -175,6 +176,7 @@ export default buildConfig({
     Enquiries,
     Customers,
     Products,
+    MealPlans,
     Subcategories,
     Audiences,
     Media,

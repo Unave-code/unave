@@ -8,12 +8,14 @@ import { cartLineKey, ONE_TIME_DURATION } from './cart'
 import { comboComponents, isProductSellable, type ComboComponentSnapshot } from './combos'
 import {
   decodePlanSelection,
-  normalizePlanBuilder,
-  PLAN_BUILDER_PATH,
-  PLAN_BUILDER_SLUG,
-  PLAN_BUILDER_TITLE,
-  pricePlanSelection,
+  LEGACY_PLAN_LINE,
+  MEAL_PLANS_PATH,
+  mealPlanPath,
+  mealPlanSlugFromLine,
+  normalizeMealPlan,
+  normalizePlanSettings,
   type PlanBuilderData,
+  pricePlanSelection,
 } from './planBuilder'
 
 /**
@@ -124,15 +126,26 @@ export const resolveCartLines = async ({
   lines: CartLine[]
   payload: Payload
 }): Promise<ResolvedCart> => {
-  const slugs = [...new Set(lines.map((line) => line.product))].filter((slug) => slug !== PLAN_BUILDER_SLUG)
+  const isPlanLine = (product: string) => product === LEGACY_PLAN_LINE || mealPlanSlugFromLine(product) !== null
+  const slugs = [...new Set(lines.map((line) => line.product))].filter((slug) => !isPlanLine(slug))
 
-  // A built plan prices from the plan builder global, never from a product.
-  let planBuilder: null | PlanBuilderData = null
+  // A built plan prices from its meal plan and the shared settings, never from a product.
+  const mealPlans = new Map<string, PlanBuilderData>()
+  const planSlugs = [...new Set(lines.map((line) => mealPlanSlugFromLine(line.product)).filter(Boolean))] as string[]
 
-  if (lines.some((line) => line.product === PLAN_BUILDER_SLUG)) {
-    planBuilder = normalizePlanBuilder(
-      await payload.findGlobal({ slug: 'plan-builder', depth: 0, overrideAccess: true }),
-    )
+  if (planSlugs.length > 0) {
+    const [settingsDoc, found] = await Promise.all([
+      payload.findGlobal({ slug: 'plan-builder', depth: 0, overrideAccess: true }),
+      payload.find({
+        collection: 'meal-plans',
+        depth: 1,
+        limit: planSlugs.length,
+        overrideAccess: true,
+        where: { slug: { in: planSlugs } },
+      }),
+    ])
+    const settings = normalizePlanSettings(settingsDoc)
+    for (const doc of found.docs) mealPlans.set(doc.slug, normalizeMealPlan(doc, settings))
   }
   const productsBySlug = new Map<string, Product>()
 
@@ -153,9 +166,11 @@ export const resolveCartLines = async ({
   const all: ResolvedCartLine[] = lines.map((line) => {
     const key = cartLineKey(line)
 
-    if (line.product === PLAN_BUILDER_SLUG) {
+    if (isPlanLine(line.product)) {
+      const planSlug = mealPlanSlugFromLine(line.product)
+      const plan = planSlug ? (mealPlans.get(planSlug) ?? null) : null
       const selection = decodePlanSelection(line.duration)
-      const priced = planBuilder && selection ? pricePlanSelection(planBuilder, selection) : null
+      const priced = plan && selection ? pricePlanSelection(plan, selection) : null
       // A plan line is the plan: its people are in the price, so it is always one.
       const qty = 1
 
@@ -163,15 +178,15 @@ export const resolveCartLines = async ({
         days: priced?.days ?? null,
         detail: priced?.detail ?? null,
         duration: line.duration,
-        href: PLAN_BUILDER_PATH,
-        image: null,
+        href: plan ? mealPlanPath(plan.slug) : MEAL_PLANS_PATH,
+        image: plan?.image ?? null,
         key,
         lineTotal: priced?.total ?? 0,
         price: priced?.total ?? null,
         productId: null,
-        productTitle: PLAN_BUILDER_TITLE,
+        productTitle: plan ? `Meal plan: ${plan.title}` : 'Meal plan',
         qty,
-        reason: priced ? null : 'missing-duration',
+        reason: priced ? null : plan ? 'missing-duration' : 'unknown-product',
         size: null,
         slug: line.product,
         stale: !priced,

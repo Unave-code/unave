@@ -1,13 +1,14 @@
 'use client'
 
 import { ArrowLeft, ArrowRight, Check, ChevronUp, Minus, Moon, Plus, ShoppingBag, Sparkles, Sun } from 'lucide-react'
+import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { Notice } from '@/components/Notice'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { formatPaise } from '@/utilities/money'
 import type { PlanBuilderData, PlanSlot } from '@/utilities/planBuilder'
-import { PLAN_MAX_PEOPLE, SLOT_LABEL } from '@/utilities/planBuilder'
+import { MEAL_PLANS_PATH, PLAN_MAX_PEOPLE, SLOT_LABEL } from '@/utilities/planBuilder'
 import { cn } from '@/utilities/ui'
 import { whatsappHref } from '@/utilities/whatsapp'
 
@@ -76,7 +77,12 @@ export function PlanBuilder({
   whatsapp: null | string
 }) {
   const [step, setStep] = useState(0)
-  const [meals, setMeals] = useState<Record<Meal, boolean>>({ dinner: true, lunch: true })
+  // A lunch-only or dinner-only plan fixes its meal; the rest start with both.
+  const offered: Meal[] = data.meals === 'any' ? MEALS : [data.meals]
+  const [meals, setMeals] = useState<Record<Meal, boolean>>({
+    dinner: data.meals !== 'lunch',
+    lunch: data.meals !== 'dinner',
+  })
   const [planLabel, setPlanLabel] = useState(data.plans[Math.min(1, data.plans.length - 1)]?.label ?? '')
   const [people, setPeople] = useState(1)
   const [choices, setChoices] = useState<number[]>(data.optionGroups.map(() => 0))
@@ -98,9 +104,8 @@ export function PlanBuilder({
   const slot: null | PlanSlot = meals.lunch && meals.dinner ? 'both' : meals.lunch ? 'lunch' : meals.dinner ? 'dinner' : null
   const plan = data.plans.find((p) => p.label === planLabel) ?? null
   const chosen = data.optionGroups.map((g, i) => g.choices[choices[i]] ?? g.choices[0])
-  const valid = Boolean(slot && plan)
-
-  const planPrice = slot && plan ? plan.prices[slot] : 0
+  const planPrice = slot && plan ? (plan.prices[slot] ?? 0) : 0
+  const valid = Boolean(slot && plan && planPrice > 0)
   const extraPerDay = chosen.reduce((sum, c) => sum + c.extraPerDay, 0)
   const extrasTotal = plan ? extraPerDay * plan.days * people : 0
   const total = planPrice * people + extrasTotal
@@ -113,7 +118,7 @@ export function PlanBuilder({
       <main className="bg-cream">
         <section className="container max-w-2xl py-20 text-center">
           <h1 className="text-ink-900 text-2xl font-extrabold">Plans open soon</h1>
-          <p className="text-ink-600 mt-3">We are setting up this week&apos;s menu. Message us and we will help you start.</p>
+          <p className="text-ink-600 mt-3">We are setting up this plan&apos;s menu and prices. Message us and we will help you start.</p>
           {whatsapp && (
             <a
               className={cn('rounded-pill mt-6 inline-flex h-13 items-center gap-2 bg-green-700 px-7 font-bold text-white hover:bg-green-600', focusRing)}
@@ -130,7 +135,7 @@ export function PlanBuilder({
   }
 
   const message = [
-    'Hi UNAVE, I have a question about this plan:',
+    `Hi UNAVE, I have a question about the ${data.title} meal plan:`,
     `• ${slot ? SLOT_LABEL[slot] : 'No meals picked'}, ${plan?.label ?? ''}, ${people} ${people > 1 ? 'people' : 'person'}`,
     ...chosen.map((c, i) => `• ${data.optionGroups[i].title}: ${c.label}`),
   ].join('\n')
@@ -192,6 +197,7 @@ export function PlanBuilder({
       <input name="slot" type="hidden" value={slot ?? ''} />
       <input name="plan" type="hidden" value={plan?.label ?? ''} />
       <input name="people" type="hidden" value={people} />
+      <input name="mealPlan" type="hidden" value={data.slug} />
       {choices.map((c, i) => (
         <input key={i} name={`choice-${i}`} type="hidden" value={c} />
       ))}
@@ -213,14 +219,22 @@ export function PlanBuilder({
   const planStep = (
     <div className="space-y-8">
       <div aria-labelledby="lbl-meals" role="group">
-        <FieldLabel hint="Choose one or both. We deliver Monday to Saturday." id="lbl-meals">
+        <FieldLabel
+          hint={offered.length > 1 ? 'Choose one or both. We deliver Monday to Saturday.' : `This plan is ${MEAL_LABEL[offered[0]].toLowerCase()} only. We deliver Monday to Saturday.`}
+          id="lbl-meals"
+        >
           Which meals?
         </FieldLabel>
         <div className="grid gap-3 sm:grid-cols-2">
-          {MEALS.map((m) => {
+          {offered.map((m) => {
             const Icon = MEAL_ICON[m]
             return (
-              <ChoiceCard key={m} onClick={() => setMeals((c) => ({ ...c, [m]: !c[m] }))} role="checkbox" selected={meals[m]}>
+              <ChoiceCard
+                key={m}
+                onClick={() => offered.length > 1 && setMeals((c) => ({ ...c, [m]: !c[m] }))}
+                role="checkbox"
+                selected={meals[m]}
+              >
                 <Icon aria-hidden className="text-gold-600 size-6" />
                 <span className="text-ink-900 mt-1 font-extrabold">{MEAL_LABEL[m]}</span>
                 {times[m] && <span className="text-ink-600 text-sm">Delivered {times[m]}</span>}
@@ -235,16 +249,19 @@ export function PlanBuilder({
           How long?
         </FieldLabel>
         <div className="grid gap-3 sm:grid-cols-3">
-          {data.plans.map((p) => (
+          {data.plans.map((p) => {
+            const price = slot ? p.prices[slot] : undefined
+            return (
             <ChoiceCard key={p.label} onClick={() => setPlanLabel(p.label)} selected={planLabel === p.label}>
               <span className="text-ink-900 pr-8 font-extrabold">{p.label}</span>
               <span className="text-ink-600 text-sm">{p.days} delivery days</span>
-              <span className="mt-1 text-lg font-extrabold text-green-700">
-                {formatPaise(p.prices[slot ?? 'both'])}
+              <span className={cn('mt-1 font-extrabold', price ? 'text-lg text-green-700' : 'text-ink-400 text-sm')}>
+                {price ? formatPaise(price) : 'Not offered for these meals'}
               </span>
               {p.note && <span className="text-gold-600 text-sm font-bold">{p.note}</span>}
             </ChoiceCard>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -318,7 +335,7 @@ export function PlanBuilder({
               <th className="w-20 px-4 py-3 font-extrabold" scope="col">
                 Day
               </th>
-              {MEALS.map((m) => {
+              {offered.map((m) => {
                 const Icon = MEAL_ICON[m]
                 return (
                   <th className={cn('px-4 py-3', !meals[m] && 'opacity-50')} key={m} scope="col">
@@ -337,7 +354,7 @@ export function PlanBuilder({
                 <th className="px-4 py-4 font-extrabold text-green-700" scope="row">
                   {d.day}
                 </th>
-                {MEALS.map((m) => {
+                {offered.map((m) => {
                   const dish = d[m]
                   return (
                     <td className={cn('px-4 py-4', !meals[m] && 'opacity-50')} key={m}>
@@ -404,9 +421,15 @@ export function PlanBuilder({
     <main className="bg-cream pb-28 lg:pb-0">
       <section className="bg-green-900 text-cream">
         <div className="container py-10 md:py-14">
-          {data.copy.eyebrow && <p className="text-eyebrow text-gold-400 uppercase">{data.copy.eyebrow}</p>}
-          {data.copy.heading && <h1 className="text-hero mt-3 max-w-[24ch] font-extrabold text-balance">{data.copy.heading}</h1>}
-          {data.copy.intro && <p className="text-lead text-cream/85 mt-3 max-w-[56ch]">{data.copy.intro}</p>}
+          <Link
+            className="text-cream/80 hover:text-cream inline-flex min-h-11 items-center gap-1.5 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
+            href={MEAL_PLANS_PATH}
+          >
+            <ArrowLeft aria-hidden className="size-4" /> All meal plans
+          </Link>
+          <p className="text-eyebrow text-gold-400 mt-2 uppercase">{data.audience?.title ? `Meal plan · ${data.audience.title}` : 'Meal plan'}</p>
+          <h1 className="text-hero mt-3 max-w-[24ch] font-extrabold text-balance">{data.title}</h1>
+          {data.description && <p className="text-lead text-cream/85 mt-3 max-w-[56ch]">{data.description}</p>}
         </div>
       </section>
 
@@ -494,7 +517,7 @@ export function PlanBuilder({
             </div>
           </section>
 
-          {data.copy.noticeTitle && data.copy.noticeBody && <Notice title={data.copy.noticeTitle}>{data.copy.noticeBody}</Notice>}
+          {data.notice.title && data.notice.body && <Notice title={data.notice.title}>{data.notice.body}</Notice>}
         </div>
 
         {/* Desktop summary, live */}

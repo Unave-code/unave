@@ -1,0 +1,63 @@
+import type { Field } from 'payload'
+
+export const MENU_DAYS = [
+  { name: 'mon', label: 'Monday' },
+  { name: 'tue', label: 'Tuesday' },
+  { name: 'wed', label: 'Wednesday' },
+  { name: 'thu', label: 'Thursday' },
+  { name: 'fri', label: 'Friday' },
+  { name: 'sat', label: 'Saturday' },
+] as const
+
+/** A price in paise; the RupeeField shows and takes rupees. */
+export const rupeeField = (name: string, label: string, extra: Partial<Field> = {}): Field =>
+  ({
+    name,
+    label,
+    type: 'number',
+    min: 1,
+    admin: {
+      width: '33%',
+      components: { Field: '@/components/Admin/RupeeField#RupeeField' },
+    },
+    ...extra,
+  }) as Field
+
+/** A week of menu: one fixed lunch and dinner per delivery day, text only. */
+export const menuWeekField = (name: string, label: string, description: string): Field => ({
+  name,
+  label,
+  type: 'group',
+  admin: { description },
+  fields: [
+    {
+      name: 'range',
+      type: 'text',
+      label: 'Dates',
+      admin: { description: 'Shown on the week switch, for example 23 – 28 Nov.' },
+    },
+    ...MENU_DAYS.map(
+      (day): Field => ({
+        name: day.name,
+        label: day.label,
+        type: 'group',
+        fields: [
+          {
+            type: 'row',
+            fields: [
+              { name: 'lunchMain', type: 'text', label: 'Lunch', admin: { width: '50%', placeholder: 'Kadhai Paneer with carrot roti' } },
+              { name: 'dinnerMain', type: 'text', label: 'Dinner', admin: { width: '50%', placeholder: 'No-Butter Soya Masala with multigrain roti' } },
+            ],
+          },
+          {
+            type: 'row',
+            fields: [
+              { name: 'lunchSides', type: 'text', label: 'Lunch sides', admin: { width: '50%', placeholder: 'Sprouted moong salad, Matki dal, Capsicum besan subzi' } },
+              { name: 'dinnerSides', type: 'text', label: 'Dinner sides', admin: { width: '50%', placeholder: 'Mixed bean salad, Homestyle chole, Aloo gobi' } },
+            ],
+          },
+        ],
+      }),
+    ),
+  ],
+})

@@ -67,6 +67,21 @@ const denyDeleteInUse: CollectionBeforeDeleteHook = async ({ id, req: { payload 
       400,
     )
   }
+
+  const plans = await payload.count({
+    collection: 'meal-plans',
+    overrideAccess: true,
+    where: { audience: { equals: id } },
+  })
+
+  if (plans.totalDocs > 0) {
+    throw new APIError(
+      `This audience is still used by ${plans.totalDocs} meal plan${
+        plans.totalDocs === 1 ? '' : 's'
+      }. Give those meal plans another audience first, then delete this one.`,
+      400,
+    )
+  }
 }
 
 export const Audiences: CollectionConfig = {

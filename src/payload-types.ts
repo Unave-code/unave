@@ -73,6 +73,7 @@ export interface Config {
     enquiries: Enquiry;
     customers: Customer;
     products: Product;
+    'meal-plans': MealPlan;
     subcategories: Subcategory;
     audiences: Audience;
     media: Media;
@@ -105,6 +106,7 @@ export interface Config {
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    'meal-plans': MealPlansSelect<false> | MealPlansSelect<true>;
     subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
     audiences: AudiencesSelect<false> | AudiencesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -707,6 +709,149 @@ export interface Enquiry {
    * Tick when somebody has replied to this person.
    */
   handled?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each meal plan has its own page on /meal-subscription with its weekly menu and prices. Plan lengths and options are shared, in Meal plan settings.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-plans".
+ */
+export interface MealPlan {
+  id: number;
+  title: string;
+  /**
+   * One or two lines on the plan card and at the top of its page.
+   */
+  description?: string | null;
+  /**
+   * Shown on the plan card and in the cart. Leave empty for the branded placeholder.
+   */
+  image?: (number | null) | Media;
+  /**
+   * Who the plan is for, for example Kids. The list page can be filtered by it.
+   */
+  audience?: (number | null) | Audience;
+  /**
+   * Lunch only suits a lunch-box plan, for example.
+   */
+  meals: 'any' | 'lunch' | 'dinner';
+  /**
+   * One row per plan length, for one person. Fill the prices for the meals this plan offers; a length with no price for a meal choice is not offered for it.
+   */
+  prices?:
+    | {
+        length: string;
+        lunchPrice?: number | null;
+        dinnerPrice?: number | null;
+        bothPrice?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The menu customers see first.
+   */
+  thisWeek?: {
+    /**
+     * Shown on the week switch, for example 23 – 28 Nov.
+     */
+    range?: string | null;
+    mon?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    tue?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    wed?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    thu?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    fri?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    sat?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+  };
+  /**
+   * Shown on the Next week switch. Leave empty to hide the switch.
+   */
+  nextWeek?: {
+    /**
+     * Shown on the week switch, for example 23 – 28 Nov.
+     */
+    range?: string | null;
+    mon?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    tue?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    wed?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    thu?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    fri?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    sat?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+  };
+  noticeTitle?: string | null;
+  /**
+   * Required near any medical, allergy, diabetes or child-nutrition claim. Leave both empty to hide.
+   */
+  noticeBody?: string | null;
+  /**
+   * Left empty, it fills itself from the name. The plan page lives at /meal-subscription/<slug>.
+   */
+  slug: string;
+  /**
+   * Lower numbers come first on the list page.
+   */
+  position?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1544,6 +1689,10 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'meal-plans';
+        value: number | MealPlan;
+      } | null)
+    | ({
         relationTo: 'subcategories';
         value: number | Subcategory;
       } | null)
@@ -1840,6 +1989,138 @@ export interface ProductsSelect<T extends boolean = true> {
   available?: T;
   featured?: T;
   fromPrice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-plans_select".
+ */
+export interface MealPlansSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  image?: T;
+  audience?: T;
+  meals?: T;
+  prices?:
+    | T
+    | {
+        length?: T;
+        lunchPrice?: T;
+        dinnerPrice?: T;
+        bothPrice?: T;
+        id?: T;
+      };
+  thisWeek?:
+    | T
+    | {
+        range?: T;
+        mon?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        tue?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        wed?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        thu?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        fri?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        sat?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+      };
+  nextWeek?:
+    | T
+    | {
+        range?: T;
+        mon?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        tue?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        wed?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        thu?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        fri?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        sat?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+      };
+  noticeTitle?: T;
+  noticeBody?: T;
+  slug?: T;
+  position?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2772,7 +3053,7 @@ export interface ProductPage {
   createdAt?: string | null;
 }
 /**
- * The weekly menu, plan prices and options on the Build your plan page (/meal-subscription).
+ * Shared by every meal plan on /meal-subscription: plan lengths, options, delivery times and the list page text. Menus and prices live on each meal plan.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "plan-builder".
@@ -2780,97 +3061,7 @@ export interface ProductPage {
 export interface PlanBuilder {
   id: number;
   /**
-   * The menu customers see first.
-   */
-  thisWeek?: {
-    /**
-     * Shown on the week switch, for example 23 – 28 Nov.
-     */
-    range?: string | null;
-    mon?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    tue?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    wed?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    thu?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    fri?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    sat?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-  };
-  /**
-   * Shown on the Next week switch. Leave empty to hide the switch.
-   */
-  nextWeek?: {
-    /**
-     * Shown on the week switch, for example 23 – 28 Nov.
-     */
-    range?: string | null;
-    mon?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    tue?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    wed?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    thu?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    fri?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    sat?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-  };
-  /**
-   * Each plan length with its price for one person. Customers pick lunch, dinner or both, and the matching price is charged.
+   * The lengths every meal plan is sold in. Each meal plan sets its own price for each length, using the same name.
    */
   plans?:
     | {
@@ -2880,16 +3071,13 @@ export interface PlanBuilder {
          */
         days: number;
         note?: string | null;
-        lunchPrice: number;
-        dinnerPrice: number;
-        bothPrice: number;
         id?: string | null;
       }[]
     | null;
   lunchTime?: string | null;
   dinnerTime?: string | null;
   /**
-   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default.
+   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default. Every meal plan offers these.
    */
   optionGroups?:
     | {
@@ -2912,8 +3100,6 @@ export interface PlanBuilder {
   eyebrow?: string | null;
   heading?: string | null;
   intro?: string | null;
-  noticeTitle?: string | null;
-  noticeBody?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3130,121 +3316,12 @@ export interface ProductPageSelect<T extends boolean = true> {
  * via the `definition` "plan-builder_select".
  */
 export interface PlanBuilderSelect<T extends boolean = true> {
-  thisWeek?:
-    | T
-    | {
-        range?: T;
-        mon?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        tue?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        wed?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        thu?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        fri?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        sat?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-      };
-  nextWeek?:
-    | T
-    | {
-        range?: T;
-        mon?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        tue?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        wed?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        thu?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        fri?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        sat?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-      };
   plans?:
     | T
     | {
         label?: T;
         days?: T;
         note?: T;
-        lunchPrice?: T;
-        dinnerPrice?: T;
-        bothPrice?: T;
         id?: T;
       };
   lunchTime?: T;
@@ -3267,8 +3344,6 @@ export interface PlanBuilderSelect<T extends boolean = true> {
   eyebrow?: T;
   heading?: T;
   intro?: T;
-  noticeTitle?: T;
-  noticeBody?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
