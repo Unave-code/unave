@@ -15,11 +15,11 @@ export function MenuStep({ data, state }: { data: PlanBuilderData; state: PlanBu
         <p className="text-ink-600 max-w-[52ch]">One balanced meal for each slot, set by our kitchen. The menu changes every week.</p>
         {week?.range && <p className="text-ink-900 text-sm font-bold">This week · {week.range}</p>}
       </div>
-      <div className="border-line mt-5 overflow-x-auto rounded-2xl border">
+      <div className="border-line mt-5 overflow-x-auto rounded-2xl border bg-white">
         <table className="w-full min-w-[560px] border-collapse text-left text-sm">
           <caption className="sr-only">Menu{week?.range ? ` for ${week.range}` : ''}</caption>
           <thead>
-            <tr className="bg-green-100 text-green-700">
+            <tr className="bg-green-50 text-green-900">
               <th className="w-20 px-4 py-3 font-extrabold" scope="col">
                 Day
               </th>
@@ -52,7 +52,7 @@ export function MenuStep({ data, state }: { data: PlanBuilderData; state: PlanBu
                           {dish.sides.length > 0 && <p className="text-ink-600 mt-1 text-xs leading-5">{dish.sides.join(' · ')}</p>}
                         </>
                       ) : (
-                        <p className="text-ink-400 text-xs">To be announced</p>
+                        <p className="text-ink-600 text-xs">To be announced</p>
                       )}
                     </td>
                   )

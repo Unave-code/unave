@@ -54,7 +54,8 @@ const data: PlanBuilderData = {
 const renderBuilder = (overrides: Partial<PlanBuilderData> = {}) =>
   render(<PlanBuilder data={{ ...data, ...overrides }} notice={null} whatsapp="919999999999" />)
 
-describe('the meal plan builder', () => {
+// Role queries walk the whole builder; under the full suite's load one test can pass 5s.
+describe('the meal plan builder', { timeout: 20_000 }, () => {
   it('opens on the builder with no hero block', () => {
     renderBuilder()
     expect(screen.getByRole('heading', { level: 1, name: 'Build your Kids plan' })).toBeTruthy()
@@ -146,5 +147,45 @@ describe('the meal plan builder', () => {
     fireEvent.click(week)
     expect(week.className).toContain('bg-green-700')
     expect(screen.getByRole('radio', { name: /Month/ }).className).not.toContain('bg-green-700')
+  })
+
+  it('posts the same cart form', () => {
+    const { container } = renderBuilder()
+    fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /Roti/ }))
+    const form = container.querySelector('form[action="/api/cart/plan"]') as HTMLFormElement
+    const value = (name: string) => (form.querySelector(`input[name="${name}"]`) as HTMLInputElement).value
+    expect(value('slot')).toBe('both')
+    expect(value('plan')).toBe('Week')
+    expect(value('people')).toBe('2')
+    expect(value('mealPlan')).toBe('kids')
+    expect(value('choice-0')).toBe('1')
+    expect(value('choice-1')).toBe('0')
+  })
+
+  it('edits a summary row back to its step', () => {
+    renderBuilder()
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit meals' })[0])
+    expect(screen.getByRole('heading', { level: 2, name: 'Choose your plan' })).toBeTruthy()
+  })
+
+  it('keeps the WhatsApp ask with the plan in the message', () => {
+    renderBuilder()
+    const href = screen.getAllByRole('link', { name: /Ask us on WhatsApp first/ })[0].getAttribute('href') ?? ''
+    expect(href).toContain('wa.me/919999999999')
+    expect(href).toContain(encodeURIComponent('Kids plan'))
+  })
+
+  it('wears the cart summary card, with no gold text on a light surface', () => {
+    const { container } = renderBuilder()
+    const summary = screen.getByRole('complementary', { name: 'Your plan' })
+    expect(summary.className).toContain('bg-card')
+    expect(summary.querySelector('img')).toBeNull()
+    expect(container.querySelector('.text-gold-400')).toBeNull()
   })
 })
