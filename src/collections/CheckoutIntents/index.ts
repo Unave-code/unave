@@ -43,7 +43,8 @@ export const CheckoutIntents: CollectionConfig = {
       minRows: 1,
       fields: [
         { name: 'productRef', type: 'relationship', relationTo: 'products' },
-        { name: 'productId', type: 'number', required: true },
+        // Empty for a plan built on the plan builder, which has no product record.
+        { name: 'productId', type: 'number' },
         { name: 'productTitle', type: 'text', required: true },
         { name: 'durationLabel', type: 'text', required: true },
         { name: 'days', type: 'number', required: true },

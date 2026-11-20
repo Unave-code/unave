@@ -149,7 +149,7 @@ export default async function CartPage({
                   <Link
                     aria-hidden="true"
                     className="relative size-20 shrink-0 overflow-hidden rounded-md bg-green-50 sm:size-24"
-                    href={productHref(line.slug)}
+                    href={line.href ?? productHref(line.slug)}
                     tabIndex={-1}
                   >
                     <Image
@@ -165,7 +165,7 @@ export default async function CartPage({
                     <div className="min-w-0">
                       <Link
                         className="text-ink-900 rounded-sm text-base font-bold underline-offset-4 hover:text-green-800 hover:underline focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none"
-                        href={productHref(line.slug)}
+                        href={line.href ?? productHref(line.slug)}
                       >
                         {line.productTitle}
                       </Link>
@@ -176,7 +176,7 @@ export default async function CartPage({
                             ? line.size
                               ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
                               : PRODUCT_ONE_TIME_LABEL
-                            : line.duration}
+                            : (line.detail ?? line.duration)}
                         {line.days !== null && line.days > 0
                           ? `, ${line.days} ${line.days === 1 ? 'day' : 'days'}`
                           : ''}
@@ -252,7 +252,7 @@ export default async function CartPage({
                             aria-label={
                               line.type !== 'plan'
                                 ? `Remove ${line.productTitle} from the cart`
-                                : `Remove ${line.duration} of ${line.productTitle} from the cart`
+                                : `Remove ${line.detail ?? line.duration} of ${line.productTitle} from the cart`
                             }
                             className="text-ink-600 hover:text-error hover:bg-error/10 focus-visible:ring-green-500 -ml-3 inline-flex min-h-11 items-center gap-1.5 rounded-pill px-3 text-sm font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none"
                             type="submit"

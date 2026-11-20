@@ -22,5 +22,8 @@ export const redirects: NextConfig['redirects'] = async () => {
     { destination: '/blog/:slug', permanent: true, source: '/posts/:slug' },
   ]
 
-  return [...blogRedirects, internetExplorerRedirect]
+  // The plan builder moved to /meal-subscription.
+  const planRedirects = [{ destination: '/meal-subscription', permanent: true, source: '/plan-builder' }]
+
+  return [...blogRedirects, ...planRedirects, internetExplorerRedirect]
 }

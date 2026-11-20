@@ -83,6 +83,11 @@ const nextConfig: NextConfig = {
 
     return webpackConfig
   },
+  experimental: {
+    // Each build worker loads Payload; one per core (11 here) ran out of memory
+    // and crashed with "Jest worker encountered 2 child process exceptions".
+    cpus: 4,
+  },
   reactStrictMode: true,
   redirects,
   turbopack: {

@@ -136,6 +136,7 @@ export interface Config {
     hero: Hero;
     testimonials: Testimonial;
     'product-page': ProductPage;
+    'plan-builder': PlanBuilder;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
@@ -145,6 +146,7 @@ export interface Config {
     hero: HeroSelect<false> | HeroSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
+    'plan-builder': PlanBuilderSelect<false> | PlanBuilderSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -1269,7 +1271,7 @@ export interface CheckoutIntent {
   };
   items: {
     productRef?: (number | null) | Product;
-    productId: number;
+    productId?: number | null;
     productTitle: string;
     durationLabel: string;
     days: number;
@@ -2770,6 +2772,152 @@ export interface ProductPage {
   createdAt?: string | null;
 }
 /**
+ * The weekly menu, plan prices and options on the Build your plan page (/meal-subscription).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-builder".
+ */
+export interface PlanBuilder {
+  id: number;
+  /**
+   * The menu customers see first.
+   */
+  thisWeek?: {
+    /**
+     * Shown on the week switch, for example 23 – 28 Nov.
+     */
+    range?: string | null;
+    mon?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    tue?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    wed?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    thu?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    fri?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    sat?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+  };
+  /**
+   * Shown on the Next week switch. Leave empty to hide the switch.
+   */
+  nextWeek?: {
+    /**
+     * Shown on the week switch, for example 23 – 28 Nov.
+     */
+    range?: string | null;
+    mon?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    tue?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    wed?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    thu?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    fri?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+    sat?: {
+      lunchMain?: string | null;
+      dinnerMain?: string | null;
+      lunchSides?: string | null;
+      dinnerSides?: string | null;
+    };
+  };
+  /**
+   * Each plan length with its price for one person. Customers pick lunch, dinner or both, and the matching price is charged.
+   */
+  plans?:
+    | {
+        label: string;
+        /**
+         * Mon–Sat, so 2 weeks is 12.
+         */
+        days: number;
+        note?: string | null;
+        lunchPrice: number;
+        dinnerPrice: number;
+        bothPrice: number;
+        id?: string | null;
+      }[]
+    | null;
+  lunchTime?: string | null;
+  dinnerTime?: string | null;
+  /**
+   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default.
+   */
+  optionGroups?:
+    | {
+        title: string;
+        hint?: string | null;
+        choices?:
+          | {
+              label: string;
+              detail?: string | null;
+              /**
+               * 0 means included.
+               */
+              extraPerDay?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  noticeTitle?: string | null;
+  noticeBody?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2973,6 +3121,154 @@ export interface TestimonialsSelect<T extends boolean = true> {
  */
 export interface ProductPageSelect<T extends boolean = true> {
   planHowItWorks?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plan-builder_select".
+ */
+export interface PlanBuilderSelect<T extends boolean = true> {
+  thisWeek?:
+    | T
+    | {
+        range?: T;
+        mon?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        tue?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        wed?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        thu?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        fri?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        sat?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+      };
+  nextWeek?:
+    | T
+    | {
+        range?: T;
+        mon?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        tue?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        wed?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        thu?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        fri?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+        sat?:
+          | T
+          | {
+              lunchMain?: T;
+              dinnerMain?: T;
+              lunchSides?: T;
+              dinnerSides?: T;
+            };
+      };
+  plans?:
+    | T
+    | {
+        label?: T;
+        days?: T;
+        note?: T;
+        lunchPrice?: T;
+        dinnerPrice?: T;
+        bothPrice?: T;
+        id?: T;
+      };
+  lunchTime?: T;
+  dinnerTime?: T;
+  optionGroups?:
+    | T
+    | {
+        title?: T;
+        hint?: T;
+        choices?:
+          | T
+          | {
+              label?: T;
+              detail?: T;
+              extraPerDay?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  noticeTitle?: T;
+  noticeBody?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

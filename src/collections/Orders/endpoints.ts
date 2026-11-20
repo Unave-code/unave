@@ -146,9 +146,10 @@ export const createOrderEndpoint: Endpoint = {
         productTitle: component.productTitle,
       })),
       days: line.days ?? 0,
-      durationLabel: line.duration,
-      productId: Number(line.productId),
-      productRef: Number(line.productId),
+      // A built plan has no product record: its line names its choices instead.
+      durationLabel: line.detail ?? line.duration,
+      productId: line.productId === null ? null : Number(line.productId),
+      productRef: line.productId === null ? null : Number(line.productId),
       productTitle: line.productTitle,
       qty: line.qty,
       unitPrice: line.price ?? 0,

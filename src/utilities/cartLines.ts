@@ -6,6 +6,15 @@ import type { Product } from '@/payload-types'
 import type { CartLine } from './cart'
 import { cartLineKey, ONE_TIME_DURATION } from './cart'
 import { comboComponents, isProductSellable, type ComboComponentSnapshot } from './combos'
+import {
+  decodePlanSelection,
+  normalizePlanBuilder,
+  PLAN_BUILDER_PATH,
+  PLAN_BUILDER_SLUG,
+  PLAN_BUILDER_TITLE,
+  pricePlanSelection,
+  type PlanBuilderData,
+} from './planBuilder'
 
 /**
  * Resolving the cart against the live product records (spec 0007, AC-3 and AC-5).
@@ -33,7 +42,11 @@ export type StaleReason = 'missing-duration' | 'paused' | 'unknown-product'
 export type ResolvedCartLine = {
   days: null | number
   components?: ComboComponentSnapshot[]
+  /** A plain description to show instead of the raw duration (a built plan's choices). */
+  detail?: null | string
   duration: string
+  /** Where the line's title links; the product page unless set. */
+  href?: string
   /** The product's photo for the cart and checkout lists, when it has one. */
   image?: { alt: string; url: string } | null
   key: string
@@ -111,7 +124,16 @@ export const resolveCartLines = async ({
   lines: CartLine[]
   payload: Payload
 }): Promise<ResolvedCart> => {
-  const slugs = [...new Set(lines.map((line) => line.product))]
+  const slugs = [...new Set(lines.map((line) => line.product))].filter((slug) => slug !== PLAN_BUILDER_SLUG)
+
+  // A built plan prices from the plan builder global, never from a product.
+  let planBuilder: null | PlanBuilderData = null
+
+  if (lines.some((line) => line.product === PLAN_BUILDER_SLUG)) {
+    planBuilder = normalizePlanBuilder(
+      await payload.findGlobal({ slug: 'plan-builder', depth: 0, overrideAccess: true }),
+    )
+  }
   const productsBySlug = new Map<string, Product>()
 
   if (slugs.length > 0) {
@@ -130,6 +152,33 @@ export const resolveCartLines = async ({
 
   const all: ResolvedCartLine[] = lines.map((line) => {
     const key = cartLineKey(line)
+
+    if (line.product === PLAN_BUILDER_SLUG) {
+      const selection = decodePlanSelection(line.duration)
+      const priced = planBuilder && selection ? pricePlanSelection(planBuilder, selection) : null
+      // A plan line is the plan: its people are in the price, so it is always one.
+      const qty = 1
+
+      return {
+        days: priced?.days ?? null,
+        detail: priced?.detail ?? null,
+        duration: line.duration,
+        href: PLAN_BUILDER_PATH,
+        image: null,
+        key,
+        lineTotal: priced?.total ?? 0,
+        price: priced?.total ?? null,
+        productId: null,
+        productTitle: PLAN_BUILDER_TITLE,
+        qty,
+        reason: priced ? null : 'missing-duration',
+        size: null,
+        slug: line.product,
+        stale: !priced,
+        type: 'plan',
+      }
+    }
+
     const product = productsBySlug.get(line.product) ?? null
     const type: 'combo' | 'one-time' | 'plan' =
       product?.type === 'combo' ? 'combo' : product?.type === 'one-time' ? 'one-time' : 'plan'

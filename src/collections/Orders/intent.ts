@@ -123,8 +123,11 @@ const readItems = (value: unknown): OrderIntentItem[] | null => {
         ? null
         : readComponents(rawComponents)
 
+    // A built plan carries no product id; anything else must carry a real one.
+    const noProduct = entry.productId === null || entry.productId === undefined
+
     if (
-      productId === null ||
+      (!noProduct && productId === null) ||
       typeof entry.productTitle !== 'string' ||
       typeof entry.durationLabel !== 'string' ||
       !Number.isSafeInteger(entry.days) ||
