@@ -45,38 +45,42 @@ export const ComboHealth: React.FC = () => {
   const ids = rows.map((row) => relationId(row?.product)).filter((id) => id !== null)
   const idKey = ids.join(',')
 
-  const [items, setItems] = useState<Map<string, Product>>(new Map())
-  const [state, setState] = useState<'error' | 'idle' | 'loading'>('idle')
+  /* The last lookup, keyed by the item ids it answered for: while the form's ids
+     differ from that key, a lookup is in flight. */
+  const [lookup, setLookup] = useState<{ error: boolean; items: Map<string, Product>; key: string }>({
+    error: false,
+    items: new Map(),
+    key: '',
+  })
 
   useEffect(() => {
-    if (!isCombo || !idKey) {
-      setItems(new Map())
-      return
-    }
+    if (!isCombo || !idKey) return
 
     const controller = new AbortController()
     const query = new URLSearchParams({ depth: '0', limit: '10' })
     idKey.split(',').forEach((id, index) => query.set(`where[id][in][${index}]`, id))
 
-    setState('loading')
     fetch(`/api/products?${query.toString()}`, {
       credentials: 'include',
       signal: controller.signal,
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
       .then((result: { docs?: Product[] }) => {
-        setItems(new Map((result.docs ?? []).map((doc) => [String(doc.id), doc])))
-        setState('idle')
+        setLookup({ error: false, items: new Map((result.docs ?? []).map((doc) => [String(doc.id), doc])), key: idKey })
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
           console.error('[ComboHealth] could not load combo items', error)
-          setState('error')
+          setLookup((prev) => ({ error: true, items: prev.items, key: idKey }))
         }
       })
 
     return () => controller.abort()
   }, [isCombo, idKey])
+
+  const items = lookup.items
+  const state: 'error' | 'idle' | 'loading' =
+    isCombo && idKey && lookup.key !== idKey ? 'loading' : lookup.error ? 'error' : 'idle'
 
   if (!isCombo) return null
 

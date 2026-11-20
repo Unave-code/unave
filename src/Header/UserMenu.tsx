@@ -77,9 +77,11 @@ export const UserMenu: React.FC<Props> = ({ name }) => {
 
   /* The header survives a client navigation, so a menu left open would otherwise
      follow the visitor onto the page it just took them to. */
-  useEffect(() => {
+  const [menuPath, setMenuPath] = useState(pathname)
+  if (menuPath !== pathname) {
+    setMenuPath(pathname)
     setOpen(false)
-  }, [pathname])
+  }
 
   const onMenuKeyDown = (event: React.KeyboardEvent) => {
     const items = menuItems()

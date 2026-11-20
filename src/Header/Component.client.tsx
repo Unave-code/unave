@@ -71,6 +71,8 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   }, [pathname])
 
   useEffect(() => {
+    // After mount on purpose: the server cannot know the theme, so setting it during render would break hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (headerTheme && headerTheme !== theme) setTheme(headerTheme)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
@@ -160,9 +162,11 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     triggerRef.current?.focus()
   }
 
-  useEffect(() => {
+  const [menuPath, setMenuPath] = useState(pathname)
+  if (menuPath !== pathname) {
+    setMenuPath(pathname)
     setMenuOpen(false)
-  }, [pathname])
+  }
 
   /* While the drawer is open: lock the page behind it, focus the close button,
      keep Tab inside the drawer, and close on Escape. */

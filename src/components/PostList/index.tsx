@@ -12,7 +12,7 @@ import { getMediaUrl } from '@/utilities/getMediaUrl'
 import useClickableCard from '@/utilities/useClickableCard'
 
 const Row: React.FC<{ doc: CardPostData }> = ({ doc }) => {
-  const { card, link } = useClickableCard({})
+  const { cardRef, linkRef } = useClickableCard({})
   const { categories, meta, publishedAt, slug, title } = doc
 
   const image = meta?.image && typeof meta.image === 'object' ? meta.image : null
@@ -21,7 +21,7 @@ const Row: React.FC<{ doc: CardPostData }> = ({ doc }) => {
   const href = collectionHref('posts', slug ?? '')
 
   return (
-    <article className="group flex gap-5 py-6 sm:gap-8" ref={card.ref}>
+    <article className="group flex gap-5 py-6 sm:gap-8" ref={cardRef}>
       {image?.url ? (
         <div className="bg-green-50 relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-md sm:w-44">
           <Image
@@ -40,7 +40,7 @@ const Row: React.FC<{ doc: CardPostData }> = ({ doc }) => {
           <Link
             className="focus-visible:ring-green-500 rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
             href={href}
-            ref={link.ref}
+            ref={linkRef}
           >
             {title}
           </Link>

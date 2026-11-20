@@ -5,12 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef } from 'react'
 
 type UseClickableCardType<T extends HTMLElement> = {
-  card: {
-    ref: RefObject<T | null>
-  }
-  link: {
-    ref: RefObject<HTMLAnchorElement | null>
-  }
+  cardRef: RefObject<T | null>
+  linkRef: RefObject<HTMLAnchorElement | null>
 }
 
 interface Props {
@@ -95,14 +91,7 @@ function useClickableCard<T extends HTMLElement>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card, link, router])
 
-  return {
-    card: {
-      ref: card,
-    },
-    link: {
-      ref: link,
-    },
-  }
+  return { cardRef: card, linkRef: link }
 }
 
 export default useClickableCard

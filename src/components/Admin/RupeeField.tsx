@@ -1,7 +1,7 @@
 'use client'
 
 import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import type { NumberFieldClientComponent } from 'payload'
 
 import { formatRupeeInput, rupeesToPaise } from '@/utilities/money'
@@ -22,9 +22,7 @@ export const RupeeField: NumberFieldClientComponent = ({ field, path, readOnly }
   const [focused, setFocused] = useState(false)
   const [text, setText] = useState(() => formatRupeeInput(value))
 
-  useEffect(() => {
-    if (!focused) setText(formatRupeeInput(value))
-  }, [focused, value])
+  const shown = focused ? text : formatRupeeInput(value)
 
   const disabled = Boolean(readOnly || field.admin?.readOnly)
   const inputID = `field-${path.replace(/\./g, '__')}`
@@ -57,9 +55,12 @@ export const RupeeField: NumberFieldClientComponent = ({ field, path, readOnly }
               setText(event.target.value)
               setValue(rupeesToPaise(event.target.value))
             }}
-            onFocus={() => setFocused(true)}
+            onFocus={() => {
+              setText(formatRupeeInput(value))
+              setFocused(true)
+            }}
             type="text"
-            value={text}
+            value={shown}
           />
         </div>
 

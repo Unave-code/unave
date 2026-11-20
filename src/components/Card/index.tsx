@@ -25,7 +25,7 @@ export const Card: React.FC<{
   showCategories?: boolean
   title?: string
 }> = (props) => {
-  const { card, link } = useClickableCard({})
+  const { cardRef, linkRef } = useClickableCard({})
   const { className, doc, relationTo, showCategories, title: titleFromProps } = props
 
   const { slug, categories, meta, title } = doc || {}
@@ -43,7 +43,7 @@ export const Card: React.FC<{
         'bg-card border-line group hover:shadow-md flex h-full flex-col overflow-hidden rounded-md border transition-[transform,box-shadow] duration-200 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0',
         className,
       )}
-      ref={card.ref}
+      ref={cardRef}
     >
       {image?.url ? (
         <div className="bg-green-50 relative aspect-[4/3]">
@@ -81,7 +81,7 @@ export const Card: React.FC<{
             <Link
               className="focus-visible:ring-green-500 inline-flex min-h-11 items-center rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
               href={href}
-              ref={link.ref}
+              ref={linkRef}
             >
               {titleToUse}
             </Link>
