@@ -57,10 +57,13 @@ export function PlanBuilder({
         </p>
       )}
 
-      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <section aria-labelledby="step-heading" className="min-w-0 rounded-2xl bg-white p-5 shadow-md sm:p-8">
-          <StepNav go={go} step={step} valid={valid} />
-          <h2 className="text-ink-900 mt-6 mb-6 text-2xl font-extrabold outline-none" id="step-heading" ref={headingRef} tabIndex={-1}>
+      <div className="mt-8">
+        <StepNav go={go} step={step} valid={valid} />
+      </div>
+
+      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <section aria-labelledby="step-heading" className="bg-card min-w-0 rounded-2xl p-6 shadow-sm sm:p-8">
+          <h2 className="text-h3 mb-6 text-green-900 outline-none" id="step-heading" ref={headingRef} tabIndex={-1}>
             {STEPS[step].heading}
           </h2>
           <StepBody data={data} state={state} />
