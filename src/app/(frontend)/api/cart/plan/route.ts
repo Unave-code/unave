@@ -9,7 +9,6 @@ import {
   mealPlanLineProduct,
   mealPlanPath,
   normalizeMealPlan,
-  normalizePlanSettings,
   PLAN_SLOTS,
   type PlanSelection,
   type PlanSlot,
@@ -20,8 +19,7 @@ import {
  * Adding a built meal plan to the cart (/meal-subscription/<slug>).
  *
  * A plain form post: the meal plan, meals, plan length, people and one choice
- * per option group. Every choice is checked against the meal plan and the
- * shared settings before the identifiers go into the cookie. A cart can hold
+ * per option group. Every choice is checked against the meal plan before the identifiers go into the cookie. A cart can hold
  * several built plans, of the same meal plan or different ones; building the
  * exact same plan again keeps the one line. No price travels: the cart, checkout
  * and order endpoint price each line again on the server.
@@ -37,14 +35,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!isSameOriginRequest(request) || !form || !slug) return seeOther(`${back}?notice=unknown`)
 
   const payload = await getPayload({ config: configPromise })
-  const [settingsDoc, found] = await Promise.all([
-    payload.findGlobal({ slug: 'plan-builder', depth: 0 }),
-    payload.find({ collection: 'meal-plans', depth: 1, limit: 1, where: { slug: { equals: slug } } }),
-  ])
+  const found = await payload.find({ collection: 'meal-plans', depth: 1, limit: 1, where: { slug: { equals: slug } } })
   const doc = found.docs[0]
   if (!doc) return seeOther(`${MEAL_PLANS_PATH}?notice=changed`)
 
-  const data = normalizeMealPlan(doc, normalizePlanSettings(settingsDoc))
+  const data = normalizeMealPlan(doc)
   const slot = String(form.get('slot') ?? '') as PlanSlot
   const selection: PlanSelection = {
     choices: data.optionGroups.map((_, i) => Number.parseInt(String(form.get(`choice-${i}`) ?? '0'), 10)),

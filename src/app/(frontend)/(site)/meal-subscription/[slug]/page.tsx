@@ -5,7 +5,7 @@ import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { mealPlanPath, normalizeMealPlan, normalizePlanSettings } from '@/utilities/planBuilder'
+import { mealPlanPath, normalizeMealPlan } from '@/utilities/planBuilder'
 import type { Footer } from '@/payload-types'
 
 import { PlanBuilder } from '../PlanBuilder'
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-/** One meal plan's builder: its menu and prices, with the shared lengths and options. */
+/** One meal plan's builder: its own menu, lengths, prices, options and delivery times. */
 export default async function MealPlanPage({
   params,
   searchParams,
@@ -49,14 +49,11 @@ export default async function MealPlanPage({
   const doc = await findPlan(slug)
   if (!doc) notFound()
 
-  const [settingsDoc, footer] = await Promise.all([
-    getCachedGlobal('plan-builder', 0)(),
-    getCachedGlobal('footer', 1)() as Promise<Footer | null>,
-  ])
+  const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
 
   return (
     <PlanBuilder
-      data={normalizeMealPlan(doc, normalizePlanSettings(settingsDoc))}
+      data={normalizeMealPlan(doc)}
       notice={query.notice ? (NOTICES[query.notice] ?? NOTICES.unknown) : null}
       whatsapp={footer?.contact?.whatsapp ?? null}
     />

@@ -1,11 +1,10 @@
-import type { MealPlan, PlanBuilder as PlanSettingsDoc } from '@/payload-types'
+import type { MealPlan } from '@/payload-types'
 
 /**
  * Meal plans and their pricing (/meal-subscription and its cart lines).
  *
- * Each meal plan (Catalogue → Meal plans) has its own menu and its own price
- * per plan length; the lengths, the pick-one options and the delivery times are
- * shared (Catalogue → Meal plan settings).
+ * Each meal plan (Catalogue → Meal plans) carries everything it sells: its plan
+ * lengths and prices, its pick-one options, its delivery times and its menu.
  *
  * A built plan rides the cart cookie like any other line. The product is the
  * meal plan's slug behind a reserved prefix no product slug can take (slugs never
@@ -57,14 +56,6 @@ export type PlanLength = {
 export type PlanChoice = { detail: string; extraPerDay: number; label: string }
 export type PlanOptionGroup = { choices: PlanChoice[]; hint: string; title: string }
 
-export type PlanSettings = {
-  copy: { eyebrow: string; heading: string; intro: string }
-  dinnerTime: string
-  lengths: { days: number; label: string; note: string }[]
-  lunchTime: string
-  optionGroups: PlanOptionGroup[]
-}
-
 export type PlanImage = { alt: string; url: string } | null
 
 /** Everything one meal plan page and its cart line need. */
@@ -76,7 +67,6 @@ export type PlanBuilderData = {
   lunchTime: string
   meals: MealsOffered
   nextWeek: null | PlanMenuWeek
-  notice: { body: string; title: string }
   optionGroups: PlanOptionGroup[]
   plans: PlanLength[]
   slug: string
@@ -127,19 +117,11 @@ const readWeek = (week: MealPlan['thisWeek'] | null | undefined): null | PlanMen
   return { days, range: text(week.range) }
 }
 
-/** The shared settings, trimmed and typed, broken rows dropped. */
-export const normalizePlanSettings = (doc: null | PlanSettingsDoc | undefined): PlanSettings => ({
-  copy: { eyebrow: text(doc?.eyebrow), heading: text(doc?.heading), intro: text(doc?.intro) },
-  dinnerTime: text(doc?.dinnerTime),
-  lengths: (doc?.plans ?? [])
-    .map((plan) => ({
-      days: Number(plan?.days),
-      label: text(plan?.label).replace(/\|/g, ' '),
-      note: text(plan?.note),
-    }))
-    .filter((plan) => plan.label && Number.isSafeInteger(plan.days) && plan.days >= 1),
-  lunchTime: text(doc?.lunchTime),
-  optionGroups: (doc?.optionGroups ?? [])
+const readImage = (image: MealPlan['image']): PlanImage =>
+  image && typeof image === 'object' && image.url ? { alt: text(image.alt), url: image.url } : null
+
+const readOptionGroups = (groups: MealPlan['optionGroups']): PlanOptionGroup[] =>
+  (groups ?? [])
     .map((group) => ({
       choices: (group?.choices ?? [])
         .map((choice) => ({
@@ -151,29 +133,37 @@ export const normalizePlanSettings = (doc: null | PlanSettingsDoc | undefined): 
       hint: text(group?.hint),
       title: text(group?.title),
     }))
-    .filter((group) => group.title && group.choices.length > 0),
-})
+    .filter((group) => group.title && group.choices.length > 0)
 
-const readImage = (image: MealPlan['image']): PlanImage =>
-  image && typeof image === 'object' && image.url ? { alt: text(image.alt), url: image.url } : null
-
-/** One meal plan joined with the shared settings: its lengths keep only the prices it sets. */
-export const normalizeMealPlan = (doc: MealPlan, settings: PlanSettings): PlanBuilderData => {
+/** One meal plan, trimmed and typed: broken rows dropped, lengths keep only the prices it sets. */
+export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
   const meals: MealsOffered = doc.meals === 'lunch' || doc.meals === 'dinner' ? doc.meals : 'any'
   const allowed = allowedSlots(meals)
+  const seen = new Set<string>()
 
-  const plans: PlanLength[] = settings.lengths
-    .map((length) => {
-      const row = (doc.prices ?? []).find((p) => text(p?.length).toLowerCase() === length.label.toLowerCase())
+  const plans: PlanLength[] = (doc.prices ?? [])
+    .map((row) => {
       const prices: Partial<Record<PlanSlot, number>> = {}
       const raw = { both: row?.bothPrice, dinner: row?.dinnerPrice, lunch: row?.lunchPrice }
       for (const slot of allowed) {
         const value = paise(raw[slot])
         if (Number.isSafeInteger(value) && value >= 1) prices[slot] = value
       }
-      return { ...length, prices }
+      return {
+        days: Number(row?.days),
+        label: text(row?.length).replace(/\|/g, ' '),
+        note: text(row?.note),
+        prices,
+      }
     })
-    .filter((plan) => Object.keys(plan.prices).length > 0)
+    .filter((plan) => {
+      // A length is found by its name, so the first row with a name wins.
+      const key = plan.label.toLowerCase()
+      if (!plan.label || seen.has(key) || !Number.isSafeInteger(plan.days) || plan.days < 1) return false
+      if (Object.keys(plan.prices).length === 0) return false
+      seen.add(key)
+      return true
+    })
 
   const audience =
     doc.audience && typeof doc.audience === 'object'
@@ -183,13 +173,12 @@ export const normalizeMealPlan = (doc: MealPlan, settings: PlanSettings): PlanBu
   return {
     audience,
     description: text(doc.description),
-    dinnerTime: settings.dinnerTime,
+    dinnerTime: text(doc.dinnerTime),
     image: readImage(doc.image),
-    lunchTime: settings.lunchTime,
+    lunchTime: text(doc.lunchTime),
     meals,
     nextWeek: readWeek(doc.nextWeek),
-    notice: { body: text(doc.noticeBody), title: text(doc.noticeTitle) },
-    optionGroups: settings.optionGroups,
+    optionGroups: readOptionGroups(doc.optionGroups),
     plans,
     slug: doc.slug,
     thisWeek: readWeek(doc.thisWeek),
@@ -239,7 +228,7 @@ export type PricedPlan = {
 }
 
 /**
- * Prices a selection against the live meal plan and settings, or null when
+ * Prices a selection against the live meal plan, or null when
  * anything in it no longer exists (a renamed length, a removed option, a meal
  * choice the plan no longer offers, too many people).
  */

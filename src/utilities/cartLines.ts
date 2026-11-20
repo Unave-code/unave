@@ -13,7 +13,6 @@ import {
   mealPlanPath,
   mealPlanSlugFromLine,
   normalizeMealPlan,
-  normalizePlanSettings,
   type PlanBuilderData,
   pricePlanSelection,
 } from './planBuilder'
@@ -129,23 +128,19 @@ export const resolveCartLines = async ({
   const isPlanLine = (product: string) => product === LEGACY_PLAN_LINE || mealPlanSlugFromLine(product) !== null
   const slugs = [...new Set(lines.map((line) => line.product))].filter((slug) => !isPlanLine(slug))
 
-  // A built plan prices from its meal plan and the shared settings, never from a product.
+  // A built plan prices from its meal plan, never from a product.
   const mealPlans = new Map<string, PlanBuilderData>()
   const planSlugs = [...new Set(lines.map((line) => mealPlanSlugFromLine(line.product)).filter(Boolean))] as string[]
 
   if (planSlugs.length > 0) {
-    const [settingsDoc, found] = await Promise.all([
-      payload.findGlobal({ slug: 'plan-builder', depth: 0, overrideAccess: true }),
-      payload.find({
-        collection: 'meal-plans',
-        depth: 1,
-        limit: planSlugs.length,
-        overrideAccess: true,
-        where: { slug: { in: planSlugs } },
-      }),
-    ])
-    const settings = normalizePlanSettings(settingsDoc)
-    for (const doc of found.docs) mealPlans.set(doc.slug, normalizeMealPlan(doc, settings))
+    const found = await payload.find({
+      collection: 'meal-plans',
+      depth: 1,
+      limit: planSlugs.length,
+      overrideAccess: true,
+      where: { slug: { in: planSlugs } },
+    })
+    for (const doc of found.docs) mealPlans.set(doc.slug, normalizeMealPlan(doc))
   }
   const productsBySlug = new Map<string, Product>()
 

@@ -138,7 +138,6 @@ export interface Config {
     hero: Hero;
     testimonials: Testimonial;
     'product-page': ProductPage;
-    'plan-builder': PlanBuilder;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
@@ -148,7 +147,6 @@ export interface Config {
     hero: HeroSelect<false> | HeroSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
-    'plan-builder': PlanBuilderSelect<false> | PlanBuilderSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -713,7 +711,7 @@ export interface Enquiry {
   createdAt: string;
 }
 /**
- * Each meal plan has its own page on /meal-subscription with its weekly menu and prices. Plan lengths and options are shared, in Meal plan settings.
+ * Each meal plan has its own page on /meal-subscription with its own lengths, prices, options, delivery times and weekly menu.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "meal-plans".
@@ -737,15 +735,43 @@ export interface MealPlan {
    * Lunch only suits a lunch-box plan, for example.
    */
   meals: 'any' | 'lunch' | 'dinner';
+  lunchTime?: string | null;
+  dinnerTime?: string | null;
   /**
-   * One row per plan length, for one person. Fill the prices for the meals this plan offers; a length with no price for a meal choice is not offered for it.
+   * One row per plan length this plan is sold in, priced for one person. Fill the prices for the meals this plan offers; a length with no price for a meal choice is not offered for it.
    */
   prices?:
     | {
         length: string;
+        /**
+         * Mon–Sat, so 2 weeks is 12.
+         */
+        days: number;
+        note?: string | null;
         lunchPrice?: number | null;
         dinnerPrice?: number | null;
         bothPrice?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default. Leave empty for a plan with no options.
+   */
+  optionGroups?:
+    | {
+        title: string;
+        hint?: string | null;
+        choices?:
+          | {
+              label: string;
+              detail?: string | null;
+              /**
+               * 0 means included.
+               */
+              extraPerDay?: number | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -839,11 +865,6 @@ export interface MealPlan {
       dinnerSides?: string | null;
     };
   };
-  noticeTitle?: string | null;
-  /**
-   * Required near any medical, allergy, diabetes or child-nutrition claim. Leave both empty to hide.
-   */
-  noticeBody?: string | null;
   /**
    * Left empty, it fills itself from the name. The plan page lives at /meal-subscription/<slug>.
    */
@@ -2002,13 +2023,32 @@ export interface MealPlansSelect<T extends boolean = true> {
   image?: T;
   audience?: T;
   meals?: T;
+  lunchTime?: T;
+  dinnerTime?: T;
   prices?:
     | T
     | {
         length?: T;
+        days?: T;
+        note?: T;
         lunchPrice?: T;
         dinnerPrice?: T;
         bothPrice?: T;
+        id?: T;
+      };
+  optionGroups?:
+    | T
+    | {
+        title?: T;
+        hint?: T;
+        choices?:
+          | T
+          | {
+              label?: T;
+              detail?: T;
+              extraPerDay?: T;
+              id?: T;
+            };
         id?: T;
       };
   thisWeek?:
@@ -2117,8 +2157,6 @@ export interface MealPlansSelect<T extends boolean = true> {
               dinnerSides?: T;
             };
       };
-  noticeTitle?: T;
-  noticeBody?: T;
   slug?: T;
   position?: T;
   updatedAt?: T;
@@ -3053,57 +3091,6 @@ export interface ProductPage {
   createdAt?: string | null;
 }
 /**
- * Shared by every meal plan on /meal-subscription: plan lengths, options, delivery times and the list page text. Menus and prices live on each meal plan.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plan-builder".
- */
-export interface PlanBuilder {
-  id: number;
-  /**
-   * The lengths every meal plan is sold in. Each meal plan sets its own price for each length, using the same name.
-   */
-  plans?:
-    | {
-        label: string;
-        /**
-         * Mon–Sat, so 2 weeks is 12.
-         */
-        days: number;
-        note?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  lunchTime?: string | null;
-  dinnerTime?: string | null;
-  /**
-   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default. Every meal plan offers these.
-   */
-  optionGroups?:
-    | {
-        title: string;
-        hint?: string | null;
-        choices?:
-          | {
-              label: string;
-              detail?: string | null;
-              /**
-               * 0 means included.
-               */
-              extraPerDay?: number | null;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
-    | null;
-  eyebrow?: string | null;
-  heading?: string | null;
-  intro?: string | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
  * Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3307,43 +3294,6 @@ export interface TestimonialsSelect<T extends boolean = true> {
  */
 export interface ProductPageSelect<T extends boolean = true> {
   planHowItWorks?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plan-builder_select".
- */
-export interface PlanBuilderSelect<T extends boolean = true> {
-  plans?:
-    | T
-    | {
-        label?: T;
-        days?: T;
-        note?: T;
-        id?: T;
-      };
-  lunchTime?: T;
-  dinnerTime?: T;
-  optionGroups?:
-    | T
-    | {
-        title?: T;
-        hint?: T;
-        choices?:
-          | T
-          | {
-              label?: T;
-              detail?: T;
-              extraPerDay?: T;
-              id?: T;
-            };
-        id?: T;
-      };
-  eyebrow?: T;
-  heading?: T;
-  intro?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

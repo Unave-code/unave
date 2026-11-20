@@ -1,11 +1,14 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Check, ChevronUp, Minus, Moon, Plus, ShoppingBag, Sparkles, Sun } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, ChevronUp, Clock, Minus, Moon, Plus, ShoppingBag, Sparkles, Sun } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 
-import { Notice } from '@/components/Notice'
+import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
+import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
 import type { PlanBuilderData, PlanSlot } from '@/utilities/planBuilder'
 import { MEAL_PLANS_PATH, PLAN_MAX_PEOPLE, SLOT_LABEL } from '@/utilities/planBuilder'
@@ -149,15 +152,18 @@ export function PlanBuilder({
     ...chosen.map((c, i) => ({ label: data.optionGroups[i].title, to: 2, value: c.label })),
   ]
 
-  const summary = (
+  const summary = (dark: boolean) => (
     <>
-      <dl className="space-y-2 text-sm">
+      <dl className="space-y-1 text-sm">
         {planRows.map((r) => (
-          <div className="flex items-baseline gap-3" key={r.label}>
-            <dt className="text-cream/70 w-16 shrink-0">{r.label}</dt>
-            <dd className="min-w-0 flex-1 font-bold">{r.value}</dd>
+          <div className="flex min-h-11 items-center gap-3" key={r.label}>
+            <dt className={cn('w-16 shrink-0', dark ? 'text-cream/70' : 'text-ink-600')}>{r.label}</dt>
+            <dd className={cn('min-w-0 flex-1 font-bold', !dark && 'text-ink-900')}>{r.value}</dd>
             <button
-              className="text-gold-400 shrink-0 text-xs font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
+              className={cn(
+                'inline-flex min-h-11 shrink-0 items-center px-1 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none',
+                dark ? 'text-gold-400 focus-visible:ring-gold-400' : 'text-green-700 focus-visible:ring-green-500',
+              )}
               onClick={() => {
                 go(r.to)
                 setSheetOpen(false)
@@ -169,22 +175,22 @@ export function PlanBuilder({
           </div>
         ))}
       </dl>
-      <dl className="border-cream/15 mt-4 space-y-2 border-t pt-4 text-sm">
+      <dl className={cn('mt-4 space-y-2 border-t pt-4 text-sm', dark ? 'border-cream/15' : 'border-line')}>
         <div className="flex justify-between gap-4">
-          <dt className="text-cream/75">
+          <dt className={dark ? 'text-cream/75' : 'text-ink-600'}>
             {plan?.label ?? 'Plan'}
             {people > 1 ? ` × ${people}` : ''}
           </dt>
-          <dd className="font-bold">{formatPaise(planPrice * people)}</dd>
+          <dd className={cn('font-bold tabular-nums', !dark && 'text-ink-900')}>{formatPaise(planPrice * people)}</dd>
         </div>
         {chosen
           .filter((c) => c.extraPerDay > 0)
           .map((c) => (
             <div className="flex justify-between gap-4" key={c.label}>
-              <dt className="text-cream/75">
+              <dt className={dark ? 'text-cream/75' : 'text-ink-600'}>
                 {c.label} × {(plan?.days ?? 0) * people}
               </dt>
-              <dd className="font-bold">{formatPaise(c.extraPerDay * (plan?.days ?? 0) * people)}</dd>
+              <dd className={cn('font-bold tabular-nums', !dark && 'text-ink-900')}>{formatPaise(c.extraPerDay * (plan?.days ?? 0) * people)}</dd>
             </div>
           ))}
       </dl>
@@ -192,7 +198,7 @@ export function PlanBuilder({
   )
 
   /** The form that puts the plan in the cart; the server prices it again from the admin. */
-  const cartForm = (className?: string, compact = false) => (
+  const cartForm = (className?: string, compact = false, dark = true) => (
     <form action="/api/cart/plan" className={className} method="post">
       <input name="slot" type="hidden" value={slot ?? ''} />
       <input name="plan" type="hidden" value={plan?.label ?? ''} />
@@ -203,7 +209,10 @@ export function PlanBuilder({
       ))}
       <button
         className={cn(
-          'rounded-pill bg-gold-400 hover:bg-gold-500 inline-flex w-full items-center justify-center gap-2 font-bold text-green-700 transition-colors focus-visible:ring-[3px] focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 motion-reduce:transition-none',
+          'rounded-pill inline-flex w-full items-center justify-center gap-2 font-bold transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 motion-reduce:transition-none',
+          dark
+            ? 'bg-gold-400 hover:bg-gold-500 text-green-700 focus-visible:ring-gold-400'
+            : 'text-cream bg-green-700 hover:bg-green-600 focus-visible:ring-green-500',
           compact ? 'h-12 px-5 text-sm' : 'text-button h-13 px-6',
         )}
         disabled={!valid}
@@ -419,17 +428,48 @@ export function PlanBuilder({
 
   return (
     <main className="bg-cream pb-28 lg:pb-0">
-      <section className="bg-green-900 text-cream">
-        <div className="container py-10 md:py-14">
-          <Link
-            className="text-cream/80 hover:text-cream inline-flex min-h-11 items-center gap-1.5 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
-            href={MEAL_PLANS_PATH}
-          >
-            <ArrowLeft aria-hidden className="size-4" /> All meal plans
-          </Link>
-          <p className="text-eyebrow text-gold-400 mt-2 uppercase">{data.audience?.title ? `Meal plan · ${data.audience.title}` : 'Meal plan'}</p>
-          <h1 className="text-hero mt-3 max-w-[24ch] font-extrabold text-balance">{data.title}</h1>
-          {data.description && <p className="text-lead text-cream/85 mt-3 max-w-[56ch]">{data.description}</p>}
+      <section className="relative overflow-hidden bg-green-900 text-cream">
+        <Swoosh className="-top-40 -left-40 w-[40rem] text-gold-400/[0.06]" />
+        <div className="relative container grid items-center gap-8 py-8 md:py-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-14">
+          <div className="min-w-0">
+            <Link
+              className="text-cream/80 hover:text-cream -ml-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
+              href={MEAL_PLANS_PATH}
+            >
+              <ArrowLeft aria-hidden className="size-4" /> All meal plans
+            </Link>
+            <h1 className="text-hero mt-4 max-w-[20ch] font-extrabold text-balance">{data.title}</h1>
+            {data.description && <p className="text-lead text-cream/85 mt-4 max-w-[52ch]">{data.description}</p>}
+            <ul className="text-cream/90 mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+              {data.audience?.title && (
+                <li className="rounded-pill bg-cream/10 px-3 py-1 font-bold">{data.audience.title}</li>
+              )}
+              {offered.map((m) => {
+                const Icon = MEAL_ICON[m]
+                return (
+                  <li className="inline-flex items-center gap-2" key={m}>
+                    <Icon aria-hidden className="text-gold-400 size-4" />
+                    {MEAL_LABEL[m]}
+                    {times[m] && <span className="text-cream/70">{times[m]}</span>}
+                  </li>
+                )
+              })}
+              <li className="inline-flex items-center gap-2">
+                <Clock aria-hidden className="text-gold-400 size-4" />
+                Monday to Saturday
+              </li>
+            </ul>
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-green-800 shadow-lg">
+            <Image
+              alt={data.image?.alt ?? ''}
+              className="object-cover"
+              fill
+              priority
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              src={data.image ? getMediaUrl(data.image.url) : PRODUCT_PLACEHOLDER}
+            />
+          </div>
         </div>
       </section>
 
@@ -441,7 +481,7 @@ export function PlanBuilder({
             </p>
           )}
 
-          <section aria-labelledby="step-heading" className="border-line rounded-3xl border bg-white p-5 shadow-sm sm:p-8">
+          <section aria-labelledby="step-heading" className="rounded-2xl bg-white p-5 shadow-md sm:p-8">
             <nav aria-label="Steps">
               <ol className="grid grid-cols-3 gap-2">
                 {STEPS.map((st, i) => {
@@ -458,17 +498,25 @@ export function PlanBuilder({
                       >
                         <span
                           className={cn(
-                            'h-1.5 w-full rounded-full transition-colors motion-reduce:transition-none',
+                            'h-1 w-full rounded-full transition-colors motion-reduce:transition-none',
                             done || current ? 'bg-green-700' : 'bg-line',
                           )}
                         />
                         <span
                           className={cn(
-                            'flex items-center gap-1.5 text-sm font-bold',
-                            current ? 'text-green-700' : done ? 'text-ink-900' : 'text-ink-400',
+                            'flex min-h-8 items-center gap-2 text-sm font-bold',
+                            current ? 'text-green-700' : done ? 'text-ink-900' : 'text-ink-600',
                           )}
                         >
-                          {done ? <Check aria-hidden className="size-4 text-green-700" /> : <span>{i + 1}.</span>}
+                          <span
+                            aria-hidden
+                            className={cn(
+                              'grid size-7 shrink-0 place-items-center rounded-full text-xs tabular-nums',
+                              done ? 'bg-green-100 text-green-700' : current ? 'text-cream bg-green-700' : 'border-line border-2',
+                            )}
+                          >
+                            {done ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
+                          </span>
                           {st.label}
                         </span>
                       </button>
@@ -517,34 +565,43 @@ export function PlanBuilder({
             </div>
           </section>
 
-          {data.notice.title && data.notice.body && <Notice title={data.notice.title}>{data.notice.body}</Notice>}
         </div>
 
         {/* Desktop summary, live */}
         <aside aria-labelledby="summary-heading" className="hidden lg:sticky lg:top-24 lg:block">
-          <div className="text-cream rounded-3xl bg-green-700 p-6 shadow-md">
-            <h2 className="text-lg font-extrabold" id="summary-heading">
-              Your plan
-            </h2>
-            <div className="mt-4">{summary}</div>
-            <div className="border-cream/20 mt-4 flex items-end justify-between border-t pt-4">
-              <span className="text-cream/75 text-sm">Total</span>
-              <span aria-live="polite" className="text-gold-400 text-3xl font-extrabold">
-                {formatPaise(total)}
-              </span>
+          <div className="overflow-hidden rounded-2xl bg-white shadow-md">
+            <div className="flex items-center gap-3 bg-green-900 p-4">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-green-800">
+                <Image alt="" className="object-cover" fill sizes="56px" src={data.image ? getMediaUrl(data.image.url) : PRODUCT_PLACEHOLDER} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-cream text-lg font-extrabold" id="summary-heading">
+                  Your plan
+                </h2>
+                <p className="text-cream/75 truncate text-sm">{data.title}</p>
+              </div>
             </div>
-            {cartForm('mt-6')}
-            <p className="text-cream/70 mt-3 text-center text-xs">Pay securely at checkout. We call you to confirm your start date.</p>
-            {whatsapp && (
-              <a
-                className="text-cream/90 mt-3 flex min-h-11 items-center justify-center gap-2 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
+            <div className="p-6 pt-4">
+              {summary(false)}
+              <div className="border-line mt-4 flex items-end justify-between border-t pt-4">
+                <span className="text-ink-600 text-sm">Total</span>
+                <span aria-live="polite" className="text-3xl font-extrabold text-green-700 tabular-nums">
+                  {formatPaise(total)}
+                </span>
+              </div>
+              {cartForm('mt-6', false, false)}
+              <p className="text-ink-600 mt-3 text-center text-sm">Pay securely at checkout. We call you to confirm your start date.</p>
+              {whatsapp && (
+                <a
+                  className="mt-2 flex min-h-11 items-center justify-center gap-2 text-sm font-bold text-green-700 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none"
                 href={whatsappHref(whatsapp, message)}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <WhatsAppIcon className="size-4" /> Ask us on WhatsApp first
-              </a>
-            )}
+                  <WhatsAppIcon className="size-4" /> Ask us on WhatsApp first
+                </a>
+              )}
+            </div>
           </div>
         </aside>
       </div>
@@ -553,7 +610,7 @@ export function PlanBuilder({
       <div className="border-cream/10 text-cream fixed inset-x-0 bottom-0 z-40 max-h-[80vh] overflow-y-auto border-t bg-green-800 shadow-lg lg:hidden">
         {sheetOpen && (
           <div className="container border-cream/10 border-b py-4" id="mobile-summary">
-            {summary}
+            {summary(true)}
             {whatsapp && (
               <a
                 className="text-cream/90 mt-3 flex min-h-11 items-center gap-2 text-sm font-bold underline-offset-4 hover:underline"
