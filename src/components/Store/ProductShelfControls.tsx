@@ -1,10 +1,5 @@
-import { Search } from 'lucide-react'
-import Link from 'next/link'
 import React from 'react'
 
-import { CTA_BASE, CTA_SIZES, CTA_VARIANTS } from '@/components/Cta'
-import { AUTH_INPUT, AUTH_INPUT_LEADING } from '@/components/CustomerAuth/styles'
-import { cn } from '@/utilities/ui'
 import {
   CATEGORY_LABEL,
   PRODUCT_CATEGORY_VALUES,
@@ -20,7 +15,6 @@ import {
 import {
   SHELF_APPLY,
   SHELF_CLEAR,
-  SHELF_FILTER_ALL,
   PRODUCT_KIND_FILTER_LABEL,
   PRODUCT_KIND_ORDER,
   SHELF_FILTER_AUDIENCE,
@@ -33,6 +27,8 @@ import {
   SHELF_SEARCH_PLACEHOLDER,
   SHELF_SORT_FIELD_LABEL,
 } from '@/utilities/productsCopy'
+
+import { FacetSelect, type FacetOption, PriceRange, ShelfActions, ShelfSearch, SortSelect } from './ShelfFields'
 
 /**
  * The shelf's search bar: the search field, the filters, the price range, the
@@ -49,38 +45,7 @@ import {
  * (design.md §6.2).
  */
 
-/** One choice in a facet select: the value the address carries and its word. */
-export interface FacetOption {
-  label: string
-  value: string
-}
-
-/** One facet as a select, its name inline before it. */
-const FacetSelect: React.FC<{
-  label: string
-  name: string
-  options: FacetOption[]
-  value: null | string
-}> = ({ label, name, options, value }) => (
-  <div className="flex items-center gap-2">
-    <span className="text-ink-600 text-sm font-semibold">{label}</span>
-
-    <select
-      aria-label={label}
-      className={cn(AUTH_INPUT, 'w-auto pr-8 pl-3')}
-      defaultValue={value ?? ''}
-      name={name}
-    >
-      <option value="">{SHELF_FILTER_ALL}</option>
-
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </div>
-)
+export type { FacetOption } from './ShelfFields'
 
 export const ProductShelfControls: React.FC<{
   /** The shelf's own address, which is also where its form applies to. */
@@ -108,22 +73,7 @@ export const ProductShelfControls: React.FC<{
         <input name="subcategory" type="hidden" value={state.subcategory} />
       ) : null}
 
-      <div className="relative min-w-[12rem] flex-1">
-        <Search
-          aria-hidden="true"
-          className="text-ink-400 pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
-        />
-
-        <input
-          aria-label={SHELF_SEARCH_LABEL}
-          className={cn(AUTH_INPUT, AUTH_INPUT_LEADING)}
-          defaultValue={state.q}
-          maxLength={80}
-          name="q"
-          placeholder={SHELF_SEARCH_PLACEHOLDER}
-          type="search"
-        />
-      </div>
+      <ShelfSearch label={SHELF_SEARCH_LABEL} placeholder={SHELF_SEARCH_PLACEHOLDER} value={state.q} />
 
       {fixedCategory ? null : (
         <FacetSelect
@@ -153,57 +103,25 @@ export const ProductShelfControls: React.FC<{
         />
       ) : null}
 
-      <div aria-label={SHELF_PRICE_LABEL} className="flex items-center gap-1.5" role="group">
-        <input
-          aria-label={SHELF_PRICE_FROM}
-          className={cn(AUTH_INPUT, 'w-20 px-3')}
-          defaultValue={state.from ?? ''}
-          inputMode="numeric"
-          min={0}
-          name="from"
-          placeholder={SHELF_PRICE_FROM}
-          type="number"
-        />
+      <PriceRange
+        from={state.from}
+        fromLabel={SHELF_PRICE_FROM}
+        fromPlaceholder={SHELF_PRICE_FROM}
+        label={SHELF_PRICE_LABEL}
+        to={state.to}
+        toLabel={SHELF_PRICE_TO}
+        toPlaceholder={SHELF_PRICE_TO}
+        width="w-20"
+      />
 
-        <span aria-hidden="true" className="text-ink-400">
-          –
-        </span>
+      <SortSelect
+        label={SHELF_SORT_FIELD_LABEL}
+        labels={SHELF_SORT_LABEL}
+        order={SHELF_SORT_ORDER}
+        value={state.sort}
+      />
 
-        <input
-          aria-label={SHELF_PRICE_TO}
-          className={cn(AUTH_INPUT, 'w-20 px-3')}
-          defaultValue={state.to ?? ''}
-          inputMode="numeric"
-          min={0}
-          name="to"
-          placeholder={SHELF_PRICE_TO}
-          type="number"
-        />
-      </div>
-
-      <select
-        aria-label={SHELF_SORT_FIELD_LABEL}
-        className={cn(AUTH_INPUT, 'w-auto pr-8 pl-3')}
-        defaultValue={state.sort}
-        name="sort"
-      >
-        {SHELF_SORT_ORDER.map((key) => (
-          <option key={key} value={key}>
-            {SHELF_SORT_LABEL[key]}
-          </option>
-        ))}
-      </select>
-
-      <button className={cn(CTA_BASE, CTA_SIZES.small, CTA_VARIANTS.primary)} type="submit">
-        {SHELF_APPLY}
-      </button>
-
-      <Link
-        className="text-ink-600 hover:text-green-700 rounded-pill focus-visible:ring-green-500 inline-flex h-11 items-center px-3 text-sm font-semibold underline underline-offset-4 transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none"
-        href={clearHref}
-      >
-        {SHELF_CLEAR}
-      </Link>
+      <ShelfActions applyLabel={SHELF_APPLY} clearHref={clearHref} clearLabel={SHELF_CLEAR} />
     </form>
   )
 }

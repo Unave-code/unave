@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
-import { CTA_BASE, CTA_SIZES, CTA_VARIANTS } from '@/components/Cta'
 import { Media } from '@/components/Media'
 import type { Product } from '@/payload-types'
 import { ONE_TIME_DURATION } from '@/utilities/cart'
@@ -28,6 +27,7 @@ import {
 import { cn } from '@/utilities/ui'
 
 import { ProductCardActions } from './ProductCardActions'
+import { CARD_ACTIONS, CARD_BODY, CARD_CTA, CARD_EYEBROW, CARD_FRAME, CARD_PHOTO_LINK, CARD_PHOTO_ZOOM, CARD_PRICE, CARD_SUBLINE, CARD_TITLE, CARD_TITLE_LINK } from './cardStyles'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
 const PHOTO_PILL =
@@ -124,10 +124,10 @@ export const ProductCard: React.FC<{
   const canAddHere = isAvailable && !choosesOnPage && flatPrice !== null
 
   return (
-    <article className="group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-[box-shadow,translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className={CARD_FRAME}>
       <Link
         aria-hidden="true"
-        className="relative block aspect-square overflow-hidden rounded-md bg-green-50"
+        className={CARD_PHOTO_LINK}
         href={href}
         tabIndex={-1}
       >
@@ -135,7 +135,7 @@ export const ProductCard: React.FC<{
           <Media
             alt=""
             fill
-            imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            imgClassName={CARD_PHOTO_ZOOM}
             pictureClassName="absolute inset-0"
             resource={image}
             size={sizes}
@@ -143,7 +143,7 @@ export const ProductCard: React.FC<{
         ) : (
           <Image
             alt=""
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            className={CARD_PHOTO_ZOOM}
             data-testid="product-image-placeholder"
             fill
             sizes={sizes}
@@ -158,7 +158,7 @@ export const ProductCard: React.FC<{
             alt=""
             className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
             fill
-            imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            imgClassName={CARD_PHOTO_ZOOM}
             pictureClassName="absolute inset-0"
             resource={hoverImage}
             size={sizes}
@@ -172,15 +172,15 @@ export const ProductCard: React.FC<{
         ) : null}
       </Link>
 
-      <div className="flex flex-1 flex-col px-2 pt-3 pb-1">
-        <p className="text-ink-600 flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase">
+      <div className={CARD_BODY}>
+        <p className={CARD_EYEBROW}>
           <span aria-hidden="true" className={cn('size-1.5 rounded-full', KIND_DOT[kind])} />
           {PRODUCT_KIND_LABEL[kind]}
         </p>
 
-        <h3 className="text-body text-ink-900 mt-1 line-clamp-2 leading-snug font-semibold">
+        <h3 className={CARD_TITLE}>
           <Link
-            className="rounded-sm underline-offset-4 hover:text-green-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+            className={CARD_TITLE_LINK}
             href={href}
           >
             {product.title}
@@ -188,7 +188,7 @@ export const ProductCard: React.FC<{
         </h3>
 
         {comboItems.length > 0 ? (
-          <p className="text-ink-600 mt-1 line-clamp-2 text-xs leading-5">
+          <p className={CARD_SUBLINE}>
             {comboItems.join(' + ')}
           </p>
         ) : null}
@@ -205,7 +205,7 @@ export const ProductCard: React.FC<{
 
         {price ? (
           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-body font-bold text-green-700 tabular-nums">{price}</span>
+            <span className={CARD_PRICE}>{price}</span>
             {struckPrice !== null ? (
               <del className="text-ink-600 text-xs tabular-nums">{formatPaise(struckPrice)}</del>
             ) : null}
@@ -217,10 +217,10 @@ export const ProductCard: React.FC<{
         ) : null}
 
         {isAvailable && choosesOnPage && price ? (
-          <div className="mt-auto pt-3">
+          <div className={CARD_ACTIONS}>
             <Link
               aria-label={`${isPlan ? PRODUCT_CHOOSE_PLAN : PRODUCT_CHOOSE_SIZE} for ${product.title}`}
-              className={cn(CTA_BASE, CTA_SIZES.small, CTA_VARIANTS.primary, 'w-full px-1 text-xs uppercase')}
+              className={CARD_CTA}
               href={href}
             >
               {isPlan ? PRODUCT_CHOOSE_PLAN : PRODUCT_CHOOSE_SIZE}
@@ -228,7 +228,7 @@ export const ProductCard: React.FC<{
             </Link>
           </div>
         ) : canAddHere ? (
-          <div className="mt-auto pt-3">
+          <div className={CARD_ACTIONS}>
             <ProductCardActions
               durationLabel={ONE_TIME_DURATION}
               oneTime
