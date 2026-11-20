@@ -66,7 +66,6 @@ export type PlanBuilderData = {
   image: PlanImage
   lunchTime: string
   meals: MealsOffered
-  nextWeek: null | PlanMenuWeek
   optionGroups: PlanOptionGroup[]
   plans: PlanLength[]
   slug: string
@@ -177,7 +176,6 @@ export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
     image: readImage(doc.image),
     lunchTime: text(doc.lunchTime),
     meals,
-    nextWeek: readWeek(doc.nextWeek),
     optionGroups: readOptionGroups(doc.optionGroups),
     plans,
     slug: doc.slug,

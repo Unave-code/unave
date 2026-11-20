@@ -6,7 +6,6 @@ import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
-import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
@@ -89,7 +88,6 @@ export function PlanBuilder({
   const [planLabel, setPlanLabel] = useState(data.plans[Math.min(1, data.plans.length - 1)]?.label ?? '')
   const [people, setPeople] = useState(1)
   const [choices, setChoices] = useState<number[]>(data.optionGroups.map(() => 0))
-  const [menuWeek, setMenuWeek] = useState<'next' | 'this'>('this')
   const [sheetOpen, setSheetOpen] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const firstRender = useRef(true)
@@ -113,7 +111,9 @@ export function PlanBuilder({
   const extrasTotal = plan ? extraPerDay * plan.days * people : 0
   const total = planPrice * people + extrasTotal
 
-  const week = menuWeek === 'next' && data.nextWeek ? data.nextWeek : data.thisWeek
+  const week = data.thisWeek
+  const allPrices = data.plans.flatMap((p) => Object.values(p.prices))
+  const fromPrice = allPrices.length ? Math.min(...allPrices) : null
   const go = (n: number) => setStep(Math.max(0, Math.min(STEPS.length - 1, n)))
 
   if (!data.plans.length || !data.thisWeek) {
@@ -309,34 +309,9 @@ export function PlanBuilder({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-ink-600 max-w-[52ch]">One balanced meal for each slot, set by our kitchen. The menu changes every week.</p>
-        {data.nextWeek && (
-          <div aria-label="Menu week" className="border-line inline-flex gap-1 rounded-full border bg-green-50 p-1" role="tablist">
-            {(['this', 'next'] as const).map((w) => {
-              const info = w === 'this' ? data.thisWeek : data.nextWeek
-              const on = menuWeek === w
-              return (
-                <button
-                  aria-controls="menu-table"
-                  aria-selected={on}
-                  className={cn(
-                    'rounded-pill flex min-h-11 flex-col items-center justify-center px-5 leading-tight transition-colors motion-reduce:transition-none',
-                    on ? 'bg-green-700 text-white shadow-sm' : 'text-green-700 hover:bg-green-100',
-                    focusRing,
-                  )}
-                  key={w}
-                  onClick={() => setMenuWeek(w)}
-                  role="tab"
-                  type="button"
-                >
-                  <span className="text-sm font-extrabold">{w === 'this' ? 'This week' : 'Next week'}</span>
-                  {info?.range && <span className={cn('text-xs', on ? 'text-cream/80' : 'text-ink-600')}>{info.range}</span>}
-                </button>
-              )
-            })}
-          </div>
-        )}
+        {week?.range && <p className="text-ink-900 text-sm font-bold">This week · {week.range}</p>}
       </div>
-      <div className="border-line mt-5 overflow-x-auto rounded-2xl border" id="menu-table" role={data.nextWeek ? 'tabpanel' : undefined}>
+      <div className="border-line mt-5 overflow-x-auto rounded-2xl border">
         <table className="w-full min-w-[560px] border-collapse text-left text-sm">
           <caption className="sr-only">Menu{week?.range ? ` for ${week.range}` : ''}</caption>
           <thead>
@@ -427,52 +402,105 @@ export function PlanBuilder({
   /* -------------------------------------------------------------- page */
 
   return (
-    <main className="bg-cream pb-28 lg:pb-0">
-      <section className="relative overflow-hidden bg-green-900 text-cream">
-        <Swoosh className="-top-40 -left-40 w-[40rem] text-gold-400/[0.06]" />
-        <div className="relative container grid items-center gap-8 py-8 md:py-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-14">
-          <div className="min-w-0">
-            <Link
-              className="text-cream/80 hover:text-cream -ml-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:outline-none"
-              href={MEAL_PLANS_PATH}
-            >
-              <ArrowLeft aria-hidden className="size-4" /> All meal plans
-            </Link>
-            <h1 className="text-hero mt-4 max-w-[20ch] font-extrabold text-balance">{data.title}</h1>
-            {data.description && <p className="text-lead text-cream/85 mt-4 max-w-[52ch]">{data.description}</p>}
-            <ul className="text-cream/90 mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              {data.audience?.title && (
-                <li className="rounded-pill bg-cream/10 px-3 py-1 font-bold">{data.audience.title}</li>
-              )}
-              {offered.map((m) => {
-                const Icon = MEAL_ICON[m]
-                return (
-                  <li className="inline-flex items-center gap-2" key={m}>
-                    <Icon aria-hidden className="text-gold-400 size-4" />
-                    {MEAL_LABEL[m]}
-                    {times[m] && <span className="text-cream/70">{times[m]}</span>}
-                  </li>
-                )
-              })}
-              <li className="inline-flex items-center gap-2">
-                <Clock aria-hidden className="text-gold-400 size-4" />
-                Monday to Saturday
+    <main className="pb-28 lg:pb-0">
+      <section className="bg-card pt-6 pb-12 md:pt-10 md:pb-16">
+        <div className="container">
+          <nav aria-label="Breadcrumb">
+            <ol className="text-caption text-ink-600 flex flex-wrap items-center gap-2">
+              <li>
+                <Link className="inline-flex min-h-11 items-center font-bold underline-offset-4 hover:text-green-700 hover:underline" href={MEAL_PLANS_PATH}>
+                  Meal plans
+                </Link>
               </li>
-            </ul>
-          </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-green-800 shadow-lg">
-            <Image
-              alt={data.image?.alt ?? ''}
-              className="object-cover"
-              fill
-              priority
-              sizes="(min-width: 1024px) 40vw, 100vw"
-              src={data.image ? getMediaUrl(data.image.url) : PRODUCT_PLACEHOLDER}
-            />
+              <li aria-hidden="true">›</li>
+              <li aria-current="page" className="text-ink-900 max-w-[28ch] truncate">
+                {data.title}
+              </li>
+            </ol>
+          </nav>
+
+          <div className="mt-4 grid items-start gap-8 md:grid-cols-2 lg:gap-14">
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-green-50 shadow-md md:sticky md:top-24">
+              <Image
+                alt={data.image?.alt || data.title}
+                className="object-cover"
+                fill
+                priority
+                sizes="(min-width: 768px) 50vw, 100vw"
+                src={data.image ? getMediaUrl(data.image.url) : PRODUCT_PLACEHOLDER}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="rounded-pill inline-flex min-h-7 items-center bg-green-100 px-3 text-xs font-bold tracking-wide text-green-800 uppercase">
+                  Meal plan
+                </span>
+                {data.audience?.title && (
+                  <span className="rounded-pill ring-line text-ink-600 inline-flex min-h-7 items-center px-3 text-xs font-bold tracking-wide uppercase ring-1 ring-inset">
+                    {data.audience.title}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-balance text-green-900 md:text-[36px]">{data.title}</h1>
+
+              <p className="text-caption text-ink-600 mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="inline-flex items-center gap-1.5 font-bold text-green-700">
+                  <span aria-hidden="true" className="bg-success size-2 rounded-full" />
+                  Delivered Monday to Saturday
+                </span>
+              </p>
+
+              {fromPrice !== null && (
+                <p className="border-line mt-6 border-t pt-6">
+                  <span className="text-ink-600 block text-sm">From, for one person</span>
+                  <span className="text-[34px] leading-tight font-extrabold text-green-900 tabular-nums">{formatPaise(fromPrice)}</span>
+                </p>
+              )}
+
+              {data.description && <p className="text-body text-ink-600 mt-4 max-w-[56ch]">{data.description}</p>}
+
+              <dl className="border-line mt-6 divide-y divide-[var(--line)] rounded-2xl border text-sm">
+                {offered.map((m) => {
+                  const Icon = MEAL_ICON[m]
+                  return (
+                    <div className="flex items-center gap-3 px-4 py-3" key={m}>
+                      <dt className="text-ink-600 flex w-28 shrink-0 items-center gap-2">
+                        <Icon aria-hidden className="text-gold-600 size-4" /> {MEAL_LABEL[m]}
+                      </dt>
+                      <dd className="text-ink-900 font-bold">{times[m] || 'Delivery time confirmed by phone'}</dd>
+                    </div>
+                  )
+                })}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <dt className="text-ink-600 flex w-28 shrink-0 items-center gap-2">
+                    <Clock aria-hidden className="text-gold-600 size-4" /> Lengths
+                  </dt>
+                  <dd className="text-ink-900 font-bold">{data.plans.map((p) => p.label).join(' · ')}</dd>
+                </div>
+                {data.optionGroups.length > 0 && (
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <dt className="text-ink-600 flex w-28 shrink-0 items-center gap-2">
+                      <Sparkles aria-hidden className="text-gold-600 size-4" /> Options
+                    </dt>
+                    <dd className="text-ink-900 font-bold">{data.optionGroups.map((g) => g.title).join(', ')}</dd>
+                  </div>
+                )}
+              </dl>
+
+              <a
+                className="rounded-pill text-button text-cream mt-8 inline-flex h-13 w-full items-center justify-center gap-2 bg-green-700 px-7 transition-colors hover:bg-green-600 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none sm:w-auto"
+                href="#builder"
+              >
+                Build your plan <ArrowRight aria-hidden className="size-4" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
+      <div className="scroll-mt-20 bg-green-50" id="builder">
       <div className="container grid gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:py-12">
         <div className="min-w-0 space-y-8">
           {notice && (
@@ -604,6 +632,8 @@ export function PlanBuilder({
             </div>
           </div>
         </aside>
+      </div>
+
       </div>
 
       {/* Mobile sticky bar, live */}

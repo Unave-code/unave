@@ -776,54 +776,9 @@ export interface MealPlan {
       }[]
     | null;
   /**
-   * The menu customers see first.
+   * The menu customers see on the plan page and its card.
    */
   thisWeek?: {
-    /**
-     * Shown on the week switch, for example 23 – 28 Nov.
-     */
-    range?: string | null;
-    mon?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    tue?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    wed?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    thu?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    fri?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-    sat?: {
-      lunchMain?: string | null;
-      dinnerMain?: string | null;
-      lunchSides?: string | null;
-      dinnerSides?: string | null;
-    };
-  };
-  /**
-   * Shown on the Next week switch. Leave empty to hide the switch.
-   */
-  nextWeek?: {
     /**
      * Shown on the week switch, for example 23 – 28 Nov.
      */
@@ -2052,59 +2007,6 @@ export interface MealPlansSelect<T extends boolean = true> {
         id?: T;
       };
   thisWeek?:
-    | T
-    | {
-        range?: T;
-        mon?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        tue?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        wed?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        thu?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        fri?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-        sat?:
-          | T
-          | {
-              lunchMain?: T;
-              dinnerMain?: T;
-              lunchSides?: T;
-              dinnerSides?: T;
-            };
-      };
-  nextWeek?:
     | T
     | {
         range?: T;

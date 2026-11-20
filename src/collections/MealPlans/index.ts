@@ -208,11 +208,8 @@ export const MealPlans: CollectionConfig = {
         {
           label: 'Menu',
           description:
-            'One fixed lunch and dinner per day. Write the main dish with its roti or rice, and the sides separated by commas. Each week, copy next week into this week and write the new next week.',
-          fields: [
-            menuWeekField('thisWeek', 'This week', 'The menu customers see first.'),
-            menuWeekField('nextWeek', 'Next week', 'Shown on the Next week switch. Leave empty to hide the switch.'),
-          ],
+            'One fixed lunch and dinner per day. Write the main dish with its roti or rice, and the sides separated by commas. Update it each week.',
+          fields: [menuWeekField('thisWeek', 'This week', 'The menu customers see on the plan page and its card.')],
         },
       ],
     },

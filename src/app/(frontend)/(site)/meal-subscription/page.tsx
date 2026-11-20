@@ -1,246 +1,179 @@
 import type { Metadata } from 'next'
 import configPromise from '@payload-config'
-import { ArrowRight, Moon, Sun, UtensilsCrossed } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
+import { Cta } from '@/components/Cta'
+import { Section } from '@/components/home/Section'
+import { MealPlanCard } from '@/components/Store/MealPlanCard'
+import { MealPlanShelfControls } from '@/components/Store/MealPlanShelfControls'
 import { Swoosh } from '@/components/Swoosh'
-import { getMediaUrl } from '@/utilities/getMediaUrl'
-import { formatPaise } from '@/utilities/money'
+import { WhatsAppIcon } from '@/components/WhatsAppIcon'
+import type { Footer } from '@/payload-types'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
-  MEAL_PLANS_PATH,
-  mealPlanPath,
-  normalizeMealPlan,
-  type PlanBuilderData,
-  type PlanMenuMeal,
-} from '@/utilities/planBuilder'
-import { cn } from '@/utilities/ui'
+  filterMealPlans,
+  hasMealPlanFilters,
+  type MealPlanSearchParams,
+  parseMealPlanShelf,
+} from '@/utilities/mealPlanShelf'
+import { MEAL_PLANS_PATH, normalizeMealPlan } from '@/utilities/planBuilder'
+import { whatsappHref } from '@/utilities/whatsapp'
 
-export const metadata: Metadata = {
-  alternates: { canonical: MEAL_PLANS_PATH },
-  description: 'Weekly home-style meal plans. Pick a plan, see the menu, choose your options and pay securely.',
-  title: 'Meal subscription',
-}
+export const dynamic = 'force-dynamic'
 
 const COPY = {
   heading: 'A fresh home-style menu',
   accent: 'every week',
-  intro: 'Choose a meal plan, see what we are cooking, pick your options, then pay securely.',
+  intro: 'Choose a meal plan, see what we are cooking this week, pick your options, then pay securely.',
+  browse: 'Browse the meal plans',
+  gridHeading: 'Every meal plan',
+  gridIntro: 'Each plan has its own weekly menu, lengths and prices. Search for a dish, or narrow the shelf by who it is for and which meals you want.',
+  howHeading: 'How a meal plan works',
+  howIntro: 'Pick once, and the kitchen cooks for you every delivery day.',
   family: 'Feeding a family? Add more than one plan to your cart and pay for them together.',
 }
+
+const HOW_STEPS = [
+  { body: 'Open a plan to see this week’s lunch and dinner, day by day.', title: 'See the menu' },
+  { body: 'Choose lunch, dinner or both, how long, how many people and any options.', title: 'Build your plan' },
+  { body: 'Pay securely at checkout. We call you to confirm your start date.', title: 'Pay and start' },
+]
 
 const NOTICES: Record<string, string> = {
   changed: 'That meal plan changed or is no longer offered. Please pick one again.',
   unknown: 'That did not go through. Please try again.',
 }
 
-const MEALS_LABEL = { any: 'Lunch, dinner or both', dinner: 'Dinner only', lunch: 'Lunch only' } as const
+const STEP_NUMBER = 'bg-green-100 text-green-700 grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold'
 
-const focusRing = 'focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:outline-none'
-
-/** The cheapest way in: the price for one person and the length it buys. */
-const cheapest = (plan: PlanBuilderData): null | { label: string; price: number } => {
-  let best: null | { label: string; price: number } = null
-  for (const length of plan.plans) {
-    for (const price of Object.values(length.prices)) {
-      if (price !== undefined && (!best || price < best.price)) best = { label: length.label, price }
-    }
+export async function generateMetadata({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }): Promise<Metadata> {
+  const state = parseMealPlanShelf(await searchParams)
+  return {
+    alternates: { canonical: MEAL_PLANS_PATH },
+    description: 'Weekly home-style meal plans. Pick a plan, see the menu, choose your options and pay securely.',
+    // A filtered view is not a page of its own.
+    robots: hasMealPlanFilters(state) ? { follow: true, index: false } : undefined,
+    title: 'Meal subscription',
   }
-  return best
-}
-
-/** Up to three dishes from this week, in day order, so a row shows real food. */
-const tasting = (plan: PlanBuilderData): { dish: PlanMenuMeal; when: string }[] => {
-  const out: { dish: PlanMenuMeal; when: string }[] = []
-  for (const day of plan.thisWeek?.days ?? []) {
-    if (plan.meals !== 'dinner' && day.lunch) out.push({ dish: day.lunch, when: `${day.day} lunch` })
-    if (plan.meals !== 'lunch' && day.dinner) out.push({ dish: day.dinner, when: `${day.day} dinner` })
-    if (out.length >= 3) break
-  }
-  return out.slice(0, 3)
 }
 
 /**
- * Every meal plan, one wide row each: the photo, who it is for, real dishes from
- * this week and the price to start. Staff manage plans under Catalogue → Meal
- * plans; shoppers can narrow the list by audience. A cart can hold several built
- * plans, so a family can mix them in one order.
+ * Every meal plan as a shelf, built like /products (design.md §6.15, §6.19): the
+ * green opening band, a search and filter bar whose state lives in the address,
+ * the card grid, two honest empty states and a how-it-works band.
  */
-export default async function MealPlansPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ audience?: string; notice?: string }>
-}) {
-  const params = await searchParams
-  const audienceSlug = typeof params.audience === 'string' ? params.audience.trim().slice(0, 80) : ''
+export default async function MealPlansPage({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }) {
+  const raw = await searchParams
+  const state = parseMealPlanShelf(raw)
+  const noticeKey = typeof raw.notice === 'string' ? raw.notice : null
+  const notice = noticeKey ? (NOTICES[noticeKey] ?? NOTICES.unknown) : null
+
   const payload = await getPayload({ config: configPromise })
+  const [all, footer] = await Promise.all([
+    payload.find({ collection: 'meal-plans', depth: 1, limit: 100, sort: 'position' }),
+    getCachedGlobal('footer', 1)() as Promise<Footer | null>,
+  ])
+  const whatsapp = footer?.contact?.whatsapp ?? null
 
-  const all = await payload.find({ collection: 'meal-plans', depth: 1, limit: 50, sort: 'position' })
   const plans = all.docs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
+  const shown = filterMealPlans(plans, state)
+  const filtered = hasMealPlanFilters(state)
 
-  // Only audiences some plan uses become filters.
-  const audiences = [...new Map(plans.filter((p) => p.audience?.slug).map((p) => [p.audience!.slug, p.audience!])).values()]
-  const shown = audienceSlug ? plans.filter((p) => p.audience?.slug === audienceSlug) : plans
-  const notice = params.notice ? (NOTICES[params.notice] ?? NOTICES.unknown) : null
-
-  const chip = (label: string, href: string, active: boolean) => (
-    <Link
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'rounded-pill inline-flex min-h-11 items-center border-2 px-5 text-sm font-bold transition-colors motion-reduce:transition-none',
-        active ? 'border-green-700 bg-green-700 text-white' : 'border-line text-ink-900 bg-white hover:border-green-500',
-        focusRing,
-      )}
-      href={href}
-      key={href}
-    >
-      {label}
-    </Link>
-  )
+  // Only audiences some plan uses become choices.
+  const audiences = [
+    ...new Map(plans.filter((p) => p.audience?.slug).map((p) => [p.audience!.slug, { label: p.audience!.title, value: p.audience!.slug }])).values(),
+  ]
 
   return (
-    <main className="bg-cream">
-      <section className="relative overflow-hidden bg-green-900 text-cream">
+    <main>
+      <Section className="opening-band relative overflow-hidden bg-green-900 md:py-20" tone="green">
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
-        <div className="relative container py-12 md:py-20">
-          <h1 className="text-hero max-w-[22ch] font-extrabold text-balance">
+        <div className="relative max-w-[46rem]">
+          <h1 className="text-display text-balance">
             {COPY.heading} <span className="text-gold-400 whitespace-nowrap italic">{COPY.accent}</span>
           </h1>
-          <p className="text-lead text-cream/85 mt-5 max-w-[52ch]">{COPY.intro}</p>
-          {plans.length > 0 && (
-            <p className="text-cream/70 mt-8 text-sm">
-              {plans.length} {plans.length === 1 ? 'plan' : 'plans'} to choose from · Delivered Monday to Saturday
-            </p>
-          )}
+          <p className="text-lead text-cream/85 mt-6 max-w-[52ch]">{COPY.intro}</p>
+          <div className="mt-8">
+            <Cta href="#meal-plans" variant="onDark">
+              {COPY.browse}
+            </Cta>
+          </div>
         </div>
-      </section>
+      </Section>
 
-      <div className="container py-10 lg:py-16">
-        {notice && (
-          <p className="bg-gold-100 border-gold-300 text-ink-900 mb-8 rounded-2xl border px-5 py-4 text-base" role="alert">
+      <Section id="meal-plans" tone="white">
+        <h2 className="text-h2">{COPY.gridHeading}</h2>
+        <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{COPY.gridIntro}</p>
+
+        {notice ? (
+          <p className="bg-gold-100 border-gold-300 text-ink-900 mt-6 rounded-2xl border px-5 py-4 text-base" role="alert">
             {notice}
           </p>
-        )}
+        ) : null}
 
-        {audiences.length > 1 && (
-          <nav aria-label="Filter meal plans" className="mb-10 flex flex-wrap gap-2">
-            {chip('All plans', MEAL_PLANS_PATH, !audienceSlug)}
-            {audiences.map((a) => chip(a.title, `${MEAL_PLANS_PATH}?audience=${encodeURIComponent(a.slug)}`, audienceSlug === a.slug))}
-          </nav>
-        )}
+        {plans.length > 0 ? <MealPlanShelfControls audiences={audiences} basePath={MEAL_PLANS_PATH} state={state} /> : null}
 
-        {shown.length === 0 ? (
-          <div className="mx-auto max-w-[30rem] rounded-2xl bg-white p-10 text-center shadow-sm">
-            <UtensilsCrossed aria-hidden className="mx-auto size-8 text-green-700" />
-            <h2 className="text-ink-900 mt-4 text-xl font-extrabold">No meal plans here yet</h2>
-            <p className="text-ink-600 mt-2">{audienceSlug ? 'Try all plans instead.' : 'Plans open soon. Message us and we will help you start.'}</p>
-            {audienceSlug && (
-              <Link className={cn('rounded-pill mt-6 inline-flex h-12 items-center bg-green-700 px-6 font-bold text-white hover:bg-green-600', focusRing)} href={MEAL_PLANS_PATH}>
-                See all plans
-              </Link>
-            )}
-          </div>
-        ) : (
-          <ol className="divide-line divide-y">
-            {shown.map((plan, index) => {
-              const from = cheapest(plan)
-              const dishes = tasting(plan)
-              const flip = index % 2 === 1
-              const href = mealPlanPath(plan.slug)
-              return (
-                <li className="py-10 first:pt-0 last:pb-0 lg:py-14" key={plan.slug}>
-                  <article
-                    aria-labelledby={`plan-${plan.slug}`}
-                    className="grid items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14"
-                  >
-                    <Link
-                      aria-hidden
-                      className={cn(
-                        'group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-green-100 shadow-md',
-                        flip && 'md:order-2',
-                      )}
-                      href={href}
-                      tabIndex={-1}
-                    >
-                      <Image
-                        alt=""
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
-                        fill
-                        sizes="(min-width: 1024px) 45vw, (min-width: 768px) 45vw, 100vw"
-                        src={plan.image ? getMediaUrl(plan.image.url) : PRODUCT_PLACEHOLDER}
-                      />
-                    </Link>
-
-                    <div className="min-w-0">
-                      <div className="text-ink-600 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                        {plan.audience?.title && (
-                          <span className="rounded-pill bg-green-100 px-3 py-1 font-bold text-green-700">{plan.audience.title}</span>
-                        )}
-                        <span className="inline-flex items-center gap-1.5">
-                          {plan.meals !== 'dinner' && <Sun aria-hidden className="text-gold-600 size-4" />}
-                          {plan.meals !== 'lunch' && <Moon aria-hidden className="text-gold-600 size-4" />}
-                          {MEALS_LABEL[plan.meals]}
-                        </span>
-                      </div>
-
-                      <h2 className="mt-4 text-[28px] leading-tight font-extrabold text-green-900 md:text-[34px]" id={`plan-${plan.slug}`}>
-                        <Link className={cn('rounded-sm hover:text-green-700', focusRing)} href={href}>
-                          {plan.title}
-                        </Link>
-                      </h2>
-                      {plan.description && <p className="text-ink-600 mt-3 max-w-[56ch] text-base leading-7">{plan.description}</p>}
-
-                      {dishes.length > 0 && (
-                        <div className="mt-6">
-                          <h3 className="text-ink-900 text-sm font-bold">
-                            On the menu this week{plan.thisWeek?.range ? ` · ${plan.thisWeek.range}` : ''}
-                          </h3>
-                          <ul className="mt-3 space-y-2.5">
-                            {dishes.map(({ dish, when }) => (
-                              <li className="flex items-baseline gap-3" key={when}>
-                                <span className="text-ink-600 w-24 shrink-0 text-sm">{when}</span>
-                                <span className="text-ink-900 min-w-0 font-bold">{dish.main}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
-                        {from && (
-                          <p>
-                            <span className="block text-2xl font-extrabold text-green-700 tabular-nums">{formatPaise(from.price)}</span>
-                            <span className="text-ink-600 text-sm">from, for one person, {from.label}</span>
-                          </p>
-                        )}
-                        <Link
-                          className={cn(
-                            'rounded-pill text-button inline-flex h-13 items-center gap-2 bg-green-700 px-7 text-cream transition-colors hover:bg-green-600 motion-reduce:transition-none',
-                            focusRing,
-                          )}
-                          href={href}
-                        >
-                          Choose this plan <ArrowRight aria-hidden className="size-4" />
-                          <span className="sr-only">: {plan.title}</span>
-                        </Link>
-                      </div>
-                      <p className="text-ink-600 mt-4 text-sm">
-                        {plan.plans.map((l) => l.label).join(' · ')}
-                        {plan.optionGroups.length > 0 && ` · Options: ${plan.optionGroups.map((g) => g.title).join(', ')}`}
-                      </p>
-                    </div>
-                  </article>
+        {shown.length > 0 ? (
+          <>
+            <p className="text-ink-600 mt-6 text-sm font-semibold">
+              {filtered ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
+            </p>
+            <ul aria-label="Meal plans" className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {shown.map((plan) => (
+                <li className="min-w-0" key={plan.slug}>
+                  <MealPlanCard meals={state.meals} plan={plan} />
                 </li>
-              )
-            })}
-          </ol>
+              ))}
+            </ul>
+            <p className="text-ink-600 mt-8 text-sm">{COPY.family}</p>
+          </>
+        ) : (
+          <div className="border-line mx-auto mt-8 max-w-[52ch] rounded-2xl border p-8 text-center">
+            <h3 className="text-h3">{filtered ? 'Nothing matches those filters' : 'Meal plans open soon'}</h3>
+            <p className="text-body text-ink-600 mt-3">
+              {filtered
+                ? 'Try fewer filters, or tell us what you are looking for and we will help.'
+                : 'We are setting up the menus and prices. Message us and we will help you start.'}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {filtered ? (
+                <Cta href={MEAL_PLANS_PATH} variant="secondary">
+                  Clear all
+                </Cta>
+              ) : null}
+              {whatsapp ? (
+                <Cta href={whatsappHref(whatsapp)} rel="noopener noreferrer" target="_blank" variant="primary">
+                  <WhatsAppIcon className="size-4" />
+                  Message us on WhatsApp
+                </Cta>
+              ) : null}
+            </div>
+          </div>
         )}
+      </Section>
 
-        {shown.length > 0 && <p className="text-ink-600 border-line mt-14 border-t pt-8 text-center text-base">{COPY.family}</p>}
-      </div>
+      <Section tone="tint">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
+          <div>
+            <h2 className="text-h2">{COPY.howHeading}</h2>
+            <p className="text-body text-ink-600 mt-3 max-w-[45ch]">{COPY.howIntro}</p>
+          </div>
+          <ol className="flex flex-col gap-8">
+            {HOW_STEPS.map((step, index) => (
+              <li className="flex gap-4" key={step.title}>
+                <span aria-hidden="true" className={STEP_NUMBER}>
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 className="text-h3">{step.title}</h3>
+                  <p className="text-body text-ink-600 mt-2 max-w-[55ch]">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Section>
     </main>
   )
 }
