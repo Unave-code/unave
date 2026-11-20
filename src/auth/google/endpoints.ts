@@ -8,14 +8,16 @@ import {
   mintCustomerSession,
   revokeCustomerSession,
 } from '@/auth/customerSession'
+import { ACCOUNT_PATH, SIGN_IN_PATH } from '@/auth/paths'
 import {
+  clearOauthCookie,
+  clearSessionCookie,
   CUSTOMER_OAUTH_COOKIE,
   CUSTOMER_SESSION_COOKIE,
-  CUSTOMER_SESSION_MAX_AGE,
   customerOauthCookieOptions,
-  customerSessionCookieOptions,
   readCookie,
   serializeCookie,
+  sessionCookie,
 } from '@/utilities/customerSession'
 import { safeReturnPath } from '@/utilities/formPost'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -31,9 +33,6 @@ import {
   safeCompare,
   type GoogleProfile,
 } from './oauth'
-
-const SIGN_IN_PATH = '/sign-in'
-const ACCOUNT_PATH = '/account'
 
 /**
  * Google has proved the address, so it is as verified as a clicked email link.
@@ -178,7 +177,7 @@ const redirectToSignIn = (error: string): Response => {
   headers.set('Location', `${SIGN_IN_PATH}?error=${encodeURIComponent(error)}`)
   headers.append(
     'Set-Cookie',
-    serializeCookie(CUSTOMER_OAUTH_COOKIE, '', { ...customerOauthCookieOptions, maxAge: 0 }),
+    clearOauthCookie(),
   )
 
   return new Response(null, { headers, status: 303 })
@@ -315,14 +314,11 @@ export const googleCallbackEndpoint: Endpoint = {
     // Clear the round trip cookie, then set the session.
     headers.append(
       'Set-Cookie',
-      serializeCookie(CUSTOMER_OAUTH_COOKIE, '', { ...customerOauthCookieOptions, maxAge: 0 }),
+      clearOauthCookie(),
     )
     headers.append(
       'Set-Cookie',
-      serializeCookie(CUSTOMER_SESSION_COOKIE, token, {
-        ...customerSessionCookieOptions,
-        maxAge: CUSTOMER_SESSION_MAX_AGE,
-      }),
+      sessionCookie(token),
     )
 
     return new Response(null, { headers, status: 303 })
@@ -356,10 +352,7 @@ export const customerLogoutEndpoint: Endpoint = {
     headers.set('Location', '/')
     headers.append(
       'Set-Cookie',
-      serializeCookie(CUSTOMER_SESSION_COOKIE, '', {
-        ...customerSessionCookieOptions,
-        maxAge: 0,
-      }),
+      clearSessionCookie(),
     )
 
     return new Response(null, { headers, status: 303 })

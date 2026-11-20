@@ -90,3 +90,23 @@ export const readCookie = (header: string | null | undefined, name: string): str
 
   return null
 }
+
+/**
+ * Put Payload's JWT in the customer cookie.
+ *
+ * The token is already signed by Payload. This only chooses the name, so a
+ * storefront sign-in leaves a staff member's `payload-token` untouched.
+ */
+export const sessionCookie = (token: string): string =>
+  serializeCookie(CUSTOMER_SESSION_COOKIE, token, {
+    ...customerSessionCookieOptions,
+    maxAge: CUSTOMER_SESSION_MAX_AGE,
+  })
+
+/** The Set-Cookie value that drops the customer session. */
+export const clearSessionCookie = (): string =>
+  serializeCookie(CUSTOMER_SESSION_COOKIE, '', { ...customerSessionCookieOptions, maxAge: 0 })
+
+/** The Set-Cookie value that drops the Google sign-in round trip cookie. */
+export const clearOauthCookie = (): string =>
+  serializeCookie(CUSTOMER_OAUTH_COOKIE, '', { ...customerOauthCookieOptions, maxAge: 0 })

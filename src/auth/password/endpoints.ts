@@ -4,12 +4,8 @@ import type { Endpoint } from 'payload'
 
 import type { Customer } from '@/payload-types'
 
-import {
-  CUSTOMER_SESSION_COOKIE,
-  CUSTOMER_SESSION_MAX_AGE,
-  customerSessionCookieOptions,
-  serializeCookie,
-} from '@/utilities/customerSession'
+import { ACCOUNT_PATH, FORGOT_PATH, RESET_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from '@/auth/paths'
+import { sessionCookie } from '@/utilities/customerSession'
 import {
   backWithError,
   isSameOriginPost,
@@ -38,18 +34,6 @@ import {
 import { errorMessage } from '@/utilities/errorMessage'
 
 /**
- * Put Payload's JWT in the customer cookie.
- *
- * The token is already signed by Payload. This only chooses the name, so a
- * storefront sign-in leaves a staff member's `payload-token` untouched.
- */
-const sessionCookie = (token: string): string =>
-  serializeCookie(CUSTOMER_SESSION_COOKIE, token, {
-    ...customerSessionCookieOptions,
-    maxAge: CUSTOMER_SESSION_MAX_AGE,
-  })
-
-/**
  * The password half of customer accounts.
  *
  * These are Payload collection endpoints rather than Next server actions so the
@@ -65,12 +49,6 @@ const sessionCookie = (token: string): string =>
  * and the place that puts the resulting Payload JWT in the `unave-customer` cookie
  * instead of the staff `payload-token`.
  */
-
-const SIGN_IN_PATH = '/sign-in'
-const SIGN_UP_PATH = '/sign-up'
-const FORGOT_PATH = '/forgot-password'
-const RESET_PATH = '/reset-password'
-const ACCOUNT_PATH = '/account'
 
 /**
  * The error code a person sees when the form guard (honeypot and fill-time
