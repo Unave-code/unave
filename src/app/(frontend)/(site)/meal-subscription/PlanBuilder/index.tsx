@@ -6,7 +6,7 @@ import type { PlanBuilderData } from '@/utilities/planBuilder'
 
 import { MenuStep } from './MenuStep'
 import { OptionsStep } from './OptionsStep'
-import { PlanEmpty, PlanHero } from './Hero'
+import { PlanEmpty, PlanHeader } from './Hero'
 import { PlanStep } from './PlanStep'
 import { StepFooter, StepNav } from './StepNav'
 import { MobileSummaryBar, SummaryAside } from './Summary'
@@ -48,30 +48,26 @@ export function PlanBuilder({
   const StepBody = STEP_BODY[step]
 
   return (
-    <main className="pb-28 lg:pb-0">
-      <PlanHero data={data} state={state} />
+    <main className="container max-w-6xl py-10 pb-28 sm:py-14 lg:pb-14">
+      <PlanHeader data={data} />
 
-      <div className="scroll-mt-20 bg-green-50" id="builder">
-        <div className="container grid gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:py-12">
-          <div className="min-w-0 space-y-8">
-            {notice && (
-              <p className="bg-gold-100 border-gold-300 text-ink-900 rounded-2xl border px-5 py-4 text-sm" role="alert">
-                {notice}
-              </p>
-            )}
+      {notice && (
+        <p className="bg-gold-100 border-gold-300 text-ink-900 mt-8 rounded-2xl border px-5 py-4 text-sm" role="alert">
+          {notice}
+        </p>
+      )}
 
-            <section aria-labelledby="step-heading" className="rounded-2xl bg-white p-5 shadow-md sm:p-8">
-              <StepNav go={go} step={step} valid={valid} />
-              <h2 className="text-ink-900 mt-6 mb-6 text-2xl font-extrabold outline-none" id="step-heading" ref={headingRef} tabIndex={-1}>
-                {STEPS[step].heading}
-              </h2>
-              <StepBody data={data} state={state} />
-              <StepFooter go={go} step={step} valid={valid} />
-            </section>
-          </div>
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <section aria-labelledby="step-heading" className="min-w-0 rounded-2xl bg-white p-5 shadow-md sm:p-8">
+          <StepNav go={go} step={step} valid={valid} />
+          <h2 className="text-ink-900 mt-6 mb-6 text-2xl font-extrabold outline-none" id="step-heading" ref={headingRef} tabIndex={-1}>
+            {STEPS[step].heading}
+          </h2>
+          <StepBody data={data} state={state} />
+          <StepFooter go={go} step={step} valid={valid} />
+        </section>
 
-          <SummaryAside data={data} onEdit={onEdit} state={state} whatsapp={whatsapp} />
-        </div>
+        <SummaryAside data={data} onEdit={onEdit} state={state} whatsapp={whatsapp} />
       </div>
 
       <MobileSummaryBar
