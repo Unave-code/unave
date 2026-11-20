@@ -19,6 +19,7 @@ import React from 'react'
 import { Cta } from '@/components/Cta'
 import { CheckoutSteps } from '@/components/Store/CheckoutSteps'
 import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
+import { StoreEmptyState, StorePageHeader } from '@/components/Store/StorePage'
 import { CART_COOKIE, CART_MAX_QTY, encodeCartLine, readCart } from '@/utilities/cart'
 import { resolveCartLines } from '@/utilities/cartLines'
 import {
@@ -45,7 +46,7 @@ import {
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
 import { productHref } from '@/utilities/productsCategoryCopy'
-import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
+import { cartLineKind, daysLabel } from '@/utilities/orderDisplay'
 import { cn } from '@/utilities/ui'
 import { firstParam } from '@/utilities/searchParams'
 
@@ -105,12 +106,7 @@ export default async function CartPage({
     <main className="container max-w-6xl py-10 sm:py-14">
       <CheckoutSteps current={0} />
 
-      <header className="mt-8 flex flex-col gap-2">
-        <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-green-900 md:text-[34px]">
-          {CART_PAGE_HEADING}
-        </h1>
-        <p className="text-body text-ink-600 max-w-[65ch]">{CART_PAGE_INTRO}</p>
-      </header>
+      <StorePageHeader heading={CART_PAGE_HEADING} intro={CART_PAGE_INTRO} />
 
       {notice ? (
         <p className="text-ink-900 bg-gold-100 mt-8 rounded-sm p-4 text-sm leading-6" role="status">
@@ -119,22 +115,12 @@ export default async function CartPage({
       ) : null}
 
       {cart.all.length === 0 ? (
-        <div className="bg-card mx-auto mt-12 flex max-w-[30rem] flex-col items-center rounded-2xl p-10 text-center shadow-sm">
-          <span
-            aria-hidden="true"
-            className="grid size-16 place-items-center rounded-full bg-green-50 text-green-700"
-          >
-            <ShoppingBag className="size-7" strokeWidth={1.75} />
-          </span>
-          <h2 className="mt-5 text-xl font-bold text-green-900">{CART_EMPTY_HEADING}</h2>
-          <p className="text-body text-ink-600 mt-2">{CART_EMPTY_BODY}</p>
-
-          <div className="mt-6">
-            <Cta href="/products" variant="primary">
-              {CART_EMPTY_CTA}
-            </Cta>
-          </div>
-        </div>
+        <StoreEmptyState
+          body={CART_EMPTY_BODY}
+          cta={{ href: '/products', label: CART_EMPTY_CTA }}
+          heading={CART_EMPTY_HEADING}
+          icon={<ShoppingBag className="size-7" strokeWidth={1.75} />}
+        />
       ) : (
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
           <section aria-label={CART_PAGE_TITLE} className="min-w-0">
@@ -168,16 +154,8 @@ export default async function CartPage({
                         {line.productTitle}
                       </Link>
                       <p className="text-ink-600 mt-1 text-sm">
-                        {line.type === 'combo'
-                          ? 'Meal combo'
-                          : line.type === 'one-time'
-                            ? line.size
-                              ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
-                              : PRODUCT_ONE_TIME_LABEL
-                            : (line.detail ?? line.duration)}
-                        {line.days !== null && line.days > 0
-                          ? `, ${line.days} ${line.days === 1 ? 'day' : 'days'}`
-                          : ''}
+                        {cartLineKind(line) ?? line.detail ?? line.duration}
+                        {line.days !== null && line.days > 0 ? `, ${daysLabel(line.days)}` : ''}
                       </p>
 
                       {line.stale ? (

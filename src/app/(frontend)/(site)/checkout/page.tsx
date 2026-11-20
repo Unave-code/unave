@@ -8,16 +8,15 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { Cta } from '@/components/Cta'
 import { CheckoutSteps } from '@/components/Store/CheckoutSteps'
 import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
+import { StoreEmptyState, StorePageHeader } from '@/components/Store/StorePage'
 import { CART_COOKIE, readCart } from '@/utilities/cart'
 import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
-import { PRODUCT_ONE_TIME_LABEL } from '@/utilities/productsCopy'
-import { cn } from '@/utilities/ui'
+import { cartLineKind, daysLabel } from '@/utilities/orderDisplay'
 
 import { CheckoutForm } from './CheckoutForm'
 import {
@@ -87,33 +86,23 @@ export default async function CheckoutPage() {
       <main className="container max-w-6xl py-10 sm:py-14">
         <CheckoutSteps current={1} />
 
-        <div className="bg-card mx-auto mt-12 flex max-w-[30rem] flex-col items-center rounded-2xl p-10 text-center shadow-sm">
-          <span
-            aria-hidden="true"
-            className={cn(
-              'grid size-16 place-items-center rounded-full',
-              empty ? 'bg-green-50 text-green-700' : 'bg-gold-100 text-gold-600',
-            )}
-          >
-            {empty ? (
+        <StoreEmptyState
+          body={empty ? CHECKOUT_EMPTY_BODY : CHECKOUT_STALE_BODY}
+          cta={{
+            href: empty ? '/products' : '/cart',
+            label: empty ? CHECKOUT_EMPTY_CTA : CHECKOUT_STALE_CTA,
+          }}
+          heading={empty ? CHECKOUT_EMPTY_HEADING : CHECKOUT_STALE_HEADING}
+          headingLevel="h1"
+          icon={
+            empty ? (
               <ShoppingBag className="size-7" strokeWidth={1.75} />
             ) : (
               <TriangleAlert className="size-7" strokeWidth={1.75} />
-            )}
-          </span>
-          <h1 className="mt-5 text-xl font-bold text-green-900">
-            {empty ? CHECKOUT_EMPTY_HEADING : CHECKOUT_STALE_HEADING}
-          </h1>
-          <p className="text-body text-ink-600 mt-2">
-            {empty ? CHECKOUT_EMPTY_BODY : CHECKOUT_STALE_BODY}
-          </p>
-
-          <div className="mt-6">
-            <Cta href={empty ? '/products' : '/cart'} variant="primary">
-              {empty ? CHECKOUT_EMPTY_CTA : CHECKOUT_STALE_CTA}
-            </Cta>
-          </div>
-        </div>
+            )
+          }
+          tone={empty ? 'green' : 'gold'}
+        />
       </main>
     )
   }
@@ -135,12 +124,7 @@ export default async function CheckoutPage() {
     <main className="container max-w-6xl py-10 sm:py-14">
       <CheckoutSteps current={1} />
 
-      <header className="mt-8 flex flex-col gap-2">
-        <h1 className="text-[28px] leading-[1.15] font-extrabold tracking-[-0.01em] text-green-900 md:text-[34px]">
-          {CHECKOUT_PAGE_HEADING}
-        </h1>
-        <p className="text-body text-ink-600 max-w-[65ch]">{CHECKOUT_PAGE_INTRO}</p>
-      </header>
+      <StorePageHeader heading={CHECKOUT_PAGE_HEADING} intro={CHECKOUT_PAGE_INTRO} />
 
       <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
         <CheckoutForm
@@ -195,13 +179,7 @@ export default async function CheckoutPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-ink-900 truncate text-sm font-bold">{line.productTitle}</p>
                   <p className="text-ink-600 mt-0.5 text-sm">
-                    {line.type === 'combo'
-                      ? 'Meal combo'
-                      : line.type === 'one-time'
-                        ? line.size
-                          ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
-                          : PRODUCT_ONE_TIME_LABEL
-                        : `${line.detail ?? line.duration}, ${line.days} ${line.days === 1 ? 'day' : 'days'}`}
+                    {cartLineKind(line) ?? `${line.detail ?? line.duration}, ${daysLabel(line.days)}`}
                   </p>
                 </div>
 

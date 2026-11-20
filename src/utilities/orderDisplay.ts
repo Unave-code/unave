@@ -51,3 +51,19 @@ export const orderItemKind = (item: {
   }
   return item.durationLabel ?? ''
 }
+
+/** "1 day" or "7 days". */
+export const daysLabel = (days: null | number): string => `${days} ${days === 1 ? 'day' : 'days'}`
+
+/**
+ * How a cart line reads under its name, for a combo or a single item; null
+ * for a meal plan, which each page describes by its duration its own way.
+ */
+export const cartLineKind = (line: { size?: null | string; type: string }): null | string =>
+  line.type === 'combo'
+    ? 'Meal combo'
+    : line.type === 'one-time'
+      ? line.size
+        ? `${PRODUCT_ONE_TIME_LABEL} · ${line.size}`
+        : PRODUCT_ONE_TIME_LABEL
+      : null
