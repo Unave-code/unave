@@ -127,7 +127,7 @@ const ADDONS: AddonGroup[] = [
   },
 ]
 
-const STEPS = ['Meals & days', 'This week', 'Add-ons', 'Review'] as const
+const STEPS = ['This week', 'Meals & days', 'Add-ons', 'Review'] as const
 
 /* --------------------------------------------------------------- helpers */
 
@@ -229,8 +229,8 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
     return { mealsPerWeek, mealsCost, addonsCost, weekly, gross, off, saved: gross - total, total }
   }, [activeSlots.length, orderedDays.length, people, chosenAddons, weeks])
 
-  const stepValid = [activeSlots.length > 0 && orderedDays.length > 0, true, true, true]
-  const canSend = stepValid[0]
+  const stepValid = [true, activeSlots.length > 0 && orderedDays.length > 0, true, true]
+  const canSend = stepValid[1]
 
   const message = [
     'Hi UNAVE, I would like to start this plan:',
@@ -365,8 +365,8 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
     // 2. This week's menu (read-only table)
     <div key="s2">
       <p className="text-ink-600">
-        The kitchen sets one balanced meal for each slot, and the menu changes every week. {WEEK_LABEL}. Days and meals
-        outside your plan are greyed out.
+        The kitchen sets one balanced meal for each slot, and the menu changes every week. {WEEK_LABEL}. You pick your days
+        and meals in the next step; anything outside your plan shows greyed out.
       </p>
       <div className="border-line mt-5 overflow-x-auto rounded-2xl border">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
@@ -468,9 +468,9 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
     <div className="space-y-6" key="s4">
       <dl className="border-line divide-line divide-y rounded-2xl border bg-white">
         {[
-          { label: 'Meals', value: activeSlots.map((s) => SLOT_INFO[s].label).join(' and ') || 'None picked', to: 0 },
-          { label: 'Days', value: orderedDays.join(', ') || 'None picked', to: 0 },
-          { label: 'Duration', value: DURATIONS.find((d) => d.weeks === weeks)!.label + ', ' + people + (people > 1 ? ' people' : ' person'), to: 0 },
+          { label: 'Meals', value: activeSlots.map((s) => SLOT_INFO[s].label).join(' and ') || 'None picked', to: 1 },
+          { label: 'Days', value: orderedDays.join(', ') || 'None picked', to: 1 },
+          { label: 'Duration', value: DURATIONS.find((d) => d.weeks === weeks)!.label + ', ' + people + (people > 1 ? ' people' : ' person'), to: 1 },
           { label: 'Add-ons', value: chosenAddons.map((a) => a.label).join(', ') || 'None', to: 2 },
         ].map((r) => (
           <div className="flex items-center gap-4 px-5 py-4" key={r.label}>
@@ -504,7 +504,7 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
             Set up your <span className="text-gold-400 italic">weekly meals</span> in four steps
           </h1>
           <p className="text-lead text-cream/85 mt-3 max-w-[56ch]">
-            A fresh home-style menu every week. You choose when we deliver and any extras, then send it to us by message.
+            See this week&apos;s home-style menu, choose when we deliver and any extras, then send it to us by message.
           </p>
         </div>
       </section>
@@ -542,9 +542,9 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
           <section aria-labelledby="step-heading" className="border-line mt-6 rounded-3xl border bg-white p-5 shadow-sm sm:p-8">
             <p className="text-eyebrow text-gold-600 uppercase">Step {step + 1} of {STEPS.length}</p>
             <h2 className="text-ink-900 mt-1 mb-6 scroll-mt-28 text-2xl font-extrabold outline-none" id="step-heading" ref={headingRef} tabIndex={-1}>
-              {['When should we deliver?', "This week's menu", 'Add extras', 'Check and send'][step]}
+              {["This week's menu", 'When should we deliver?', 'Add extras', 'Check and send'][step]}
             </h2>
-            {stepBody[step]}
+            {[stepBody[1], stepBody[0], stepBody[2], stepBody[3]][step]}
 
             <div className="border-line mt-8 flex items-center justify-between gap-3 border-t pt-6">
               {step > 0 ? (
