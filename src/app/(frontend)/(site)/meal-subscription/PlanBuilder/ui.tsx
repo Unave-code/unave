@@ -17,7 +17,12 @@ export const STEPS = [
 export const focusRing =
   'focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:outline-none'
 
-/** A large selectable card used for every choice in the builder. */
+/**
+ * Every choice in the builder, as the product page's option tile: a white tile
+ * with a brand-green outline that turns solid green with a gold check once
+ * chosen. Its text reads the tile's state through four classes on the content:
+ * `tile-sub` (quiet lines), `tile-price`, `tile-note` and `tile-icon`.
+ */
 export const ChoiceCard: React.FC<{
   children: React.ReactNode
   onClick: () => void
@@ -27,8 +32,11 @@ export const ChoiceCard: React.FC<{
   <button
     aria-checked={selected}
     className={cn(
-      'relative flex min-h-14 w-full flex-col items-start gap-1 rounded-2xl border-2 bg-white p-4 text-left transition-colors motion-reduce:transition-none',
-      selected ? 'border-green-700 bg-green-50' : 'border-line hover:border-green-500',
+      'relative flex min-h-14 w-full flex-col items-start gap-1 rounded-2xl border-2 border-green-700 p-4 pr-12 text-left',
+      'transition-[background-color,color,box-shadow,translate] duration-200 ease-out motion-reduce:transition-none',
+      selected
+        ? 'bg-green-700 text-white shadow-md [&_.tile-icon]:text-gold-300 [&_.tile-note]:text-gold-300 [&_.tile-price]:text-gold-300 [&_.tile-sub]:text-white/80'
+        : 'bg-white text-green-900 hover:-translate-y-0.5 hover:bg-green-50 hover:shadow-sm motion-reduce:hover:translate-y-0',
       focusRing,
     )}
     onClick={onClick}
@@ -40,7 +48,7 @@ export const ChoiceCard: React.FC<{
       className={cn(
         'absolute top-4 right-4 grid size-6 place-items-center border-2',
         role === 'radio' ? 'rounded-full' : 'rounded-md',
-        selected ? 'border-green-700 bg-green-700 text-white' : 'border-line bg-white',
+        selected ? 'border-gold-300 bg-gold-300 text-green-900' : 'border-line bg-white',
       )}
     >
       {selected && <Check className="size-3.5" strokeWidth={3} />}

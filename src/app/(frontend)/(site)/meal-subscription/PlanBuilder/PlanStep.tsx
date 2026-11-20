@@ -6,8 +6,12 @@ import type { PlanBuilderData } from '@/utilities/planBuilder'
 import { PLAN_MAX_PEOPLE } from '@/utilities/planBuilder'
 import { cn } from '@/utilities/ui'
 
-import { ChoiceCard, FieldLabel, focusRing, MEAL_ICON, MEAL_LABEL } from './ui'
+import { ChoiceCard, FieldLabel, MEAL_ICON, MEAL_LABEL } from './ui'
 import type { PlanBuilderState } from './usePlanBuilder'
+
+/** The shop quantity stepper's buttons (`QuantityStepper`). */
+const STEP_BUTTON =
+  'flex size-11 shrink-0 items-center justify-center text-green-700 transition-colors hover:bg-green-50 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent motion-reduce:transition-none'
 
 export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBuilderState }) {
   const { meals, offered, people, planLabel, setPeople, setPlanLabel, slot, times, toggleMeal } = state
@@ -30,9 +34,9 @@ export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBu
                 role="checkbox"
                 selected={meals[m]}
               >
-                <Icon aria-hidden className="text-gold-600 size-6" />
-                <span className="text-ink-900 mt-1 font-extrabold">{MEAL_LABEL[m]}</span>
-                {times[m] && <span className="text-ink-600 text-sm">Delivered {times[m]}</span>}
+                <Icon aria-hidden className="tile-icon text-gold-600 size-6" />
+                <span className="mt-1 font-extrabold">{MEAL_LABEL[m]}</span>
+                {times[m] && <span className="tile-sub text-ink-600 text-sm">Delivered {times[m]}</span>}
               </ChoiceCard>
             )
           })}
@@ -48,12 +52,12 @@ export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBu
             const price = slot ? p.prices[slot] : undefined
             return (
               <ChoiceCard key={p.label} onClick={() => setPlanLabel(p.label)} selected={planLabel === p.label}>
-                <span className="text-ink-900 pr-8 font-extrabold">{p.label}</span>
-                <span className="text-ink-600 text-sm">{p.days} delivery days</span>
-                <span className={cn('mt-1 font-extrabold', price ? 'text-lg text-green-700' : 'text-ink-400 text-sm')}>
+                <span className="font-extrabold">{p.label}</span>
+                <span className="tile-sub text-ink-600 text-sm">{p.days} delivery days</span>
+                <span className={cn('mt-1 font-extrabold', price ? 'tile-price text-lg text-green-700 tabular-nums' : 'tile-sub text-ink-600 text-sm')}>
                   {price ? formatPaise(price) : 'Not offered for these meals'}
                 </span>
-                {p.note && <span className="text-gold-600 text-sm font-bold">{p.note}</span>}
+                {p.note && <span className="tile-note text-gold-600 text-sm font-bold">{p.note}</span>}
               </ChoiceCard>
             )
           })}
@@ -64,27 +68,27 @@ export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBu
         <FieldLabel hint="Each person gets their own portion." id="lbl-people">
           How many people?
         </FieldLabel>
-        <div aria-labelledby="lbl-people" className="border-line rounded-pill inline-flex items-center border-2 bg-white" role="group">
+        <div aria-labelledby="lbl-people" className="border-line rounded-pill inline-flex items-center overflow-hidden border-2 bg-white" role="group">
           <button
             aria-label="One fewer person"
-            className={cn('grid size-12 place-items-center rounded-full hover:bg-green-50 disabled:opacity-40', focusRing)}
+            className={STEP_BUTTON}
             disabled={people <= 1}
             onClick={() => setPeople((p) => p - 1)}
             type="button"
           >
-            <Minus aria-hidden className="size-4" />
+            <Minus aria-hidden className="size-4" strokeWidth={2.5} />
           </button>
-          <span aria-live="polite" className="w-10 text-center text-lg font-extrabold">
+          <span aria-live="polite" className="text-ink-900 w-10 text-center font-bold tabular-nums">
             {people}
           </span>
           <button
             aria-label="One more person"
-            className={cn('grid size-12 place-items-center rounded-full hover:bg-green-50 disabled:opacity-40', focusRing)}
+            className={STEP_BUTTON}
             disabled={people >= PLAN_MAX_PEOPLE}
             onClick={() => setPeople((p) => p + 1)}
             type="button"
           >
-            <Plus aria-hidden className="size-4" />
+            <Plus aria-hidden className="size-4" strokeWidth={2.5} />
           </button>
         </div>
       </div>

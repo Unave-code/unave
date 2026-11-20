@@ -29,9 +29,9 @@ export function OptionsStep({ data, state }: { data: PlanBuilderData; state: Pla
           <div className={cn('grid gap-3', g.choices.length > 2 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
             {g.choices.map((c, ci) => (
               <ChoiceCard key={c.label} onClick={() => choose(gi, ci)} selected={choices[gi] === ci}>
-                <span className="text-ink-900 pr-8 font-extrabold">{c.label}</span>
-                {c.detail && <span className="text-ink-600 text-sm">{c.detail}</span>}
-                <span className={cn('mt-auto pt-1 text-sm font-bold', c.extraPerDay ? 'text-green-700' : 'text-ink-400')}>
+                <span className="font-extrabold">{c.label}</span>
+                {c.detail && <span className="tile-sub text-ink-600 text-sm">{c.detail}</span>}
+                <span className={cn('mt-auto pt-1 text-sm font-bold', c.extraPerDay ? 'tile-price text-green-700' : 'tile-sub text-ink-600')}>
                   {c.extraPerDay ? `+${formatPaise(c.extraPerDay)} a day` : 'Included'}
                 </span>
               </ChoiceCard>

@@ -101,4 +101,50 @@ describe('the meal plan builder', () => {
     // Next is the shared primary pill.
     expect(screen.getByRole('button', { name: /Next: Menu/ }).className).toContain('h-13')
   })
+
+  it('fixes the meal on a lunch-only plan', () => {
+    renderBuilder({ meals: 'lunch' })
+    const lunch = screen.getByRole('checkbox', { name: /Lunch/ })
+    expect(lunch.getAttribute('aria-checked')).toBe('true')
+    fireEvent.click(lunch)
+    expect(lunch.getAttribute('aria-checked')).toBe('true')
+    expect(screen.queryByRole('checkbox', { name: /Dinner/ })).toBeNull()
+  })
+
+  it('prices only lengths offered for the chosen meals', () => {
+    renderBuilder()
+    fireEvent.click(screen.getByRole('checkbox', { name: /Lunch/ }))
+    const month = screen.getByRole('radio', { name: /Month/ })
+    expect(month.textContent).toContain('Not offered for these meals')
+    fireEvent.click(month)
+    for (const add of screen.getAllByRole('button', { name: /Add plan to cart/ })) {
+      expect((add as HTMLButtonElement).disabled).toBe(true)
+    }
+  })
+
+  it('totals options per day per person', () => {
+    renderBuilder()
+    fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /Roti/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /^C/ }))
+    expect(screen.getAllByText(formatPaise(300000 * 2 + (2000 + 900) * 6 * 2)).length).toBeGreaterThan(0)
+  })
+
+  it('says when there are no options', () => {
+    renderBuilder({ optionGroups: [] })
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
+    expect(screen.getByText('No options to choose this week. Your plan is ready.')).toBeTruthy()
+  })
+
+  it('shows a chosen tile in solid brand green, as the product page does', () => {
+    renderBuilder()
+    const week = screen.getByRole('radio', { name: /Week/ })
+    fireEvent.click(week)
+    expect(week.className).toContain('bg-green-700')
+    expect(screen.getByRole('radio', { name: /Month/ }).className).not.toContain('bg-green-700')
+  })
 })
