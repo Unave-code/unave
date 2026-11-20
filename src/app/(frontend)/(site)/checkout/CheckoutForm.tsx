@@ -6,7 +6,7 @@ import Script from 'next/script'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { orderDeliverySchema } from '@/collections/Orders/schema'
-import { toFieldErrors, type FieldErrors } from '@/auth/password/schema'
+import { toFieldErrors, type FieldErrors } from '@/utilities/fieldErrors'
 import { cn } from '@/utilities/ui'
 
 import {
