@@ -41,7 +41,6 @@ interface Meal {
   protein: number
 }
 
-const WEEK_LABEL = 'Week of 23 – 28 Nov'
 
 const MENU: { day: string; full: string; lunch: Meal; dinner: Meal }[] = [
   {
@@ -73,6 +72,44 @@ const MENU: { day: string; full: string; lunch: Meal; dinner: Meal }[] = [
     day: 'Sat', full: 'Saturday',
     lunch: { main: 'Khurchan Paneer', carb: 'Soya roti', sides: ['Cucumber mint salad', 'Dal panchmel', 'Gajar matar'], kcal: 600, protein: 30 },
     dinner: { main: 'Lahori Tofu Curry', carb: 'Palak roti', sides: ['Bombay sprouts salad', 'Lobiya masala', 'Parwal bhujiya'], kcal: 540, protein: 26 },
+  },
+]
+
+const WEEKS = [
+  { id: 0, tab: 'This week', range: '23 – 28 Nov' },
+  { id: 1, tab: 'Next week', range: '30 Nov – 5 Dec' },
+]
+
+const NEXT_MENU: typeof MENU = [
+  {
+    day: 'Mon', full: 'Monday',
+    lunch: { main: 'Paneer Lababdar', carb: 'Bajra roti', sides: ['Cabbage carrot slaw', 'Dal tadka', 'Turai chana'], kcal: 600, protein: 28 },
+    dinner: { main: 'Goan Tofu Xacuti', carb: 'Brown rice', sides: ['Kosambari', 'Masoor dal', 'Beans foogath'], kcal: 550, protein: 25 },
+  },
+  {
+    day: 'Tue', full: 'Tuesday',
+    lunch: { main: 'Soya Keema Matar', carb: 'Multigrain roti', sides: ['Tomato onion salad', 'Panchratna dal', 'Kaddu sabzi'], kcal: 570, protein: 32 },
+    dinner: { main: 'Paneer Pasanda (light)', carb: 'Methi roti', sides: ['Sprouts salad', 'Kadhi', 'Baingan bharta'], kcal: 610, protein: 27 },
+  },
+  {
+    day: 'Wed', full: 'Wednesday',
+    lunch: { main: 'Chole Masala Bowl', carb: 'Jeera brown rice', sides: ['Kachumber', 'Lauki dal', 'Aloo shimla'], kcal: 590, protein: 21 },
+    dinner: { main: 'Mangalorean Tofu Ghassi', carb: 'Ragi roti', sides: ['Cucumber peanut salad', 'Saaru', 'Beans palya'], kcal: 540, protein: 24 },
+  },
+  {
+    day: 'Thu', full: 'Thursday',
+    lunch: { main: 'Achari Paneer', carb: 'Jowar roti', sides: ['Beet carrot salad', 'Moong dal', 'Bhindi masala'], kcal: 620, protein: 29 },
+    dinner: { main: 'Soya Rogan Josh', carb: 'Palak roti', sides: ['Chana chaat', 'Dal palak', 'Gobi matar'], kcal: 560, protein: 31 },
+  },
+  {
+    day: 'Fri', full: 'Friday',
+    lunch: { main: 'Tofu Kali Mirch', carb: 'Oats roti', sides: ['Corn salad', 'Arhar dal', 'Tinda masala'], kcal: 540, protein: 25 },
+    dinner: { main: 'Paneer Do Pyaza', carb: 'Carrot roti', sides: ['Moong chaat', 'Dal makhani (light)', 'Mixed veg'], kcal: 600, protein: 28 },
+  },
+  {
+    day: 'Sat', full: 'Saturday',
+    lunch: { main: 'Rajasthani Gatte Curry', carb: 'Missi roti', sides: ['Kakdi raita salad', 'Panchmel dal', 'Ker sangri'], kcal: 580, protein: 22 },
+    dinner: { main: 'Chettinad Paneer', carb: 'Ragi roti', sides: ['Sundal', 'Rasam', 'Cabbage poriyal'], kcal: 590, protein: 28 },
   },
 ]
 
@@ -186,6 +223,9 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
   const [people, setPeople] = useState(1)
   const [picks, setPicks] = useState<Record<string, string[]>>({ juice: ['none'], breakfast: ['none'], snacks: [] })
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [menuWeek, setMenuWeek] = useState(0)
+  const weekMenu = menuWeek === 0 ? MENU : NEXT_MENU
+  const weekInfo = WEEKS[menuWeek]
   const headingRef = useRef<HTMLHeadingElement>(null)
   const firstRender = useRef(true)
 
@@ -365,12 +405,32 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
     // 2. This week's menu (read-only table)
     <div key="s2">
       <p className="text-ink-600">
-        The kitchen sets one balanced meal for each slot, and the menu changes every week. {WEEK_LABEL}. You pick your days
+        The kitchen sets one balanced meal for each slot, and the menu changes every week. You pick your days
         and meals in the next step; anything outside your plan shows greyed out.
       </p>
-      <div className="border-line mt-5 overflow-x-auto rounded-2xl border">
+      <div aria-label="Menu week" className="bg-green-50 border-line mt-5 inline-flex gap-1 rounded-full border p-1" role="tablist">
+        {WEEKS.map((w) => (
+          <button
+            aria-controls="menu-table"
+            aria-selected={menuWeek === w.id}
+            className={cn(
+              'rounded-pill flex min-h-11 flex-col items-center justify-center px-5 leading-tight transition-colors motion-reduce:transition-none',
+              menuWeek === w.id ? 'bg-green-700 text-white shadow-sm' : 'text-green-700 hover:bg-green-100',
+              focusRing,
+            )}
+            key={w.id}
+            onClick={() => setMenuWeek(w.id)}
+            role="tab"
+            type="button"
+          >
+            <span className="text-sm font-extrabold">{w.tab}</span>
+            <span className={cn('text-xs', menuWeek === w.id ? 'text-cream/80' : 'text-ink-600')}>{w.range}</span>
+          </button>
+        ))}
+      </div>
+      <div className="border-line mt-4 overflow-x-auto rounded-2xl border" id="menu-table" role="tabpanel">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-          <caption className="sr-only">Menu for the {WEEK_LABEL.toLowerCase()}</caption>
+          <caption className="sr-only">Menu for {weekInfo.tab.toLowerCase()}, {weekInfo.range}</caption>
           <thead>
             <tr className="bg-green-100 text-green-700">
               <th className="w-24 px-4 py-3 font-extrabold" scope="col">Day</th>
@@ -388,7 +448,7 @@ export function PlanBuilder({ whatsapp }: { whatsapp: string | null }) {
             </tr>
           </thead>
           <tbody className="divide-line divide-y bg-white">
-            {MENU.map((m) => {
+            {weekMenu.map((m) => {
               const inPlan = days.includes(m.day)
               return (
                 <tr className={cn('align-top', !inPlan && 'bg-cream/60')} key={m.day}>
