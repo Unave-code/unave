@@ -1,24 +1,21 @@
 'use client'
 
-import { Check, Minus, Plus, ShoppingBag, Zap } from 'lucide-react'
+import { Check, ShoppingBag, Zap } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
-import {
-  CART_ADD_CTA,
-  CART_ADDING,
-  CART_QUANTITY_ADD_ONE,
-  CART_QUANTITY_LABEL,
-  CART_QUANTITY_REMOVE_ONE,
-} from '@/utilities/cartCopy'
-import { CART_MAX_QTY, ONE_TIME_DURATION } from '@/utilities/cart'
+import { CART_ADD_CTA, CART_ADDING } from '@/utilities/cartCopy'
+import { ONE_TIME_DURATION } from '@/utilities/cart'
+import { daysLabel } from '@/utilities/orderDisplay'
 import { formatPaise } from '@/utilities/money'
 import { cn } from '@/utilities/ui'
 import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
 import type { ProductSize } from '@/utilities/cartLines'
 
+import { OptionTiles, TILE_PRICE, TILE_SUB, TileDot } from './OptionTiles'
+import { QuantityStepper } from './QuantityStepper'
 import { useAddToCart } from './useAddToCart'
 
 /**
@@ -66,48 +63,6 @@ export type ProductPurchaseProps = {
   whatsapp?: null | string
 }
 
-const daysText = (days: number) => `${days} ${days === 1 ? 'day' : 'days'}`
-
-/**
- * One option tile (a plan's duration or a product's size): a soft green button
- * that turns solid brand green with a gold price and a gold check once chosen,
- * so the choice reads at a glance. The radio underneath stays native.
- */
-const OPTION_TILE = cn(
-  // An outline pill: white with a brand-green border.
-  'rounded-pill relative isolate inline-flex min-h-12 items-center gap-2 overflow-hidden border-2 border-green-700 bg-white px-4 py-2 whitespace-nowrap text-green-900',
-  'transition-[background-color,border-color,color,box-shadow,translate] duration-200 ease-out',
-  // The overlay: a soft green wash that sweeps in from the left on hover.
-  "before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:bg-green-700/12 before:transition-transform before:duration-300 before:ease-out before:content-['']",
-  'hover:-translate-y-0.5 hover:shadow-sm hover:before:scale-x-100',
-  'motion-reduce:before:transition-none',
-  'peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-checked:shadow-md',
-  'peer-checked:[&_.tile-price]:text-gold-300 peer-checked:[&_.tile-sub]:text-white/80 peer-checked:[&_.tile-check]:flex',
-  'peer-focus-visible:ring-[3px] peer-focus-visible:ring-green-500 peer-focus-visible:ring-offset-2',
-  'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
-)
-const TILE_PRICE = 'tile-price text-sm font-extrabold text-green-700 tabular-nums'
-const TILE_SUB = 'tile-sub text-xs text-ink-600 tabular-nums'
-/** The quiet dot between a tile's parts. */
-const TileDot = () => (
-  <span aria-hidden="true" className="tile-sub text-ink-600 text-xs">
-    ·
-  </span>
-)
-
-/** The gold check on the chosen tile; hidden until its radio is checked. */
-const TileCheck = () => (
-  <span
-    aria-hidden="true"
-    className="tile-check bg-gold-400 hidden size-5 shrink-0 items-center justify-center rounded-full text-green-900"
-  >
-    <Check className="size-3" strokeWidth={3} />
-  </span>
-)
-
-const STEP_BUTTON =
-  'flex size-11 shrink-0 items-center justify-center text-green-700 transition-colors hover:bg-green-50 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent motion-reduce:transition-none'
-
 export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   combo = false,
   compareAtPrice,
@@ -143,7 +98,6 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   if (!isOneTime && !duration) return null
 
   const hasSaving = isOneTime && typeof shownCompare === 'number' && shownCompare > shownPrice
-  const clamp = (value: number) => Math.min(CART_MAX_QTY, Math.max(1, value || 1))
 
   return (
     <div>
@@ -169,7 +123,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             ? combo
               ? 'One fixed price for the whole combo.'
               : 'Cooked fresh and delivered once.'
-            : `${daysText(duration!.days)} of meals`}
+            : `${daysLabel(duration!.days)} of meals`}
         </p>
       </div>
 
@@ -182,114 +136,59 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 
         {/* Sizes as tiles, each with its own price. Native radios. */}
         {sized ? (
-          <fieldset className="mb-6">
-            <legend className="text-sm font-bold text-green-900">
-              Choose a size<span className="sr-only"> of {productTitle}</span>
-            </legend>
-
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              {sizes.map((option, index) => (
-                <label className="cursor-pointer" key={`${option.label}-${index}`}>
-                  <input
-                    checked={selected === index}
-                    className="peer sr-only"
-                    name="duration"
-                    onChange={() => setSelected(index)}
-                    type="radio"
-                    value={option.label}
-                  />
-                  <span
-                    className={OPTION_TILE}
-                  >
-                    <TileCheck />
-                    <span className="text-sm font-bold">{option.label}</span>
-                    <TileDot />
-                    <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
-                    {option.compareAtPrice !== null ? (
-                      <del className={TILE_SUB}>
-                        {formatPaise(option.compareAtPrice)}
-                      </del>
-                    ) : null}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <OptionTiles
+            className="mb-6"
+            legend={
+              <>
+                Choose a size<span className="sr-only"> of {productTitle}</span>
+              </>
+            }
+            onSelect={setSelected}
+            options={sizes.map((option, index) => ({
+              content: (
+                <>
+                  <span className="text-sm font-bold">{option.label}</span>
+                  <TileDot />
+                  <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
+                  {option.compareAtPrice !== null ? (
+                    <del className={TILE_SUB}>{formatPaise(option.compareAtPrice)}</del>
+                  ) : null}
+                </>
+              ),
+              key: `${option.label}-${index}`,
+              value: option.label,
+            }))}
+            selected={selected}
+          />
         ) : null}
 
         {/* The options as tiles, like a shop's size choice. Native radios. */}
         {!isOneTime ? (
-          <fieldset>
-            <legend className="text-sm font-bold text-green-900">
-              Choose your plan<span className="sr-only"> for {productTitle}</span>
-            </legend>
-
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              {durations.map((option, index) => {
-                return (
-                  <label className="cursor-pointer" key={`${option.label}-${index}`}>
-                    <input
-                      checked={selected === index}
-                      className="peer sr-only"
-                      name="duration"
-                      onChange={() => setSelected(index)}
-                      type="radio"
-                      value={option.label}
-                    />
-                    <span
-                      className={OPTION_TILE}
-                    >
-                      <TileCheck />
-                      <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
-                      <TileDot />
-                      <span className={TILE_SUB}>{daysText(option.days)}</span>
-                    </span>
-                  </label>
-                )
-              })}
-            </div>
-          </fieldset>
+          <OptionTiles
+            legend={
+              <>
+                Choose your plan<span className="sr-only"> for {productTitle}</span>
+              </>
+            }
+            onSelect={setSelected}
+            options={durations.map((option, index) => ({
+              content: (
+                <>
+                  <span className={TILE_PRICE}>{formatPaise(option.price)}</span>
+                  <TileDot />
+                  <span className={TILE_SUB}>{daysLabel(option.days)}</span>
+                </>
+              ),
+              key: `${option.label}-${index}`,
+              value: option.label,
+            }))}
+            selected={selected}
+          />
         ) : null}
 
         {/* Quantity, Add to cart and Buy now on one row. */}
         <div className={cn('flex flex-wrap items-center gap-3', !isOneTime && 'mt-6')}>
-          {isOneTime ? (
-            <div
-              aria-label={CART_QUANTITY_LABEL}
-              className="border-line rounded-pill flex items-center overflow-hidden border-2 bg-white"
-              role="group"
-            >
-              <button
-                aria-label={CART_QUANTITY_REMOVE_ONE}
-                className={STEP_BUTTON}
-                disabled={qty <= 1}
-                onClick={() => setQty((value) => clamp(value - 1))}
-                type="button"
-              >
-                <Minus aria-hidden="true" className="size-4" strokeWidth={2.5} />
-              </button>
-              <input
-                aria-label={`${CART_QUANTITY_LABEL} of ${productTitle}`}
-                className="text-ink-900 h-11 w-10 [appearance:textfield] bg-transparent text-center font-bold tabular-nums focus-visible:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                inputMode="numeric"
-                max={CART_MAX_QTY}
-                min={1}
-                name="qty"
-                onChange={(event) => setQty(clamp(Number(event.target.value)))}
-                type="number"
-                value={qty}
-              />
-              <button
-                aria-label={CART_QUANTITY_ADD_ONE}
-                className={STEP_BUTTON}
-                disabled={qty >= CART_MAX_QTY}
-                onClick={() => setQty((value) => clamp(value + 1))}
-                type="button"
-              >
-                <Plus aria-hidden="true" className="size-4" strokeWidth={2.5} />
-              </button>
-            </div>
-          ) : null}
+          {isOneTime ? <QuantityStepper productTitle={productTitle} qty={qty} setQty={setQty} /> : null}
 
           <button
             className={cn(CTA_BASE, CTA_VARIANTS.primary, 'min-w-40 flex-1 px-5')}
