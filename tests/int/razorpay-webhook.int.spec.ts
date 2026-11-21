@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => {
   return {
     fetchRazorpayOrder: vi.fn(),
     sendOrderMails: vi.fn(),
+    sendPaymentAlertMail: vi.fn(),
     secret,
   }
 })
@@ -53,6 +54,7 @@ vi.mock('../../src/utilities/razorpay', async (importOriginal) => {
 
 vi.mock('../../src/collections/Orders/mail', () => ({
   sendOrderMails: mocks.sendOrderMails,
+  sendPaymentAlertMail: mocks.sendPaymentAlertMail,
 }))
 
 import { POST } from '../../src/app/(frontend)/api/razorpay/webhook/route'
@@ -243,6 +245,8 @@ beforeEach(() => {
   mocks.fetchRazorpayOrder.mockReset()
   mocks.sendOrderMails.mockReset()
   mocks.sendOrderMails.mockResolvedValue({ sent: true })
+  mocks.sendPaymentAlertMail.mockReset()
+  mocks.sendPaymentAlertMail.mockResolvedValue(undefined)
 })
 
 afterAll(async () => {
@@ -444,6 +448,10 @@ describe('the Razorpay webhook', () => {
 
     expect(await findOrderByGateway(gatewayOrderId)).toBeNull()
     expect(mocks.sendOrderMails).not.toHaveBeenCalled()
+    expect(mocks.sendPaymentAlertMail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ paymentId: 'pay_hook_3', reason: 'amount_mismatch' }),
+    )
   })
 
   it('writes nothing when no intent was stored for the gateway order', async () => {
@@ -456,6 +464,49 @@ describe('the Razorpay webhook', () => {
 
     expect(await findOrderByGateway(gatewayOrderId)).toBeNull()
     expect(mocks.sendOrderMails).not.toHaveBeenCalled()
+    expect(mocks.sendPaymentAlertMail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ paymentId: 'pay_hook_4', reason: 'intent_missing' }),
+    )
+  })
+
+  it('answers retryably when the order cannot be saved, then writes it on the retry', async () => {
+    const customer = await createCustomer()
+    const gatewayOrderId = `order_${run}_writefail`
+
+    await stageIntent(customer, gatewayOrderId)
+
+    const realCreate = payload.create.bind(payload)
+    const spy = vi.spyOn(payload, 'create').mockImplementation(((args: { collection: string }) => {
+      if (args.collection === 'orders') return Promise.reject(new Error('database went away'))
+      return realCreate(args as Parameters<typeof realCreate>[0])
+    }) as typeof payload.create)
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_writefail')
+    let first: Response
+
+    try {
+      first = await post(raw, sign(raw))
+    } finally {
+      spy.mockRestore()
+    }
+
+    expect(first.status).toBe(500)
+    expect(await findOrderByGateway(gatewayOrderId)).toBeNull()
+    expect(mocks.sendOrderMails).not.toHaveBeenCalled()
+    expect(mocks.sendPaymentAlertMail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ paymentId: 'pay_hook_writefail', reason: 'write_failed' }),
+    )
+
+    // Razorpay's retry: the intent is still there, so the order is written once.
+    const retry = await post(raw, sign(raw))
+    expect(retry.status).toBe(200)
+
+    const after = await findOrderByGateway(gatewayOrderId)
+    expect(after).not.toBeNull()
+    orderIDs.push(after!.id)
+    expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 
   it('ignores events that are not a captured payment', async () => {

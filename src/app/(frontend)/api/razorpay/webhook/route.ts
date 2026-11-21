@@ -1,11 +1,12 @@
 import { after } from 'next/server'
-import { getPayload } from 'payload'
+import { getPayload, type Payload } from 'payload'
 import configPromise from '@payload-config'
 
 import { fetchRazorpayOrder, verifyWebhookSignature } from '@/utilities/razorpay'
 import { paymentDetailsFrom } from '@/utilities/razorpayPaymentDetails'
 
 import { recordPaidOrder } from '@/collections/Orders/confirm'
+import { type PaymentAlert, sendPaymentAlertMail } from '@/collections/Orders/mail'
 import { findCheckoutIntent } from '@/collections/Orders/intent'
 import { errorMessage } from '@/utilities/errorMessage'
 
@@ -84,6 +85,9 @@ const sendAfterReply = (send: () => Promise<void>): void => {
     void send()
   }
 }
+
+const alertAfterReply = (payload: Payload, alert: PaymentAlert): void =>
+  sendAfterReply(() => sendPaymentAlertMail(payload, alert))
 
 export async function POST(request: Request): Promise<Response> {
   const rawBody = await request.text()
@@ -176,7 +180,7 @@ export async function POST(request: Request): Promise<Response> {
       msg: 'razorpay_webhook_intent_read_failed',
       paymentId: captured.paymentId,
     })
-    return new Response('Event acknowledged.', { status: 500 })
+    return new Response('Checkout intent could not be read.', { status: 500 })
   }
 
   if (!intent) {
@@ -185,6 +189,13 @@ export async function POST(request: Request): Promise<Response> {
       msg: 'razorpay_webhook_intent_missing',
       paymentId: captured.paymentId,
       status: paymentEntity(event)?.status,
+    })
+    const missing = paymentEntity(event)
+    alertAfterReply(payload, {
+      amount: typeof missing?.amount === 'number' ? missing.amount : null,
+      gatewayOrderId: captured.orderId,
+      paymentId: captured.paymentId,
+      reason: 'intent_missing',
     })
     return new Response('Event acknowledged.', { status: 200 })
   }
@@ -211,6 +222,12 @@ export async function POST(request: Request): Promise<Response> {
       msg: 'razorpay_webhook_amount_mismatch',
       order: captured.orderId,
     })
+    alertAfterReply(payload, {
+      amount,
+      gatewayOrderId: captured.orderId,
+      paymentId: captured.paymentId,
+      reason: 'amount_mismatch',
+    })
     return new Response('Event acknowledged.', { status: 200 })
   }
 
@@ -234,6 +251,15 @@ export async function POST(request: Request): Promise<Response> {
       msg: 'razorpay_webhook_write_failed',
       order: captured.orderId,
     })
+    alertAfterReply(payload, {
+      amount,
+      gatewayOrderId: captured.orderId,
+      paymentId: captured.paymentId,
+      reason: 'write_failed',
+    })
+    // The payment is captured and no row holds it: a 500 makes Razorpay retry,
+    // and the replay guard above keeps a later success from writing twice.
+    return new Response('Order could not be saved.', { status: 500 })
   }
 
   return new Response('Event acknowledged.', { status: 200 })

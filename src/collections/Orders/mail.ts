@@ -54,6 +54,67 @@ export const loadOrderMailCopy = async (payload: Payload): Promise<OrderMailCopy
   }
 }
 
+export type PaymentAlert = {
+  amount: null | number
+  gatewayOrderId: string
+  paymentId: string
+  reason: 'amount_mismatch' | 'intent_missing' | 'write_failed'
+}
+
+const ALERT_REASONS: Record<PaymentAlert['reason'], string> = {
+  amount_mismatch:
+    'The amount Razorpay captured does not match what the checkout asked for, so no order was written.',
+  intent_missing:
+    'No checkout was stored for this Razorpay order, so the site does not know what was bought or where to deliver it.',
+  write_failed:
+    'The order could not be saved. Razorpay will retry the webhook, so it may still appear; check the Orders list.',
+}
+
+const escapeHtml = (value: string): string =>
+  value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`)
+
+/**
+ * A customer paid and no order row exists for it. These cases are rare and
+ * each one is money in Razorpay with nobody cooking for it, so the kitchen
+ * inbox hears about it instead of a log line nobody reads. Never throws.
+ */
+export const sendPaymentAlertMail = async (payload: Payload, alert: PaymentAlert): Promise<void> => {
+  try {
+    const footer = (await payload.findGlobal({ slug: 'footer', depth: 0 }).catch(() => null)) as
+      | Footer
+      | null
+    const to = footer?.contact?.email?.trim() ?? ''
+
+    if (!to) {
+      payload.logger.warn({ msg: 'payment_alert_mail_no_recipient', ...alert })
+      return
+    }
+
+    const lines = [
+      ALERT_REASONS[alert.reason],
+      '',
+      `Razorpay order: ${alert.gatewayOrderId}`,
+      `Razorpay payment: ${alert.paymentId}`,
+      `Amount captured: ${alert.amount === null ? 'unknown' : formatPaise(alert.amount)}`,
+      '',
+      'Open the payment in the Razorpay dashboard, then contact the customer or refund it.',
+    ]
+
+    const result = await sendOrderMail(payload, {
+      html: lines.map((line) => (line ? `<p>${escapeHtml(line)}</p>` : '')).join(''),
+      subject: `Payment needs attention · ${alert.paymentId}`,
+      text: lines.join('\n'),
+      to,
+    })
+
+    if (result.status !== 'sent') {
+      payload.logger.warn({ msg: 'payment_alert_mail_not_sent', status: result.status, ...alert })
+    }
+  } catch (error) {
+    payload.logger.error({ err: String(error), msg: 'payment_alert_mail_failed', ...alert })
+  }
+}
+
 const addressLabel = (order: Order): string => {
   const delivery = order.delivery ?? {}
   const parts = [
