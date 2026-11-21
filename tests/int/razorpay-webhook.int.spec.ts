@@ -223,6 +223,7 @@ beforeAll(async () => {
       slug: `${run}-plan`,
       title: 'Lunch plan',
       type: 'plan' as const,
+      mealPlan: true,
       category: 'ready-to-eat',
       subcategory: subcategoryId as number,
       audience: audienceId,

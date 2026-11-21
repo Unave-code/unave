@@ -153,6 +153,7 @@ const createProduct = async (overrides: Partial<{ available: boolean; title: str
       slug: `${run}-${productIDs.length}-${Math.random().toString(36).slice(2, 8)}`,
       title: 'Lunch plan',
       type: 'plan' as const,
+      mealPlan: true,
       category: 'ready-to-eat',
       subcategory: readyToEatSubcategoryId as number,
       audience: audienceId,

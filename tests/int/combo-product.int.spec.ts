@@ -68,6 +68,7 @@ const comboData = (
   subcategory: subcategoryId as number,
   title: 'Family combo',
   type: 'combo' as const,
+  combo: true,
   ...overrides,
 })
 
@@ -106,6 +107,7 @@ beforeAll(async () => {
       subcategory: subcategoryId as number,
       title: 'Lunch plan',
       type: 'plan',
+      mealPlan: true,
     },
     depth: 0,
     context: { disableRevalidate: true },

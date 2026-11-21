@@ -45,6 +45,7 @@ const createProductWithoutSlug = async (title: string): Promise<Product> => {
     subcategory: subcategoryId as number,
     title,
     type: 'plan' as const,
+    mealPlan: true,
   }
 
   const created = (await payload.create({
@@ -72,6 +73,7 @@ const createProduct = async (data: { slug: string; title: string }): Promise<Pro
       subcategory: subcategoryId as number,
       title: data.title,
       type: 'plan' as const,
+      mealPlan: true,
     },
     depth: 0,
     // The revalidateProducts hook calls Next's revalidateTag, which only exists
