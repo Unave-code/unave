@@ -209,10 +209,60 @@ describe('the payment block in the sidebar', () => {
     expect(screen.getByText('21 Nov 2026, 11:30 am')).toBeTruthy()
   })
 
+  it('shows a UPI payment as Razorpay sent it', () => {
+    render(
+      <OrderPaymentView
+        details={{
+          bankReference: '322206890934',
+          capturedAt: '2026-11-21T06:00:00.000Z',
+          contact: '+919876543210',
+          email: 'asha@example.com',
+          fee: 354,
+          method: 'upi',
+          tax: 54,
+          vpa: 'asha@okhdfc',
+        }}
+        gatewayOrderId="order_seed_9"
+        gatewayPaymentId="pay_seed_9"
+        paidAt="2026-11-21T06:00:05.000Z"
+      />,
+    )
+
+    expect(screen.getByText('UPI')).toBeTruthy()
+    expect(screen.getByText('asha@okhdfc')).toBeTruthy()
+    expect(screen.getByText('322206890934')).toBeTruthy()
+    expect(screen.getByText('₹3.54')).toBeTruthy()
+    expect(screen.getByText('₹0.54')).toBeTruthy()
+    expect(screen.getByText('asha@example.com')).toBeTruthy()
+    expect(screen.getByText('+919876543210')).toBeTruthy()
+    expect(screen.getByText('21 Nov 2026, 11:30 am')).toBeTruthy()
+  })
+
+  it('shows a card by its network, type and last four digits', () => {
+    render(
+      <OrderPaymentView
+        details={{ cardLast4: '0153', cardNetwork: 'Visa', cardType: 'debit', method: 'card' }}
+        gatewayOrderId="order_seed_3"
+      />,
+    )
+
+    expect(screen.getByText('Card')).toBeTruthy()
+    expect(screen.getByText('Visa debit ···· 0153')).toBeTruthy()
+  })
+
+  it('shows the bank of a netbanking payment', () => {
+    render(<OrderPaymentView details={{ bank: 'HDFC', method: 'netbanking' }} gatewayOrderId="order_seed_2" />)
+
+    expect(screen.getByText('Netbanking')).toBeTruthy()
+    expect(screen.getByText('HDFC')).toBeTruthy()
+  })
+
   it('leaves out an id the order does not have', () => {
     render(<OrderPaymentView gatewayOrderId="order_seed_9" gatewayPaymentId={null} paidAt={null} />)
 
     expect(screen.queryByText('Razorpay payment')).toBeNull()
     expect(screen.queryByText('Paid at')).toBeNull()
+    expect(screen.queryByText('Method')).toBeNull()
+    expect(screen.queryByText('Razorpay fee')).toBeNull()
   })
 })

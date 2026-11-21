@@ -43,7 +43,7 @@ const PASSWORD = process.env.SEED_CUSTOMER_PASSWORD ?? 'dummy-password-123'
 const NAME = process.env.SEED_CUSTOMER_NAME ?? 'Dummy Customer'
 
 const payload = await getPayload({ config })
-const counts = { created: 0, skipped: 0, failed: 0 }
+const counts = { backfilled: 0, created: 0, skipped: 0, failed: 0 }
 
 /* Customer */
 let customer = (
@@ -160,6 +160,32 @@ const delivery = {
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString()
 
+/** What Razorpay would have sent for each seed order: a mix of methods, fee at 2% with 18% GST on it. */
+const PAYMENT_METHODS: Record<string, Omit<NonNullable<Order['payment']>, 'capturedAt' | 'fee' | 'tax'>> = {
+  seed_1: { method: 'upi', vpa: 'dummy@okhdfcbank', bankReference: '432118765401' },
+  seed_2: { method: 'card', cardNetwork: 'Visa', cardType: 'debit', cardLast4: '0153', bankReference: '432118765402' },
+  seed_3: { method: 'netbanking', bank: 'HDFC', bankReference: 'HDFC0000432118' },
+  seed_4: { method: 'wallet', wallet: 'payzapp' },
+  seed_5: { method: 'upi', vpa: 'dummy@ybl', bankReference: '432118765405' },
+  seed_6: { method: 'card', cardNetwork: 'MasterCard', cardType: 'credit', cardLast4: '4444', bankReference: '432118765406' },
+  seed_7: { method: 'upi', vpa: 'dummy@paytm', bankReference: '432118765407' },
+  seed_8: { method: 'upi', vpa: 'dummy@okicici', bankReference: '432118765408' },
+  seed_9: { method: 'upi', vpa: 'dummy@okhdfcbank', bankReference: '432118765409' },
+  seed_10: { method: 'card', cardNetwork: 'RuPay', cardType: 'debit', cardLast4: '6011', bankReference: '432118765410' },
+}
+
+const paymentFor = (key: string, total: number, paidAt: string): NonNullable<Order['payment']> => {
+  const fee = Math.round(total * 0.02)
+  return {
+    ...PAYMENT_METHODS[key],
+    capturedAt: paidAt,
+    contact: '+919876543210',
+    email: EMAIL,
+    fee,
+    tax: Math.round(fee * 0.18),
+  }
+}
+
 const orders: { key: string; paidDaysAgo: number; startsInDays?: number; note?: string; lines: LineSeed[] }[] = [
   {
     key: 'seed_1',
@@ -253,6 +279,17 @@ for (const seed of orders) {
 
   if (existing) {
     seeded[seed.key] = existing.id
+    // Seed rows written before payment details were stored get them filled in.
+    if (!existing.payment?.method && PAYMENT_METHODS[seed.key]) {
+      await payload.update({
+        collection: 'orders',
+        data: { payment: paymentFor(seed.key, Number(existing.total), existing.paidAt ?? daysAgo(seed.paidDaysAgo)) },
+        depth: 0,
+        id: existing.id,
+        overrideAccess: true,
+      })
+      counts.backfilled++
+    }
     counts.skipped++
     continue
   }
@@ -275,6 +312,7 @@ for (const seed of orders) {
         gatewayPaymentId: `pay_${seed.key}`,
         items,
         paidAt: daysAgo(seed.paidDaysAgo),
+        payment: paymentFor(seed.key, total, daysAgo(seed.paidDaysAgo)),
         ...(seed.startsInDays !== undefined ? { startsOn: daysAgo(-seed.startsInDays) } : {}),
         subtotal: total,
         total,
@@ -319,7 +357,7 @@ if (planOrder) {
 }
 
 payload.logger.info(
-  `Orders: ${counts.created} created, ${counts.skipped} already there, ${counts.failed} failed. Sign in as ${EMAIL} to see them.`,
+  `Orders: ${counts.created} created, ${counts.skipped} already there (${counts.backfilled} given payment details), ${counts.failed} failed. Sign in as ${EMAIL} to see them.`,
 )
 
 process.exit(counts.failed > 0 ? 1 : 0)
