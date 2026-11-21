@@ -1,0 +1,319 @@
+/* The admin order summary (OrderSummaryView). Payload theme variables only,
+   so the same rules colour light and dark; custom.scss sets the brand scales. */
+
+.order-summary {
+  display: grid;
+  gap: var(--base);
+  margin-bottom: calc(var(--base) * 1.5);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--theme-elevation-800);
+
+  p {
+    margin: 0;
+  }
+
+  &__card {
+    display: block;
+    padding: calc(var(--base) * 1.1);
+    border-radius: var(--style-radius-l);
+  }
+
+  &__card-title {
+    margin: 0 0 calc(var(--base) * 0.6);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-elevation-600);
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--base);
+    padding: calc(var(--base) * 1.1);
+    border-radius: var(--style-radius-l);
+
+    > div {
+      display: grid;
+      gap: 6px;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--theme-elevation-1000);
+  }
+
+  &__total {
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--theme-elevation-1000);
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__muted {
+    color: var(--theme-elevation-600);
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &--ok {
+      background: var(--theme-success-100);
+      color: var(--theme-success-800);
+    }
+
+    &--new {
+      background: var(--theme-warning-100);
+      color: var(--theme-warning-800);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    gap: var(--base);
+    align-items: start;
+
+    @media (min-width: 1000px) {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+  }
+
+  &__side {
+    display: grid;
+    gap: var(--base);
+    min-width: 0;
+  }
+
+  &__items {
+    min-width: 0;
+  }
+
+  &__lines,
+  &__requests {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__line,
+  &__request {
+    display: grid;
+    gap: 8px;
+    padding: calc(var(--base) * 0.75) 0;
+    border-top: 1px solid var(--theme-elevation-150);
+
+    &:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+
+  &__line-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--base);
+  }
+
+  &__line-name {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__line-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--theme-elevation-1000);
+    overflow-wrap: anywhere;
+  }
+
+  &__line-price {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  &__money {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__tag {
+    display: inline-flex;
+    padding: 1px 8px;
+    border-radius: var(--style-radius-s);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--theme-elevation-100);
+    color: var(--theme-elevation-700);
+
+    &--subscription,
+    &--plan {
+      background: var(--theme-success-100);
+      color: var(--theme-success-800);
+    }
+
+    &--trial {
+      background: var(--theme-warning-100);
+      color: var(--theme-warning-800);
+    }
+  }
+
+  &__rows {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.9fr) minmax(0, 2fr);
+    gap: 12px;
+
+    dt {
+      color: var(--theme-elevation-600);
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__totals {
+    margin-top: calc(var(--base) * 0.75);
+    padding-top: calc(var(--base) * 0.75);
+    border-top: 1px solid var(--theme-elevation-150);
+
+    dd {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .order-summary__row:last-child dd {
+      font-size: 16px;
+      font-weight: 800;
+    }
+  }
+
+  &__address-line {
+    display: block;
+  }
+
+  &__note {
+    display: grid;
+    gap: 4px;
+    margin-top: calc(var(--base) * 0.75);
+    padding: calc(var(--base) * 0.6);
+    border: 1px solid var(--theme-warning-200);
+    border-radius: var(--style-radius-m);
+    background: var(--theme-warning-50);
+  }
+
+  &__note-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--theme-warning-800);
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    color: var(--theme-success-750);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+      border-radius: var(--style-radius-s);
+    }
+  }
+
+  &__rows dd &__link {
+    min-height: 0;
+  }
+
+  &__copy {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    code {
+      font-size: 13px;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+  }
+
+  &__copy-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--style-radius-m);
+    background: var(--theme-elevation-50);
+    color: var(--theme-elevation-800);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--theme-elevation-100);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--theme-success-500);
+      outline-offset: 2px;
+    }
+  }
+
+  &__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  &__record {
+    color: var(--theme-elevation-500);
+    font-size: 12px;
+  }
+}
