@@ -40,6 +40,15 @@ const findByGatewayOrder = async (
   return (found.docs[0] as Order | undefined) ?? null
 }
 
+export type RecordOrderOptions = {
+  /**
+   * Hands the order emails to the caller to send later instead of waiting for
+   * them. The webhook uses it to answer Razorpay first: a reply slower than
+   * five seconds counts as a failed delivery and is sent again.
+   */
+  deferMail?: (send: () => Promise<void>) => void
+}
+
 export const recordPaidOrder = async (
   payload: Payload,
   input: {
@@ -50,6 +59,7 @@ export const recordPaidOrder = async (
     paymentId: string
     signature: null | string
   },
+  options: RecordOrderOptions = {},
 ): Promise<RecordOrderResult> => {
   const already = await findByGatewayOrder(payload, input.gatewayOrderId)
 
@@ -93,17 +103,22 @@ export const recordPaidOrder = async (
 
   await deleteCheckoutIntent(payload, input.intent.id, input.gatewayOrderId)
 
-  try {
-    await sendOrderMails(payload, order)
-  } catch (error) {
-    // sendOrderMails already swallows its own failures; this catch is the belt
-    // to that braces. A mail problem must never undo a paid order.
-    payload.logger.error({
-      err: errorMessage(error),
-      msg: 'order_mail_send_failed',
-      order: order.id,
-    })
+  const send = async (): Promise<void> => {
+    try {
+      await sendOrderMails(payload, order)
+    } catch (error) {
+      // sendOrderMails already swallows its own failures; this catch is the belt
+      // to that braces. A mail problem must never undo a paid order.
+      payload.logger.error({
+        err: errorMessage(error),
+        msg: 'order_mail_send_failed',
+        order: order.id,
+      })
+    }
   }
+
+  if (options.deferMail) options.deferMail(send)
+  else await send()
 
   return { order, recorded: true }
 }

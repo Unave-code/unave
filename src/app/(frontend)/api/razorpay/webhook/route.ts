@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 
@@ -68,6 +69,20 @@ const paymentCaptured = (
   if (payment.status !== 'captured') return null
 
   return { orderId: payment.order_id, paymentId: payment.id }
+}
+
+/**
+ * Sends the order emails once the reply has gone, so Razorpay hears back
+ * within its five second window however slow the mail server is. Outside a
+ * Next request (a direct call in a test) there is no response to wait for,
+ * so the send simply runs without being awaited.
+ */
+const sendAfterReply = (send: () => Promise<void>): void => {
+  try {
+    after(send)
+  } catch {
+    void send()
+  }
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -206,7 +221,7 @@ export async function POST(request: Request): Promise<Response> {
       payment: paymentDetailsFrom(payment),
       paymentId: captured.paymentId,
       signature,
-    })
+    }, { deferMail: sendAfterReply })
 
     payload.logger.info({
       msg: 'razorpay_webhook_handled',

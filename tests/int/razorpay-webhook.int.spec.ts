@@ -390,6 +390,29 @@ describe('the Razorpay webhook', () => {
     })
   })
 
+  it('answers Razorpay before the order emails finish sending', async () => {
+    const customer = await createCustomer()
+    const gatewayOrderId = `order_${run}_fast`
+
+    await stageIntent(customer, gatewayOrderId)
+    // A mail server that never answers: the webhook must still reply at once,
+    // since Razorpay treats a reply slower than five seconds as a failure.
+    mocks.sendOrderMails.mockImplementation(() => new Promise(() => {}))
+
+    const raw = capturedEvent(gatewayOrderId, 'pay_hook_fast')
+    const outcome = await Promise.race([
+      post(raw, sign(raw)).then((response) => response.status),
+      new Promise<'timed out'>((resolve) => setTimeout(() => resolve('timed out'), 8000)),
+    ])
+
+    expect(outcome).toBe(200)
+
+    const after = await findOrderByGateway(gatewayOrderId)
+    expect(after).not.toBeNull()
+    orderIDs.push(after!.id)
+    expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
+  })
+
   it('refuses an unsigned or forged body without writing anything', async () => {
     const customer = await createCustomer()
     const gatewayOrderId = `order_${run}_b`
