@@ -29,6 +29,7 @@ const subcategoryIDs: (number | string)[] = []
 let staff: User
 let planId: number
 let oneTimeId: number
+let secondOneTimeId: number
 let subcategoryId: number
 
 const staffOptions = () => ({ context: { disableRevalidate: true }, user: staff })
@@ -134,6 +135,25 @@ beforeAll(async () => {
   })) as Product
   oneTimeId = oneTime.id
   productIDs.push(oneTime.id)
+
+  const second = (await payload.create({
+    collection: 'products',
+    data: {
+      audience: audienceId,
+      available: true,
+      category: 'ready-to-eat',
+      price: 6900,
+      slug: `${run}-dal`,
+      subcategory: subcategoryId as number,
+      title: 'Dal tin',
+      type: 'one-time',
+    },
+    depth: 0,
+    context: { disableRevalidate: true },
+    overrideAccess: true,
+  })) as Product
+  secondOneTimeId = second.id
+  productIDs.push(second.id)
 })
 
 afterAll(async () => {
@@ -174,10 +194,10 @@ afterAll(async () => {
 })
 
 describe('saving a combo', () => {
-  it('accepts two distinct products and freezes their titles and duration', async () => {
+  it('accepts two distinct single items and freezes their titles', async () => {
     const created = (await payload.create({
       collection: 'products',
-      data: comboData([{ product: oneTimeId }, { durationLabel: 'one week', product: planId }]),
+      data: comboData([{ product: oneTimeId }, { product: secondOneTimeId }]),
       depth: 0,
       ...staffOptions(),
     })) as Product
@@ -187,9 +207,7 @@ describe('saving a combo', () => {
     expect(created.type).toBe('combo')
     expect(created.components).toHaveLength(2)
     expect(created.components?.[0]?.productTitleSnapshot).toBe('Phulka box')
-    expect(created.components?.[1]?.productTitleSnapshot).toBe('Lunch plan')
-    expect(created.components?.[1]?.durationLabel).toBe('One week')
-    expect(created.components?.[1]?.durationDaysSnapshot).toBe(5)
+    expect(created.components?.[1]?.productTitleSnapshot).toBe('Dal tin')
     expect(created.durations).toHaveLength(0)
   })
 
@@ -219,40 +237,23 @@ describe('saving a combo', () => {
     expect(message).toMatch(/between one and ten/i)
   })
 
-  it('saves a meal plan with no duration named, since the duration is optional', async () => {
-    const saved = (await payload.create({
-      collection: 'products',
-      data: comboData([{ product: oneTimeId }, { product: planId }]),
-      depth: 0,
-      ...staffOptions(),
-    })) as Product
-    productIDs.unshift(saved.id)
-
-    const planRow = saved.components?.find((row) => {
-      const id = typeof row.product === 'object' ? row.product?.id : row.product
-      return id === planId
-    })
-    expect(planRow?.durationLabel ?? '').toBe('')
-    expect(planRow?.durationDaysSnapshot ?? null).toBeNull()
-  })
-
-  it('refuses a duration the plan no longer has', async () => {
+  it('refuses a meal plan inside a combo, since only single items go in one', async () => {
     const message = await failure(
       payload.create({
         collection: 'products',
-        data: comboData([{ product: oneTimeId }, { durationLabel: 'Two weeks', product: planId }]),
+        data: comboData([{ product: oneTimeId }, { product: planId }]),
         depth: 0,
         ...staffOptions(),
       }),
     )
 
-    expect(message).toMatch(/duration/i)
+    expect(message).toMatch(/single item/i)
   })
 
   it('refuses a combo inside a combo', async () => {
     const inner = (await payload.create({
       collection: 'products',
-      data: comboData([{ product: oneTimeId }, { durationLabel: 'One week', product: planId }]),
+      data: comboData([{ product: oneTimeId }, { product: secondOneTimeId }]),
       depth: 0,
       ...staffOptions(),
     })) as Product
@@ -268,7 +269,7 @@ describe('saving a combo', () => {
       }),
     )
 
-    expect(message).toMatch(/existing one-time product or meal plan/i)
+    expect(message).toMatch(/single item/i)
   })
 
   it('refuses a price with more than two decimal places', async () => {

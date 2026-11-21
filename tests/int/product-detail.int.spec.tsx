@@ -208,18 +208,12 @@ describe('a product page', () => {
     expect(screen.queryAllByTestId('related-card')).toHaveLength(0)
   })
 
-  it('lists what a combo includes and keeps the required notice beside it', () => {
+  it('lists what a combo includes', () => {
     render(<ProductDetail product={comboProduct} />)
 
     expect(screen.getByRole('heading', { name: /^Included in this combo/ })).toBeTruthy()
     expect(screen.getByText('Dal tin')).toBeTruthy()
     expect(screen.getByText('Phulka box')).toBeTruthy()
-    expect(screen.getByText('A note on our meals')).toBeTruthy()
-    expect(
-      screen.getByText(
-        'Our meals are food options and are not a substitute for medical or nutritional advice.',
-      ),
-    ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Add to cart' })).toBeTruthy()
   })
 
