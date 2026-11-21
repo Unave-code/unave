@@ -306,6 +306,36 @@ export const Orders: CollectionConfig = {
       label: 'Paid at',
     },
     {
+      // What Razorpay told us about the payment, copied once when the order is
+      // written (razorpayPaymentDetails.ts). Only values Razorpay sent are
+      // stored; OrderPayment shows them in the sidebar.
+      name: 'payment',
+      type: 'group',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        components: { Field: HIDDEN_IN_FORM },
+        position: 'sidebar',
+      },
+      label: 'Payment details',
+      fields: [
+        { name: 'method', type: 'text' },
+        { name: 'vpa', type: 'text', label: 'UPI id' },
+        { name: 'cardNetwork', type: 'text' },
+        { name: 'cardType', type: 'text' },
+        { name: 'cardLast4', type: 'text', label: 'Card last 4' },
+        { name: 'bank', type: 'text' },
+        { name: 'wallet', type: 'text' },
+        { name: 'bankReference', type: 'text', label: 'Bank reference (RRN)' },
+        { name: 'fee', type: 'number', label: 'Razorpay fee (paise)' },
+        { name: 'tax', type: 'number', label: 'GST on fee (paise)' },
+        { name: 'email', type: 'text', label: 'Payer email' },
+        { name: 'contact', type: 'text', label: 'Payer phone' },
+        { name: 'capturedAt', type: 'date', label: 'Captured at' },
+      ],
+    },
+    {
       // Razorpay ids and the paid time, above the start day (OrderPayment).
       name: 'paymentSummary',
       type: 'ui',

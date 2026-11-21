@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 
 import { fetchRazorpayOrder, verifyWebhookSignature } from '@/utilities/razorpay'
+import { paymentDetailsFrom } from '@/utilities/razorpayPaymentDetails'
 
 import { recordPaidOrder } from '@/collections/Orders/confirm'
 import { findCheckoutIntent } from '@/collections/Orders/intent'
@@ -202,6 +203,7 @@ export async function POST(request: Request): Promise<Response> {
     const { order, recorded } = await recordPaidOrder(payload, {
       gatewayOrderId: captured.orderId,
       intent: { ...intent, total: amount },
+      payment: paymentDetailsFrom(payment),
       paymentId: captured.paymentId,
       signature,
     })

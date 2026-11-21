@@ -749,6 +749,40 @@ describe('POST /api/orders/verify', () => {
     expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 
+  it('keeps the payment details Razorpay returns', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+    const gatewayOrderId = `order_${run}_vdetails`
+
+    const { total } = await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    mocks.fetchRazorpayPayment.mockResolvedValue({
+      amount: total,
+      currency: 'INR',
+      details: { cardLast4: '0153', cardNetwork: 'Visa', cardType: 'debit', method: 'card' },
+      id: `pay_${gatewayOrderId}`,
+      order_id: gatewayOrderId,
+      status: 'captured',
+    })
+
+    const response = (await verifyOrderEndpoint.handler(
+      createRequest(
+        {
+          razorpay_order_id: gatewayOrderId,
+          razorpay_payment_id: `pay_${gatewayOrderId}`,
+          razorpay_signature: 'sig',
+        },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { orderId: number }
+    orderIDs.push(body.orderId)
+
+    const row = await findOrder(body.orderId)
+    expect(row!.payment).toMatchObject({ cardLast4: '0153', cardNetwork: 'Visa', cardType: 'debit', method: 'card' })
+  })
+
   it('refuses a return whose signature does not verify and writes nothing', async () => {
     const customer = await createCustomer()
     const product = await createProduct()

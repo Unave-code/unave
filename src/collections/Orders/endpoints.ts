@@ -347,6 +347,7 @@ export const verifyOrderEndpoint: Endpoint = {
       recorded = await recordPaidOrder(req.payload, {
         gatewayOrderId: razorpay_order_id,
         intent: { ...intent, total: payment.amount },
+        payment: payment.details,
         paymentId: payment.id,
         signature: razorpay_signature,
       })

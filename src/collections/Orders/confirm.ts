@@ -2,6 +2,8 @@ import type { Payload } from 'payload'
 
 import type { Order } from '@/payload-types'
 
+import type { OrderPaymentDetails } from '@/utilities/razorpayPaymentDetails'
+
 import { deleteCheckoutIntent, type OrderIntent } from './intent'
 import { sendOrderMails } from './mail'
 import { errorMessage } from '@/utilities/errorMessage'
@@ -43,6 +45,8 @@ export const recordPaidOrder = async (
   input: {
     gatewayOrderId: string
     intent: OrderIntent
+    /** What Razorpay sent about the payment; only the values it sent. */
+    payment?: OrderPaymentDetails
     paymentId: string
     signature: null | string
   },
@@ -67,6 +71,7 @@ export const recordPaidOrder = async (
         ...(input.signature ? { gatewaySignature: input.signature } : {}),
         items: input.intent.items,
         paidAt: new Date().toISOString(),
+        ...(input.payment && Object.keys(input.payment).length > 0 ? { payment: input.payment } : {}),
         subtotal: input.intent.total,
         total: input.intent.total,
       },

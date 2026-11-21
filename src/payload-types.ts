@@ -266,6 +266,21 @@ export interface Order {
   gatewayPaymentId?: string | null;
   gatewaySignature?: string | null;
   paidAt?: string | null;
+  payment?: {
+    method?: string | null;
+    vpa?: string | null;
+    cardNetwork?: string | null;
+    cardType?: string | null;
+    cardLast4?: string | null;
+    bank?: string | null;
+    wallet?: string | null;
+    bankReference?: string | null;
+    fee?: number | null;
+    tax?: number | null;
+    email?: string | null;
+    contact?: string | null;
+    capturedAt?: string | null;
+  };
   /**
    * When deliveries begin. The kitchen sets this, nobody else.
    */
@@ -1839,6 +1854,23 @@ export interface OrdersSelect<T extends boolean = true> {
   gatewayPaymentId?: T;
   gatewaySignature?: T;
   paidAt?: T;
+  payment?:
+    | T
+    | {
+        method?: T;
+        vpa?: T;
+        cardNetwork?: T;
+        cardType?: T;
+        cardLast4?: T;
+        bank?: T;
+        wallet?: T;
+        bankReference?: T;
+        fee?: T;
+        tax?: T;
+        email?: T;
+        contact?: T;
+        capturedAt?: T;
+      };
   startsOn?: T;
   updatedAt?: T;
   createdAt?: T;

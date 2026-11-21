@@ -1,3 +1,4 @@
+import { type OrderPaymentDetails, paymentDetailsFrom } from './razorpayPaymentDetails'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 /**
@@ -54,6 +55,8 @@ export type RazorpayOrder = {
 export type RazorpayPayment = {
   amount: number
   currency: string
+  /** What the order keeps of the rest of the record (method, UPI id, card, fee…). */
+  details: OrderPaymentDetails
   id: string
   order_id: string
   status: string
@@ -168,6 +171,7 @@ export const fetchRazorpayPayment = async (paymentId: string): Promise<RazorpayP
   return {
     amount: data.amount,
     currency: data.currency,
+    details: paymentDetailsFrom(data),
     id: data.id,
     order_id: data.order_id,
     status: data.status,

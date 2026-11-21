@@ -180,7 +180,7 @@ const capturedEvent = (
  * wrapped in an `entity` object. The route must write the order on this shape,
  * not only on the flat shape the hand built tests below use.
  */
-const capturedEventNested = (orderId: string, paymentId: string): string =>
+const capturedEventNested = (orderId: string, paymentId: string, extra: Record<string, unknown> = {}): string =>
   JSON.stringify({
     account_id: 'acc_test',
     contains: ['order', 'payment'],
@@ -197,6 +197,7 @@ const capturedEventNested = (orderId: string, paymentId: string): string =>
           id: paymentId,
           order_id: orderId,
           status: 'captured',
+          ...extra,
         },
       },
     },
@@ -351,6 +352,42 @@ describe('the Razorpay webhook', () => {
 
     expect(after!.gatewayPaymentId).toBe('pay_hook_nested')
     expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the payment details the event carries', async () => {
+    const customer = await createCustomer()
+    const gatewayOrderId = `order_${run}_details`
+
+    await stageIntent(customer, gatewayOrderId)
+
+    const raw = capturedEventNested(gatewayOrderId, 'pay_hook_details', {
+      acquirer_data: { rrn: '322206890934' },
+      contact: '+919876543210',
+      created_at: 1567674797,
+      email: 'asha@example.com',
+      fee: 354,
+      method: 'upi',
+      tax: 54,
+      vpa: 'asha@okhdfc',
+    })
+    const response = await post(raw, sign(raw))
+
+    expect(response.status).toBe(200)
+
+    const after = await findOrderByGateway(gatewayOrderId)
+    expect(after).not.toBeNull()
+    orderIDs.push(after!.id)
+
+    expect(after!.payment).toMatchObject({
+      bankReference: '322206890934',
+      capturedAt: '2019-09-05T09:13:17.000Z',
+      contact: '+919876543210',
+      email: 'asha@example.com',
+      fee: 354,
+      method: 'upi',
+      tax: 54,
+      vpa: 'asha@okhdfc',
+    })
   })
 
   it('refuses an unsigned or forged body without writing anything', async () => {
