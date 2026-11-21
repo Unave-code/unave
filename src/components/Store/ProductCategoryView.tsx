@@ -8,7 +8,8 @@ import { MealPlanCard } from '@/components/Store/MealPlanCard'
 import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
-import type { Footer } from '@/payload-types'
+import { Media } from '@/components/Media'
+import type { CategoryPage, Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
   EMPTY_SHELF,
@@ -60,7 +61,9 @@ export const ProductCategoryView: React.FC<{
     // Meal plans live in their own collection; they join the shelf on page one only.
     state.page > 1 ? Promise.resolve([]) : fetchCategoryMealPlans(category, shelfState.subcategory),
   ])
-  const mealPlans = mealPlanDocs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
+  const mealPlans = mealPlanDocs
+    .map((doc) => normalizeMealPlan(doc))
+    .filter((plan) => plan.plans.length > 0)
 
   const subcategories = categorySubcategories.filter((item) => item.slug)
   const tiles: CategoryTile[] =
@@ -89,37 +92,75 @@ export const ProductCategoryView: React.FC<{
     Object.keys(CATEGORY_LABEL) as Array<keyof typeof CATEGORY_LABEL>
   ).filter((value) => value !== category)
 
-  const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
+  const [footer, pages] = await Promise.all([
+    getCachedGlobal('footer', 1)() as Promise<Footer | null>,
+    getCachedGlobal('category-pages', 1)() as Promise<CategoryPage | null>,
+  ])
   const whatsapp = footer?.contact?.whatsapp ?? null
+  const headerField = {
+    'fresh-from-produce': 'freshFromProduce',
+    'ready-to-cook': 'readyToCook',
+    'ready-to-eat': 'readyToEat',
+  } as const
+  const rawImage = pages?.[headerField[category]]
+  const headerImage = rawImage && typeof rawImage === 'object' && rawImage.url ? rawImage : null
 
   return (
     <main>
       <Section className="opening-band relative overflow-hidden bg-green-900 md:py-20" tone="green">
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
 
-        <div className="relative max-w-[46rem]">
-          <p className="text-eyebrow text-gold-400 uppercase">{copy.eyebrow}</p>
+        <div
+          className={
+            headerImage
+              ? 'relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-14'
+              : 'relative'
+          }
+        >
+          <div className="max-w-[46rem]">
+            <p className="text-eyebrow text-gold-400 uppercase">{copy.eyebrow}</p>
 
-          <h1 className="text-display mt-4 text-balance">
-            {copy.headline}{' '}
-            <span className="text-gold-400 whitespace-nowrap italic">{copy.headlineAccent}</span>
-          </h1>
+            <h1 className="text-display mt-4 text-balance">
+              {copy.headline}{' '}
+              <span className="text-gold-400 whitespace-nowrap italic">{copy.headlineAccent}</span>
+            </h1>
 
-          <p className="text-lead text-cream/85 mt-6 max-w-[52ch]">{copy.intro}</p>
+            <p className="text-lead text-cream/85 mt-6 max-w-[52ch]">{copy.intro}</p>
 
-          <div className="mt-8">
-            <Cta href="#products" variant="onDark">
-              {PRODUCTS_CATEGORY_CTA_BROWSE}
-            </Cta>
+            <div className="mt-8">
+              <Cta href="#products" variant="onDark">
+                {PRODUCTS_CATEGORY_CTA_BROWSE}
+              </Cta>
+            </div>
           </div>
+
+          {headerImage ? (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-lg ring-1 ring-white/10">
+              <Media
+                alt={headerImage.alt ?? ''}
+                fill
+                imgClassName="object-cover"
+                priority
+                resource={headerImage}
+                size="(min-width: 64rem) 28rem, 100vw"
+              />
+            </div>
+          ) : null}
         </div>
       </Section>
 
       <Section id="products" tone="tint">
-        <CategoryTiles className="mb-8 px-6 md:mb-10" label={`${CATEGORY_LABEL[category]} subcategories`} tiles={tiles} />
+        <CategoryTiles
+          className="mb-8 px-6 md:mb-10"
+          label={`${CATEGORY_LABEL[category]} subcategories`}
+          tiles={tiles}
+        />
 
         {mealPlans.length > 0 ? (
-          <ul aria-label="Meal plans" className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <ul
+            aria-label="Meal plans"
+            className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+          >
             {mealPlans.map((plan) => (
               <li className="min-w-0" key={plan.slug}>
                 <MealPlanCard plan={plan} />

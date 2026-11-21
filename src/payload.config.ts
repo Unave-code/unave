@@ -25,6 +25,7 @@ import { emailTestEndpoint } from './endpoints/emailTest'
 import { Footer } from './Footer/config'
 import { EmailSettings } from './globals/EmailSettings'
 import { Hero } from './globals/Hero/config'
+import { CategoryPages } from './globals/CategoryPages/config'
 import { Testimonials } from './globals/Testimonials/config'
 import { ProductPage } from './globals/ProductPage/config'
 import { Header } from './Header/config'
@@ -190,7 +191,7 @@ export default buildConfig({
   cors: [getServerSideURL()].filter(Boolean),
   email: unaveEmailAdapter,
   endpoints: [emailTestEndpoint],
-  globals: [Header, Footer, Hero, Testimonials, ProductPage, EmailSettings],
+  globals: [Header, Footer, Hero, CategoryPages, Testimonials, ProductPage, EmailSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

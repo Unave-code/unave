@@ -136,6 +136,7 @@ export interface Config {
     header: Header;
     footer: Footer;
     hero: Hero;
+    'category-pages': CategoryPage;
     testimonials: Testimonial;
     'product-page': ProductPage;
     'email-settings': EmailSetting;
@@ -145,6 +146,7 @@ export interface Config {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     hero: HeroSelect<false> | HeroSelect<true>;
+    'category-pages': CategoryPagesSelect<false> | CategoryPagesSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
@@ -2950,6 +2952,29 @@ export interface Hero {
   createdAt?: string | null;
 }
 /**
+ * The header photo on each product category page. Give each Media item descriptive alt text.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "category-pages".
+ */
+export interface CategoryPage {
+  id: number;
+  /**
+   * The photo beside the heading on /products/ready-to-eat. Leave empty for a text-only header.
+   */
+  readyToEat?: (number | null) | Media;
+  /**
+   * The photo beside the heading on /products/ready-to-cook. Leave empty for a text-only header.
+   */
+  readyToCook?: (number | null) | Media;
+  /**
+   * The photo beside the heading on /products/fresh-from-produce. Leave empty for a text-only header.
+   */
+  freshFromProduce?: (number | null) | Media;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Written and video testimonials shown on the home page above the FAQ. The section is hidden while the list is empty.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3175,6 +3200,18 @@ export interface HeroSelect<T extends boolean = true> {
               link?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "category-pages_select".
+ */
+export interface CategoryPagesSelect<T extends boolean = true> {
+  readyToEat?: T;
+  readyToCook?: T;
+  freshFromProduce?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

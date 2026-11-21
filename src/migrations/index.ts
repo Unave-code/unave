@@ -43,6 +43,7 @@ import * as migration_20261120_190000_meal_plans from './20261120_190000_meal_pl
 import * as migration_20261121_120000_meal_plan_settings_per_plan from './20261121_120000_meal_plan_settings_per_plan';
 import * as migration_20261121_150000_drop_next_week_menu from './20261121_150000_drop_next_week_menu';
 import * as migration_20261121_180000_meal_plan_subcategory from './20261121_180000_meal_plan_subcategory';
+import * as migration_20261121_200000_category_pages_global from './20261121_200000_category_pages_global';
 
 export const migrations = [
   {
@@ -269,5 +270,10 @@ export const migrations = [
     up: migration_20261121_180000_meal_plan_subcategory.up,
     down: migration_20261121_180000_meal_plan_subcategory.down,
     name: '20261121_180000_meal_plan_subcategory',
+  },
+  {
+    up: migration_20261121_200000_category_pages_global.up,
+    down: migration_20261121_200000_category_pages_global.down,
+    name: '20261121_200000_category_pages_global',
   },
 ];
