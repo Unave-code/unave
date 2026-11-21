@@ -19,6 +19,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "reinstall": "cross-env NODE_OPTIONS=--no-deprecation rm -rf node_modules && rm pnpm-lock.yaml && pnpm --ignore-workspace install",
     "compress:media": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/compress-media.ts",
+    "seed:catalogue": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/seed-catalogue.ts",
+    "seed:meal-plans": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/seed-catalogue.ts --meal-plans",
     "seed:subcategories": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/seed-subcategories.ts",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
