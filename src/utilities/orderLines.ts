@@ -72,16 +72,19 @@ export function parseSubscriptionLabel(
 
 /**
  * The picks under their groups, in the plan's group order, or null when any
- * pick no longer matches a choice. A label two groups share is placed once, in
- * the first group still able to take it.
+ * pick no longer matches a choice. The label lists picks group by group, so a
+ * pick never belongs to a group before the previous pick's: a label two groups
+ * share goes to the first group at or after that point that offers it.
  */
 export function groupPicks(picks: string[], groups: PlanGroups): null | PickGroup[] {
   const placed: string[][] = groups.map(() => [])
+  let from = 0
 
   for (const pick of picks) {
-    const index = groups.findIndex((group, i) => group.choices.includes(pick) && !placed[i].includes(pick))
+    const index = groups.findIndex((group, i) => i >= from && group.choices.includes(pick) && !placed[i].includes(pick))
     if (index === -1) return null
     placed[index].push(pick)
+    from = index
   }
 
   return groups.flatMap((group, i) => (placed[i].length > 0 ? [{ title: group.title, picks: placed[i] }] : []))

@@ -125,6 +125,15 @@ describe('order lines', () => {
     ])
   })
 
+  it('keeps a shared label in the group order the picks were written in', () => {
+    expect(
+      groupPicks(['P', 'X'], [
+        { title: 'A', choices: ['X'] },
+        { title: 'B', choices: ['P', 'X'] },
+      ]),
+    ).toEqual([{ title: 'B', picks: ['P', 'X'] }])
+  })
+
   it('shows a label that does not split as it is', () => {
     const old: OrderItemLike = { ...sub, productTitle: 'Meal plan: Old', durationLabel: 'Weekly' }
 
