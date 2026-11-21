@@ -203,6 +203,7 @@ const products: ProductSeed[] = [
     slug: 'diabetic-friendly-lunch-plan',
     title: 'Diabetic-Friendly Lunch Plan',
     type: 'plan',
+    mealPlan: true,
     category: 'ready-to-eat',
     sub: 'lunch',
     aud: 'special',
@@ -219,6 +220,7 @@ const products: ProductSeed[] = [
     slug: 'breakfast-and-lunch-combo',
     title: 'Breakfast and Lunch Combo',
     type: 'combo',
+    combo: true,
     category: 'ready-to-eat',
     sub: 'lunch',
     aud: 'adults',
@@ -310,6 +312,7 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     img: ['kitchen.jpg', 'Meals being prepared in the kitchen'],
     description: 'Home-style North and South Indian meals, cooked fresh each day with less oil and no maida.',
     prices: [
+      { length: '3-day trial', trial: true, days: 3, note: 'Try it first', lunchPrice: rs(627), dinnerPrice: rs(627), bothPrice: rs(1197) },
       { length: '1 week', days: 6, lunchPrice: rs(1194), dinnerPrice: rs(1194), bothPrice: rs(2268) },
       { length: '2 weeks', days: 12, note: 'Save 5%', lunchPrice: rs(2268), dinnerPrice: rs(2268), bothPrice: rs(4309) },
       { length: '1 month', days: 24, note: 'Save 10%', lunchPrice: rs(4298), dinnerPrice: rs(4298), bothPrice: rs(8165) },
@@ -375,6 +378,60 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     ],
     thisWeek: everydayMenu,
   },
+  {
+    slug: 'high-protein-meals',
+    title: 'High Protein Meals',
+    position: 3,
+    aud: 'adults',
+    sub: 'lunch',
+    meals: 'any',
+    img: ['gallery-2.jpg', 'A fresh meal with vegetables'],
+    description: 'Paneer, soya, dals and sprouts in every meal, built for training days, with add-ons to take the protein further.',
+    prices: [
+      { length: '3-day trial', trial: true, days: 3, note: 'Try it first', lunchPrice: rs(747), dinnerPrice: rs(747), bothPrice: rs(1419) },
+      { length: '1 week', days: 6, lunchPrice: rs(1434), dinnerPrice: rs(1434), bothPrice: rs(2724) },
+      { length: '1 month', days: 24, note: 'Save 10%', lunchPrice: rs(5164), dinnerPrice: rs(5164), bothPrice: rs(9810) },
+    ],
+    optionGroups: [
+      {
+        title: 'Base',
+        hint: 'What your meal sits on.',
+        choices: [
+          { label: 'Multigrain roti', detail: 'Three rotis', extraPerDay: 0 },
+          { label: 'Brown rice', detail: 'One bowl', extraPerDay: 0 },
+          { label: 'Quinoa', detail: 'One bowl, cooked with herbs', extraPerDay: rs(30) },
+        ],
+      },
+      {
+        title: 'Spice level',
+        hint: 'How hot the kitchen cooks it.',
+        choices: [
+          { label: 'Mild', extraPerDay: 0 },
+          { label: 'Medium', extraPerDay: 0 },
+          { label: 'Spicy', extraPerDay: 0 },
+        ],
+      },
+      {
+        title: 'Protein add-ons',
+        hint: 'Tick any you want with every meal.',
+        choices: [
+          { label: 'Extra paneer', detail: '50 g grilled paneer', extraPerDay: rs(45) },
+          { label: 'Boiled eggs', detail: 'Two eggs', extraPerDay: rs(25) },
+          { label: 'Sprouts bowl', detail: 'Moong and chana sprouts', extraPerDay: rs(30) },
+        ],
+      },
+      {
+        title: 'Drinks and sides',
+        hint: 'Tick any, or none.',
+        choices: [
+          { label: 'Buttermilk', detail: '250 ml, spiced', extraPerDay: rs(20) },
+          { label: 'Detox juice', detail: 'Amla, beet and ginger', extraPerDay: rs(60) },
+          { label: 'Fruit bowl', detail: 'Seasonal cut fruit', extraPerDay: rs(40) },
+        ],
+      },
+    ],
+    thisWeek: everydayMenu,
+  },
 ]
 
 for (const { slug, img, aud, sub, ...rest } of plans) {
@@ -386,6 +443,17 @@ for (const { slug, img, aud, sub, ...rest } of plans) {
         collection: 'meal-plans',
         id: existing.id,
         data: { category: 'ready-to-eat', subcategory: subIds[sub] },
+        overrideAccess: true,
+        context: ctx,
+      })
+    }
+    // Adds the trial length to a plan seeded before trials existed; a plan staff already gave a trial is left alone.
+    const seededTrial = rest.prices?.find((row) => row.trial)
+    if (seededTrial && !existing.prices?.some((row) => row.trial)) {
+      await payload.update({
+        collection: 'meal-plans',
+        id: existing.id,
+        data: { prices: [seededTrial, ...(existing.prices ?? [])] },
         overrideAccess: true,
         context: ctx,
       })
