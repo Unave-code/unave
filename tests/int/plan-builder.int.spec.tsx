@@ -150,7 +150,8 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     const rows = screen.getAllByRole('row').slice(1)
     // Three days with a dish; the empty Tuesday and the days after the trial are hidden.
-    expect(rows.map((r) => r.querySelector('th')?.textContent)).toEqual(['Mon', 'Wed', 'Thu'])
+    // Numbered, not named, since a trial can start on any day.
+    expect(rows.map((r) => r.querySelector('th')?.textContent)).toEqual(['1', '2', '3'])
     expect(screen.getByText(/Your 3 trial days/)).toBeTruthy()
   })
 
