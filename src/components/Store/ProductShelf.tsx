@@ -42,12 +42,14 @@ export const ProductShelf: React.FC<{
   basePath: string
   /** Set on a category page, where the category is the page and not a filter. */
   category?: ProductCategoryValue
+  /** Skip the empty state, because something else (meal plans) fills the page. */
+  hideEmpty?: boolean
   result: ShelfResult
   /** Category pages browse by subcategory tiles instead of the filter bar. */
   showControls?: boolean
   state: ShelfState
   whatsapp: null | string
-}> = ({ audiences, basePath, category, result, showControls = true, state, whatsapp }) => {
+}> = ({ audiences, basePath, category, hideEmpty = false, result, showControls = true, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
 
   const first = result.totalDocs === 0 ? 0 : (result.page - 1) * SHELF_PER_PAGE + 1
@@ -84,7 +86,7 @@ export const ProductShelf: React.FC<{
             ))}
           </ul>
         </>
-      ) : (
+      ) : hideEmpty ? null : (
         <div className="border-line mx-auto mt-8 max-w-[52ch] rounded-2xl border p-8 text-center">
           <h3 className="text-h3">{filtered ? SHELF_EMPTY_HEADING : PRODUCTS_EMPTY_HEADING}</h3>
 

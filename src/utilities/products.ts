@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import type { Payload } from 'payload'
 
-import type { Product, Subcategory } from '@/payload-types'
+import type { MealPlan, Product, Subcategory } from '@/payload-types'
 
 /**
  * Available, featured products for the homepage Best sellers section.
@@ -52,6 +52,28 @@ export const fetchCategorySubcategories = async (
     limit: 100,
     sort: 'title',
     where: { category: { equals: category } },
+  })
+
+  return result.docs
+}
+
+/**
+ * The meal plans that belong on a category page: those in the category, and in
+ * the chosen subcategory when one is picked. In the admin's order.
+ */
+export const fetchCategoryMealPlans = async (
+  category: Subcategory['category'],
+  subcategory: null | string = null,
+): Promise<MealPlan[]> => {
+  const payload = await getPayload({ config: configPromise })
+  const result = await payload.find({
+    collection: 'meal-plans',
+    depth: 1,
+    limit: 100,
+    sort: 'position',
+    where: subcategory
+      ? { and: [{ category: { equals: category } }, { 'subcategory.slug': { equals: subcategory } }] }
+      : { category: { equals: category } },
   })
 
   return result.docs

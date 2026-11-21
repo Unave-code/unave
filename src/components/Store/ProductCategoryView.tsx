@@ -4,6 +4,7 @@ import React from 'react'
 import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
 import { Section } from '@/components/home/Section'
+import { MealPlanCard } from '@/components/Store/MealPlanCard'
 import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
@@ -16,7 +17,8 @@ import {
   shelfHref,
   type ShelfSearchParams,
 } from '@/utilities/productShelf'
-import { fetchCategorySubcategories } from '@/utilities/products'
+import { normalizeMealPlan } from '@/utilities/planBuilder'
+import { fetchCategorySubcategories, fetchCategoryMealPlans } from '@/utilities/products'
 import {
   CATEGORY_LABEL,
   PRODUCTS_CATEGORY_CTA_BROWSE,
@@ -52,10 +54,13 @@ export const ProductCategoryView: React.FC<{
   const shelfState = { ...EMPTY_SHELF, page: state.page, subcategory: state.subcategory }
   const basePath = productCategoryHref(category)
 
-  const [result, categorySubcategories] = await Promise.all([
+  const [result, categorySubcategories, mealPlanDocs] = await Promise.all([
     fetchProductShelf(shelfState, category),
     fetchCategorySubcategories(category),
+    // Meal plans live in their own collection; they join the shelf on page one only.
+    state.page > 1 ? Promise.resolve([]) : fetchCategoryMealPlans(category, shelfState.subcategory),
   ])
+  const mealPlans = mealPlanDocs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
 
   const subcategories = categorySubcategories.filter((item) => item.slug)
   const tiles: CategoryTile[] =
@@ -113,8 +118,19 @@ export const ProductCategoryView: React.FC<{
       <Section id="products" tone="tint">
         <CategoryTiles className="mb-8 px-6 md:mb-10" label={`${CATEGORY_LABEL[category]} subcategories`} tiles={tiles} />
 
+        {mealPlans.length > 0 ? (
+          <ul aria-label="Meal plans" className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {mealPlans.map((plan) => (
+              <li className="min-w-0" key={plan.slug}>
+                <MealPlanCard plan={plan} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
         <ProductShelf
           basePath={basePath}
+          hideEmpty={mealPlans.length > 0}
           category={category}
           result={result}
           showControls={false}
