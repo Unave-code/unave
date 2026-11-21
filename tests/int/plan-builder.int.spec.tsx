@@ -43,8 +43,8 @@ const data: PlanBuilderData = {
     },
   ],
   plans: [
-    { days: 6, label: 'Week', note: '', prices: { both: 300000, dinner: 160000, lunch: 150000 } },
-    { days: 24, label: 'Month', note: 'Best value', prices: { both: 1100000, lunch: 600000 } },
+    { days: 6, label: 'Week', note: '', trial: false, prices: { both: 300000, dinner: 160000, lunch: 150000 } },
+    { days: 24, label: 'Month', note: 'Best value', trial: false, prices: { both: 1100000, lunch: 600000 } },
   ],
   slug: 'kids',
   subcategory: null,
@@ -135,14 +135,37 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     expect(adds().every((b) => !b.disabled)).toBe(true)
   })
 
+  it('shows only the trial days of the menu for a trial length', () => {
+    const base = data.plans[0]
+    const dish = { main: 'Dal', sides: [] }
+    const day = (d: string, full: string, has: boolean) => ({ day: d, dinner: has ? dish : null, full, lunch: has ? dish : null })
+    renderBuilder({
+      plans: [{ ...base, days: 3, label: 'Trial', note: '', trial: true }, ...data.plans],
+      thisWeek: {
+        days: [day('Mon', 'Monday', true), day('Tue', 'Tuesday', false), day('Wed', 'Wednesday', true), day('Thu', 'Thursday', true), day('Fri', 'Friday', true)],
+        range: '',
+      },
+    })
+    fireEvent.click(screen.getByRole('radio', { name: /Trial/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    const rows = screen.getAllByRole('row').slice(1)
+    // Three days with a dish; the empty Tuesday and the days after the trial are hidden.
+    expect(rows.map((r) => r.querySelector('th')?.textContent)).toEqual(['Mon', 'Wed', 'Thu'])
+    expect(screen.getByText(/Your 3 trial days/)).toBeTruthy()
+  })
+
   it('totals options per day per person', () => {
     renderBuilder()
     fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
     fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
-    fireEvent.click(screen.getByRole('radio', { name: /Roti/ }))
-    fireEvent.click(screen.getByRole('radio', { name: /^C/ }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /Roti/ }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /^B/ }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /^C/ }))
+    expect(screen.getAllByText(formatPaise(300000 * 2 + (2000 + 500 + 900) * 6 * 2)).length).toBeGreaterThan(0)
+    // A second click takes an add-on off again.
+    fireEvent.click(screen.getByRole('checkbox', { name: /^B/ }))
     expect(screen.getAllByText(formatPaise(300000 * 2 + (2000 + 900) * 6 * 2)).length).toBeGreaterThan(0)
   })
 
@@ -150,7 +173,7 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     renderBuilder({ optionGroups: [] })
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
-    expect(screen.getByText('No options to choose this week. Your plan is ready.')).toBeTruthy()
+    expect(screen.getByText('No add-ons for this plan. Your plan is ready.')).toBeTruthy()
   })
 
   it('shows a chosen tile in solid brand green, as the product page does', () => {
@@ -167,15 +190,17 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
-    fireEvent.click(screen.getByRole('radio', { name: /Roti/ }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /Rice/ }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /Roti/ }))
     const form = container.querySelector('form[action="/api/cart/plan"]') as HTMLFormElement
     const value = (name: string) => (form.querySelector(`input[name="${name}"]`) as HTMLInputElement).value
     expect(value('slot')).toBe('both')
     expect(value('plan')).toBe('Week')
     expect(value('people')).toBe('2')
     expect(value('mealPlan')).toBe('kids')
-    expect(value('choice-0')).toBe('1')
-    expect(value('choice-1')).toBe('0')
+    const values = (name: string) => [...form.querySelectorAll(`input[name="${name}"]`)].map((i) => (i as HTMLInputElement).value)
+    expect(values('choice-0')).toEqual(['0', '1'])
+    expect(values('choice-1')).toEqual([])
   })
 
   it('edits a summary row back to its step', () => {

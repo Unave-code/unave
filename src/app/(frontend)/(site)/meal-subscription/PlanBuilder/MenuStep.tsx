@@ -7,12 +7,22 @@ import { MEAL_ICON, MEAL_LABEL } from './ui'
 import type { PlanBuilderState } from './usePlanBuilder'
 
 export function MenuStep({ data, state }: { data: PlanBuilderData; state: PlanBuilderState }) {
-  const { meals, offered, times } = state
+  const { meals, offered, plan, times } = state
   const week = data.thisWeek
+  /* A trial shows only the days it delivers: the first ones with a dish for
+     the meals picked, and the empty days are left out. */
+  const wanted = offered.filter((m) => meals[m])
+  const days = plan?.trial
+    ? (week?.days ?? []).filter((d) => (wanted.length ? wanted : offered).some((m) => d[m])).slice(0, plan.days)
+    : (week?.days ?? [])
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-ink-600 max-w-[52ch]">One balanced meal for each slot, set by our kitchen. The menu changes every week.</p>
+        <p className="text-ink-600 max-w-[52ch]">
+          {plan?.trial
+            ? `Your ${plan.days} trial days, set by our kitchen. One balanced meal for each slot.`
+            : 'One balanced meal for each slot, set by our kitchen. The menu changes every week.'}
+        </p>
         {week?.range && <p className="text-ink-900 text-sm font-bold">This week · {week.range}</p>}
       </div>
       <div className="border-line mt-5 overflow-x-auto rounded-2xl border bg-white">
@@ -37,7 +47,7 @@ export function MenuStep({ data, state }: { data: PlanBuilderData; state: PlanBu
             </tr>
           </thead>
           <tbody className="divide-line divide-y bg-white">
-            {week?.days.map((d) => (
+            {days.map((d) => (
               <tr className="align-top" key={d.day}>
                 <th className="px-4 py-4 font-extrabold text-green-700" scope="row">
                   {d.day}

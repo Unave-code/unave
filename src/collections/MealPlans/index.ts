@@ -6,6 +6,7 @@ import { anyone } from '../../access/anyone'
 import { isStaff } from '../../access/isStaff'
 import { menuWeekField, rupeeField } from './fields'
 import { slugifyTitle } from '../Products/hooks/autoProductSlug'
+import { TRIAL_DAYS } from '../../utilities/planBuilder'
 import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
 /**
@@ -178,9 +179,31 @@ export const MealPlans: CollectionConfig = {
                   type: 'row',
                   fields: [
                     { name: 'length', type: 'text', label: 'Name', required: true, maxLength: 30, validate: lengthName, admin: { width: '50%', placeholder: '2 weeks' } },
-                    { name: 'days', type: 'number', label: 'Delivery days', required: true, min: 1, admin: { width: '25%', description: 'Mon–Sat, so 2 weeks is 12.' } },
+                    {
+                      name: 'days',
+                      type: 'number',
+                      label: 'Delivery days',
+                      required: true,
+                      min: 1,
+                      // A trial always runs TRIAL_DAYS days, whatever was typed.
+                      hooks: { beforeValidate: [({ siblingData, value }) => ((siblingData as { trial?: boolean })?.trial ? TRIAL_DAYS : value)] },
+                      admin: {
+                        width: '25%',
+                        description: 'Mon–Sat, so 2 weeks is 12. A trial is always 3.',
+                        condition: (_, siblingData) => !(siblingData as { trial?: boolean })?.trial,
+                      },
+                    },
                     { name: 'note', type: 'text', label: 'Tag', maxLength: 20, admin: { width: '25%', placeholder: 'Save 5%' } },
                   ],
+                },
+                {
+                  name: 'trial',
+                  type: 'checkbox',
+                  label: '3-day trial',
+                  defaultValue: false,
+                  admin: {
+                    description: 'A short trial length: it runs 3 delivery days, and the plan page shows only those 3 days of the menu.',
+                  },
                 },
                 {
                   type: 'row',
@@ -205,7 +228,7 @@ export const MealPlans: CollectionConfig = {
               maxRows: 4,
               admin: {
                 description:
-                  'Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default. Leave empty for a plan with no options.',
+                  'Each option is a group of add-ons, like Juice: Normal or Detox. Customers can pick any number of them, or none. Leave empty for a plan with no add-ons.',
               },
               fields: [
                 {
@@ -219,8 +242,8 @@ export const MealPlans: CollectionConfig = {
                   name: 'choices',
                   type: 'array',
                   label: 'Choices',
-                  minRows: 2,
-                  maxRows: 4,
+                  minRows: 1,
+                  maxRows: 6,
                   fields: [
                     {
                       type: 'row',

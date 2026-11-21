@@ -45,10 +45,15 @@ export type PlanMenuMeal = { main: string; sides: string[] }
 export type PlanMenuDay = { day: string; dinner: null | PlanMenuMeal; full: string; lunch: null | PlanMenuMeal }
 export type PlanMenuWeek = { days: PlanMenuDay[]; range: string }
 
+/** A trial length always runs this many delivery days. */
+export const TRIAL_DAYS = 3
+
 export type PlanLength = {
   days: number
   label: string
   note: string
+  /** A short trial: the menu shows only its days. */
+  trial: boolean
   /** Per person, in paise; a missing slot is not offered at this length. */
   prices: Partial<Record<PlanSlot, number>>
 }
@@ -150,9 +155,10 @@ export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
         if (Number.isSafeInteger(value) && value >= 1) prices[slot] = value
       }
       return {
-        days: Number(row?.days),
+        days: row?.trial ? TRIAL_DAYS : Number(row?.days),
         label: text(row?.length).replace(/\|/g, ' '),
         note: text(row?.note),
+        trial: Boolean(row?.trial),
         prices,
       }
     })
@@ -200,16 +206,20 @@ export const fromPrice = (data: PlanBuilderData): null | number => {
 /* ------------------------------------------------------------ selection */
 
 export type PlanSelection = {
-  /** The chosen choice's index in each option group, in group order. */
-  choices: number[]
+  /** The picked choices' indexes in each option group, in group order; any number per group, none included. */
+  choices: number[][]
   people: number
   plan: string
   slot: PlanSlot
 }
 
-/** The cart line's duration value: slot|plan label|people|choice indexes. */
+/**
+ * The cart line's duration value: slot|plan label|people|choices, the choices
+ * as groups split by "." and the picked indexes in a group split by "+". An
+ * older pick-one line ("0.1") reads as one pick per group, so it still resolves.
+ */
 export const encodePlanSelection = (selection: PlanSelection): string =>
-  [selection.slot, selection.plan, String(selection.people), selection.choices.join('.')].join('|')
+  [selection.slot, selection.plan, String(selection.people), selection.choices.map((group) => group.join('+')).join('.')].join('|')
 
 export const decodePlanSelection = (value: string): null | PlanSelection => {
   const parts = value.split('|')
@@ -218,9 +228,9 @@ export const decodePlanSelection = (value: string): null | PlanSelection => {
   if (!PLAN_SLOTS.includes(slot as PlanSlot)) return null
   const count = Number(people)
   if (!Number.isSafeInteger(count) || count < 1) return null
-  const indexes = choices ? choices.split('.').map(Number) : []
-  if (indexes.some((index) => !Number.isSafeInteger(index) || index < 0)) return null
-  return { choices: indexes, people: count, plan: plan.trim(), slot: slot as PlanSlot }
+  const groups = choices.split('.').map((group) => (group ? group.split('+').map(Number) : []))
+  if (groups.some((group) => group.some((index) => !Number.isSafeInteger(index) || index < 0))) return null
+  return { choices: groups, people: count, plan: plan.trim(), slot: slot as PlanSlot }
 }
 
 export type PricedPlan = {
@@ -243,10 +253,19 @@ export const pricePlanSelection = (data: PlanBuilderData, selection: PlanSelecti
   const price = plan.prices[selection.slot]
   if (price === undefined) return null
   if (selection.people > PLAN_MAX_PEOPLE) return null
-  if (selection.choices.length !== data.optionGroups.length) return null
+  // A group past the plan's last one may only be empty (an encoding of no groups reads as one empty group).
+  if (selection.choices.slice(data.optionGroups.length).some((group) => group.length > 0)) return null
 
-  const chosen = data.optionGroups.map((group, i) => group.choices[selection.choices[i]])
-  if (chosen.some((choice) => !choice)) return null
+  const chosen: PlanChoice[] = []
+  for (const [i, group] of data.optionGroups.entries()) {
+    const picked = selection.choices[i] ?? []
+    if (new Set(picked).size !== picked.length) return null
+    for (const index of picked) {
+      const choice = group.choices[index]
+      if (!choice) return null
+      chosen.push(choice)
+    }
+  }
 
   const perPerson = price + chosen.reduce((sum, c) => sum + c.extraPerDay, 0) * plan.days
   const total = perPerson * selection.people

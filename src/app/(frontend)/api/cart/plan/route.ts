@@ -42,7 +42,13 @@ export async function POST(request: Request): Promise<Response> {
   const data = normalizeMealPlan(doc)
   const slot = String(form.get('slot') ?? '') as PlanSlot
   const selection: PlanSelection = {
-    choices: data.optionGroups.map((_, i) => Number.parseInt(String(form.get(`choice-${i}`) ?? '0'), 10)),
+    // Every picked add-on in a group arrives as its own choice-<group> field; none is fine.
+    choices: data.optionGroups.map((_, i) =>
+      form
+        .getAll(`choice-${i}`)
+        .slice(0, 20)
+        .map((v) => Number.parseInt(String(v), 10)),
+    ),
     people: Number.parseInt(String(form.get('people') ?? '1'), 10),
     plan: String(form.get('plan') ?? '').trim().slice(0, 40),
     slot,

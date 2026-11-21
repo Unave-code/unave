@@ -81,9 +81,9 @@ export function CartForm({
       <input name="plan" type="hidden" value={plan?.label ?? ''} />
       <input name="people" type="hidden" value={people} />
       <input name="mealPlan" type="hidden" value={slug} />
-      {choices.map((c, i) => (
-        <input key={i} name={`choice-${i}`} type="hidden" value={c} />
-      ))}
+      {choices.flatMap((group, i) =>
+        group.map((c) => <input key={`${i}-${c}`} name={`choice-${i}`} type="hidden" value={c} />),
+      )}
       <button
         className={cn(
           CTA_BASE,

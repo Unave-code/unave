@@ -754,10 +754,14 @@ export interface MealPlan {
     | {
         length: string;
         /**
-         * Mon–Sat, so 2 weeks is 12.
+         * Mon–Sat, so 2 weeks is 12. A trial is always 3.
          */
-        days: number;
+        days?: number | null;
         note?: string | null;
+        /**
+         * A short trial length: it runs 3 delivery days, and the plan page shows only those 3 days of the menu.
+         */
+        trial?: boolean | null;
         lunchPrice?: number | null;
         dinnerPrice?: number | null;
         bothPrice?: number | null;
@@ -765,7 +769,7 @@ export interface MealPlan {
       }[]
     | null;
   /**
-   * Each option is a pick-one choice, like Juice: Normal or Detox. The first choice is selected by default. Leave empty for a plan with no options.
+   * Each option is a group of add-ons, like Juice: Normal or Detox. Customers can pick any number of them, or none. Leave empty for a plan with no add-ons.
    */
   optionGroups?:
     | {
@@ -1998,6 +2002,7 @@ export interface MealPlansSelect<T extends boolean = true> {
         length?: T;
         days?: T;
         note?: T;
+        trial?: T;
         lunchPrice?: T;
         dinnerPrice?: T;
         bothPrice?: T;
