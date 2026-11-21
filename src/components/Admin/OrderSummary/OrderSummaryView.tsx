@@ -5,7 +5,6 @@ import { FOOD_PREFERENCE_LABELS, isFoodPreference } from '@/utilities/foodPrefer
 import { formatPaise } from '@/utilities/money'
 import { orderKindSummary, type OrderLineView } from '@/utilities/orderLines'
 
-import { CopyValue } from './CopyValue'
 import './OrderSummary.scss'
 
 /**
@@ -15,7 +14,11 @@ import './OrderSummary.scss'
  * Presentational only: `OrderSummary` loads the order, its customer, its
  * requests and the meal plans its lines name, and passes plain values here.
  * Nothing renders as an input; the one editable value, the delivery start day,
- * stays in Payload's own sidebar.
+ * stays in Payload's own sidebar, beside the payment (`OrderPaymentView`).
+ *
+ * Only what the order holds is shown: an empty value leaves its row out
+ * rather than printing a placeholder, and the requests card appears only when
+ * the customer has asked for something.
  */
 
 export type OrderSummaryProps = {
@@ -27,13 +30,13 @@ export type OrderSummaryProps = {
 
 const IST = 'Asia/Kolkata'
 
-const dateTime = (value: null | string | undefined): string =>
-  value
-    ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: IST }).format(new Date(value))
-    : 'Not recorded'
+export const dateTime = (value: string): string =>
+  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: IST }).format(new Date(value))
 
-const dateOnly = (value: null | string | undefined): string =>
-  value ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: IST }).format(new Date(value)) : 'Not set'
+const dateOnly = (value: string): string =>
+  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: IST }).format(new Date(value))
+
+const present = (value: null | string | undefined): value is string => typeof value === 'string' && value.trim().length > 0
 
 const daysLabel = (days: number): string => `${days} ${days === 1 ? 'day' : 'days'}`
 
@@ -74,9 +77,7 @@ const LineBody: React.FC<{ line: OrderLineView }> = ({ line }) => {
           <Row label="Meal">{line.meal}</Row>
           <Row label="Length">{`${line.length} · ${daysLabel(line.days)}`}</Row>
           <Row label="People">{line.people}</Row>
-          {line.picks.length === 0 ? (
-            <Row label="Choices">No options or add-ons</Row>
-          ) : line.groups ? (
+          {line.picks.length === 0 ? null : line.groups ? (
             line.groups.map((group) => (
               <Row key={group.title} label={group.title}>
                 {group.picks.join(' · ')}
@@ -108,11 +109,11 @@ const LineBody: React.FC<{ line: OrderLineView }> = ({ line }) => {
         </dl>
       )
     default:
-      return (
+      return line.detail ? (
         <dl className="order-summary__rows">
-          <Row label="Detail">{line.detail || 'Not recorded'}</Row>
+          <Row label="Detail">{line.detail}</Row>
         </dl>
-      )
+      ) : null
   }
 }
 
@@ -142,11 +143,20 @@ const Line: React.FC<{ line: OrderLineView }> = ({ line }) => (
 
 export function OrderSummaryView({ customer, lines, order, requests }: OrderSummaryProps): React.JSX.Element {
   const delivery = order.delivery ?? {}
-  const preference = isFoodPreference(delivery.foodPreference)
-    ? FOOD_PREFERENCE_LABELS[delivery.foodPreference]
-    : FOOD_PREFERENCE_LABELS.none
-  const place = [[delivery.city, delivery.state].filter(Boolean).join(', '), delivery.pincode].filter(Boolean).join(' ')
-  const address = [delivery.addressLine1, delivery.addressLine2, place].filter((part) => part && String(part).trim())
+  // "No preference" is the default, not something the customer told us.
+  const preference =
+    isFoodPreference(delivery.foodPreference) && delivery.foodPreference !== 'none'
+      ? FOOD_PREFERENCE_LABELS[delivery.foodPreference]
+      : null
+  const place = [[delivery.city, delivery.state].filter(present).join(', '), delivery.pincode]
+    .filter(present)
+    .join(' ')
+  const address = [delivery.addressLine1, delivery.addressLine2, place].filter(present)
+  const hasDelivery = present(delivery.name) || present(delivery.phone) || address.length > 0 || preference || present(delivery.note)
+  const record = [
+    order.createdAt ? `Created ${dateTime(order.createdAt)}` : null,
+    order.updatedAt ? `Last updated ${dateTime(order.updatedAt)}` : null,
+  ].filter(present)
   const summary = orderKindSummary(lines)
 
   return (
@@ -156,7 +166,7 @@ export function OrderSummaryView({ customer, lines, order, requests }: OrderSumm
           <h2 className="order-summary__title">{`Order ${order.id}`}</h2>
           <p className="order-summary__meta">
             <span className="order-summary__pill order-summary__pill--ok">Paid</span>
-            <span>{`Paid ${dateTime(order.paidAt)}`}</span>
+            {order.paidAt ? <span>{`Paid ${dateTime(order.paidAt)}`}</span> : null}
           </p>
           {summary ? <p className="order-summary__muted">{summary}</p> : null}
         </div>
@@ -180,7 +190,7 @@ export function OrderSummaryView({ customer, lines, order, requests }: OrderSumm
           <Section title="Customer">
             {customer ? (
               <dl className="order-summary__rows">
-                <Row label="Name">{customer.name || 'Not given'}</Row>
+                {present(customer.name) ? <Row label="Name">{customer.name}</Row> : null}
                 <Row label="Email">
                   <a className="order-summary__link" href={`mailto:${customer.email}`}>
                     {customer.email}
@@ -202,82 +212,77 @@ export function OrderSummaryView({ customer, lines, order, requests }: OrderSumm
             )}
           </Section>
 
-          <Section title="Delivery">
-            <dl className="order-summary__rows">
-              <Row label="Name">{delivery.name || 'Not given'}</Row>
-              <Row label="Phone">
-                {delivery.phone ? (
-                  <a className="order-summary__link" href={`tel:${delivery.phone}`}>
-                    {delivery.phone}
-                  </a>
-                ) : (
-                  'Not given'
-                )}
-              </Row>
-              <Row label="Address">
-                {address.length > 0
-                  ? address.map((part, index) => (
+          {hasDelivery ? (
+            <Section title="Delivery">
+              <dl className="order-summary__rows">
+                {present(delivery.name) ? <Row label="Name">{delivery.name}</Row> : null}
+                {present(delivery.phone) ? (
+                  <Row label="Phone">
+                    <a className="order-summary__link" href={`tel:${delivery.phone}`}>
+                      {delivery.phone}
+                    </a>
+                  </Row>
+                ) : null}
+                {address.length > 0 ? (
+                  <Row label="Address">
+                    {address.map((part, index) => (
                       <span className="order-summary__address-line" key={index}>
                         {part}
                       </span>
-                    ))
-                  : 'Not given'}
-              </Row>
-              <Row label="Food preference">{preference}</Row>
-            </dl>
-            {delivery.note ? (
-              <div className="order-summary__note">
-                <p className="order-summary__note-title">Customer note</p>
-                <p>{delivery.note}</p>
-              </div>
-            ) : null}
-          </Section>
-
-          <Section title="Payment">
-            <dl className="order-summary__rows">
-              <Row label="Razorpay order">
-                {order.gatewayOrderId ? <CopyValue label="Razorpay order id" value={order.gatewayOrderId} /> : 'Not recorded'}
-              </Row>
-              <Row label="Razorpay payment">
-                {order.gatewayPaymentId ? <CopyValue label="Razorpay payment id" value={order.gatewayPaymentId} /> : 'Not recorded'}
-              </Row>
-              <Row label="Paid at">{dateTime(order.paidAt)}</Row>
-            </dl>
-          </Section>
+                    ))}
+                  </Row>
+                ) : null}
+                {preference ? <Row label="Food preference">{preference}</Row> : null}
+              </dl>
+              {present(delivery.note) ? (
+                <div className="order-summary__note">
+                  <p className="order-summary__note-title">Customer note</p>
+                  <p>{delivery.note}</p>
+                </div>
+              ) : null}
+            </Section>
+          ) : null}
         </div>
       </div>
 
-      <Section title="Requests">
-        {requests.length === 0 ? (
-          <p className="order-summary__muted">No requests on this order.</p>
-        ) : (
+      {requests.length > 0 ? (
+        <Section title="Requests">
           <ul className="order-summary__requests">
-            {requests.map((request) => (
-              <li className="order-summary__request" key={request.id}>
-                <p className="order-summary__meta">
-                  <strong>{request.type === 'pause' ? 'Pause' : 'Cancellation'}</strong>
-                  <span
-                    className={`order-summary__pill order-summary__pill--${request.status === 'handled' ? 'ok' : 'new'}`}
-                  >
-                    {request.status === 'handled' ? 'Handled' : 'New'}
-                  </span>
-                  <span className="order-summary__muted">{`Asked ${dateTime(request.createdAt)}`}</span>
-                </p>
-                {request.type === 'pause' ? (
-                  <p>{`Pause ${dateOnly(request.pauseFrom)} to ${dateOnly(request.pauseTo)}`}</p>
-                ) : null}
-                {request.reason ? <p>{request.reason}</p> : null}
-                {request.staffNote ? <p className="order-summary__muted">{`Kitchen note: ${request.staffNote}`}</p> : null}
-                <a className="order-summary__link" href={`/admin/collections/order-requests/${request.id}`}>
-                  Open request
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+            {requests.map((request) => {
+              const pause = [
+                request.pauseFrom ? `from ${dateOnly(request.pauseFrom)}` : null,
+                request.pauseTo ? `to ${dateOnly(request.pauseTo)}` : null,
+              ].filter(present)
 
-      <p className="order-summary__record">{`Created ${dateTime(order.createdAt)} · Last updated ${dateTime(order.updatedAt)}`}</p>
+              return (
+                <li className="order-summary__request" key={request.id}>
+                  <p className="order-summary__meta">
+                    <strong>{request.type === 'pause' ? 'Pause' : 'Cancellation'}</strong>
+                    <span
+                      className={`order-summary__pill order-summary__pill--${request.status === 'handled' ? 'ok' : 'new'}`}
+                    >
+                      {request.status === 'handled' ? 'Handled' : 'New'}
+                    </span>
+                    {request.createdAt ? (
+                      <span className="order-summary__muted">{`Asked ${dateTime(request.createdAt)}`}</span>
+                    ) : null}
+                  </p>
+                  {request.type === 'pause' && pause.length > 0 ? <p>{`Pause ${pause.join(' ')}`}</p> : null}
+                  {present(request.reason) ? <p>{request.reason}</p> : null}
+                  {present(request.staffNote) ? (
+                    <p className="order-summary__muted">{`Kitchen note: ${request.staffNote}`}</p>
+                  ) : null}
+                  <a className="order-summary__link" href={`/admin/collections/order-requests/${request.id}`}>
+                    Open request
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </Section>
+      ) : null}
+
+      {record.length > 0 ? <p className="order-summary__record">{record.join(' · ')}</p> : null}
     </div>
   )
 }

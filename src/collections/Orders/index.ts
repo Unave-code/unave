@@ -27,6 +27,9 @@ const staffOrOrderOwner: Access = ({ req: { user } }) => {
   }
 }
 
+/** Takes a snapshot field out of the edit form; OrderSummary shows it instead. */
+const HIDDEN_IN_FORM = '@/components/Admin/HiddenField#HiddenField'
+
 /**
  * The record of a purchase (spec 0007).
  *
@@ -71,12 +74,25 @@ export const Orders: CollectionConfig = {
       },
     },
     {
+      // The whole order as plain text, the way a receipt reads (OrderSummary).
+      // The snapshot fields below are taken out of the form, so this is the
+      // only place staff read them; the list view still shows them as columns.
+      name: 'summary',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/Admin/OrderSummary#OrderSummary',
+        },
+      },
+    },
+    {
       name: 'customer',
       type: 'relationship',
       access: {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         position: 'sidebar',
       },
       index: true,
@@ -91,6 +107,7 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         description: 'What was bought, copied from the product at purchase time. Product edits never change these rows.',
       },
       fields: [
@@ -167,6 +184,7 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         description: 'Where to deliver, as the customer entered it at checkout.',
       },
       fields: [
@@ -216,7 +234,7 @@ export const Orders: CollectionConfig = {
       },
       admin: {
         components: {
-          Field: '@/components/Admin/RupeeField#RupeeField',
+          Field: HIDDEN_IN_FORM,
         },
         readOnly: true,
       },
@@ -231,7 +249,7 @@ export const Orders: CollectionConfig = {
       admin: {
         components: {
           Cell: '@/components/Admin/RupeeCell#RupeeCell',
-          Field: '@/components/Admin/RupeeField#RupeeField',
+          Field: HIDDEN_IN_FORM,
         },
         readOnly: true,
       },
@@ -244,6 +262,7 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         position: 'sidebar',
       },
       index: true,
@@ -257,6 +276,7 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         position: 'sidebar',
       },
       label: 'Razorpay payment id',
@@ -279,10 +299,22 @@ export const Orders: CollectionConfig = {
         update: () => false,
       },
       admin: {
+        components: { Field: HIDDEN_IN_FORM },
         position: 'sidebar',
         readOnly: true,
       },
       label: 'Paid at',
+    },
+    {
+      // Razorpay ids and the paid time, above the start day (OrderPayment).
+      name: 'paymentSummary',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/Admin/OrderSummary/OrderPayment#OrderPayment',
+        },
+        position: 'sidebar',
+      },
     },
     {
       name: 'startsOn',

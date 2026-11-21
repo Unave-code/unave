@@ -317,3 +317,29 @@
     font-size: 12px;
   }
 }
+
+/* The payment block in Payload's document sidebar: narrow, so each label sits
+   above its value. */
+.order-payment {
+  margin-bottom: calc(var(--base) * 1.25);
+  padding-bottom: var(--base);
+  border-bottom: 1px solid var(--theme-elevation-150);
+  font-size: 13px;
+  line-height: 1.5;
+
+  &__rows {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+
+    dt {
+      color: var(--theme-elevation-600);
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+  }
+}

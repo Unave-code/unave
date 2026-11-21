@@ -1,6 +1,9 @@
 import { PaymentModeNotice as PaymentModeNotice_65c80ffd05597db004a61c0c63892b65 } from '@/components/Admin/PaymentModeNotice'
+import { OrderSummary as OrderSummary_d3a6876e10fcd496118d490ecdd2f9d3 } from '@/components/Admin/OrderSummary'
+import { HiddenField as HiddenField_e6ccfc82cbf35023135a5c40655cd208 } from '@/components/Admin/HiddenField'
 import { RupeeField as RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27 } from '@/components/Admin/RupeeField'
 import { RupeeCell as RupeeCell_bd976b46085bdf8ab53e7abd04517138 } from '@/components/Admin/RupeeCell'
+import { OrderPayment as OrderPayment_dc6d9f1fe14515efd09573ade57d6a2c } from '@/components/Admin/OrderSummary/OrderPayment'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -47,8 +50,11 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 /** @type import('payload').ImportMap */
 export const importMap = {
   "@/components/Admin/PaymentModeNotice#PaymentModeNotice": PaymentModeNotice_65c80ffd05597db004a61c0c63892b65,
+  "@/components/Admin/OrderSummary#OrderSummary": OrderSummary_d3a6876e10fcd496118d490ecdd2f9d3,
+  "@/components/Admin/HiddenField#HiddenField": HiddenField_e6ccfc82cbf35023135a5c40655cd208,
   "@/components/Admin/RupeeField#RupeeField": RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27,
   "@/components/Admin/RupeeCell#RupeeCell": RupeeCell_bd976b46085bdf8ab53e7abd04517138,
+  "@/components/Admin/OrderSummary/OrderPayment#OrderPayment": OrderPayment_dc6d9f1fe14515efd09573ade57d6a2c,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,

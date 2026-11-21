@@ -2,6 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { OrderPaymentView } from '@/components/Admin/OrderSummary/OrderPaymentView'
 import { OrderSummaryView, type OrderSummaryProps } from '@/components/Admin/OrderSummary/OrderSummaryView'
 import { describeOrderLine, type PlanLookup } from '@/utilities/orderLines'
 
@@ -95,6 +96,17 @@ describe('the admin order summary', () => {
     expect(screen.getByText('₹1,228 a day')).toBeTruthy()
   })
 
+  it('adds no choices row to a subscription bought without picks', () => {
+    const plain = describeOrderLine(
+      { product: null, productTitle: 'Meal plan: Low-GI Dinner', days: 12, qty: 1, unitPrice: 298800, durationLabel: 'Dinner · 2 weeks · 1 person' },
+      { groups: [], trialLengths: [] },
+    )
+    render(<OrderSummaryView {...props({ lines: [plain] })} />)
+
+    expect(screen.queryByText('Choices')).toBeNull()
+    expect(screen.queryByText(/No options/)).toBeNull()
+  })
+
   it('tags a trial', () => {
     render(<OrderSummaryView {...props({ lines: [trial] })} />)
 
@@ -134,10 +146,38 @@ describe('the admin order summary', () => {
     expect(screen.getByText('Travelling for a few days.')).toBeTruthy()
   })
 
-  it('says so when there are no requests', () => {
+  it('leaves the requests out when there are none', () => {
     render(<OrderSummaryView {...props()} />)
 
-    expect(screen.getByText('No requests on this order.')).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Requests' })).toBeNull()
+  })
+
+  it('shows only the details the order has', () => {
+    const base = props()
+    render(
+      <OrderSummaryView
+        {...props({
+          customer: { id: 7, name: null, email: 'dummy@unave.test', phone: null },
+          order: {
+            ...base.order,
+            delivery: { name: 'Dummy Customer', addressLine1: '12, Green Park', city: 'Pune', foodPreference: 'none' },
+          },
+        })}
+      />,
+    )
+
+    expect(screen.queryByText(/Not given|Not recorded|Not set/)).toBeNull()
+    expect(screen.queryByText('Customer note')).toBeNull()
+    expect(screen.queryByText('Food preference')).toBeNull()
+    expect(screen.queryByText('Phone')).toBeNull()
+    expect(screen.getByText('dummy@unave.test')).toBeTruthy()
+  })
+
+  it('keeps the payment out of the main column', () => {
+    render(<OrderSummaryView {...props()} />)
+
+    expect(screen.queryByRole('heading', { name: 'Payment' })).toBeNull()
+    expect(screen.queryByText('order_seed_9')).toBeNull()
   })
 
   it('renders when the customer is missing', () => {
@@ -150,5 +190,29 @@ describe('the admin order summary', () => {
     const { container } = render(<OrderSummaryView {...props({ lines: [subscription, trial] })} />)
 
     expect(container.querySelectorAll('input, textarea, select').length).toBe(0)
+  })
+})
+
+describe('the payment block in the sidebar', () => {
+  it('shows the Razorpay ids and the paid time', () => {
+    render(
+      <OrderPaymentView
+        gatewayOrderId="order_seed_9"
+        gatewayPaymentId="pay_seed_9"
+        paidAt="2026-11-21T06:00:00.000Z"
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Payment' })).toBeTruthy()
+    expect(screen.getByText('order_seed_9')).toBeTruthy()
+    expect(screen.getByText('pay_seed_9')).toBeTruthy()
+    expect(screen.getByText('21 Nov 2026, 11:30 am')).toBeTruthy()
+  })
+
+  it('leaves out an id the order does not have', () => {
+    render(<OrderPaymentView gatewayOrderId="order_seed_9" gatewayPaymentId={null} paidAt={null} />)
+
+    expect(screen.queryByText('Razorpay payment')).toBeNull()
+    expect(screen.queryByText('Paid at')).toBeNull()
   })
 })
