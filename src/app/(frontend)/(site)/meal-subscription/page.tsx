@@ -3,20 +3,15 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
 import { Section } from '@/components/home/Section'
 import { MealPlanCard } from '@/components/Store/MealPlanCard'
-import { MealPlanShelfControls } from '@/components/Store/MealPlanShelfControls'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
-import type { Footer } from '@/payload-types'
+import type { Footer, Media as MediaDoc } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import {
-  filterMealPlans,
-  hasMealPlanFilters,
-  type MealPlanSearchParams,
-  parseMealPlanShelf,
-} from '@/utilities/mealPlanShelf'
+import { EMPTY_MEAL_PLAN_SHELF, mealPlanShelfHref, parseMealPlanShelf, type MealPlanSearchParams } from '@/utilities/mealPlanShelf'
 import { MEAL_PLANS_PATH, normalizeMealPlan } from '@/utilities/planBuilder'
 import { whatsappHref } from '@/utilities/whatsapp'
 
@@ -27,45 +22,28 @@ const COPY = {
   accent: 'every week',
   intro: 'Choose a meal plan, see what we are cooking this week, pick your options, then pay securely.',
   browse: 'Browse the meal plans',
-  gridHeading: 'Every meal plan',
-  gridIntro: 'Each plan has its own weekly menu, lengths and prices. Search for a dish, or narrow the shelf by who it is for and which meals you want.',
-  howHeading: 'How a meal plan works',
-  howIntro: 'Pick once, and the kitchen cooks for you every delivery day.',
   family: 'Feeding a family? Add more than one plan to your cart and pay for them together.',
 }
-
-const HOW_STEPS = [
-  { body: 'Open a plan to see this week’s lunch and dinner, day by day.', title: 'See the menu' },
-  { body: 'Choose lunch, dinner or both, how long, how many people and any options.', title: 'Build your plan' },
-  { body: 'Pay securely at checkout. We call you to confirm your start date.', title: 'Pay and start' },
-]
 
 const NOTICES: Record<string, string> = {
   changed: 'That meal plan changed or is no longer offered. Please pick one again.',
   unknown: 'That did not go through. Please try again.',
 }
 
-const STEP_NUMBER = 'bg-green-100 text-green-700 grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold'
-
-export async function generateMetadata({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }): Promise<Metadata> {
-  const state = parseMealPlanShelf(await searchParams)
-  return {
-    alternates: { canonical: MEAL_PLANS_PATH },
-    description: 'Weekly home-style meal plans. Pick a plan, see the menu, choose your options and pay securely.',
-    // A filtered view is not a page of its own.
-    robots: hasMealPlanFilters(state) ? { follow: true, index: false } : undefined,
-    title: 'Meal subscription',
-  }
+export const metadata: Metadata = {
+  alternates: { canonical: MEAL_PLANS_PATH },
+  description: 'Weekly home-style meal plans. Pick a plan, see the menu, choose your options and pay securely.',
+  title: 'Meal subscription',
 }
 
 /**
  * Every meal plan as a shelf, built like /products (design.md §6.15, §6.19): the
- * green opening band, a search and filter bar whose state lives in the address,
- * the card grid, two honest empty states and a how-it-works band.
+ * green opening band, audience tiles like a category page's subcategories
+ * (`?audience=` in the address, "All" clears it), the card grid and an honest
+ * empty state.
  */
 export default async function MealPlansPage({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }) {
   const raw = await searchParams
-  const state = parseMealPlanShelf(raw)
   const noticeKey = typeof raw.notice === 'string' ? raw.notice : null
   const notice = noticeKey ? (NOTICES[noticeKey] ?? NOTICES.unknown) : null
 
@@ -77,13 +55,34 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
   const whatsapp = footer?.contact?.whatsapp ?? null
 
   const plans = all.docs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
-  const shown = filterMealPlans(plans, state)
-  const filtered = hasMealPlanFilters(state)
+  const photos = new Map(all.docs.map((doc) => [doc.slug, doc.image && typeof doc.image === 'object' ? doc.image : null]))
 
-  // Only audiences some plan uses become choices.
-  const audiences = [
-    ...new Map(plans.filter((p) => p.audience?.slug).map((p) => [p.audience!.slug, { label: p.audience!.title, value: p.audience!.slug }])).values(),
-  ]
+  /* One tile per audience some plan is for, in plan order, each showing the
+     photo of its first plan. An audience no plan uses is ignored, so a stale
+     link shows every plan rather than none. */
+  const audienceMap = new Map<string, { image: MediaDoc | null; slug: string; title: string }>()
+  for (const plan of plans) {
+    if (plan.audience?.slug && !audienceMap.has(plan.audience.slug)) {
+      audienceMap.set(plan.audience.slug, { image: photos.get(plan.slug) ?? null, slug: plan.audience.slug, title: plan.audience.title })
+    }
+  }
+  const audiences = [...audienceMap.values()]
+  const asked = parseMealPlanShelf(raw).audience
+  const audience = audiences.some((item) => item.slug === asked) ? asked : null
+  const shown = audience ? plans.filter((plan) => plan.audience?.slug === audience) : plans
+  const tiles: CategoryTile[] =
+    audiences.length > 1
+      ? [
+          { category: 'ready-to-eat', current: !audience, href: `${MEAL_PLANS_PATH}#meal-plans`, key: 'all', title: 'All' },
+          ...audiences.map((item) => ({
+            current: audience === item.slug,
+            href: `${mealPlanShelfHref(MEAL_PLANS_PATH, { ...EMPTY_MEAL_PLAN_SHELF, audience: item.slug })}#meal-plans`,
+            image: item.image ?? null,
+            key: item.slug,
+            title: item.title,
+          })),
+        ]
+      : []
 
   return (
     <main>
@@ -103,8 +102,8 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
       </Section>
 
       <Section id="meal-plans" tone="white">
-        <h2 className="text-h2">{COPY.gridHeading}</h2>
-        <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{COPY.gridIntro}</p>
+        <h2 className="sr-only">Meal plans</h2>
+        <CategoryTiles className="mb-8 px-6 md:mb-10" label="Meal plans by who they are for" noun="meal plans" tiles={tiles} />
 
         {notice ? (
           <p className="bg-gold-100 border-gold-300 text-ink-900 mt-6 rounded-2xl border px-5 py-4 text-base" role="alert">
@@ -112,17 +111,15 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
           </p>
         ) : null}
 
-        {plans.length > 0 ? <MealPlanShelfControls audiences={audiences} basePath={MEAL_PLANS_PATH} state={state} /> : null}
-
-        {shown.length > 0 ? (
+        {plans.length > 0 ? (
           <>
-            <p className="text-ink-600 mt-6 text-sm font-semibold">
-              {filtered ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
+            <p className="text-ink-600 text-sm font-semibold">
+              {audience ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
             </p>
             <ul aria-label="Meal plans" className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {shown.map((plan) => (
                 <li className="min-w-0" key={plan.slug}>
-                  <MealPlanCard meals={state.meals} plan={plan} />
+                  <MealPlanCard plan={plan} />
                 </li>
               ))}
             </ul>
@@ -130,18 +127,11 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
           </>
         ) : (
           <div className="border-line mx-auto mt-8 max-w-[52ch] rounded-2xl border p-8 text-center">
-            <h3 className="text-h3">{filtered ? 'Nothing matches those filters' : 'Meal plans open soon'}</h3>
+            <h3 className="text-h3">Meal plans open soon</h3>
             <p className="text-body text-ink-600 mt-3">
-              {filtered
-                ? 'Try fewer filters, or tell us what you are looking for and we will help.'
-                : 'We are setting up the menus and prices. Message us and we will help you start.'}
+              We are setting up the menus and prices. Message us and we will help you start.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              {filtered ? (
-                <Cta href={MEAL_PLANS_PATH} variant="secondary">
-                  Clear all
-                </Cta>
-              ) : null}
               {whatsapp ? (
                 <Cta href={whatsappHref(whatsapp)} rel="noopener noreferrer" target="_blank" variant="primary">
                   <WhatsAppIcon className="size-4" />
@@ -151,28 +141,6 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
             </div>
           </div>
         )}
-      </Section>
-
-      <Section tone="tint">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
-          <div>
-            <h2 className="text-h2">{COPY.howHeading}</h2>
-            <p className="text-body text-ink-600 mt-3 max-w-[45ch]">{COPY.howIntro}</p>
-          </div>
-          <ol className="flex flex-col gap-8">
-            {HOW_STEPS.map((step, index) => (
-              <li className="flex gap-4" key={step.title}>
-                <span aria-hidden="true" className={STEP_NUMBER}>
-                  {index + 1}
-                </span>
-                <div>
-                  <h3 className="text-h3">{step.title}</h3>
-                  <p className="text-body text-ink-600 mt-2 max-w-[55ch]">{step.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
       </Section>
     </main>
   )

@@ -36,8 +36,10 @@ export interface CategoryTile {
 export const CategoryTiles: React.FC<{
   className?: string
   label: string
+  /** What a tile leads to, for its accessible name: "Browse Kids meal plans". */
+  noun?: string
   tiles: CategoryTile[]
-}> = ({ className, label, tiles }) => {
+}> = ({ className, label, noun = 'products', tiles }) => {
   if (tiles.length === 0) return null
 
   return (
@@ -90,7 +92,7 @@ export const CategoryTiles: React.FC<{
             {item.href ? (
               <Link
                 aria-current={item.current ? 'page' : undefined}
-                aria-label={`Browse ${item.title} products`}
+                aria-label={item.title === 'All' ? `Browse all ${noun}` : `Browse ${item.title} ${noun}`}
                 className={className}
                 href={item.href}
               >
