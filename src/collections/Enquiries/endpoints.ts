@@ -9,6 +9,7 @@ import {
 } from '@/utilities/formPost'
 import { checkFormGuard } from '@/utilities/formGuard'
 import { checkEnquiryIpLimit, getClientIp } from '@/utilities/rateLimit'
+import { confirmHuman, TURNSTILE_FIELD } from '@/utilities/turnstile'
 
 import { sendEnquiryNotice } from './mail'
 import { enquirySchema } from './schema'
@@ -26,11 +27,12 @@ const CONTACT_PATH = '/contact'
  * 2. The honeypot. A filled-in field is a script pretending to be a person; it is
  *    answered with the success redirect and nothing is stored or sent, so the
  *    script learns nothing except that it may stop.
- * 3. Validation against `enquirySchema`.
- * 4. The IP rate limit, because a written row and an emailed notice cost more
+ * 3. Cloudflare Turnstile, when its keys are set (`src/utilities/turnstile.ts`).
+ * 4. Validation against `enquirySchema`.
+ * 5. The IP rate limit, because a written row and an emailed notice cost more
  *    than a rejected request.
- * 5. The row, written by Payload with `overrideAccess` (public REST create is off).
- * 6. The notice email. Its failure does not fail the enquiry — the row is the
+ * 6. The row, written by Payload with `overrideAccess` (public REST create is off).
+ * 7. The notice email. Its failure does not fail the enquiry — the row is the
  *    record, and the admin is the backup inbox.
  */
 export const enquiryEndpoint: Endpoint = {
@@ -51,6 +53,10 @@ export const enquiryEndpoint: Endpoint = {
 
     if (guard !== 'ok') {
       return backWithError(CONTACT_PATH, guard === 'too-fast' ? 'fast' : 'expired')
+    }
+
+    if (!(await confirmHuman(req, fields[TURNSTILE_FIELD], 'enquiry'))) {
+      return backWithError(CONTACT_PATH, 'challenge')
     }
 
     const parsed = enquirySchema.safeParse({

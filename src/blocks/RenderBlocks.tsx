@@ -7,6 +7,7 @@ import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
+import { turnstileSiteKey } from '@/utilities/turnstile'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -22,6 +23,8 @@ export const RenderBlocks: React.FC<{
   const { blocks } = props
 
   const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
+  // Read on the server and handed down, so the key is never baked into a bundle.
+  const challenge = turnstileSiteKey()
 
   if (hasBlocks) {
     return (
@@ -36,7 +39,7 @@ export const RenderBlocks: React.FC<{
               return (
                 <div className="my-16" key={index}>
                   {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                  <Block {...block} disableInnerContainer />
+                  <Block {...block} {...(blockType === 'formBlock' ? { challenge } : {})} disableInnerContainer />
                 </div>
               )
             }

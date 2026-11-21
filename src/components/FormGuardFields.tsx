@@ -1,22 +1,26 @@
 import React from 'react'
 
+import { TurnstileWidget } from './TurnstileWidget'
+
 /** Kept in sync with `src/utilities/formGuard.ts`, which is server only. */
 const HONEYPOT_FIELD = 'website'
 const STAMP_FIELD = 'form_stamp'
 
 /**
- * The hidden half of the form guard: a honeypot a person never sees and the
- * signed fill-time stamp the page was drawn with.
+ * The hidden half of the form guard: a honeypot a person never sees, the
+ * signed fill-time stamp the page was drawn with, and, when the page passes a
+ * Turnstile site key (`turnstileSiteKey()`), the Cloudflare check.
  *
  * The honeypot sits off screen rather than `display: none`, because some
  * scripts skip fields the stylesheet hides outright. It is out of the tab order
  * and hidden from assistive technology, and `autoComplete="off"` keeps a
  * browser from filling it for a real person.
  */
-export const FormGuardFields: React.FC<{ idPrefix: string; stamp?: string }> = ({
-  idPrefix,
-  stamp,
-}) => (
+export const FormGuardFields: React.FC<{
+  challenge?: string
+  idPrefix: string
+  stamp?: string
+}> = ({ challenge, idPrefix, stamp }) => (
   <>
     <div
       aria-hidden="true"
@@ -32,5 +36,6 @@ export const FormGuardFields: React.FC<{ idPrefix: string; stamp?: string }> = (
       />
     </div>
     {stamp ? <input name={STAMP_FIELD} type="hidden" value={stamp} /> : null}
+    {challenge ? <TurnstileWidget siteKey={challenge} /> : null}
   </>
 )

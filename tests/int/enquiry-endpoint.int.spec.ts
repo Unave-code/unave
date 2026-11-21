@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { getPayload, type Payload } from 'payload'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { issueFormStamp } from '@/utilities/formGuard'
 
 import { enquiryEndpoint } from '../../src/collections/Enquiries/endpoints'
@@ -225,5 +225,24 @@ describe('the enquiry notice email', () => {
     expect(content.html).toContain('&lt;kale&gt;')
     expect(content.html).toContain('&lt;friend&gt;')
     expect(content.html).not.toContain('<friend>')
+  })
+})
+
+describe('the contact form with Turnstile switched on', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('refuses a post without a Turnstile token and stores nothing', async () => {
+    vi.stubEnv('TURNSTILE_SITE_KEY', 'site-key')
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'secret-key')
+    const email = uniqueEmail()
+
+    const response = await post({ ...VALID, email })
+
+    expect(response.status).toBe(303)
+    expect(locationOf(response)).toContain('error=challenge')
+    expect(await findRow(email)).toBeNull()
+    expect(mocks.sendEnquiryNotice).not.toHaveBeenCalled()
   })
 })

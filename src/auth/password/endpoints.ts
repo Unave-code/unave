@@ -15,6 +15,7 @@ import {
   withParams,
 } from '@/utilities/formPost'
 import { checkFormGuard, type FormGuardResult } from '@/utilities/formGuard'
+import { confirmHuman, TURNSTILE_FIELD } from '@/utilities/turnstile'
 import {
   checkAccountMailIpLimit,
   checkLoginEmailLimit,
@@ -89,6 +90,10 @@ export const customerLoginEndpoint: Endpoint = {
     if (guard !== 'ok') {
       req.payload.logger.info({ guard, msg: 'customer_login_guard_rejected' })
       return backWithError(SIGN_IN_PATH, guard === 'honeypot' ? 'credentials' : guardCode(guard), keep)
+    }
+
+    if (!(await confirmHuman(req, fields[TURNSTILE_FIELD], 'customer_login'))) {
+      return backWithError(SIGN_IN_PATH, 'challenge', keep)
     }
 
     const parsed = signInSchema.safeParse({ email: fields.email, password: fields.password })
@@ -191,6 +196,10 @@ export const customerRegisterEndpoint: Endpoint = {
 
     if (guard !== 'ok') return backWithError(SIGN_UP_PATH, guardCode(guard))
 
+    if (!(await confirmHuman(req, fields[TURNSTILE_FIELD], 'customer_register'))) {
+      return backWithError(SIGN_UP_PATH, 'challenge')
+    }
+
     const parsed = signUpSchema.safeParse(fields)
 
     if (!parsed.success) {
@@ -288,6 +297,10 @@ export const customerResendVerificationEndpoint: Endpoint = {
     if (guard === 'honeypot') return answer
     if (guard !== 'ok') return backWithError(SIGN_IN_PATH, guardCode(guard))
 
+    if (!(await confirmHuman(req, fields[TURNSTILE_FIELD], 'customer_resend'))) {
+      return backWithError(SIGN_IN_PATH, 'challenge')
+    }
+
     if (!parsed.success) return answer
     if (checkAccountMailIpLimit(getClientIp(req.headers)).limited) return answer
 
@@ -357,6 +370,10 @@ export const customerForgotPasswordEndpoint: Endpoint = {
 
     if (guard === 'honeypot') return answer
     if (guard !== 'ok') return backWithError(FORGOT_PATH, guardCode(guard))
+
+    if (!(await confirmHuman(req, fields[TURNSTILE_FIELD], 'customer_forgot'))) {
+      return backWithError(FORGOT_PATH, 'challenge')
+    }
 
     if (!parsed.success) return answer
     if (checkAccountMailIpLimit(getClientIp(req.headers)).limited) return answer

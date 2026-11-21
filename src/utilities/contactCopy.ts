@@ -58,6 +58,8 @@ export const contactError = (code?: string): string | undefined => {
       return 'Please tell us your name.'
     case 'phone':
       return 'Please check the phone number — at least 10 digits.'
+    case 'challenge':
+      return 'We could not confirm this came from a person. Please try again; the form needs JavaScript switched on.'
     case 'expired':
       return 'That form was open for a long time. Please send it again now that the page is fresh.'
     case 'fast':

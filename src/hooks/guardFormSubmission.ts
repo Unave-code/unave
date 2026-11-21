@@ -2,6 +2,7 @@ import { APIError, type CollectionBeforeChangeHook } from 'payload'
 
 import { isSameOriginRequest } from '@/utilities/formPost'
 import { checkFormSubmissionIpLimit, getClientIp } from '@/utilities/rateLimit'
+import { confirmHuman, TURNSTILE_HEADER } from '@/utilities/turnstile'
 
 /** More fields than any form here has; past this the body is not a form. */
 const MAX_FIELDS = 40
@@ -13,10 +14,11 @@ const MAX_VALUE_LENGTH = 5000
  *
  * The form builder lets anyone create a submission, and each one writes a row
  * and sends an email, so an anonymous create is held to the same rules as the
- * contact form: same origin only, a rate limit per address, and a size cap on
- * what it may store. Staff working in the admin are not limited.
+ * contact form: same origin only, a rate limit per address, Cloudflare Turnstile
+ * when its keys are set (the token arrives in a header, since the block posts
+ * JSON), and a size cap on what it may store. Staff working in the admin are not limited.
  */
-export const guardFormSubmission: CollectionBeforeChangeHook = ({ data, operation, req }) => {
+export const guardFormSubmission: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
   if (operation !== 'create' || req.user) return data
 
   if (!req.headers || !isSameOriginRequest({ headers: req.headers })) {
@@ -28,6 +30,15 @@ export const guardFormSubmission: CollectionBeforeChangeHook = ({ data, operatio
     throw new APIError(
       'That was a few messages too quickly. Please try again in a little while.',
       429,
+      undefined,
+      true,
+    )
+  }
+
+  if (!(await confirmHuman(req, req.headers.get(TURNSTILE_HEADER), 'form_submission'))) {
+    throw new APIError(
+      'We could not confirm this came from a person. Please try again.',
+      403,
       undefined,
       true,
     )

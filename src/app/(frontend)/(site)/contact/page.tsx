@@ -7,6 +7,7 @@ import { Section } from '@/components/home/Section'
 import { Swoosh } from '@/components/Swoosh'
 import type { Footer } from '@/payload-types'
 import { issueFormStamp } from '@/utilities/formGuard'
+import { turnstileSiteKey } from '@/utilities/turnstile'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import {
@@ -217,7 +218,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
               <p className="text-body text-ink-600 mt-3 max-w-[45ch]">{CONTACT_FORM_INTRO}</p>
             </div>
 
-            <ContactForm error={error} stamp={issueFormStamp()} />
+            <ContactForm challenge={turnstileSiteKey()} error={error} stamp={issueFormStamp()} />
           </div>
         </Section>
       ) : null}

@@ -101,6 +101,8 @@ export const CUSTOMER_AUTH_NOTICES: Record<string, string> = {
  * so none of these deserve an alarming tone.
  */
 export const CUSTOMER_AUTH_ERRORS: Record<string, string> = {
+  challenge:
+    'We could not confirm this came from a person. Please try again; this form needs JavaScript switched on.',
   credentials: 'That email address and password do not match. Please try again.',
   email: 'Please enter a valid email address.',
   exists:

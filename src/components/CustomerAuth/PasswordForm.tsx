@@ -36,6 +36,8 @@ interface Props {
    * codes the Google half already uses.
    */
   action: string
+  /** The Turnstile site key from `turnstileSiteKey()`, when the endpoint checks it. */
+  challenge?: string
   /** Hidden fields, used by the reset form to carry its token back. */
   children?: React.ReactNode
   emailField?: boolean
@@ -72,6 +74,7 @@ interface Props {
  */
 export const PasswordForm: React.FC<Props> = ({
   action,
+  challenge,
   children,
   emailField = false,
   fields,
@@ -187,7 +190,7 @@ export const PasswordForm: React.FC<Props> = ({
 
       {children}
 
-      <FormGuardFields idPrefix={idPrefix} stamp={stamp} />
+      <FormGuardFields challenge={challenge} idPrefix={idPrefix} stamp={stamp} />
 
       <button
         className={cn(CTA_BASE, CTA_VARIANTS.primary, 'mt-2 short:mt-1 w-full')}

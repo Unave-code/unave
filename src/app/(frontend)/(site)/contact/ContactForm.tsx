@@ -23,7 +23,11 @@ import {
  * never loses typed text; the server validates again with the same rules and
  * answers a crafted post with one plain error line instead of the form.
  */
-export const ContactForm: React.FC<{ error?: string; stamp?: string }> = ({ error, stamp }) => (
+export const ContactForm: React.FC<{ challenge?: string; error?: string; stamp?: string }> = ({
+  challenge,
+  error,
+  stamp,
+}) => (
   <form action="/api/enquiries/send" className="relative flex flex-col gap-6" method="post">
     {error ? (
       <p className={AUTH_PROBLEM} role="alert">
@@ -93,7 +97,7 @@ export const ContactForm: React.FC<{ error?: string; stamp?: string }> = ({ erro
       />
     </div>
 
-    <FormGuardFields idPrefix="contact" stamp={stamp} />
+    <FormGuardFields challenge={challenge} idPrefix="contact" stamp={stamp} />
 
     <div>
       <Button type="submit">{CONTACT_SUBMIT}</Button>

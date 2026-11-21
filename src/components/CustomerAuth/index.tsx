@@ -6,6 +6,7 @@ import { FormGuardFields } from '@/components/FormGuardFields'
 import { issueFormStamp } from '@/utilities/formGuard'
 import { cn } from '@/utilities/ui'
 import { isCustomerSignInConfigured } from '@/utilities/customerSession'
+import { turnstileSiteKey } from '@/utilities/turnstile'
 
 import { AuthShell } from './AuthShell'
 import { PasswordForm } from './PasswordForm'
@@ -89,6 +90,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
   const confirmation = customerAuthNotice(notice)
   const configured = isCustomerSignInConfigured()
   const stamp = issueFormStamp()
+  const challenge = turnstileSiteKey()
 
   return (
     <AuthShell>
@@ -148,7 +150,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
             label={CUSTOMER_AUTH_EMAIL_LABEL}
             name="email"
           />
-          <FormGuardFields idPrefix="resend" stamp={stamp} />
+          <FormGuardFields challenge={challenge} idPrefix="resend" stamp={stamp} />
           <button className={cn(CTA_BASE, CTA_VARIANTS.secondary, 'w-full')} type="submit">
             {CUSTOMER_AUTH_RESEND}
           </button>
@@ -158,6 +160,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
       <div className="mt-7 short:mt-3">
         <PasswordForm
           action={mode === 'sign-up' ? '/api/customers/register' : '/api/customers/login'}
+          challenge={challenge}
           emailField
           fields={mode === 'sign-up' ? SIGN_UP_FIELDS : undefined}
           idPrefix={mode === 'sign-up' ? 'signup' : 'signin'}

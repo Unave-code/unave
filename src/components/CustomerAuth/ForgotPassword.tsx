@@ -2,6 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import { issueFormStamp } from '@/utilities/formGuard'
+import { turnstileSiteKey } from '@/utilities/turnstile'
 import { cn } from '@/utilities/ui'
 
 import { AuthShell } from './AuthShell'
@@ -48,6 +49,7 @@ export const ForgotPassword: React.FC<Props> = ({ error, sent }) => {
       <div className="mt-8 short:mt-4">
         <PasswordForm
           action="/api/customers/forgot-password"
+          challenge={turnstileSiteKey()}
           emailField
           idPrefix="forgot"
           intent="forgot"

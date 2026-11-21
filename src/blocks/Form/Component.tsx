@@ -10,6 +10,11 @@ import type { DefaultTypedEditorState } from '@payloadcms/richtext-lexical'
 
 import { fields } from './fields'
 import { getClientSideURL } from '@/utilities/getURL'
+import { TurnstileWidget } from '@/components/TurnstileWidget'
+
+/** Kept in sync with `src/utilities/turnstile.ts`, which is server only. */
+const TURNSTILE_FIELD = 'cf-turnstile-response'
+const TURNSTILE_HEADER = 'x-turnstile-token'
 
 /** Not a field any CMS form defines, and tempting to a form-filling script. */
 const HONEYPOT_NAME = 'website_url'
@@ -17,6 +22,8 @@ const HONEYPOT_NAME = 'website_url'
 export type FormBlockType = {
   blockName?: string
   blockType?: 'formBlock'
+  /** The Turnstile site key, passed down by RenderBlocks when it is configured. */
+  challenge?: string
   enableIntro: boolean
   form: FormType
   introContent?: DefaultTypedEditorState
@@ -28,6 +35,7 @@ export const FormBlock: React.FC<
   } & FormBlockType
 > = (props) => {
   const {
+    challenge,
     enableIntro,
     form: formFromProps,
     form: { id: formID, confirmationMessage, confirmationType, redirect, submitButtonLabel } = {},
@@ -47,6 +55,8 @@ export const FormBlock: React.FC<
   const [isLoading, setIsLoading] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState<boolean>()
   const [error, setError] = useState<{ message: string; status?: string } | undefined>()
+  /* A Turnstile token is spent once, so a refused send draws a fresh widget. */
+  const [challengeRound, setChallengeRound] = useState(0)
   const router = useRouter()
 
   /* The honeypot sits outside react-hook-form so it never reaches the
@@ -57,6 +67,8 @@ export const FormBlock: React.FC<
       const formElement = event?.target instanceof HTMLFormElement ? event.target : null
       const trap = formElement?.elements.namedItem(HONEYPOT_NAME)
       const trapped = trap instanceof HTMLInputElement && trap.value.trim() !== ''
+      const tokenInput = formElement?.elements.namedItem(TURNSTILE_FIELD)
+      const token = tokenInput instanceof HTMLInputElement ? tokenInput.value : ''
 
       let loadingTimerID: ReturnType<typeof setTimeout>
       const submitForm = async () => {
@@ -85,6 +97,7 @@ export const FormBlock: React.FC<
             }),
             headers: {
               'Content-Type': 'application/json',
+              ...(token ? { [TURNSTILE_HEADER]: token } : {}),
             },
             method: 'POST',
           })
@@ -95,6 +108,7 @@ export const FormBlock: React.FC<
 
           if (req.status >= 400) {
             setIsLoading(false)
+            setChallengeRound((round) => round + 1)
 
             setError({
               message: res.errors?.[0]?.message || 'Internal Server Error',
@@ -117,6 +131,7 @@ export const FormBlock: React.FC<
         } catch (err) {
           console.warn(err)
           setIsLoading(false)
+          setChallengeRound((round) => round + 1)
           setError({
             message: 'Something went wrong.',
           })
@@ -178,6 +193,8 @@ export const FormBlock: React.FC<
                     return null
                   })}
               </div>
+
+              {challenge ? <TurnstileWidget key={challengeRound} siteKey={challenge} /> : null}
 
               <Button form={formID} type="submit" variant="default">
                 {submitButtonLabel}
