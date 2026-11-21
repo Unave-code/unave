@@ -47,6 +47,7 @@ const data: PlanBuilderData = {
     { days: 24, label: 'Month', note: 'Best value', prices: { both: 1100000, lunch: 600000 } },
   ],
   slug: 'kids',
+  subcategory: null,
   thisWeek: { days: [{ day: 'Mon', dinner: { main: 'Dal', sides: ['Rice'] }, full: 'Monday', lunch: { main: 'Khichdi', sides: [] } }], range: '1–6 Dec' },
   title: 'Kids plan',
 }
@@ -121,6 +122,17 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     for (const add of screen.getAllByRole('button', { name: /Add plan to cart/ })) {
       expect((add as HTMLButtonElement).disabled).toBe(true)
     }
+  })
+
+  it('enables Add plan to cart only on the last step', () => {
+    renderBuilder()
+    fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
+    const adds = () => screen.getAllByRole('button', { name: /Add plan to cart/ }) as HTMLButtonElement[]
+    expect(adds().every((b) => b.disabled)).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
+    expect(adds().every((b) => b.disabled)).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
+    expect(adds().every((b) => !b.disabled)).toBe(true)
   })
 
   it('totals options per day per person', () => {

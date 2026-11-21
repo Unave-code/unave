@@ -8,6 +8,7 @@ import type { PlanBuilderData } from '@/utilities/planBuilder'
 import { cn } from '@/utilities/ui'
 import { whatsappHref } from '@/utilities/whatsapp'
 
+import { STEPS } from './ui'
 import type { PlanBuilderState } from './usePlanBuilder'
 
 const WHATSAPP_LINK =
@@ -71,7 +72,9 @@ export function CartForm({
   slug: string
   state: PlanBuilderState
 }) {
-  const { choices, people, plan, slot, valid } = state
+  const { choices, people, plan, slot, step, valid } = state
+  // Only on the last step, so every choice has been seen before it goes in the cart.
+  const ready = valid && step === STEPS.length - 1
   return (
     <form action="/api/cart/plan" className={className} method="post">
       <input name="slot" type="hidden" value={slot ?? ''} />
@@ -88,7 +91,8 @@ export function CartForm({
           CTA_VARIANTS.primary,
           'w-full disabled:cursor-not-allowed disabled:opacity-40',
         )}
-        disabled={!valid}
+        disabled={!ready}
+        title={ready ? undefined : `Finish the steps first: the cart opens on ${STEPS[STEPS.length - 1].label}.`}
         type="submit"
       >
         <ShoppingBag aria-hidden className="size-4" strokeWidth={2} /> Add plan to cart
