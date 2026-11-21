@@ -68,4 +68,11 @@ describe('formatPaise', () => {
   it('shows rupees on the site', () => {
     expect(formatPaise(150000)).toContain('1,500')
   })
+
+  it('keeps whole rupees bare and always shows paise as two digits', () => {
+    expect(formatPaise(49900)).toBe('₹499')
+    expect(formatPaise(11790)).toBe('₹117.90')
+    expect(formatPaise(354)).toBe('₹3.54')
+    expect(formatPaise(5)).toBe('₹0.05')
+  })
 })

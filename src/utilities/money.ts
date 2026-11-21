@@ -12,11 +12,12 @@
  */
 export const formatPaise = (paise: number): string => {
   const rupees = paise / 100
+  const digits = Number.isInteger(rupees) ? 0 : 2
 
   return new Intl.NumberFormat('en-IN', {
     currency: 'INR',
-    maximumFractionDigits: Number.isInteger(rupees) ? 0 : 2,
-    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
     style: 'currency',
   }).format(rupees)
 }
