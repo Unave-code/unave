@@ -21,6 +21,21 @@ export const denyDeleteInUse: CollectionBeforeDeleteHook = async ({ id, req: { p
     },
   })
 
+  const plans = await payload.count({
+    collection: 'meal-plans',
+    overrideAccess: true,
+    where: { subcategory: { equals: id } },
+  })
+
+  if (plans.totalDocs > 0) {
+    throw new APIError(
+      `This subcategory is still used by ${plans.totalDocs} meal plan${
+        plans.totalDocs === 1 ? '' : 's'
+      }. Give those meal plans another subcategory first, then delete this one.`,
+      400,
+    )
+  }
+
   if (inUse.totalDocs > 0) {
     throw new APIError(
       `This subcategory is still used by ${inUse.totalDocs} product${

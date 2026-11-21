@@ -1,4 +1,4 @@
-import type { CollectionAfterChangeHook, CollectionConfig, FieldHook, TextFieldSingleValidation, Where } from 'payload'
+import type { CollectionAfterChangeHook, CollectionConfig, FieldHook, PayloadRequest, TextFieldSingleValidation, Where } from 'payload'
 
 import { revalidatePath } from 'next/cache'
 
@@ -6,6 +6,7 @@ import { anyone } from '../../access/anyone'
 import { isStaff } from '../../access/isStaff'
 import { menuWeekField, rupeeField } from './fields'
 import { slugifyTitle } from '../Products/hooks/autoProductSlug'
+import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
 /**
  * The meal plans sold on /meal-subscription, each on its own page at
@@ -94,6 +95,47 @@ export const MealPlans: CollectionConfig = {
               label: 'Audience',
               relationTo: 'audiences',
               admin: { description: 'Who the plan is for, for example Kids. The list page can be filtered by it.' },
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'category',
+                  type: 'select',
+                  label: 'Category',
+                  defaultValue: 'ready-to-eat',
+                  options: PRODUCT_CATEGORY_VALUES.map((value) => ({ label: CATEGORY_LABEL[value], value })),
+                  admin: { width: '50%', description: 'Narrows the subcategories offered beside it.' },
+                },
+                {
+                  name: 'subcategory',
+                  type: 'relationship',
+                  label: 'Subcategory',
+                  relationTo: 'subcategories',
+                  index: true,
+                  admin: {
+                    width: '50%',
+                    description: 'For example Lunch. The meal plans page offers one tile per subcategory a plan uses.',
+                  },
+                  filterOptions: ({ siblingData }) => {
+                    const category = (siblingData as { category?: null | string } | undefined)?.category
+                    return category ? { category: { equals: category } } : true
+                  },
+                  validate: async (value: unknown, { req, siblingData }: { req: PayloadRequest; siblingData: { category?: null | string } }) => {
+                    if (!value) return true
+                    const id = typeof value === 'object' ? (value as { id?: number | string }).id : value
+                    if (typeof id !== 'number' && typeof id !== 'string') return true
+                    const selected = await req.payload
+                      .findByID({ collection: 'subcategories', id, depth: 0, overrideAccess: true })
+                      .catch(() => null)
+                    if (!selected) return 'That subcategory no longer exists. Pick another one.'
+                    if (siblingData?.category && selected.category !== siblingData.category) {
+                      return "Pick a subcategory from the plan's own category."
+                    }
+                    return true
+                  },
+                },
+              ],
             },
             {
               name: 'meals',

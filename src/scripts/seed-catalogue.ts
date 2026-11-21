@@ -53,7 +53,7 @@ const paragraph = (text: string): Product['description'] => ({
 
 const payload = await getPayload({ config })
 const ctx = { disableRevalidate: true }
-/** `--meal-plans` seeds only the audiences and meal plans, leaving products alone. */
+/** `--meal-plans` seeds the audiences, subcategories and meal plans, leaving products alone. */
 const mealPlansOnly = process.argv.includes('--meal-plans')
 const counts = { created: 0, skipped: 0, failed: 0 }
 
@@ -96,7 +96,7 @@ const subcategoryDefs = [
   { slug: 'vegetables', title: 'Vegetables', category: 'fresh-from-produce', image: 'category-nutrition.jpg', alt: 'Fresh produce and ingredients' },
 ] as const
 const subIds: Record<string, number> = {}
-for (const s of mealPlansOnly ? [] : subcategoryDefs) {
+for (const s of subcategoryDefs) {
   const doc =
     (await findBySlug('subcategories', s.slug)) ??
     (await payload.create({
@@ -299,12 +299,13 @@ const kidsMenu = week([
   ['Cheese corn sandwich', 'Cucumber, Pomegranate', '', ''],
 ])
 
-const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, string]; aud: string })[] = [
+const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, string]; aud: string; sub: string })[] = [
   {
     slug: 'everyday-indian',
     title: 'Everyday Indian',
     position: 0,
     aud: 'adults',
+    sub: 'lunch',
     meals: 'any',
     img: ['kitchen.jpg', 'Meals being prepared in the kitchen'],
     description: 'Home-style North and South Indian meals, cooked fresh each day with less oil and no maida.',
@@ -339,6 +340,7 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     title: 'Kids Lunch Box',
     position: 1,
     aud: 'kids',
+    sub: 'lunch',
     meals: 'lunch',
     img: ['category-diet.jpg', 'A small lunch box meal for children'],
     description: 'A school-sized lunch with a fruit portion, mild on spice and delivered before the break.',
@@ -363,6 +365,7 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     title: 'Low-GI Dinner',
     position: 2,
     aud: 'special',
+    sub: 'dinner',
     meals: 'dinner',
     img: ['category-diabetes.jpg', 'A balanced low glycemic meal'],
     description: 'Light, low-glycaemic dinners planned with a nutritionist, for steadier evening sugar levels.',
@@ -374,15 +377,26 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
   },
 ]
 
-for (const { slug, img, aud, ...rest } of plans) {
-  if (await findBySlug('meal-plans', slug)) {
+for (const { slug, img, aud, sub, ...rest } of plans) {
+  const existing = (await findBySlug('meal-plans', slug)) as MealPlan | undefined
+  if (existing) {
+    // Only fills a missing subcategory; anything staff set is left alone.
+    if (!existing.subcategory) {
+      await payload.update({
+        collection: 'meal-plans',
+        id: existing.id,
+        data: { category: 'ready-to-eat', subcategory: subIds[sub] },
+        overrideAccess: true,
+        context: ctx,
+      })
+    }
     counts.skipped++
     continue
   }
   try {
     await payload.create({
       collection: 'meal-plans',
-      data: { ...rest, slug, image: await media(...img), audience: audienceIds[aud] } as MealPlan,
+      data: { ...rest, slug, image: await media(...img), audience: audienceIds[aud], category: 'ready-to-eat', subcategory: subIds[sub] } as MealPlan,
       overrideAccess: true,
       context: ctx,
     })

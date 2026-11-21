@@ -69,6 +69,7 @@ export type PlanBuilderData = {
   optionGroups: PlanOptionGroup[]
   plans: PlanLength[]
   slug: string
+  subcategory: null | { slug: string; title: string }
   thisWeek: null | PlanMenuWeek
   title: string
 }
@@ -169,6 +170,11 @@ export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
       ? { slug: text(doc.audience.slug), title: text(doc.audience.title) }
       : null
 
+  const subcategory =
+    doc.subcategory && typeof doc.subcategory === 'object' && doc.subcategory.slug
+      ? { slug: text(doc.subcategory.slug), title: text(doc.subcategory.title) }
+      : null
+
   return {
     audience,
     description: text(doc.description),
@@ -179,6 +185,7 @@ export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
     optionGroups: readOptionGroups(doc.optionGroups),
     plans,
     slug: doc.slug,
+    subcategory,
     thisWeek: readWeek(doc.thisWeek),
     title: text(doc.title),
   }

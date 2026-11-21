@@ -9,9 +9,9 @@ import { Section } from '@/components/home/Section'
 import { MealPlanCard } from '@/components/Store/MealPlanCard'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
-import type { Footer, Media as MediaDoc } from '@/payload-types'
+import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { EMPTY_MEAL_PLAN_SHELF, mealPlanShelfHref, parseMealPlanShelf, type MealPlanSearchParams } from '@/utilities/mealPlanShelf'
+import type { MealPlanSearchParams } from '@/utilities/mealPlanShelf'
 import { MEAL_PLANS_PATH, normalizeMealPlan } from '@/utilities/planBuilder'
 import { whatsappHref } from '@/utilities/whatsapp'
 
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
 
 /**
  * Every meal plan as a shelf, built like /products (design.md §6.15, §6.19): the
- * green opening band, audience tiles like a category page's subcategories
- * (`?audience=` in the address, "All" clears it), the card grid and an honest
+ * green opening band, subcategory tiles like a category page's
+ * (`?subcategory=` in the address, "All" clears it), the card grid and an honest
  * empty state.
  */
 export default async function MealPlansPage({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }) {
@@ -55,30 +55,30 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
   const whatsapp = footer?.contact?.whatsapp ?? null
 
   const plans = all.docs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
-  const photos = new Map(all.docs.map((doc) => [doc.slug, doc.image && typeof doc.image === 'object' ? doc.image : null]))
 
-  /* One tile per audience some plan is for, in plan order, each showing the
-     photo of its first plan. An audience no plan uses is ignored, so a stale
-     link shows every plan rather than none. */
-  const audienceMap = new Map<string, { image: MediaDoc | null; slug: string; title: string }>()
-  for (const plan of plans) {
-    if (plan.audience?.slug && !audienceMap.has(plan.audience.slug)) {
-      audienceMap.set(plan.audience.slug, { image: photos.get(plan.slug) ?? null, slug: plan.audience.slug, title: plan.audience.title })
-    }
-  }
-  const audiences = [...audienceMap.values()]
-  const asked = parseMealPlanShelf(raw).audience
-  const audience = audiences.some((item) => item.slug === asked) ? asked : null
-  const shown = audience ? plans.filter((plan) => plan.audience?.slug === audience) : plans
+  /* One tile per subcategory some plan uses, in plan order, with the
+     subcategory's own photo, like a category page. A subcategory no plan uses
+     is ignored, so a stale link shows every plan rather than none. */
+  const usedSlugs = [...new Set(plans.flatMap((plan) => (plan.subcategory ? [plan.subcategory.slug] : [])))]
+  const subcategoryDocs = usedSlugs.length
+    ? (await payload.find({ collection: 'subcategories', depth: 1, limit: usedSlugs.length, where: { slug: { in: usedSlugs } } })).docs
+    : []
+  const subcategories = usedSlugs.flatMap((slug) => subcategoryDocs.filter((doc) => doc.slug === slug))
+  const asked = typeof raw.subcategory === 'string' ? raw.subcategory : null
+  const subcategory = subcategories.some((item) => item.slug === asked) ? asked : null
+  const shown = subcategory ? plans.filter((plan) => plan.subcategory?.slug === subcategory) : plans
+  const filterHref = (slug: null | string) =>
+    `${MEAL_PLANS_PATH}${slug ? `?subcategory=${encodeURIComponent(slug)}` : ''}#meal-plans`
   const tiles: CategoryTile[] =
-    audiences.length > 1
+    subcategories.length > 1
       ? [
-          { category: 'ready-to-eat', current: !audience, href: `${MEAL_PLANS_PATH}#meal-plans`, key: 'all', title: 'All' },
-          ...audiences.map((item) => ({
-            current: audience === item.slug,
-            href: `${mealPlanShelfHref(MEAL_PLANS_PATH, { ...EMPTY_MEAL_PLAN_SHELF, audience: item.slug })}#meal-plans`,
-            image: item.image ?? null,
-            key: item.slug,
+          { category: 'ready-to-eat', current: !subcategory, href: filterHref(null), key: 'all', title: 'All' },
+          ...subcategories.map((item) => ({
+            category: item.category,
+            current: subcategory === item.slug,
+            href: filterHref(item.slug),
+            image: item.image && typeof item.image === 'object' ? item.image : null,
+            key: item.id,
             title: item.title,
           })),
         ]
@@ -103,7 +103,7 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
 
       <Section id="meal-plans" tone="white">
         <h2 className="sr-only">Meal plans</h2>
-        <CategoryTiles className="mb-8 px-6 md:mb-10" label="Meal plans by who they are for" noun="meal plans" tiles={tiles} />
+        <CategoryTiles className="mb-8 px-6 md:mb-10" label="Meal plan subcategories" noun="meal plans" tiles={tiles} />
 
         {notice ? (
           <p className="bg-gold-100 border-gold-300 text-ink-900 mt-6 rounded-2xl border px-5 py-4 text-base" role="alert">
@@ -114,7 +114,7 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
         {plans.length > 0 ? (
           <>
             <p className="text-ink-600 text-sm font-semibold">
-              {audience ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
+              {subcategory ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
             </p>
             <ul aria-label="Meal plans" className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {shown.map((plan) => (

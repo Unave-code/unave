@@ -732,6 +732,14 @@ export interface MealPlan {
    */
   audience?: (number | null) | Audience;
   /**
+   * Narrows the subcategories offered beside it.
+   */
+  category?: ('ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce') | null;
+  /**
+   * For example Lunch. The meal plans page offers one tile per subcategory a plan uses.
+   */
+  subcategory?: (number | null) | Subcategory;
+  /**
    * Lunch only suits a lunch-box plan, for example.
    */
   meals: 'any' | 'lunch' | 'dinner';
@@ -1977,6 +1985,8 @@ export interface MealPlansSelect<T extends boolean = true> {
   description?: T;
   image?: T;
   audience?: T;
+  category?: T;
+  subcategory?: T;
   meals?: T;
   lunchTime?: T;
   dinnerTime?: T;
