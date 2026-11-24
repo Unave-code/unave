@@ -142,21 +142,8 @@ export const fetchRazorpayOrder = async (orderId: string): Promise<RazorpayOrder
   }
 }
 
-/** Read a payment back over REST, the honest way to confirm a return. */
-export const fetchRazorpayPayment = async (paymentId: string): Promise<RazorpayPayment> => {
-  const response = await fetch(`${RAZORPAY_API_BASE}/payments/${encodeURIComponent(paymentId)}`, {
-    headers: {
-      Authorization: authHeader(),
-    },
-    method: 'GET',
-  })
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(`razorpay_payment_fetch_failed_${response.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
-  }
-
-  const data = (await response.json()) as Partial<RazorpayPayment>
+const readPayment = (body: unknown): RazorpayPayment => {
+  const data = body as Partial<RazorpayPayment>
 
   if (
     typeof data.id !== 'string' ||
@@ -176,6 +163,50 @@ export const fetchRazorpayPayment = async (paymentId: string): Promise<RazorpayP
     order_id: data.order_id,
     status: data.status,
   }
+}
+
+/** Read a payment back over REST, the honest way to confirm a return. */
+export const fetchRazorpayPayment = async (paymentId: string): Promise<RazorpayPayment> => {
+  const response = await fetch(`${RAZORPAY_API_BASE}/payments/${encodeURIComponent(paymentId)}`, {
+    headers: {
+      Authorization: authHeader(),
+    },
+    method: 'GET',
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`razorpay_payment_fetch_failed_${response.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
+  }
+
+  return readPayment(await response.json())
+}
+
+/**
+ * Capture an authorized payment. Razorpay hands the checkout popup back as soon
+ * as a payment is authorized, and an account without automatic capture leaves
+ * it there, to be refunded after a few days. The caller checks the amount
+ * against the intent first; this only moves money that was already agreed.
+ */
+export const captureRazorpayPayment = async (
+  paymentId: string,
+  amountInPaise: number,
+): Promise<RazorpayPayment> => {
+  const response = await fetch(`${RAZORPAY_API_BASE}/payments/${encodeURIComponent(paymentId)}/capture`, {
+    body: JSON.stringify({ amount: amountInPaise, currency: 'INR' }),
+    headers: {
+      Authorization: authHeader(),
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`razorpay_payment_capture_failed_${response.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
+  }
+
+  return readPayment(await response.json())
 }
 
 const signaturesMatch = (expectedHex: string, provided: string): boolean => {

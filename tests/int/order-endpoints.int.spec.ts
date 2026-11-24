@@ -26,6 +26,7 @@ vi.setConfig({ hookTimeout: 120_000, testTimeout: 60_000 })
  */
 
 const mocks = vi.hoisted(() => ({
+  captureRazorpayPayment: vi.fn(),
   createRazorpayOrder: vi.fn(),
   fetchRazorpayOrder: vi.fn(),
   fetchRazorpayPayment: vi.fn(),
@@ -39,6 +40,7 @@ vi.mock('../../src/utilities/razorpay', async (importOriginal) => {
 
   return {
     ...actual,
+    captureRazorpayPayment: mocks.captureRazorpayPayment,
     createRazorpayOrder: mocks.createRazorpayOrder,
     fetchRazorpayOrder: mocks.fetchRazorpayOrder,
     fetchRazorpayPayment: mocks.fetchRazorpayPayment,
@@ -322,6 +324,7 @@ beforeAll(async () => {
 })
 
 beforeEach(() => {
+  mocks.captureRazorpayPayment.mockReset()
   mocks.createRazorpayOrder.mockReset()
   mocks.fetchRazorpayOrder.mockReset()
   mocks.fetchRazorpayPayment.mockReset()
@@ -781,6 +784,137 @@ describe('POST /api/orders/verify', () => {
 
     const row = await findOrder(body.orderId)
     expect(row!.payment).toMatchObject({ cardLast4: '0153', cardNetwork: 'Visa', cardType: 'debit', method: 'card' })
+  })
+
+  it('captures a payment that is only authorized and writes the order', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+    const gatewayOrderId = `order_${run}_vauth`
+
+    const { total } = await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    const payment = {
+      amount: total,
+      currency: 'INR',
+      id: `pay_${gatewayOrderId}`,
+      order_id: gatewayOrderId,
+    }
+    // Razorpay hands the popup back on authorization; capture comes later, or
+    // never when the account does not capture on its own.
+    mocks.fetchRazorpayPayment.mockResolvedValue({ ...payment, status: 'authorized' })
+    mocks.captureRazorpayPayment.mockResolvedValue({ ...payment, status: 'captured' })
+
+    const response = (await verifyOrderEndpoint.handler(
+      createRequest(
+        {
+          razorpay_order_id: gatewayOrderId,
+          razorpay_payment_id: payment.id,
+          razorpay_signature: 'sig',
+        },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { orderId: number }
+    orderIDs.push(body.orderId)
+
+    expect(mocks.captureRazorpayPayment).toHaveBeenCalledWith(payment.id, total)
+    expect((await findOrder(body.orderId))?.gatewayPaymentId).toBe(payment.id)
+  })
+
+  it('writes the order when the payment was captured while verify tried to capture it', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+    const gatewayOrderId = `order_${run}_vraced`
+
+    const { total } = await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    const payment = {
+      amount: total,
+      currency: 'INR',
+      id: `pay_${gatewayOrderId}`,
+      order_id: gatewayOrderId,
+    }
+    mocks.fetchRazorpayPayment
+      .mockResolvedValueOnce({ ...payment, status: 'authorized' })
+      .mockResolvedValueOnce({ ...payment, status: 'captured' })
+    mocks.captureRazorpayPayment.mockRejectedValue(
+      new Error('razorpay_payment_capture_failed_400: This payment has already been captured'),
+    )
+
+    const response = (await verifyOrderEndpoint.handler(
+      createRequest(
+        {
+          razorpay_order_id: gatewayOrderId,
+          razorpay_payment_id: payment.id,
+          razorpay_signature: 'sig',
+        },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { orderId: number }
+    orderIDs.push(body.orderId)
+  })
+
+  it('never captures an authorized payment for the wrong amount', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+    const gatewayOrderId = `order_${run}_vauthwrong`
+
+    await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    mocks.fetchRazorpayPayment.mockResolvedValue({
+      amount: 999,
+      currency: 'INR',
+      id: `pay_${gatewayOrderId}`,
+      order_id: gatewayOrderId,
+      status: 'authorized',
+    })
+
+    const response = (await verifyOrderEndpoint.handler(
+      createRequest(
+        {
+          razorpay_order_id: gatewayOrderId,
+          razorpay_payment_id: `pay_${gatewayOrderId}`,
+          razorpay_signature: 'sig',
+        },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    )) as Response
+
+    expect(response.status).toBe(400)
+    expect(mocks.captureRazorpayPayment).not.toHaveBeenCalled()
+    expect(await findOrderByGateway(gatewayOrderId)).toBeNull()
+  })
+
+  it('answers the browser without waiting for the order emails', async () => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+    const gatewayOrderId = `order_${run}_vslowmail`
+
+    await stageGatewayOrder([itemFor(product, 0)], customer, gatewayOrderId)
+    // A mail server that never answers.
+    mocks.sendOrderMails.mockReturnValue(new Promise(() => {}))
+
+    const answer = verifyOrderEndpoint.handler(
+      createRequest(
+        {
+          razorpay_order_id: gatewayOrderId,
+          razorpay_payment_id: `pay_${gatewayOrderId}`,
+          razorpay_signature: 'sig',
+        },
+        { cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    ) as Promise<Response>
+    const stuck = new Promise<'stuck'>((resolve) => setTimeout(() => resolve('stuck'), 20_000))
+
+    const response = await Promise.race([answer, stuck])
+
+    expect(response).not.toBe('stuck')
+    expect((response as Response).status).toBe(200)
+    const body = (await (response as Response).json()) as { orderId: number }
+    orderIDs.push(body.orderId)
+    expect(mocks.sendOrderMails).toHaveBeenCalledOnce()
   })
 
   it('refuses a return whose signature does not verify and writes nothing', async () => {

@@ -16,7 +16,9 @@ import { resolveCartLines } from '@/utilities/cartLines'
 import { CUSTOMER_SESSION_COOKIE, readCookie } from '@/utilities/customerSession'
 import { isSameOriginPost } from '@/utilities/formPost'
 import { checkOrderIpLimit, getClientIp } from '@/utilities/rateLimit'
+import { runAfterReply } from '@/utilities/afterReply'
 import {
+  captureRazorpayPayment,
   createRazorpayOrder,
   fetchRazorpayOrder,
   fetchRazorpayPayment,
@@ -325,7 +327,6 @@ export const verifyOrderEndpoint: Endpoint = {
     if (
       razorpayOrder.id !== razorpay_order_id ||
       razorpayOrder.currency !== 'INR' ||
-      payment.status !== 'captured' ||
       payment.order_id !== razorpay_order_id ||
       !Number.isSafeInteger(payment.amount) ||
       payment.amount !== razorpayOrder.amount ||
@@ -341,16 +342,61 @@ export const verifyOrderEndpoint: Endpoint = {
       return json(PAYMENT_UNCONFIRMED, 400)
     }
 
+    // The popup returns as soon as the payment is authorized. Capture can lag
+    // behind, or never come when the account does not capture on its own, so an
+    // authorized payment whose amount matched above is captured here. When the
+    // capture is refused, most often because Razorpay captured it meanwhile,
+    // the payment is read again and judged on what it says now.
+    if (payment.status === 'authorized') {
+      try {
+        payment = await captureRazorpayPayment(payment.id, payment.amount)
+      } catch (error) {
+        req.payload.logger.warn({
+          err: errorMessage(error),
+          msg: 'order_return_capture_failed',
+        })
+
+        try {
+          payment = await fetchRazorpayPayment(razorpay_payment_id)
+        } catch (refetchError) {
+          req.payload.logger.warn({
+            err: errorMessage(refetchError),
+            msg: 'order_return_payment_fetch_failed',
+          })
+          return json(PAYMENT_UNCONFIRMED, 400)
+        }
+      }
+    }
+
+    if (
+      payment.status !== 'captured' ||
+      payment.id !== razorpay_payment_id ||
+      payment.order_id !== razorpay_order_id ||
+      payment.amount !== razorpayOrder.amount
+    ) {
+      req.payload.logger.warn({
+        msg: 'order_return_payment_not_captured',
+        status: payment.status,
+      })
+      return json(PAYMENT_UNCONFIRMED, 400)
+    }
+
     let recorded
 
     try {
-      recorded = await recordPaidOrder(req.payload, {
-        gatewayOrderId: razorpay_order_id,
-        intent: { ...intent, total: payment.amount },
-        payment: payment.details,
-        paymentId: payment.id,
-        signature: razorpay_signature,
-      })
+      // The browser is waiting on this answer to show the order page, so the
+      // emails go once the reply has left.
+      recorded = await recordPaidOrder(
+        req.payload,
+        {
+          gatewayOrderId: razorpay_order_id,
+          intent: { ...intent, total: payment.amount },
+          payment: payment.details,
+          paymentId: payment.id,
+          signature: razorpay_signature,
+        },
+        { deferMail: runAfterReply },
+      )
     } catch (error) {
       req.payload.logger.error({
         err: errorMessage(error),

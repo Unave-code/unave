@@ -1,4 +1,3 @@
-import { after } from 'next/server'
 import { getPayload, type Payload } from 'payload'
 import configPromise from '@payload-config'
 
@@ -8,6 +7,7 @@ import { paymentDetailsFrom } from '@/utilities/razorpayPaymentDetails'
 import { recordPaidOrder } from '@/collections/Orders/confirm'
 import { type PaymentAlert, sendPaymentAlertMail } from '@/collections/Orders/mail'
 import { findCheckoutIntent } from '@/collections/Orders/intent'
+import { runAfterReply } from '@/utilities/afterReply'
 import { errorMessage } from '@/utilities/errorMessage'
 
 /**
@@ -72,19 +72,8 @@ const paymentCaptured = (
   return { orderId: payment.order_id, paymentId: payment.id }
 }
 
-/**
- * Sends the order emails once the reply has gone, so Razorpay hears back
- * within its five second window however slow the mail server is. Outside a
- * Next request (a direct call in a test) there is no response to wait for,
- * so the send simply runs without being awaited.
- */
-const sendAfterReply = (send: () => Promise<void>): void => {
-  try {
-    after(send)
-  } catch {
-    void send()
-  }
-}
+/** Razorpay must hear back within five seconds however slow the mail server is. */
+const sendAfterReply = runAfterReply
 
 const alertAfterReply = (payload: Payload, alert: PaymentAlert): void =>
   sendAfterReply(() => sendPaymentAlertMail(payload, alert))
