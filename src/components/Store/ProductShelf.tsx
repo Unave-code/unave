@@ -1,3 +1,5 @@
+import React from 'react'
+
 import { Cta } from '@/components/Cta'
 import { Pagination } from '@/components/Pagination'
 import { ProductCard } from '@/components/Store/ProductCard'
@@ -42,14 +44,18 @@ export const ProductShelf: React.FC<{
   basePath: string
   /** Set on a category page, where the category is the page and not a filter. */
   category?: ProductCategoryValue
-  /** Skip the empty state, because something else (meal plans) fills the page. */
-  hideEmpty?: boolean
+  /**
+   * Cards that open the grid ahead of the products (a category page's meal
+   * plans), so everything on the shelf sits in the one grid. When there are
+   * any, the shelf is never empty and skips its empty state.
+   */
+  leading?: { key: string; node: React.ReactNode }[]
   result: ShelfResult
   /** Category pages browse by subcategory tiles instead of the filter bar. */
   showControls?: boolean
   state: ShelfState
   whatsapp: null | string
-}> = ({ audiences, basePath, category, hideEmpty = false, result, showControls = true, state, whatsapp }) => {
+}> = ({ audiences, basePath, category, leading = [], result, showControls = true, state, whatsapp }) => {
   const filtered = hasShelfFilters(state, category)
 
   const first = result.totalDocs === 0 ? 0 : (result.page - 1) * SHELF_PER_PAGE + 1
@@ -65,16 +71,23 @@ export const ProductShelf: React.FC<{
           state={state}
         />
       ) : null}
-      {result.docs.length > 0 ? (
+      {result.docs.length > 0 || leading.length > 0 ? (
         <>
-          <p className="text-ink-600 mt-6 text-sm font-semibold">
-            {shelfResultsLine(first, last, result.totalDocs)}
-          </p>
+          {result.docs.length > 0 ? (
+            <p className="text-ink-600 mt-6 text-sm font-semibold">
+              {shelfResultsLine(first, last, result.totalDocs)}
+            </p>
+          ) : null}
 
           <ul
             aria-label="Products"
             className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
           >
+            {leading.map((item) => (
+              <li className="min-w-0" key={item.key}>
+                {item.node}
+              </li>
+            ))}
             {result.docs.map((product) => (
               <li className="min-w-0" key={product.id}>
                 <ProductCard
@@ -86,7 +99,7 @@ export const ProductShelf: React.FC<{
             ))}
           </ul>
         </>
-      ) : hideEmpty ? null : (
+      ) : (
         <div className="border-line mx-auto mt-8 max-w-[52ch] rounded-2xl border p-8 text-center">
           <h3 className="text-h3">{filtered ? SHELF_EMPTY_HEADING : PRODUCTS_EMPTY_HEADING}</h3>
 

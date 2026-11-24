@@ -58,7 +58,7 @@ export const ProductCategoryView: React.FC<{
   const [result, categorySubcategories, mealPlanDocs] = await Promise.all([
     fetchProductShelf(shelfState, category),
     fetchCategorySubcategories(category),
-    // Meal plans live in their own collection; they join the shelf on page one only.
+    // Meal plans live in their own collection; they open the shelf's grid on page one only.
     state.page > 1 ? Promise.resolve([]) : fetchCategoryMealPlans(category, shelfState.subcategory),
   ])
   const mealPlans = mealPlanDocs
@@ -144,23 +144,10 @@ export const ProductCategoryView: React.FC<{
           tiles={tiles}
         />
 
-        {mealPlans.length > 0 ? (
-          <ul
-            aria-label="Meal plans"
-            className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {mealPlans.map((plan) => (
-              <li className="min-w-0" key={plan.slug}>
-                <MealPlanCard plan={plan} />
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
         <ProductShelf
           basePath={basePath}
-          hideEmpty={mealPlans.length > 0}
           category={category}
+          leading={mealPlans.map((plan) => ({ key: `meal-plan-${plan.slug}`, node: <MealPlanCard plan={plan} /> }))}
           result={result}
           showControls={false}
           state={shelfState}
