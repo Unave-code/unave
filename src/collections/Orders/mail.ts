@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import type { Customer, Footer, Order } from '@/payload-types'
+import { loadEmailDesign } from '@/email/design'
 import { renderOrder } from '@/email/templates/render'
 import { sendOrderMail } from '@/email/send'
 import { formatPaise } from '@/utilities/money'
@@ -14,7 +15,8 @@ import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
  * runs, both log under the `order` key, and neither failure can fail the order —
  * the row is the record, the emails are the knock on the shoulder.
  *
- * The copy is admin editable in EmailSettings (the `orderCopy` group). Blank
+ * The copy is admin editable in EmailSettings (the `orderCopy` group), and so
+ * are the header image, extra content and footer (the `design` group). Blank
  * fields fall back to these defaults, so a fresh install mails sensible words
  * before anybody has opened the admin.
  */
@@ -128,7 +130,7 @@ const addressLabel = (order: Order): string => {
 }
 
 export const sendOrderMails = async (payload: Payload, order: Order): Promise<void> => {
-  const copy = await loadOrderMailCopy(payload)
+  const [copy, design] = await Promise.all([loadOrderMailCopy(payload), loadEmailDesign(payload)])
 
   // The line reads "2 × Phulka box · One-time purchase · ₹198": a quantity
   // more than one prefixes the title, and a one-time line names itself instead
@@ -166,6 +168,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
 
   if (customer?.email) {
     const rendered = await renderOrder({
+      design,
       intro: copy.confirmationIntro,
       lines,
       outro: copy.confirmationOutro,
@@ -202,6 +205,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
         note: delivery.note || undefined,
         phone: delivery.phone ?? '',
       },
+      design: { headerImage: design.headerImage },
       intro: copy.kitchenIntro,
       lines,
       paymentId,

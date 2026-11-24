@@ -95,6 +95,15 @@ export const Media: CollectionConfig = {
         width: 1920,
       },
       {
+        /* For emails: Outlook for Windows cannot show WebP, so emails use this
+           PNG instead (src/email/design.ts). Twice the email column's 456px,
+           never enlarged; a palette PNG keeps photos to a reasonable weight. */
+        name: 'email',
+        formatOptions: { format: 'png', options: { compressionLevel: 9, palette: true, quality: 80 } },
+        width: 912,
+        withoutEnlargement: true,
+      },
+      {
         name: 'og',
         formatOptions: WEBP,
         width: 1200,

@@ -44,14 +44,14 @@ export const EmailTestPanel: React.FC = () => {
 
   if (!hasAdminRole(user)) return null
 
-  const sendTest = async (event: React.MouseEvent) => {
+  const sendTest = async (event: React.MouseEvent, kind: 'order' | 'plain') => {
     event.preventDefault()
     setSending(true)
     setResult(null)
 
     try {
       const response = await fetch('/api/email/test', {
-        body: JSON.stringify({ to }),
+        body: JSON.stringify({ kind, to }),
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -82,7 +82,8 @@ export const EmailTestPanel: React.FC = () => {
     <div style={panelStyle}>
       <h3 style={headingStyle}>Send a test email</h3>
       <p style={copyStyle}>
-        Sends a short plain test message to the address you enter. Five sends per hour.
+        Send a short plain message to check mail works, or a sample order confirmation to see the saved images
+        and content in a real inbox. Save your changes first. Five sends per hour.
       </p>
       <TextInput
         label="Send to"
@@ -95,11 +96,20 @@ export const EmailTestPanel: React.FC = () => {
         <Button
           buttonStyle="primary"
           disabled={sending || to.trim().length === 0}
-          onClick={sendTest}
+          onClick={(event) => sendTest(event, 'order')}
           size="medium"
           type="button"
         >
-          {sending ? 'Sending...' : 'Send test'}
+          {sending ? 'Sending...' : 'Send sample order confirmation'}
+        </Button>
+        <Button
+          buttonStyle="secondary"
+          disabled={sending || to.trim().length === 0}
+          onClick={(event) => sendTest(event, 'plain')}
+          size="medium"
+          type="button"
+        >
+          Send plain test
         </Button>
         {result ? <span>{result}</span> : null}
       </div>

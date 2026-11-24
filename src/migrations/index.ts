@@ -46,6 +46,7 @@ import * as migration_20261121_180000_meal_plan_subcategory from './20261121_180
 import * as migration_20261121_200000_category_pages_global from './20261121_200000_category_pages_global';
 import * as migration_20261121_220000_meal_plan_trial_length from './20261121_220000_meal_plan_trial_length'
 import * as migration_20261121_240000_order_payment_details from './20261121_240000_order_payment_details';
+import * as migration_20261124_120000_email_design from './20261124_120000_email_design';
 
 export const migrations = [
   {
@@ -287,5 +288,10 @@ export const migrations = [
     up: migration_20261121_240000_order_payment_details.up,
     down: migration_20261121_240000_order_payment_details.down,
     name: '20261121_240000_order_payment_details',
+  },
+  {
+    up: migration_20261124_120000_email_design.up,
+    down: migration_20261124_120000_email_design.down,
+    name: '20261124_120000_email_design',
   },
 ];

@@ -2,6 +2,7 @@ import type { GlobalAfterReadHook, GlobalConfig } from 'payload'
 
 import { hasAdminRole, isAdmin } from '../../access/isAdmin'
 import { isStaff } from '../../access/isStaff'
+import { emailLexical } from '../../fields/emailLexical'
 
 const mergeDefaults: GlobalAfterReadHook = ({ doc }) => ({
   ...doc,
@@ -17,7 +18,7 @@ export const EmailSettings: GlobalConfig = {
   },
   admin: {
     description:
-      'Sender details for account mail, and the copy for order mail. The sender address and reply address come from the server environment.',
+      'Sender details, the copy for order mail, and the images and extra content customer emails carry. The sender address and reply address come from the server environment.',
     group: 'Settings',
   },
   fields: [
@@ -54,6 +55,48 @@ export const EmailSettings: GlobalConfig = {
           name: 'kitchenIntro',
           label: 'Kitchen notice opening line',
           type: 'textarea',
+        },
+      ],
+    },
+    {
+      name: 'design',
+      type: 'group',
+      label: 'Images and extra content',
+      admin: {
+        description:
+          'Images, formatted text and links for the emails. Images are sent as PNG so every inbox can show them; upload them at least 912px wide so they stay sharp. Use the test panel below to send a sample order confirmation and see the result.',
+      },
+      fields: [
+        {
+          name: 'headerImage',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Header image',
+          filterOptions: { mimeType: { contains: 'image' } },
+          admin: {
+            description:
+              'A logo or banner at the top of every email: the order confirmation, the kitchen notice and the account emails. Shown up to 456px wide. Fill in its alt text in the media library.',
+          },
+        },
+        {
+          name: 'orderContent',
+          type: 'richText',
+          editor: emailLexical,
+          label: 'Extra content in the order confirmation',
+          admin: {
+            description:
+              'Text, images and links shown under the order details in the email the customer gets, for example what happens next or an offer.',
+          },
+        },
+        {
+          name: 'footerContent',
+          type: 'richText',
+          editor: emailLexical,
+          label: 'Footer for customer emails',
+          admin: {
+            description:
+              'Shown at the bottom of the order confirmation and the account emails, for example the phone number or social links.',
+          },
         },
       ],
     },

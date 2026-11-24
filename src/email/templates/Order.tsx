@@ -11,6 +11,9 @@ import {
 } from '@react-email/components'
 import React from 'react'
 
+import type { EmailDesign } from '../design'
+import { EmailFooterContent, EmailHeaderImage, RichContent } from './RichContent'
+
 export type OrderMailVariant = 'confirmation' | 'kitchenNotice'
 
 export type OrderEmailLine = {
@@ -29,6 +32,8 @@ export type OrderEmailDelivery = {
 
 export type OrderEmailProps = {
   delivery?: OrderEmailDelivery
+  /** Staff-chosen images and content (Settings → Email settings). */
+  design?: EmailDesign
   intro: string
   lines: OrderEmailLine[]
   outro?: string
@@ -127,6 +132,7 @@ const rule = {
 
 export const OrderEmail: React.FC<OrderEmailProps> = ({
   delivery,
+  design,
   intro,
   lines,
   outro,
@@ -143,6 +149,7 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
       <Preview>{copy.preview}</Preview>
       <Body style={body}>
         <Container style={container}>
+          <EmailHeaderImage image={design?.headerImage} />
           <Section>
             {recipientName ? <Text style={greeting}>Hi {recipientName},</Text> : null}
             <Heading style={heading}>{copy.heading}</Heading>
@@ -173,11 +180,13 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
             <Text style={small}>{`Payment id: ${paymentId}`}</Text>
 
             {outro ? <Text style={paragraph}>{outro}</Text> : null}
+            {variant === 'confirmation' ? <RichContent state={design?.orderContent} /> : null}
             <Text style={small}>
               {variant === 'confirmation'
                 ? 'This message came from UNAVE about an order placed on our site.'
                 : 'This notice came from the UNAVE website. The order row in the admin is the record.'}
             </Text>
+            {variant === 'confirmation' ? <EmailFooterContent state={design?.footerContent} /> : null}
           </Section>
         </Container>
       </Body>

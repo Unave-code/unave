@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import { sendCustomerAuthMail, renderCustomerAuth } from '@/email'
+import { loadEmailDesign } from '@/email/design'
 import { getServerSideURL } from '@/utilities/getURL'
 
 /**
@@ -23,7 +24,8 @@ type SendArgs = {
 export const sendVerifyEmail = async ({ payload, recipientName, to, token }: SendArgs) => {
   const link = `${getServerSideURL()}/verify-email?token=${encodeURIComponent(token)}`
 
-  const rendered = await renderCustomerAuth({ action: 'verify', link, recipientName })
+  const design = await loadEmailDesign(payload)
+  const rendered = await renderCustomerAuth({ action: 'verify', design, link, recipientName })
 
   return sendCustomerAuthMail(payload, {
     html: rendered.html,
@@ -37,7 +39,8 @@ export const sendVerifyEmail = async ({ payload, recipientName, to, token }: Sen
 export const sendResetEmail = async ({ payload, recipientName, to, token }: SendArgs) => {
   const link = `${getServerSideURL()}/reset-password?token=${encodeURIComponent(token)}`
 
-  const rendered = await renderCustomerAuth({ action: 'reset', link, recipientName })
+  const design = await loadEmailDesign(payload)
+  const rendered = await renderCustomerAuth({ action: 'reset', design, link, recipientName })
 
   return sendCustomerAuthMail(payload, {
     html: rendered.html,

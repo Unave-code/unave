@@ -1,6 +1,7 @@
 import { render } from '@react-email/render'
 import React from 'react'
 
+import type { EmailDesign } from '../design'
 import { CustomerAuthEmail, type CustomerAuthAction } from './CustomerAuth'
 import {
   default as OrderEmail,
@@ -9,6 +10,7 @@ import {
 
 export type RenderCustomerAuthInput = {
   action: CustomerAuthAction
+  design?: EmailDesign
   link: string
   recipientName?: string
 }
@@ -34,10 +36,11 @@ const renderBoth = async (element: React.ReactElement): Promise<RenderedMail> =>
 
 export const renderCustomerAuth = async ({
   action,
+  design,
   link,
   recipientName,
 }: RenderCustomerAuthInput): Promise<RenderedMail> =>
-  renderBoth(<CustomerAuthEmail action={action} link={link} recipientName={recipientName} />)
+  renderBoth(<CustomerAuthEmail action={action} design={design} link={link} recipientName={recipientName} />)
 
 export const renderOrder = async (props: OrderEmailProps): Promise<RenderedMail> =>
   renderBoth(<OrderEmail {...props} />)

@@ -12,10 +12,15 @@ import {
 } from '@react-email/components'
 import React from 'react'
 
+import type { EmailDesign } from '../design'
+import { EmailFooterContent, EmailHeaderImage } from './RichContent'
+
 export type CustomerAuthAction = 'reset' | 'verify'
 
 export type CustomerAuthEmailProps = {
   action: CustomerAuthAction
+  /** Staff-chosen header image and footer (Settings → Email settings). */
+  design?: EmailDesign
   link: string
   recipientName?: string
 }
@@ -111,6 +116,7 @@ const small = {
 
 export const CustomerAuthEmail: React.FC<CustomerAuthEmailProps> = ({
   action,
+  design,
   link,
   recipientName,
 }) => {
@@ -122,6 +128,7 @@ export const CustomerAuthEmail: React.FC<CustomerAuthEmailProps> = ({
       <Preview>{copy.heading}</Preview>
       <Body style={body}>
         <Container style={container}>
+          <EmailHeaderImage image={design?.headerImage} />
           <Section>
             {recipientName ? <Text style={greeting}>Hi {recipientName},</Text> : null}
             <Heading style={heading}>{copy.heading}</Heading>
@@ -132,6 +139,7 @@ export const CustomerAuthEmail: React.FC<CustomerAuthEmailProps> = ({
             <Hr style={rule} />
             <Text style={small}>{copy.note}</Text>
             <Text style={small}>This message came from UNAVE because someone used this address on our site.</Text>
+            <EmailFooterContent state={design?.footerContent} />
           </Section>
         </Container>
       </Body>
