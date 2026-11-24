@@ -15,6 +15,22 @@ export const ORDER_STATUS_LABEL = 'Status'
 export const ORDER_NOT_GIVEN = 'To be set by the kitchen'
 export const ORDER_BACK_TO_ACCOUNT = 'Back to your account'
 export const ORDER_BROWSE_CTA = 'Browse the products'
+export const ORDER_NUMBER_LABEL = 'Order'
+export const ORDER_PAID_ON_LABEL = 'Paid on'
+export const ORDER_PAID_WITH_LABEL = 'Paid with'
+export const ORDER_DELIVERY_HEADING = 'Delivering to'
+export const ORDER_NEXT_HEADING = 'What happens next'
+export const ORDER_NEXT_STEPS: ReadonlyArray<{ body: string; title: string }> = [
+  { body: 'Your payment went through and the order is saved.', title: 'Payment confirmed' },
+  {
+    body: 'The kitchen will message you about when deliveries begin.',
+    title: 'The kitchen gets in touch',
+  },
+  {
+    body: 'Every order you have paid for is listed on your account page.',
+    title: 'Find it in your account',
+  },
+]
 
 export const ACCOUNT_ORDERS_HEADING = 'Your orders'
 export const ACCOUNT_ORDERS_INTRO = 'Every order you have paid for, newest first.'
