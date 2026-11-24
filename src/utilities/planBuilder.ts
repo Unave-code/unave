@@ -9,7 +9,7 @@ import type { MealPlan } from '@/payload-types'
  * A built plan rides the cart cookie like any other line. The product is the
  * meal plan's slug behind a reserved prefix no product slug can take (slugs never
  * hold "@"), and the duration carries the customer's choices as plain identifiers:
- * meals, plan length label, people and the index of the chosen option in each
+ * meals, plan length label and the index of the chosen option in each
  * group. No price is ever on the wire; every amount is worked out here on the
  * server, at the cart, at checkout and at order creation, as product lines are.
  */
@@ -18,8 +18,6 @@ export const MEAL_PLAN_PREFIX = '@meal/'
 /** The line the single plan builder used before meal plans; it now resolves as stale. */
 export const LEGACY_PLAN_LINE = '@plan-builder'
 export const MEAL_PLANS_PATH = '/meal-subscription'
-/** The most people one built plan can feed. */
-export const PLAN_MAX_PEOPLE = 10
 
 export const mealPlanPath = (slug: string): string => `${MEAL_PLANS_PATH}/${slug}`
 export const mealPlanLineProduct = (slug: string): string => `${MEAL_PLAN_PREFIX}${slug}`
@@ -208,29 +206,34 @@ export const fromPrice = (data: PlanBuilderData): null | number => {
 export type PlanSelection = {
   /** The picked choices' indexes in each option group, in group order; any number per group, none included. */
   choices: number[][]
-  people: number
   plan: string
   slot: PlanSlot
 }
 
 /**
- * The cart line's duration value: slot|plan label|people|choices, the choices
- * as groups split by "." and the picked indexes in a group split by "+". An
- * older pick-one line ("0.1") reads as one pick per group, so it still resolves.
+ * The cart line's duration value: slot|plan label|choices, the choices as
+ * groups split by "." and the picked indexes in a group split by "+". An older
+ * pick-one line ("0.1") reads as one pick per group, so it still resolves.
+ *
+ * Lines from before plans dropped the people count carry it as a third field
+ * (slot|plan|people|choices). A one-person line still resolves; a line for more
+ * people resolves as stale rather than quietly charging for one.
  */
 export const encodePlanSelection = (selection: PlanSelection): string =>
-  [selection.slot, selection.plan, String(selection.people), selection.choices.map((group) => group.join('+')).join('.')].join('|')
+  [selection.slot, selection.plan, selection.choices.map((group) => group.join('+')).join('.')].join('|')
 
 export const decodePlanSelection = (value: string): null | PlanSelection => {
   const parts = value.split('|')
-  if (parts.length !== 4) return null
-  const [slot, plan, people, choices] = parts
+  if (parts.length === 4) {
+    if (parts[2] !== '1') return null
+    parts.splice(2, 1)
+  }
+  if (parts.length !== 3) return null
+  const [slot, plan, choices] = parts
   if (!PLAN_SLOTS.includes(slot as PlanSlot)) return null
-  const count = Number(people)
-  if (!Number.isSafeInteger(count) || count < 1) return null
   const groups = choices.split('.').map((group) => (group ? group.split('+').map(Number) : []))
   if (groups.some((group) => group.some((index) => !Number.isSafeInteger(index) || index < 0))) return null
-  return { choices: groups, people: count, plan: plan.trim(), slot: slot as PlanSlot }
+  return { choices: groups, plan: plan.trim(), slot: slot as PlanSlot }
 }
 
 export type PricedPlan = {
@@ -238,21 +241,20 @@ export type PricedPlan = {
   days: number
   /** The plain description the cart, checkout and order show. */
   detail: string
-  /** What the line charges, in paise: every person, every option, the whole plan. */
+  /** What the line charges, in paise: every option, the whole plan. */
   total: number
 }
 
 /**
  * Prices a selection against the live meal plan, or null when
  * anything in it no longer exists (a renamed length, a removed option, a meal
- * choice the plan no longer offers, too many people).
+ * choice the plan no longer offers).
  */
 export const pricePlanSelection = (data: PlanBuilderData, selection: PlanSelection): null | PricedPlan => {
   const plan = data.plans.find((p) => p.label.toLowerCase() === selection.plan.toLowerCase())
   if (!plan) return null
   const price = plan.prices[selection.slot]
   if (price === undefined) return null
-  if (selection.people > PLAN_MAX_PEOPLE) return null
   // A group past the plan's last one may only be empty (an encoding of no groups reads as one empty group).
   if (selection.choices.slice(data.optionGroups.length).some((group) => group.length > 0)) return null
 
@@ -267,17 +269,11 @@ export const pricePlanSelection = (data: PlanBuilderData, selection: PlanSelecti
     }
   }
 
-  const perPerson = price + chosen.reduce((sum, c) => sum + c.extraPerDay, 0) * plan.days
-  const total = perPerson * selection.people
+  const total = price + chosen.reduce((sum, c) => sum + c.extraPerDay, 0) * plan.days
 
   if (!Number.isSafeInteger(total) || total < 1) return null
 
-  const detail = [
-    SLOT_LABEL[selection.slot],
-    plan.label,
-    selection.people + (selection.people === 1 ? ' person' : ' people'),
-    ...chosen.map((c) => c.label),
-  ].join(' · ')
+  const detail = [SLOT_LABEL[selection.slot], plan.label, ...chosen.map((c) => c.label)].join(' · ')
 
   return { days: plan.days, detail, total }
 }

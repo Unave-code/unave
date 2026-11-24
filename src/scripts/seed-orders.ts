@@ -84,7 +84,7 @@ type LineSeed =
   | { slug: string; kind: 'plan'; duration: string }
   | { slug: string; kind: 'combo'; qty?: number }
   /** A plan built on /meal-subscription; `length: 'trial'` picks the plan's trial length. */
-  | { slug: string; kind: 'subscription'; slot: PlanSlot; length: string; people: number; choices: number[][] }
+  | { slug: string; kind: 'subscription'; slot: PlanSlot; length: string; choices: number[][] }
 
 type OrderItem = NonNullable<Order['items']>[number]
 
@@ -102,7 +102,7 @@ const subscriptionLine = async (seed: Extract<LineSeed, { kind: 'subscription' }
     payload.logger.warn(`Meal plan ${seed.slug} has no trial length; run pnpm seed:catalogue. Line skipped.`)
     return null
   }
-  const priced = pricePlanSelection(data, { choices: seed.choices, people: seed.people, plan: length, slot: seed.slot })
+  const priced = pricePlanSelection(data, { choices: seed.choices, plan: length, slot: seed.slot })
   if (!priced) {
     payload.logger.warn(`Meal plan ${seed.slug}: the selection no longer prices. Line skipped.`)
     return null
@@ -230,22 +230,22 @@ const orders: { key: string; paidDaysAgo: number; startsInDays?: number; note?: 
     startsInDays: 1,
     note: 'Leave the box with the security desk.',
     lines: [
-      // Lunch and dinner, two weeks, two people, rice and detox juice.
-      { slug: 'everyday-indian', kind: 'subscription', slot: 'both', length: '2 weeks', people: 2, choices: [[1], [2]] },
+      // Lunch and dinner, two weeks, rice and detox juice.
+      { slug: 'everyday-indian', kind: 'subscription', slot: 'both', length: '2 weeks', choices: [[1], [2]] },
       { slug: 'dal-khichdi-dinner', kind: 'one-time' },
     ],
   },
   {
     key: 'seed_7',
     paidDaysAgo: 1,
-    lines: [{ slug: 'kids-lunch-box', kind: 'subscription', slot: 'lunch', length: '1 month', people: 1, choices: [[1]] }],
+    lines: [{ slug: 'kids-lunch-box', kind: 'subscription', slot: 'lunch', length: '1 month', choices: [[1]] }],
   },
   {
     key: 'seed_8',
     paidDaysAgo: 0,
     lines: [
-      // The 3-day trial: lunch, one person, roti and normal juice.
-      { slug: 'everyday-indian', kind: 'subscription', slot: 'lunch', length: 'trial', people: 1, choices: [[0], [1]] },
+      // The 3-day trial: lunch, roti and normal juice.
+      { slug: 'everyday-indian', kind: 'subscription', slot: 'lunch', length: 'trial', choices: [[0], [1]] },
     ],
   },
   {
@@ -254,8 +254,8 @@ const orders: { key: string; paidDaysAgo: number; startsInDays?: number; note?: 
     startsInDays: 3,
     note: 'No onion or garlic, please.',
     lines: [
-      // Every group used: quinoa, medium spice, two protein add-ons, two drinks and sides; lunch and dinner for two.
-      { slug: 'high-protein-meals', kind: 'subscription', slot: 'both', length: '1 week', people: 2, choices: [[2], [1], [0, 1], [0, 2]] },
+      // Every group used: quinoa, medium spice, two protein add-ons, two drinks and sides; lunch and dinner.
+      { slug: 'high-protein-meals', kind: 'subscription', slot: 'both', length: '1 week', choices: [[2], [1], [0, 1], [0, 2]] },
     ],
   },
   {
@@ -263,8 +263,8 @@ const orders: { key: string; paidDaysAgo: number; startsInDays?: number; note?: 
     paidDaysAgo: 0,
     lines: [
       // A trial with options and one add-on, sitting beside a plain subscription with none.
-      { slug: 'high-protein-meals', kind: 'subscription', slot: 'dinner', length: 'trial', people: 1, choices: [[1], [0], [2], []] },
-      { slug: 'low-gi-dinner', kind: 'subscription', slot: 'dinner', length: '2 weeks', people: 1, choices: [] },
+      { slug: 'high-protein-meals', kind: 'subscription', slot: 'dinner', length: 'trial', choices: [[1], [0], [2], []] },
+      { slug: 'low-gi-dinner', kind: 'subscription', slot: 'dinner', length: '2 weeks', choices: [] },
     ],
   },
 ]

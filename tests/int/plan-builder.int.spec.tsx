@@ -155,19 +155,18 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     expect(screen.getByText(/Your 3 trial days/)).toBeTruthy()
   })
 
-  it('totals options per day per person', () => {
+  it('totals options per day', () => {
     renderBuilder()
     fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
     fireEvent.click(screen.getByRole('checkbox', { name: /Roti/ }))
     fireEvent.click(screen.getByRole('checkbox', { name: /^B/ }))
     fireEvent.click(screen.getByRole('checkbox', { name: /^C/ }))
-    expect(screen.getAllByText(formatPaise(300000 * 2 + (2000 + 500 + 900) * 6 * 2)).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(formatPaise(300000 + (2000 + 500 + 900) * 6)).length).toBeGreaterThan(0)
     // A second click takes an add-on off again.
     fireEvent.click(screen.getByRole('checkbox', { name: /^B/ }))
-    expect(screen.getAllByText(formatPaise(300000 * 2 + (2000 + 900) * 6 * 2)).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(formatPaise(300000 + (2000 + 900) * 6)).length).toBeGreaterThan(0)
   })
 
   it('says when there are no options', () => {
@@ -188,7 +187,6 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
   it('posts the same cart form', () => {
     const { container } = renderBuilder()
     fireEvent.click(screen.getByRole('radio', { name: /Week/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'One more person' }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Menu/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next: Options/ }))
     fireEvent.click(screen.getByRole('checkbox', { name: /Rice/ }))
@@ -197,7 +195,7 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     const value = (name: string) => (form.querySelector(`input[name="${name}"]`) as HTMLInputElement).value
     expect(value('slot')).toBe('both')
     expect(value('plan')).toBe('Week')
-    expect(value('people')).toBe('2')
+    expect(form.querySelector('input[name="people"]')).toBeNull()
     expect(value('mealPlan')).toBe('kids')
     const values = (name: string) => [...form.querySelectorAll(`input[name="${name}"]`)].map((i) => (i as HTMLInputElement).value)
     expect(values('choice-0')).toEqual(['0', '1'])

@@ -12,8 +12,8 @@ import {
 
 /**
  * How the admin order page reads each stored line. An order keeps only a
- * snapshot: a built subscription folds its meal, length, people and every pick
- * into one label, so these pin how that label is taken apart again, and how a
+ * snapshot: a built subscription folds its meal, length and every pick into
+ * one label (older orders also carry a people count), so these pin how that label is taken apart again, and how a
  * line falls back when the meal plan it came from has changed since.
  */
 
@@ -24,7 +24,7 @@ const sub: OrderItemLike = {
   qty: 1,
   unitPrice: 736800,
   durationLabel:
-    'Lunch and dinner · 1 week · 2 people · Quinoa · Medium · Extra paneer · Boiled eggs · Buttermilk · Fruit bowl',
+    'Lunch and dinner · 1 week · Quinoa · Medium · Extra paneer · Boiled eggs · Buttermilk · Fruit bowl',
 }
 
 const lookup: PlanLookup = {
@@ -47,7 +47,7 @@ describe('order lines', () => {
       meal: 'Lunch and dinner',
       length: '1 week',
       days: 6,
-      people: '2 people',
+      people: null,
       trial: false,
       lineTotal: 736800,
       perDay: 122800,
@@ -65,12 +65,18 @@ describe('order lines', () => {
       ...sub,
       days: 3,
       unitPrice: 83700,
-      durationLabel: 'Dinner · 3-day trial · 1 person · Brown rice · Mild · Sprouts bowl',
+      durationLabel: 'Dinner · 3-day trial · Brown rice · Mild · Sprouts bowl',
     }
 
     expect(describeOrderLine(trial, lookup)).toMatchObject({ kind: 'subscription', trial: true })
     expect(describeOrderLine(trial)).toMatchObject({ kind: 'subscription', trial: true })
     expect(describeOrderLine(sub)).toMatchObject({ kind: 'subscription', trial: false })
+  })
+
+  it('still reads the people count on an older order', () => {
+    const older: OrderItemLike = { ...sub, durationLabel: 'Lunch and dinner · 1 week · 2 people · Quinoa · Medium' }
+
+    expect(describeOrderLine(older, lookup)).toMatchObject({ people: '2 people', picks: ['Quinoa', 'Medium'] })
   })
 
   it('reads a subscription with no picks', () => {
@@ -79,11 +85,11 @@ describe('order lines', () => {
       productTitle: 'Meal plan: Low-GI Dinner',
       days: 12,
       unitPrice: 298800,
-      durationLabel: 'Dinner · 2 weeks · 1 person',
+      durationLabel: 'Dinner · 2 weeks',
     }
     const line = describeOrderLine(plain, { groups: [], trialLengths: [] })
 
-    expect(line).toMatchObject({ kind: 'subscription', picks: [], groups: [], people: '1 person' })
+    expect(line).toMatchObject({ kind: 'subscription', picks: [], groups: [], people: null })
   })
 
   it('falls back to a plain list when a pick no longer matches', () => {

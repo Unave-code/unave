@@ -166,7 +166,7 @@ export const resolveCartLines = async ({
       const plan = planSlug ? (mealPlans.get(planSlug) ?? null) : null
       const selection = decodePlanSelection(line.duration)
       const priced = plan && selection ? pricePlanSelection(plan, selection) : null
-      // A plan line is the plan: its people are in the price, so it is always one.
+      // A plan line is the plan, so it is always one.
       const qty = 1
 
       return {

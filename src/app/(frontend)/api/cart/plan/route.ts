@@ -18,8 +18,8 @@ import {
 /**
  * Adding a built meal plan to the cart (/meal-subscription/<slug>).
  *
- * A plain form post: the meal plan, meals, plan length, people and one choice
- * per option group. Every choice is checked against the meal plan before the identifiers go into the cookie. A cart can hold
+ * A plain form post: the meal plan, meals, plan length and the picked
+ * add-ons in each option group. Every choice is checked against the meal plan before the identifiers go into the cookie. A cart can hold
  * several built plans, of the same meal plan or different ones; building the
  * exact same plan again keeps the one line. No price travels: the cart, checkout
  * and order endpoint price each line again on the server.
@@ -49,7 +49,6 @@ export async function POST(request: Request): Promise<Response> {
         .slice(0, 20)
         .map((v) => Number.parseInt(String(v), 10)),
     ),
-    people: Number.parseInt(String(form.get('people') ?? '1'), 10),
     plan: String(form.get('plan') ?? '').trim().slice(0, 40),
     slot,
   }

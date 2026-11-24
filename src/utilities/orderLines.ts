@@ -10,8 +10,10 @@ import { relationId } from './relationId'
  *
  * An order keeps a snapshot, never a live product. A built meal subscription
  * has no product record at all: its title is "Meal plan: <title>" and its label
- * folds the meal, the length, the people and every pick into one string,
- * "meal · length · people · pick · pick…", written by `pricePlanSelection`. This
+ * folds the meal, the length and every pick into one string,
+ * "meal · length · pick · pick…", written by `pricePlanSelection`. Orders from
+ * before plans dropped the people count carry it third ("2 people"); it is
+ * read back as `people` so those orders still show who they fed. This
  * module takes that label apart again and, given the meal plan as it stands
  * now, puts each pick back under the option group it came from. When the plan
  * has changed since the order, the picks stay a plain list rather than being
@@ -39,7 +41,8 @@ export type OrderLineView =
       meal: string
       length: string
       days: number
-      people: string
+      /** Only on orders placed before plans dropped the people count. */
+      people: null | string
       trial: boolean
       groups: null | PickGroup[]
       picks: string[]
@@ -51,6 +54,8 @@ export type OrderLineView =
 export const MEAL_PLAN_TITLE_PREFIX = 'Meal plan: '
 
 const SEPARATOR = ' · '
+/** "1 person", "2 people": the people count older order labels carry third. */
+const LEGACY_PEOPLE = /^\d+ (person|people)$/
 
 /** The meal plan a built subscription line names, or null for any other line. */
 export function mealPlanTitle(productTitle: null | string | undefined): null | string {
@@ -60,14 +65,15 @@ export function mealPlanTitle(productTitle: null | string | undefined): null | s
 
 export function parseSubscriptionLabel(
   label: string,
-): null | { meal: string; length: string; people: string; picks: string[] } {
+): null | { meal: string; length: string; people: null | string; picks: string[] } {
   const parts = label
     .split(SEPARATOR)
     .map((part) => part.trim())
     .filter(Boolean)
-  if (parts.length < 3) return null
-  const [meal, length, people, ...picks] = parts
-  return { meal, length, people, picks }
+  if (parts.length < 2) return null
+  const [meal, length, ...rest] = parts
+  const people = rest[0] && LEGACY_PEOPLE.test(rest[0]) ? rest.shift()! : null
+  return { meal, length, people, picks: rest }
 }
 
 /**

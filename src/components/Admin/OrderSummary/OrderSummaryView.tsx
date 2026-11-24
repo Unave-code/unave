@@ -76,7 +76,7 @@ const LineBody: React.FC<{ line: OrderLineView }> = ({ line }) => {
         <dl className="order-summary__rows">
           <Row label="Meal">{line.meal}</Row>
           <Row label="Length">{`${line.length} · ${daysLabel(line.days)}`}</Row>
-          <Row label="People">{line.people}</Row>
+          {line.people ? <Row label="People">{line.people}</Row> : null}
           {line.picks.length === 0 ? null : line.groups ? (
             line.groups.map((group) => (
               <Row key={group.title} label={group.title}>

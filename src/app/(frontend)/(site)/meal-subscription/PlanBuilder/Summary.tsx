@@ -16,7 +16,7 @@ const WHATSAPP_LINK =
 
 /** The chosen plan line by line, each with a link back to the step that sets it, then its price lines. */
 export function PlanSummary({ onEdit, state }: { onEdit: (step: number) => void; state: PlanBuilderState }) {
-  const { chosen, people, plan, planPrice, planRows } = state
+  const { chosen, plan, planPrice, planRows } = state
   return (
     <>
       <dl className="flex flex-col text-sm">
@@ -37,21 +37,18 @@ export function PlanSummary({ onEdit, state }: { onEdit: (step: number) => void;
       </dl>
       <dl className="border-line mt-4 flex flex-col gap-3 border-t pt-4 text-sm">
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-ink-600">
-            {plan?.label ?? 'Plan'}
-            {people > 1 ? ` × ${people}` : ''}
-          </dt>
-          <dd className="text-ink-900 font-semibold tabular-nums">{formatPaise(planPrice * people)}</dd>
+          <dt className="text-ink-600">{plan?.label ?? 'Plan'}</dt>
+          <dd className="text-ink-900 font-semibold tabular-nums">{formatPaise(planPrice)}</dd>
         </div>
         {chosen
           .filter((c) => c.extraPerDay > 0)
           .map((c) => (
             <div className="flex items-center justify-between gap-4" key={c.label}>
               <dt className="text-ink-600">
-                {c.label} × {(plan?.days ?? 0) * people}
+                {c.label} × {plan?.days ?? 0}
               </dt>
               <dd className="text-ink-900 font-semibold tabular-nums">
-                {formatPaise(c.extraPerDay * (plan?.days ?? 0) * people)}
+                {formatPaise(c.extraPerDay * (plan?.days ?? 0))}
               </dd>
             </div>
           ))}
@@ -72,14 +69,13 @@ export function CartForm({
   slug: string
   state: PlanBuilderState
 }) {
-  const { choices, people, plan, slot, step, valid } = state
+  const { choices, plan, slot, step, valid } = state
   // Only on the last step, so every choice has been seen before it goes in the cart.
   const ready = valid && step === STEPS.length - 1
   return (
     <form action="/api/cart/plan" className={className} method="post">
       <input name="slot" type="hidden" value={slot ?? ''} />
       <input name="plan" type="hidden" value={plan?.label ?? ''} />
-      <input name="people" type="hidden" value={people} />
       <input name="mealPlan" type="hidden" value={slug} />
       {choices.flatMap((group, i) =>
         group.map((c) => <input key={`${i}-${c}`} name={`choice-${i}`} type="hidden" value={c} />),

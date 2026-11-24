@@ -1,20 +1,14 @@
-import { Minus, Plus } from 'lucide-react'
 import React from 'react'
 
 import { formatPaise } from '@/utilities/money'
 import type { PlanBuilderData } from '@/utilities/planBuilder'
-import { PLAN_MAX_PEOPLE } from '@/utilities/planBuilder'
 import { cn } from '@/utilities/ui'
 
 import { ChoiceCard, FieldLabel, MEAL_ICON, MEAL_LABEL } from './ui'
 import type { PlanBuilderState } from './usePlanBuilder'
 
-/** The shop quantity stepper's buttons (`QuantityStepper`). */
-const STEP_BUTTON =
-  'flex size-11 shrink-0 items-center justify-center text-green-700 transition-colors hover:bg-green-50 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none disabled:opacity-40 disabled:hover:bg-transparent motion-reduce:transition-none'
-
 export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBuilderState }) {
-  const { meals, offered, people, planLabel, setPeople, setPlanLabel, slot, times, toggleMeal } = state
+  const { meals, offered, planLabel, setPlanLabel, slot, times, toggleMeal } = state
   return (
     <div className="space-y-8">
       <div aria-labelledby="lbl-meals" role="group">
@@ -64,34 +58,6 @@ export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBu
         </div>
       </div>
 
-      <div>
-        <FieldLabel hint="Each person gets their own portion." id="lbl-people">
-          How many people?
-        </FieldLabel>
-        <div aria-labelledby="lbl-people" className="border-line rounded-pill inline-flex items-center overflow-hidden border-2 bg-white" role="group">
-          <button
-            aria-label="One fewer person"
-            className={STEP_BUTTON}
-            disabled={people <= 1}
-            onClick={() => setPeople((p) => p - 1)}
-            type="button"
-          >
-            <Minus aria-hidden className="size-4" strokeWidth={2.5} />
-          </button>
-          <span aria-live="polite" className="text-ink-900 w-10 text-center font-bold tabular-nums">
-            {people}
-          </span>
-          <button
-            aria-label="One more person"
-            className={STEP_BUTTON}
-            disabled={people >= PLAN_MAX_PEOPLE}
-            onClick={() => setPeople((p) => p + 1)}
-            type="button"
-          >
-            <Plus aria-hidden className="size-4" strokeWidth={2.5} />
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

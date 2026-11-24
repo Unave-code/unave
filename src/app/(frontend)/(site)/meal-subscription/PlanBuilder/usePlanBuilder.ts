@@ -15,7 +15,6 @@ export function usePlanBuilder(data: PlanBuilderData) {
     lunch: data.meals !== 'dinner',
   })
   const [planLabel, setPlanLabel] = useState(data.plans[Math.min(1, data.plans.length - 1)]?.label ?? '')
-  const [people, setPeople] = useState(1)
   // Add-ons: any number per group, none picked to start.
   const [choices, setChoices] = useState<number[][]>(data.optionGroups.map(() => []))
 
@@ -27,8 +26,8 @@ export function usePlanBuilder(data: PlanBuilderData) {
   const planPrice = slot && plan ? (plan.prices[slot] ?? 0) : 0
   const valid = Boolean(slot && plan && planPrice > 0)
   const extraPerDay = chosen.reduce((sum, c) => sum + c.extraPerDay, 0)
-  const extrasTotal = plan ? extraPerDay * plan.days * people : 0
-  const total = planPrice * people + extrasTotal
+  const extrasTotal = plan ? extraPerDay * plan.days : 0
+  const total = planPrice + extrasTotal
 
   const go = (n: number) => setStep(Math.max(0, Math.min(STEPS.length - 1, n)))
   const toggleMeal = (m: Meal) => setMeals((c) => ({ ...c, [m]: !c[m] }))
@@ -41,14 +40,13 @@ export function usePlanBuilder(data: PlanBuilderData) {
 
   const message = [
     `Hi UNAVE, I have a question about the ${data.title} meal plan:`,
-    `• ${slot ? SLOT_LABEL[slot] : 'No meals picked'}, ${plan?.label ?? ''}, ${people} ${people > 1 ? 'people' : 'person'}`,
+    `• ${slot ? SLOT_LABEL[slot] : 'No meals picked'}, ${plan?.label ?? ''}`,
     ...picked.flatMap((list, i) => (list.length ? [`• ${data.optionGroups[i].title}: ${list.map((c) => c.label).join(', ')}`] : [])),
   ].join('\n')
 
   const planRows = [
     { label: 'Meals', to: 0, value: slot ? SLOT_LABEL[slot] : 'None picked' },
     { label: 'Plan', to: 0, value: plan ? `${plan.label} · ${plan.days} days` : '—' },
-    { label: 'People', to: 0, value: String(people) },
     ...picked.map((list, i) => ({
       label: data.optionGroups[i].title,
       to: 2,
@@ -64,12 +62,10 @@ export function usePlanBuilder(data: PlanBuilderData) {
     meals,
     message,
     offered,
-    people,
     plan,
     planLabel,
     planPrice,
     planRows,
-    setPeople,
     setPlanLabel,
     slot,
     step,
