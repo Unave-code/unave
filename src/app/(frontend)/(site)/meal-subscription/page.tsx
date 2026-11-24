@@ -28,9 +28,7 @@ const COPY = {
   intro: 'Choose a meal plan, see what we are cooking this week, pick your options, then pay securely.',
   browse: 'Browse the meal plans',
   family: 'Feeding a family? Add more than one plan to your cart and pay for them together.',
-  audienceLabel: 'Who it is for',
-  subcategoryLabel: 'Kind of plan',
-  noMatch: 'No meal plan matches both choices.',
+  noMatch: 'No meal plan is for that audience yet.',
   showAll: 'Show all meal plans',
   otherShelves: 'Not quite what you need? The other shelves:',
   finalHeading: 'Ready when you are',
@@ -62,10 +60,9 @@ export const metadata: Metadata = {
 
 /**
  * Every meal plan as a shelf, built like a category page (design.md §6.15,
- * §6.19): the green opening band, then on the tint band two rows of tiles, who
- * the plan is for (`?audience=`) and its subcategory (`?subcategory=`), each
- * with "All" to clear it and each keeping the other choice, then the card grid,
- * the other shelves and the closing band. A slug no plan uses is ignored, so a
+ * §6.19): the green opening band, then on the tint band one row of tiles for
+ * who the plan is for (`?audience=`, "All" clears it), the card grid, the
+ * other shelves and the closing band. An audience no plan uses is ignored, so a
  * stale link shows every plan rather than none.
  */
 export default async function MealPlansPage({ searchParams }: { searchParams: Promise<MealPlanSearchParams> }) {
@@ -82,66 +79,33 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
 
   const plans = all.docs.map((doc) => normalizeMealPlan(doc)).filter((plan) => plan.plans.length > 0)
 
-  /* One tile per subcategory and per audience some plan uses, in plan order. */
-  const usedSlugs = [...new Set(plans.flatMap((plan) => (plan.subcategory ? [plan.subcategory.slug] : [])))]
-  const subcategoryDocs = usedSlugs.length
-    ? (await payload.find({ collection: 'subcategories', depth: 1, limit: usedSlugs.length, where: { slug: { in: usedSlugs } } })).docs
-    : []
-  const subcategories = usedSlugs.flatMap((slug) => subcategoryDocs.filter((doc) => doc.slug === slug))
+  /* One tile per audience some plan uses, in plan order. */
   const audiences = [
     ...new Map(
       plans.flatMap((plan) => (plan.audience?.slug ? [[plan.audience.slug, plan.audience] as const] : [])),
     ).values(),
   ]
 
-  const askedSubcategory = typeof raw.subcategory === 'string' ? raw.subcategory : null
-  const subcategory = subcategories.some((item) => item.slug === askedSubcategory) ? askedSubcategory : null
-  const askedAudience = parseMealPlanShelf(raw).audience
-  const audience = audiences.some((item) => item.slug === askedAudience) ? askedAudience : null
+  const asked = parseMealPlanShelf(raw).audience
+  const audience = audiences.some((item) => item.slug === asked) ? asked : null
+  const shown = audience ? plans.filter((plan) => plan.audience?.slug === audience) : plans
 
-  const shown = plans.filter(
-    (plan) =>
-      (!subcategory || plan.subcategory?.slug === subcategory) &&
-      (!audience || plan.audience?.slug === audience),
-  )
-  const filtered = Boolean(subcategory || audience)
-
-  const filterHref = (next: { audience: null | string; subcategory: null | string }) => {
-    const query = new URLSearchParams()
-    if (next.audience) query.set('audience', next.audience)
-    if (next.subcategory) query.set('subcategory', next.subcategory)
-    const search = query.toString()
-    return `${MEAL_PLANS_PATH}${search ? `?${search}` : ''}#meal-plans`
-  }
+  const filterHref = (slug: null | string) =>
+    `${MEAL_PLANS_PATH}${slug ? `?audience=${encodeURIComponent(slug)}` : ''}#meal-plans`
 
   const audienceTiles: CategoryTile[] =
     audiences.length > 0
       ? [
-          { current: !audience, href: filterHref({ audience: null, subcategory }), icon: Users, key: 'all', title: 'All' },
+          { current: !audience, href: filterHref(null), icon: Users, key: 'all', title: 'All' },
           ...audiences.map((item) => ({
             current: audience === item.slug,
-            href: filterHref({ audience: item.slug, subcategory }),
+            href: filterHref(item.slug),
             icon: AUDIENCE_ICONS[item.slug] ?? Users,
             key: item.slug,
             title: item.title,
           })),
         ]
       : []
-  const subcategoryTiles: CategoryTile[] =
-    subcategories.length > 0
-      ? [
-          { category: 'ready-to-eat', current: !subcategory, href: filterHref({ audience, subcategory: null }), key: 'all', title: 'All' },
-          ...subcategories.map((item) => ({
-            category: item.category,
-            current: subcategory === item.slug,
-            href: filterHref({ audience, subcategory: item.slug }),
-            image: item.image && typeof item.image === 'object' ? item.image : null,
-            key: item.id,
-            title: item.title,
-          })),
-        ]
-      : []
-  const bothRows = audienceTiles.length > 0 && subcategoryTiles.length > 0
 
   return (
     <main>
@@ -168,23 +132,12 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
       <Section id="meal-plans" tone="tint">
         <h2 className="sr-only">Meal plans</h2>
 
-        {audienceTiles.length > 0 ? (
-          <div className="mb-8 md:mb-10">
-            {bothRows ? (
-              <p className="mb-3 text-center text-sm font-bold text-green-900">{COPY.audienceLabel}</p>
-            ) : null}
-            <CategoryTiles className="px-6" label="Who the meal plans are for" noun="meal plans" tiles={audienceTiles} />
-          </div>
-        ) : null}
-
-        {subcategoryTiles.length > 0 ? (
-          <div className="mb-8 md:mb-10">
-            {bothRows ? (
-              <p className="mb-3 text-center text-sm font-bold text-green-900">{COPY.subcategoryLabel}</p>
-            ) : null}
-            <CategoryTiles className="px-6" label="Meal plan subcategories" noun="meal plans" tiles={subcategoryTiles} />
-          </div>
-        ) : null}
+        <CategoryTiles
+          className="mb-8 px-6 md:mb-10"
+          label="Who the meal plans are for"
+          noun="meal plans"
+          tiles={audienceTiles}
+        />
 
         {notice ? (
           <p className="bg-gold-100 border-gold-300 text-ink-900 mt-6 rounded-2xl border px-5 py-4 text-base" role="alert">
@@ -195,7 +148,7 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
         {plans.length > 0 ? (
           <>
             <p className="text-ink-600 text-sm font-semibold">
-              {filtered ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
+              {audience ? `Showing ${shown.length} of ${plans.length} meal plans` : `${plans.length} meal ${plans.length === 1 ? 'plan' : 'plans'}`}
             </p>
             {shown.length > 0 ? (
               <ul aria-label="Meal plans" className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -209,7 +162,7 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
               <div className="bg-card mx-auto mt-6 max-w-[52ch] rounded-2xl p-8 text-center shadow-sm">
                 <p className="text-body text-ink-900 font-semibold">{COPY.noMatch}</p>
                 <div className="mt-5 flex justify-center">
-                  <Cta href={filterHref({ audience: null, subcategory: null })} variant="secondary">
+                  <Cta href={filterHref(null)} variant="secondary">
                     {COPY.showAll}
                   </Cta>
                 </div>
