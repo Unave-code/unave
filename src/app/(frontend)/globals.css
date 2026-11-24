@@ -570,8 +570,7 @@ a {
 }
 
 /* Section titles carry a short gold brush swash: a tapered, slightly curved
-   stroke with a dry-brush streak under it, the same hand as the product
-   benefits' brush strokes. It aligns with the title, or centers when the
+   stroke with a dry-brush streak under it. It aligns with the title, or centers when the
    heading is centered (design.md §4). Drawn as a mask so one shape takes any
    colour. */
 main section h2.text-h2 {
