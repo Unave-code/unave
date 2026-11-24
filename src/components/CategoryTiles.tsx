@@ -22,6 +22,8 @@ export interface CategoryTile {
   /** Which shelf's icon to show when there is no photo. */
   category?: ProductCategoryValue
   href: null | string
+  /** An icon of the tile's own, for tiles that are not a food shelf (audiences). */
+  icon?: LucideIcon
   image?: MediaDoc | null
   key: number | string
   title: string
@@ -52,7 +54,8 @@ export const CategoryTiles: React.FC<{
     >
       {tiles.map((item) => {
         const image = item.image?.url ? item.image : null
-        const { Icon } = CATEGORY_LOOK[item.category ?? 'fallback'] ?? CATEGORY_LOOK.fallback
+        const Icon =
+          item.icon ?? (CATEGORY_LOOK[item.category ?? 'fallback'] ?? CATEGORY_LOOK.fallback).Icon
         const tile = (
           <>
             <span
