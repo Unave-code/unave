@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
 import { Section } from '@/components/home/Section'
@@ -120,6 +121,15 @@ export const ProductCategoryView: React.FC<{
         )}
 
         <div className="relative max-w-[46rem]">
+          <Breadcrumbs
+            className="mb-4"
+            items={[
+              { href: '/', label: 'Home' },
+              { href: '/products', label: 'Products' },
+              { label: CATEGORY_LABEL[category] },
+            ]}
+            tone="onDark"
+          />
           <p className="text-eyebrow text-gold-400 uppercase">{copy.eyebrow}</p>
 
           <h1 className="text-display mt-4 text-balance">

@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import React from 'react'
 
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { StorePageHeader } from '@/components/Store/StorePage'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { PlanBuilderData } from '@/utilities/planBuilder'
@@ -14,22 +14,12 @@ import { focusRing } from './ui'
 export function PlanHeader({ data }: { data: PlanBuilderData }) {
   return (
     <>
-      <nav aria-label="Breadcrumb">
-        <ol className="text-caption text-ink-600 flex flex-wrap items-center gap-2">
-          <li>
-            <Link
-              className="inline-flex min-h-11 items-center font-bold underline-offset-4 hover:text-green-700 hover:underline"
-              href={MEAL_PLANS_PATH}
-            >
-              Meal plans
-            </Link>
-          </li>
-          <li aria-hidden="true">›</li>
-          <li aria-current="page" className="text-ink-900 max-w-[28ch] truncate">
-            {data.title}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { href: MEAL_PLANS_PATH, label: 'Meal subscription' },
+          { label: data.title },
+        ]}
+      />
       <StorePageHeader
         heading={`Build your ${data.title}`}
         intro={data.description || 'Choose your meals, see this week’s menu and pick your options.'}

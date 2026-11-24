@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { Section } from '@/components/home/Section'
 import type { Product } from '@/payload-types'
 import { audienceTitle } from '@/utilities/audiences'
@@ -169,35 +170,15 @@ export const ProductDetail: React.FC<{
   return (
     <main>
       <Section className="pt-6 md:pt-10" tone="white">
-        <nav aria-label="Breadcrumb">
-          <ol className="text-caption text-ink-600 flex flex-wrap items-center gap-2">
-            <li>
-              <Link
-                className="hover:text-green-700 font-bold underline-offset-4 hover:underline"
-                href="/products"
-              >
-                {PRODUCT_BACK_LABEL}
-              </Link>
-            </li>
-            {product.category ? (
-              <>
-                <li aria-hidden="true">›</li>
-                <li>
-                  <Link
-                    className="hover:text-green-700 underline-offset-4 hover:underline"
-                    href={productCategoryHref(product.category)}
-                  >
-                    {CATEGORY_LABEL[product.category]}
-                  </Link>
-                </li>
-              </>
-            ) : null}
-            <li aria-hidden="true">›</li>
-            <li aria-current="page" className="text-ink-900 max-w-[28ch] truncate">
-              {product.title}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { href: '/products', label: PRODUCT_BACK_LABEL },
+            ...(product.category
+              ? [{ href: productCategoryHref(product.category), label: CATEGORY_LABEL[product.category] }]
+              : []),
+            { label: product.title },
+          ]}
+        />
 
         <div className="mt-6 grid items-start gap-8 md:grid-cols-2 lg:gap-14">
           {/* Left: the large photo with its thumbnails underneath. */}

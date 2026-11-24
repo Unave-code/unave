@@ -5,6 +5,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
 import { Section } from '@/components/home/Section'
@@ -147,6 +148,11 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
       <Section className="opening-band relative overflow-hidden bg-green-900 md:py-20" tone="green">
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
         <div className="relative max-w-[46rem]">
+          <Breadcrumbs
+            className="mb-4"
+            items={[{ href: '/', label: 'Home' }, { label: 'Meal subscription' }]}
+            tone="onDark"
+          />
           <h1 className="text-display text-balance">
             {COPY.heading} <span className="text-gold-400 whitespace-nowrap italic">{COPY.accent}</span>
           </h1>
