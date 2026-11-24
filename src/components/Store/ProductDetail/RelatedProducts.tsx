@@ -8,7 +8,7 @@ import { ProductCard } from '../ProductCard'
 
 /** People also bought: the rest of the same shelf, with its buy buttons. */
 export const RelatedProducts: React.FC<{ productSlug: string; related: Product[] }> = ({ productSlug, related }) => (
-  <Section tone="tint">
+  <Section tone="cream">
     <div className="text-center">
       <h2 className="text-h2" id="also-bought-heading">
         People also bought
