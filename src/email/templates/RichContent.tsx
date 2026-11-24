@@ -22,21 +22,21 @@ const IS_UNDERLINE = 8
 const NBSP = String.fromCharCode(160)
 
 const paragraph = {
-  color: '#3f3f46',
+  color: '#1b2620',
   fontSize: '15px',
   lineHeight: '24px',
   margin: '0 0 16px',
 }
 
 const headings = {
-  h2: { color: '#18181b', fontSize: '19px', fontWeight: 600, lineHeight: '26px', margin: '8px 0 12px' },
-  h3: { color: '#18181b', fontSize: '16px', fontWeight: 600, lineHeight: '24px', margin: '8px 0 8px' },
+  h2: { color: '#1a4b36', fontSize: '19px', fontWeight: 600, lineHeight: '26px', margin: '8px 0 12px' },
+  h3: { color: '#1a4b36', fontSize: '16px', fontWeight: 600, lineHeight: '24px', margin: '8px 0 8px' },
 }
 
-const list = { color: '#3f3f46', fontSize: '15px', lineHeight: '24px', margin: '0 0 16px', paddingLeft: '22px' }
+const list = { color: '#1b2620', fontSize: '15px', lineHeight: '24px', margin: '0 0 16px', paddingLeft: '22px' }
 const listItem = { margin: '0 0 4px' }
 const link = { color: '#1a4b36', textDecoration: 'underline' }
-const rule = { borderColor: '#e4e4e7', margin: '20px 0' }
+const rule = { borderColor: '#e4e0d2', margin: '20px 0' }
 const image = { border: 0, borderRadius: '8px', display: 'block', height: 'auto', maxWidth: '100%', outline: 'none' }
 
 const ALIGN = new Set(['left', 'center', 'right', 'justify'])

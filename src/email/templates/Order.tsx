@@ -63,8 +63,8 @@ const COPY: Record<OrderMailVariant, { heading: string; preview: string }> = {
 }
 
 const body = {
-  backgroundColor: '#f4f4f5',
-  color: '#18181b',
+  backgroundColor: '#faf7ef',
+  color: '#1b2620',
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   margin: 0,
   padding: '32px 16px',
@@ -75,19 +75,20 @@ const container = {
   border: '1px solid #e4e4e7',
   borderRadius: '12px',
   margin: '0 auto',
+  borderTop: '4px solid #1a4b36',
   maxWidth: '520px',
   padding: '32px',
 }
 
 const greeting = {
-  color: '#52525b',
+  color: '#4a5a52',
   fontSize: '14px',
   lineHeight: '22px',
   margin: '0 0 12px',
 }
 
 const heading = {
-  color: '#18181b',
+  color: '#1a4b36',
   fontSize: '22px',
   fontWeight: 600,
   lineHeight: '30px',
@@ -95,7 +96,7 @@ const heading = {
 }
 
 const paragraph = {
-  color: '#3f3f46',
+  color: '#1b2620',
   fontSize: '15px',
   lineHeight: '24px',
   margin: '0 0 24px',
@@ -103,14 +104,14 @@ const paragraph = {
 }
 
 const lineRow = {
-  color: '#3f3f46',
+  color: '#1b2620',
   fontSize: '15px',
   lineHeight: '24px',
   margin: '0 0 8px',
 }
 
 const totalRow = {
-  color: '#18181b',
+  color: '#0f2e21',
   fontSize: '15px',
   fontWeight: 600,
   lineHeight: '24px',
@@ -118,7 +119,7 @@ const totalRow = {
 }
 
 const small = {
-  color: '#71717a',
+  color: '#4a5a52',
   fontSize: '13px',
   lineHeight: '20px',
   margin: '0 0 8px',
@@ -126,7 +127,7 @@ const small = {
 }
 
 const rule = {
-  borderColor: '#e4e4e7',
+  borderColor: '#e4e0d2',
   margin: '28px 0 20px',
 }
 
