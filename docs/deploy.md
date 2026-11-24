@@ -61,8 +61,9 @@ Ubuntu 24.04, 4 CPUs, 8 GB RAM:
    | `CRON_SECRET`, `PREVIEW_SECRET` | Random strings |
    | `MAINTENANCE_MODE` | Leave unset to serve the site normally. Set `on` to hold every public page on the maintenance screen; the admin panel and the API stay reachable. Changing it takes a redeploy |
    | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, `MAIL_REPLY_TO` | The sender identity, required for any mail to leave |
-   | `ZEPTOMAIL_API_KEY` or the `SMTP_*` group | One transport at least |
-   | `ZEPTOMAIL_API_URL` | `https://api.zeptomail.in/v1.1/email`. The account is in ZeptoMail's India region, and the default `.com` host does not know it |
+   | `ZEPTOMAIL_API_KEY` or the `SMTP_*` group | One transport at least. Mail goes through Zoho CPaaS (formerly ZeptoMail). The key is the agent's key: in the CPaaS console, Agents → the agent (alias `636b8be1a97d5320`) → SMTP/API → API Setup → Agent key. Put the key itself, without the `Zoho-enczapikey` prefix |
+   | `ZEPTOMAIL_API_URL` | `https://cpaas.zoho.in/v1.1/email`. The account is in the India region, and the default `.com` host does not know it |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` | The fallback when the API fails: `smtp.zeptomail.in`, `465`, `true`, `emailapikey`, and the same agent key as the password. With `587`, set `SMTP_SECURE=false` |
    | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile keys for `unave.in`. With both set, the contact, sign-in, sign-up, forgot-password, resend-verification and CMS forms ask Cloudflare whether the visitor is a person; leave both unset to switch the check off. Read at run time, so no rebuild is needed |
    | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For checkout |
 
