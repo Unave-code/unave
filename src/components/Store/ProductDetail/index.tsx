@@ -299,7 +299,7 @@ export const ProductDetail: React.FC<{
         </div>
       </Section>
 
-      {/* Benefits: one white card per benefit, on the tint band. */}
+      {/* Benefits: cream on the deep green band, split by thin gold rules. */}
       {benefits.length > 0 ? (
         <Benefits benefits={benefits} title={product.title} />
       ) : null}
