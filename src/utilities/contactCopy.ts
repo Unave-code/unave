@@ -4,15 +4,23 @@
  * `/api/enquiries/send` endpoint appends to the redirect are named here too.
  */
 
-export const CONTACT_PAGE_TITLE = 'Contact us'
+/** Primary query: "Unave cloud kitchen contact" (docs/seo/keyword-map.md). Names the brand, so the page sets it absolute. */
+export const CONTACT_PAGE_TITLE = 'Contact UNAVE | Cloud Kitchen in Chennai'
 export const CONTACT_PAGE_DESCRIPTION =
-  'Message UNAVE on WhatsApp, call the kitchen, or send the contact form. We usually reply within a day.'
+  'Contact UNAVE, a cloud kitchen in Chennai: message us on WhatsApp, call the kitchen to order food, or send the form. We usually reply within a day.'
+/** The longer sentence for link previews (Open Graph); the X card gets the short one. */
+export const CONTACT_SHARE_DESCRIPTION =
+  'Talk to UNAVE, a cloud kitchen in Chennai: WhatsApp us, call the kitchen or send a message about delivery, an order or allergies. We usually reply within a day.'
+export const CONTACT_TWITTER_DESCRIPTION =
+  'WhatsApp, call or message UNAVE, a cloud kitchen in Chennai. We usually reply within a day.'
+/** Alt text for the share image on this page. */
+export const CONTACT_SHARE_IMAGE_ALT = 'Contact UNAVE cloud kitchen in Chennai'
 
-export const CONTACT_HERO_EYEBROW = 'Contact'
+export const CONTACT_HERO_EYEBROW = 'Contact UNAVE, cloud kitchen in Chennai'
 export const CONTACT_HERO_HEADLINE = 'Talk to us'
 export const CONTACT_HERO_HEADLINE_ACCENT = 'we read everything'
 export const CONTACT_HERO_SUB =
-  'Ask about delivery in your area, allergies, or anything else. WhatsApp is the fastest way to reach us, and the form below lands in the same place.'
+  'Ask the UNAVE kitchen in Chennai about delivery to your area, an order, allergies or anything else. WhatsApp is the fastest way to reach us, and the form below lands in the same place.'
 
 export const CONTACT_IMAGES = {
   hero: '/images/band-cta.jpg',

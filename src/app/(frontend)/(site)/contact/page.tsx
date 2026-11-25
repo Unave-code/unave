@@ -3,13 +3,15 @@ import { ArrowRight, CheckCircle2, Mail, MapPin, MessageCircle, Phone } from 'lu
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
+import { JsonLd } from '@/components/JsonLd'
 import { Section } from '@/components/home/Section'
 import { Swoosh } from '@/components/Swoosh'
 import type { Footer } from '@/payload-types'
 import { issueFormStamp } from '@/utilities/formGuard'
 import { turnstileSiteKey } from '@/utilities/turnstile'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { DEFAULT_OG_IMAGE, mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { breadcrumbJsonLd, webPageJsonLd } from '@/utilities/structuredData'
 import {
   CONTACT_FORM_HEADING,
   CONTACT_FORM_INTRO,
@@ -22,6 +24,9 @@ import {
   CONTACT_PAGE_TITLE,
   CONTACT_SENT_BODY,
   CONTACT_SENT_HEADING,
+  CONTACT_SHARE_DESCRIPTION,
+  CONTACT_SHARE_IMAGE_ALT,
+  CONTACT_TWITTER_DESCRIPTION,
   CONTACT_WAY_CALL,
   CONTACT_WAY_CALL_NOTE,
   CONTACT_WAY_CALL_TITLE,
@@ -46,11 +51,19 @@ export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
   description: CONTACT_PAGE_DESCRIPTION,
   openGraph: mergeOpenGraph({
-    description: CONTACT_PAGE_DESCRIPTION,
+    description: CONTACT_SHARE_DESCRIPTION,
+    images: [{ ...DEFAULT_OG_IMAGE, alt: CONTACT_SHARE_IMAGE_ALT, url: '/og.png' }],
     title: CONTACT_PAGE_TITLE,
     url: '/contact',
   }),
-  title: CONTACT_PAGE_TITLE,
+  // The title already names UNAVE, so the layout's suffix is skipped.
+  title: { absolute: CONTACT_PAGE_TITLE },
+  twitter: {
+    card: 'summary_large_image',
+    description: CONTACT_TWITTER_DESCRIPTION,
+    images: [{ alt: CONTACT_SHARE_IMAGE_ALT, url: '/og.png' }],
+    title: CONTACT_PAGE_TITLE,
+  },
 }
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -78,6 +91,20 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
 
   return (
     <main>
+      {/* This page and its trail; the kitchen with its contact facts (from the same
+          Footer global the cards below read) is in the root layout's head. */}
+      <JsonLd
+        data={[
+          webPageJsonLd('ContactPage', '/contact', CONTACT_PAGE_TITLE, CONTACT_PAGE_DESCRIPTION, {
+            breadcrumb: true,
+          }),
+          breadcrumbJsonLd([
+            { href: '/', label: 'Home' },
+            { href: '/contact', label: 'Contact' },
+          ]),
+        ]}
+      />
+
       <Section
         className="opening-band overflow-hidden bg-green-900 md:py-20"
         image={{ priority: true, src: CONTACT_IMAGES.hero }}
@@ -86,9 +113,9 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
 
         <div className="relative max-w-[46rem]">
-          <p className="text-eyebrow text-gold-400 uppercase">{CONTACT_HERO_EYEBROW}</p>
-
-          <h1 className="text-display mt-4 text-balance">
+          {/* The eyebrow sits inside the h1 so the heading names the brand and the city. */}
+          <h1 className="text-display text-balance">
+            <span className="text-eyebrow text-gold-400 mb-4 block uppercase">{CONTACT_HERO_EYEBROW}</span>
             {CONTACT_HERO_HEADLINE}{' '}
             <span className="text-gold-400 whitespace-nowrap italic">
               {CONTACT_HERO_HEADLINE_ACCENT}
