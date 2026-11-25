@@ -7,27 +7,19 @@ test.describe('about and contact pages', () => {
     await page.goto(`${BASE}/about`)
 
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Food from a kitchen, not a factory' }),
+      page.getByRole('heading', { level: 1, name: 'Healthy living. Made easy.' }),
     ).toBeVisible()
 
-    // The hero's kitchen photograph and the story's morning-prep photograph are loaded.
-    await expect(page.locator('main img[src*="kitchen.jpg"]').first()).toBeVisible()
-    await expect(
-      page.getByAltText('Morning prep in the UNAVE kitchen, before the first delivery goes out'),
-    ).toBeVisible()
+    await expect(page.locator('main img[src*="indian-meal"]').first()).toBeVisible()
+    await expect(page.getByAltText('Cooking together at a home kitchen counter')).toBeVisible()
 
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Why we started UNAVE' }),
+      page.getByRole('heading', { level: 2, name: 'Why should eating healthy be difficult?' }),
     ).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'What UNAVE means' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'What we bring to you' })).toBeVisible()
 
-    // The story mentions cooking around diabetes, so the gold notice must sit beside it.
-    await expect(page.getByRole('heading', { name: 'A note on your goals' })).toBeVisible()
-
-    await expect(
-      page.getByRole('heading', { level: 2, name: 'What we stand for' }),
-    ).toBeVisible()
-
-    await expect(page.getByRole('link', { name: 'Message the kitchen' }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Message us on WhatsApp' }).first()).toBeVisible()
   })
 
   test('the contact page offers WhatsApp, phone, email and the form', async ({ page }) => {
