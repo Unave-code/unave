@@ -156,7 +156,7 @@ describe('order lines', () => {
   it('reads single items, sizes, combos and meal plan products', () => {
     expect(
       describeOrderLine({ product: 3, productTitle: 'Masala Oats Upma', durationLabel: 'one-time', days: 0, qty: 2, unitPrice: 14900 }),
-    ).toEqual({ kind: 'item', title: 'Masala Oats Upma', qty: 2, unitPrice: 14900, lineTotal: 29800, size: null, productId: 3 })
+    ).toEqual({ kind: 'item', title: 'Masala Oats Upma', qty: 2, unitPrice: 14900, lineTotal: 29800, size: null, addons: [], productId: 3 })
 
     expect(
       describeOrderLine({ product: 4, productTitle: 'Millet Dosa Batter', durationLabel: '1 kg', days: 0, qty: 1, unitPrice: 15900 }),
@@ -182,6 +182,7 @@ describe('order lines', () => {
       unitPrice: 35900,
       lineTotal: 107700,
       includes: ['Masala Oats Upma', 'Paneer Tikka Bowl'],
+      addons: [],
       productId: 9,
     })
 

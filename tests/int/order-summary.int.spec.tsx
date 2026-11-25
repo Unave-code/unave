@@ -73,7 +73,6 @@ const props = (over: Partial<OrderSummaryProps> = {}): OrderSummaryProps => ({
   },
   customer: { id: 7, name: 'Dummy Customer', email: 'dummy@unave.test', phone: '9876543210' },
   lines: [subscription],
-  requests: [],
   ...over,
 })
 
@@ -119,37 +118,6 @@ describe('the admin order summary', () => {
     expect(screen.getByText('No onion or garlic, please.')).toBeTruthy()
     expect(screen.getByText('Vegetarian')).toBeTruthy()
     expect(screen.queryByText('vegetarian')).toBeNull()
-  })
-
-  it('lists requests with their status', () => {
-    render(
-      <OrderSummaryView
-        {...props({
-          requests: [
-            {
-              id: 4,
-              type: 'pause',
-              status: 'new',
-              pauseFrom: '2026-11-24T00:00:00.000Z',
-              pauseTo: '2026-11-27T00:00:00.000Z',
-              reason: 'Travelling for a few days.',
-              staffNote: null,
-              createdAt: '2026-11-21T06:00:00.000Z',
-            },
-          ],
-        })}
-      />,
-    )
-
-    expect(screen.getByText('Pause')).toBeTruthy()
-    expect(screen.getByText('New')).toBeTruthy()
-    expect(screen.getByText('Travelling for a few days.')).toBeTruthy()
-  })
-
-  it('leaves the requests out when there are none', () => {
-    render(<OrderSummaryView {...props()} />)
-
-    expect(screen.queryByRole('heading', { name: 'Requests' })).toBeNull()
   })
 
   it('shows only the details the order has', () => {

@@ -17,6 +17,8 @@ import { EmailFooterContent, EmailHeaderImage, RichContent } from './RichContent
 export type OrderMailVariant = 'confirmation' | 'kitchenNotice'
 
 export type OrderEmailLine = {
+  /** The ticked extras, "Almond milk, Toast". */
+  addonsLabel?: string
   amountLabel: string
   componentsLabel?: string
   durationLabel: string
@@ -164,6 +166,7 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
                 {line.componentsLabel ? (
                   <Text style={small}>{`Includes: ${line.componentsLabel}`}</Text>
                 ) : null}
+                {line.addonsLabel ? <Text style={small}>{`With: ${line.addonsLabel}`}</Text> : null}
               </React.Fragment>
             ))}
 

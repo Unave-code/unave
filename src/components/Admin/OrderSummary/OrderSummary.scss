@@ -108,8 +108,7 @@
     min-width: 0;
   }
 
-  &__lines,
-  &__requests {
+  &__lines {
     display: grid;
     gap: 0;
     margin: 0;
@@ -117,8 +116,7 @@
     list-style: none;
   }
 
-  &__line,
-  &__request {
+  &__line {
     display: grid;
     gap: 8px;
     padding: calc(var(--base) * 0.75) 0;

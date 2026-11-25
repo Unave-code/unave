@@ -328,34 +328,6 @@ for (const seed of orders) {
   }
 }
 
-/* One open pause request against the first plan order */
-const planOrder = seeded.seed_1
-if (planOrder) {
-  const open = await payload.find({
-    collection: 'order-requests',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    where: { order: { equals: planOrder } },
-  })
-  if (open.docs.length === 0) {
-    await payload.create({
-      collection: 'order-requests',
-      data: {
-        customer: customer.id,
-        order: planOrder,
-        type: 'pause',
-        pauseFrom: daysAgo(-3),
-        pauseTo: daysAgo(-6),
-        reason: 'Travelling for a few days.',
-        status: 'new',
-      },
-      overrideAccess: true,
-    })
-    payload.logger.info('Created a pause request on order ' + planOrder + '.')
-  }
-}
-
 payload.logger.info(
   `Orders: ${counts.created} created, ${counts.skipped} already there (${counts.backfilled} given payment details), ${counts.failed} failed. Sign in as ${EMAIL} to see them.`,
 )

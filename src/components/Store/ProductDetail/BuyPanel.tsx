@@ -2,6 +2,7 @@ import { Phone } from 'lucide-react'
 import React from 'react'
 
 import type { Product } from '@/payload-types'
+import type { ProductAddon } from '@/utilities/addons'
 import type { ProductSize } from '@/utilities/cartLines'
 import { formatPaise } from '@/utilities/money'
 import { PRODUCT_PAUSED_INLINE } from '@/utilities/productPageCopy'
@@ -16,6 +17,7 @@ import { daysText } from './shared'
  * its sizes, price or durations read-only with the paused line under them.
  */
 export const BuyPanel: React.FC<{
+  addons?: ProductAddon[]
   buyableOneTime: boolean
   compareAt: null | number
   durations: ProductDuration[]
@@ -25,10 +27,11 @@ export const BuyPanel: React.FC<{
   product: Pick<Product, 'slug' | 'title' | 'type'>
   sizeOptions: ProductSize[]
   whatsapp?: null | string
-}> = ({ buyableOneTime, compareAt, durations, isAvailable, isPlan, oneTimePrice, product, sizeOptions, whatsapp }) => (
+}> = ({ addons = [], buyableOneTime, compareAt, durations, isAvailable, isPlan, oneTimePrice, product, sizeOptions, whatsapp }) => (
   <section aria-label="Buy" className="border-line mt-5 border-t pt-5">
     {isAvailable && buyableOneTime ? (
       <ProductPurchase
+        addons={addons}
         combo={product.type === 'combo'}
         compareAtPrice={compareAt}
         durations={[]}

@@ -12,6 +12,7 @@ import { formatPaise } from '@/utilities/money'
 import { cn } from '@/utilities/ui'
 import { WHATSAPP_CTA_LABEL, whatsappHref } from '@/utilities/whatsapp'
 
+import type { ProductAddon } from '@/utilities/addons'
 import type { ProductSize } from '@/utilities/cartLines'
 
 import { OptionTiles, TILE_PRICE, TILE_SUB, TileDot } from './OptionTiles'
@@ -41,6 +42,8 @@ export type ProductDuration = {
 }
 
 export type ProductPurchaseProps = {
+  /** Optional extras the customer can tick, a single item or combo only. */
+  addons?: ProductAddon[]
   combo?: boolean
   /** A one-time product's old price, in paise, shown struck through when higher. */
   compareAtPrice?: null | number
@@ -64,6 +67,7 @@ export type ProductPurchaseProps = {
 }
 
 export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
+  addons = [],
   combo = false,
   compareAtPrice,
   durations,
@@ -76,6 +80,7 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
 }) => {
   const [selected, setSelected] = useState(0)
   const [qty, setQty] = useState(1)
+  const [ticked, setTicked] = useState<number[]>([])
 
   const duration = durations[selected] ?? durations[0]
   const isOneTime = typeof oneTimePrice === 'number' && oneTimePrice >= 1
@@ -89,9 +94,17 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
     ? (size?.label ?? ONE_TIME_DURATION)
     : (duration?.label ?? '')
 
+  /* Extras ride single items and combos only. The total on the button is for
+     show: the server prices the line again from the records. */
+  const offeredAddons = isOneTime ? addons : []
+  const chosenAddons = offeredAddons.filter((addon) => ticked.includes(addon.id))
+  const extrasPerItem = chosenAddons.reduce((sum, addon) => sum + addon.price, 0)
+  const toggleAddon = (id: number) =>
+    setTicked((current) => (current.includes(id) ? current.filter((value) => value !== id) : [...current, id]))
+
   // Hooks run before the early return below, so the hook order never changes.
   const { added, message, onSubmit, pending } = useAddToCart(
-    { duration: lineDuration, product: productSlug },
+    { addons: chosenAddons.map((addon) => addon.id), duration: lineDuration, product: productSlug },
     { oneTime: isOneTime },
   )
 
@@ -186,6 +199,40 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
           />
         ) : null}
 
+        {/* Optional extras: native checkboxes, so they post without JavaScript. */}
+        {offeredAddons.length > 0 ? (
+          <fieldset className="mb-6">
+            <legend className="text-ink-900 mb-3 text-sm font-bold">
+              Add extras <span className="text-ink-600 font-normal">(optional)</span>
+              <span className="sr-only"> to {productTitle}</span>
+            </legend>
+            <div className="grid gap-2">
+              {offeredAddons.map((addon) => (
+                <label
+                  className="border-line has-[:checked]:border-green-700 has-[:checked]:bg-green-50 has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-green-500 flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-2.5 transition-colors motion-reduce:transition-none"
+                  key={addon.id}
+                >
+                  <input
+                    checked={ticked.includes(addon.id)}
+                    className="size-5 shrink-0 accent-green-700 focus-visible:outline-none"
+                    name="addon"
+                    onChange={() => toggleAddon(addon.id)}
+                    type="checkbox"
+                    value={addon.id}
+                  />
+                  <span className="text-ink-900 min-w-0 flex-1 text-sm font-semibold">
+                    {addon.title}
+                    {addon.note ? <span className="text-ink-600 ml-2 text-xs font-normal">{addon.note}</span> : null}
+                  </span>
+                  <span className="shrink-0 text-sm font-bold text-green-700 tabular-nums">
+                    + {formatPaise(addon.price)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+
         {/* Quantity, Add to cart and Buy now on one row. */}
         <div className={cn('flex flex-wrap items-center gap-3', !isOneTime && 'mt-6')}>
           {isOneTime ? <QuantityStepper productTitle={productTitle} qty={qty} setQty={setQty} /> : null}
@@ -200,7 +247,13 @@ export const ProductPurchase: React.FC<ProductPurchaseProps> = ({
             ) : (
               <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
             )}
-            {pending ? CART_ADDING : added ? 'Added' : CART_ADD_CTA}
+            {pending
+              ? CART_ADDING
+              : added
+                ? 'Added'
+                : chosenAddons.length > 0
+                  ? `${CART_ADD_CTA} · ${formatPaise((shownPrice + extrasPerItem) * qty)}`
+                  : CART_ADD_CTA}
           </button>
 
           <button

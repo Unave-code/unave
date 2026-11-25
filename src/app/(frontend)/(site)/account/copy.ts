@@ -95,60 +95,18 @@ export const ACCOUNT_PROFILE_SAVE_FAILED =
   'We could not save your details just now. Please try again in a moment.'
 
 /**
- * The two requests a customer can make about a paid order (design.md §6.15).
- *
- * They are asks, not controls: the kitchen answers by message and nothing about
- * the order changes until it does. Both open the same small dialog, so the words
- * are kept together here.
+ * Pausing or cancelling a paid order is a conversation with the kitchen, not a
+ * form: each order row offers WhatsApp and a phone call, with the order number
+ * already in the message.
  */
-export const ACCOUNT_REQUEST_CANCEL = 'Request cancellation'
+export const ACCOUNT_ORDER_HELP = 'To pause or cancel this order, message or call the kitchen.'
 
-export const ACCOUNT_REQUEST_PAUSE = 'Request to pause'
+export const ACCOUNT_ORDER_WHATSAPP = 'WhatsApp us'
 
-export const ACCOUNT_REQUEST_CANCEL_HEADING = 'Request cancellation'
+export const ACCOUNT_ORDER_CALL = 'Call'
 
-export const ACCOUNT_REQUEST_CANCEL_INTRO =
-  'Tell us why you want to stop this order. The kitchen will message you to confirm before anything changes.'
-
-export const ACCOUNT_REQUEST_PAUSE_HEADING = 'Request to pause'
-
-export const ACCOUNT_REQUEST_PAUSE_INTRO =
-  'Choose the days you want to skip. The kitchen will message you to confirm before anything changes.'
-
-export const ACCOUNT_REQUEST_PAUSE_FROM_LABEL = 'Pause from'
-
-export const ACCOUNT_REQUEST_PAUSE_TO_LABEL = 'Resume on'
-
-export const ACCOUNT_REQUEST_REASON_LABEL = 'Reason'
-
-export const ACCOUNT_REQUEST_REASON_HINT =
-  'A line here helps the kitchen answer faster.'
-
-export const ACCOUNT_REQUEST_SEND = 'Send request'
-
-export const ACCOUNT_REQUEST_NOT_NOW = 'Not now'
-
-export const ACCOUNT_REQUEST_CLOSE = 'Close'
-
-export const ACCOUNT_REQUEST_SENT_HEADING = 'Request sent'
-
-export const ACCOUNT_REQUEST_SENT_BODY =
-  'The kitchen has your request and will message you to confirm. You can keep ordering until then.'
-
-export const ACCOUNT_REQUEST_INVALID = 'Please check the details and try again.'
-
-export const ACCOUNT_REQUEST_FAILED =
-  'That request did not send. Please try again in a moment.'
-
-export const ACCOUNT_REQUEST_DUPLICATE =
-  'You already have a request open for this order. The kitchen will message you.'
-
-export const ACCOUNT_REQUEST_ORDER_MISSING = 'That order could not be found.'
-
-/** Shown on the row while a request is waiting for the kitchen. */
-export const ACCOUNT_REQUEST_OPEN_CANCEL = 'Cancellation requested'
-
-export const ACCOUNT_REQUEST_OPEN_PAUSE = 'Pause requested'
+export const accountOrderMessage = (orderId: number | string): string =>
+  `Hi UNAVE, I would like to pause or cancel my order #${orderId}.`
 
 /** Greet by first name when we have one, so the page does not feel like a console. */
 export const accountGreeting = (name: string | null, email: string): string => {

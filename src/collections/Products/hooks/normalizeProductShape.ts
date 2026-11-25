@@ -42,6 +42,8 @@ export const normalizeProductShape: CollectionBeforeChangeHook<Product> = ({
   if (!combo && (comboChanged || kindChanged || 'components' in data)) data.components = []
 
   if (type === 'plan') {
+    // Add-ons ride single items and combos only.
+    clear('addons', [])
     clear('price', null)
     clear('compareAtPrice', null)
     clear('packSize', null)

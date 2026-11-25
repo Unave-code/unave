@@ -8,8 +8,8 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
-import type { OrderRequestType } from '@/utilities/orderRequest'
-import type { Order } from '@/payload-types'
+import { getCachedGlobal } from '@/utilities/getGlobals'
+import type { Footer, Order } from '@/payload-types'
 
 import { AccountTabs, readAccountTab } from './AccountTabs'
 import {
@@ -131,32 +131,9 @@ export default async function AccountPage({ searchParams }: Args) {
         ).docs
       : []
 
-  // Which asks are still waiting on the kitchen, so the row can say so instead of
-  // offering the same request twice (design.md §6.15).
-  const openRequests: Record<string, OrderRequestType[]> = {}
-
-  if (tab === 'orders') {
-    const requests = await payload.find({
-      collection: 'order-requests',
-      depth: 0,
-      limit: 100,
-      overrideAccess: true,
-      select: { order: true, type: true },
-      where: {
-        and: [{ customer: { equals: customer.id } }, { status: { equals: 'new' } }],
-      },
-    })
-
-    for (const request of requests.docs) {
-      const related = request.order
-      const orderId = typeof related === 'object' && related !== null ? related.id : related
-
-      if (orderId === undefined || orderId === null) continue
-
-      const key = String(orderId)
-      openRequests[key] = [...(openRequests[key] ?? []), request.type]
-    }
-  }
+  // The kitchen's WhatsApp and phone, for pausing or cancelling an order.
+  const footer = tab === 'orders' ? ((await getCachedGlobal('footer', 1)()) as Footer | null) : null
+  const contact = { phone: footer?.contact?.phone ?? null, whatsapp: footer?.contact?.whatsapp ?? null }
 
   return (
     <div className="container max-w-5xl py-16 sm:py-20">
@@ -205,7 +182,7 @@ export default async function AccountPage({ searchParams }: Args) {
           ) : null}
 
           {tab === 'orders' ? (
-            <OrdersPanel openRequests={openRequests} orders={orders} />
+            <OrdersPanel contact={contact} orders={orders} />
           ) : null}
         </div>
 

@@ -16,6 +16,7 @@ import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
+import { addonsLabel } from '@/utilities/addons'
 import { cartLineKind, daysLabel } from '@/utilities/orderDisplay'
 
 import { CheckoutForm } from './CheckoutForm'
@@ -181,6 +182,9 @@ export default async function CheckoutPage() {
                   <p className="text-ink-600 mt-0.5 text-sm">
                     {cartLineKind(line) ?? `${line.detail ?? line.duration}, ${daysLabel(line.days)}`}
                   </p>
+                  {line.addons.length > 0 ? (
+                    <p className="text-ink-600 mt-0.5 text-sm">With: {addonsLabel(line.addons)}</p>
+                  ) : null}
                 </div>
 
                 <p className="shrink-0 text-right text-sm font-bold text-green-900 tabular-nums">

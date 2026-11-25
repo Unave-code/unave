@@ -46,6 +46,7 @@ import {
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
 import { productHref } from '@/utilities/productsCategoryCopy'
+import { addonsLabel } from '@/utilities/addons'
 import { cartLineKind, daysLabel } from '@/utilities/orderDisplay'
 import { cn } from '@/utilities/ui'
 import { firstParam } from '@/utilities/searchParams'
@@ -157,6 +158,9 @@ export default async function CartPage({
                         {cartLineKind(line) ?? line.detail ?? line.duration}
                         {line.days !== null && line.days > 0 ? `, ${daysLabel(line.days)}` : ''}
                       </p>
+                      {line.addons.length > 0 ? (
+                        <p className="text-ink-600 mt-0.5 text-sm">With: {addonsLabel(line.addons)}</p>
+                      ) : null}
 
                       {line.stale ? (
                         <p className="text-gold-600 mt-2 inline-flex items-center gap-1.5 text-sm font-semibold">
@@ -181,6 +185,7 @@ export default async function CartPage({
                               name="line"
                               type="hidden"
                               value={encodeCartLine({
+                                addons: line.addonIds,
                                 duration: line.duration,
                                 product: line.slug,
                               })}
@@ -220,7 +225,7 @@ export default async function CartPage({
                           <input
                             name="line"
                             type="hidden"
-                            value={encodeCartLine({ duration: line.duration, product: line.slug })}
+                            value={encodeCartLine({ addons: line.addonIds, duration: line.duration, product: line.slug })}
                           />
                           <input name="return" type="hidden" value="/cart" />
 

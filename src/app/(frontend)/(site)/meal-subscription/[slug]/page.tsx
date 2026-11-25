@@ -5,7 +5,7 @@ import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { mealPlanPath, normalizeMealPlan } from '@/utilities/planBuilder'
+import { mealPlanPath, normalizeMealPlan, withCurrentWeek } from '@/utilities/planBuilder'
 import type { Footer } from '@/payload-types'
 
 import { PlanBuilder } from '../PlanBuilder'
@@ -53,7 +53,7 @@ export default async function MealPlanPage({
 
   return (
     <PlanBuilder
-      data={normalizeMealPlan(doc)}
+      data={withCurrentWeek(normalizeMealPlan(doc))}
       notice={query.notice ? (NOTICES[query.notice] ?? NOTICES.unknown) : null}
       whatsapp={footer?.contact?.whatsapp ?? null}
     />

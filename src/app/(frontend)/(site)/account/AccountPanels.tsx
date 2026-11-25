@@ -4,13 +4,16 @@ import React from 'react'
 import { AUTH_INLINE_LINK } from '@/components/CustomerAuth/styles'
 import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
+import { addonsLabel } from '@/utilities/addons'
 import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
-import { ORDER_REQUEST_TYPES, type OrderRequestType } from '@/utilities/orderRequest'
-import { cn } from '@/utilities/ui'
+import { Phone } from 'lucide-react'
 
-import { OrderRequestDialog } from './OrderRequestDialog'
+import { WhatsAppIcon } from '@/components/WhatsAppIcon'
+import { cn } from '@/utilities/ui'
+import { whatsappHref } from '@/utilities/whatsapp'
 import { ProfileForm, type ProfileDefaults } from './ProfileForm'
 import {
+  accountOrderMessage,
   ACCOUNT_DELIVERY_HEADING,
   ACCOUNT_DELIVERY_INTRO,
   ACCOUNT_DETAILS_HEADING,
@@ -22,6 +25,9 @@ import {
   ACCOUNT_ONBOARDING_HEADING,
   ACCOUNT_ONBOARDING_INTRO,
   ACCOUNT_ONBOARDING_SKIP,
+  ACCOUNT_ORDER_CALL,
+  ACCOUNT_ORDER_HELP,
+  ACCOUNT_ORDER_WHATSAPP,
   ACCOUNT_SET_PASSWORD_HINT,
   ACCOUNT_SIGN_IN_GOOGLE,
   ACCOUNT_SIGN_IN_LABEL,
@@ -103,12 +109,21 @@ export const DetailsPanel: React.FC<{
   </Card>
 )
 
-/** Every paid order, newest first, each one linking to its own receipt. */
+const CONTACT_LINK =
+  'border-line text-ink-900 hover:bg-green-50 focus-visible:ring-green-500 rounded-pill inline-flex h-11 items-center gap-2 border bg-white px-4 text-sm font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none'
+
+/** The kitchen's numbers, from the footer's contact details. */
+export type KitchenContact = { phone: null | string; whatsapp: null | string }
+
+/**
+ * Every paid order, newest first, each one linking to its own receipt. Pausing
+ * or cancelling is done by talking to the kitchen, so each row offers WhatsApp
+ * (with the order number written in) and a phone call.
+ */
 export const OrdersPanel: React.FC<{
-  /** The asks waiting on the kitchen, keyed by order id. */
-  openRequests: Record<string, OrderRequestType[]>
+  contact: KitchenContact
   orders: Order[]
-}> = ({ openRequests, orders }) => (
+}> = ({ contact, orders }) => (
   <Card aria-labelledby="account-orders-heading">
     <h2 className="text-h3" id="account-orders-heading">
       {ACCOUNT_ORDERS_HEADING}
@@ -120,7 +135,7 @@ export const OrdersPanel: React.FC<{
     ) : (
       <ul className="border-line divide-line mt-6 divide-y border-t">
         {orders.map((order) => {
-          const open = openRequests[String(order.id)] ?? []
+          const phone = contact.phone?.trim()
 
           return (
             <li className="py-5 first:pt-5" key={String(order.id)}>
@@ -147,8 +162,9 @@ export const OrdersPanel: React.FC<{
                     const name = qty > 1 ? `${qty} × ${item.productTitle}` : (item.productTitle ?? '')
                     const detail = orderItemKind(item)
                     const components = orderComponentsLabel(item.components)
+                    const extras = addonsLabel(item.addons)
 
-                    return `${name}, ${detail}${components ? `, includes ${components}` : ''}`
+                    return `${name}, ${detail}${components ? `, includes ${components}` : ''}${extras ? `, with ${extras}` : ''}`
                   })
                   .join(' + ')}
               </p>
@@ -157,16 +173,30 @@ export const OrdersPanel: React.FC<{
                 {ORDER_PAYMENT_ID_LABEL}: {order.gatewayPaymentId ?? ACCOUNT_NOT_GIVEN}
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-                {ORDER_REQUEST_TYPES.map((type) => (
-                  <OrderRequestDialog
-                    key={type}
-                    open={open.includes(type)}
-                    orderId={order.id}
-                    type={type}
-                  />
-                ))}
-              </div>
+              {contact.whatsapp || phone ? (
+                <div className="mt-4">
+                  <p className="text-ink-600 text-sm">{ACCOUNT_ORDER_HELP}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    {contact.whatsapp ? (
+                      <a
+                        className={CONTACT_LINK}
+                        href={whatsappHref(contact.whatsapp, accountOrderMessage(order.id))}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <WhatsAppIcon className="size-4 text-green-700" />
+                        {ACCOUNT_ORDER_WHATSAPP}
+                      </a>
+                    ) : null}
+                    {phone ? (
+                      <a className={CONTACT_LINK} href={`tel:${phone.replace(/[^0-9+]/g, '')}`}>
+                        <Phone aria-hidden="true" className="size-4 text-green-700" strokeWidth={2} />
+                        {ACCOUNT_ORDER_CALL} {phone}
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
             </li>
           )
         })}

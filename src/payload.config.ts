@@ -4,6 +4,7 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { Addons } from './collections/Addons'
 import { Audiences } from './collections/Audiences'
 import { Categories } from './collections/Categories'
 import { CheckoutIntents } from './collections/CheckoutIntents'
@@ -13,7 +14,6 @@ import { EmailLog } from './collections/EmailLog'
 import { Enquiries } from './collections/Enquiries'
 import { MealPlans } from './collections/MealPlans'
 import { Media } from './collections/Media'
-import { OrderRequests } from './collections/OrderRequests'
 import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
 import { Products } from './collections/Products'
@@ -78,7 +78,6 @@ export default buildConfig({
     dashboard: {
       defaultLayout: [
         { widgetSlug: 'unave-orders-today', width: 'small' },
-        { widgetSlug: 'unave-open-requests', width: 'small' },
         { widgetSlug: 'unave-enquiries', width: 'small' },
         { widgetSlug: 'unave-sales-trend', width: 'full' },
         { widgetSlug: 'collections', width: 'full' },
@@ -89,12 +88,6 @@ export default buildConfig({
           maxWidth: 'medium',
           minWidth: 'x-small',
           slug: 'unave-orders-today',
-        },
-        {
-          Component: '@/components/Admin/Widgets/OpenRequests',
-          maxWidth: 'medium',
-          minWidth: 'x-small',
-          slug: 'unave-open-requests',
         },
         {
           Component: '@/components/Admin/Widgets/UnhandledEnquiries',
@@ -172,10 +165,10 @@ export default buildConfig({
    */
   collections: [
     Orders,
-    OrderRequests,
     Enquiries,
     Customers,
     Products,
+    Addons,
     MealPlans,
     Subcategories,
     Audiences,

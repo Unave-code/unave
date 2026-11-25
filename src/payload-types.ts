@@ -69,10 +69,10 @@ export interface Config {
   blocks: {};
   collections: {
     orders: Order;
-    'order-requests': OrderRequest;
     enquiries: Enquiry;
     customers: Customer;
     products: Product;
+    addons: Addon;
     'meal-plans': MealPlan;
     subcategories: Subcategory;
     audiences: Audience;
@@ -102,10 +102,10 @@ export interface Config {
   };
   collectionsSelect: {
     orders: OrdersSelect<false> | OrdersSelect<true>;
-    'order-requests': OrderRequestsSelect<false> | OrderRequestsSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    addons: AddonsSelect<false> | AddonsSelect<true>;
     'meal-plans': MealPlansSelect<false> | MealPlansSelect<true>;
     subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
     audiences: AudiencesSelect<false> | AudiencesSelect<true>;
@@ -155,7 +155,6 @@ export interface Config {
   locale: null;
   widgets: {
     'unave-orders-today': UnaveOrdersTodayWidget;
-    'unave-open-requests': UnaveOpenRequestsWidget;
     'unave-enquiries': UnaveEnquiriesWidget;
     'unave-sales-trend': UnaveSalesTrendWidget;
     collections: CollectionsWidget;
@@ -232,6 +231,18 @@ export interface Order {
      */
     qty?: number | null;
     unitPrice?: number | null;
+    basePrice?: number | null;
+    /**
+     * The extras ticked with this line, copied at purchase time. Each is charged once per item.
+     */
+    addons?:
+      | {
+          addon?: (number | null) | Addon;
+          title: string;
+          price: number;
+          id?: string | null;
+        }[]
+      | null;
     /**
      * The combo contents copied at purchase time.
      */
@@ -487,6 +498,10 @@ export interface Product {
       }[]
     | null;
   /**
+   * Optional extras a customer can tick under the price, such as almond milk or toast, in this order. Up to six. Create them under Catalogue → Add-ons.
+   */
+  addons?: (number | Addon)[] | null;
+  /**
    * How the meal reaches the customer. Shown as a label on the product card.
    */
   category: 'ready-to-cook' | 'ready-to-eat' | 'fresh-from-produce';
@@ -645,6 +660,30 @@ export interface FolderInterface {
   createdAt: string;
 }
 /**
+ * Optional extras a customer can tick on a single item or a combo, such as almond milk or toast. Attach them to a product on its Pricing tab. Turn Available off to pause one everywhere.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "addons".
+ */
+export interface Addon {
+  id: number;
+  title: string;
+  /**
+   * Optional. Shown beside the name.
+   */
+  note?: string | null;
+  /**
+   * Added to the product price for each one bought. 40 means ₹40.
+   */
+  price: number;
+  /**
+   * Turn off to stop offering this add-on on every product, without removing it.
+   */
+  available?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Manage product labels by category. Subcategories can have an optional image and an automatically generated slug.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -691,28 +730,6 @@ export interface Audience {
    * Lower numbers come first in the products filter.
    */
   position?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Pause and cancellation requests from customers. One row per ask; mark it handled once the kitchen has replied.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "order-requests".
- */
-export interface OrderRequest {
-  id: number;
-  customer: number | Customer;
-  order: number | Order;
-  type: 'cancel' | 'pause';
-  pauseFrom?: string | null;
-  pauseTo?: string | null;
-  reason?: string | null;
-  status?: ('new' | 'handled') | null;
-  /**
-   * What the kitchen did about it. Never shown to the customer.
-   */
-  staffNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -816,10 +833,6 @@ export interface MealPlan {
    * The menu customers see on the plan page and its card.
    */
   thisWeek?: {
-    /**
-     * Shown on the week switch, for example 23 – 28 Nov.
-     */
-    range?: string | null;
     mon?: {
       lunchMain?: string | null;
       dinnerMain?: string | null;
@@ -1435,6 +1448,16 @@ export interface CheckoutIntent {
     days: number;
     qty: number;
     unitPrice: number;
+    basePrice?: number | null;
+    addons?:
+      | {
+          addonRef?: (number | null) | Addon;
+          addonId: number;
+          title: string;
+          price: number;
+          id?: string | null;
+        }[]
+      | null;
     components?:
       | {
           productRef?: (number | null) | Product;
@@ -1686,10 +1709,6 @@ export interface PayloadLockedDocument {
         value: number | Order;
       } | null)
     | ({
-        relationTo: 'order-requests';
-        value: number | OrderRequest;
-      } | null)
-    | ({
         relationTo: 'enquiries';
         value: number | Enquiry;
       } | null)
@@ -1700,6 +1719,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'addons';
+        value: number | Addon;
       } | null)
     | ({
         relationTo: 'meal-plans';
@@ -1832,6 +1855,15 @@ export interface OrdersSelect<T extends boolean = true> {
         days?: T;
         qty?: T;
         unitPrice?: T;
+        basePrice?: T;
+        addons?:
+          | T
+          | {
+              addon?: T;
+              title?: T;
+              price?: T;
+              id?: T;
+            };
         components?:
           | T
           | {
@@ -1880,22 +1912,6 @@ export interface OrdersSelect<T extends boolean = true> {
         capturedAt?: T;
       };
   startsOn?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "order-requests_select".
- */
-export interface OrderRequestsSelect<T extends boolean = true> {
-  customer?: T;
-  order?: T;
-  type?: T;
-  pauseFrom?: T;
-  pauseTo?: T;
-  reason?: T;
-  status?: T;
-  staffNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2012,6 +2028,7 @@ export interface ProductsSelect<T extends boolean = true> {
         durationLabel?: T;
         id?: T;
       };
+  addons?: T;
   category?: T;
   subcategory?: T;
   audience?: T;
@@ -2019,6 +2036,18 @@ export interface ProductsSelect<T extends boolean = true> {
   available?: T;
   featured?: T;
   fromPrice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "addons_select".
+ */
+export interface AddonsSelect<T extends boolean = true> {
+  title?: T;
+  note?: T;
+  price?: T;
+  available?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2066,7 +2095,6 @@ export interface MealPlansSelect<T extends boolean = true> {
   thisWeek?:
     | T
     | {
-        range?: T;
         mon?:
           | T
           | {
@@ -2510,6 +2538,16 @@ export interface CheckoutIntentsSelect<T extends boolean = true> {
         days?: T;
         qty?: T;
         unitPrice?: T;
+        basePrice?: T;
+        addons?:
+          | T
+          | {
+              addonRef?: T;
+              addonId?: T;
+              title?: T;
+              price?: T;
+              id?: T;
+            };
         components?:
           | T
           | {
@@ -3390,16 +3428,6 @@ export interface PayloadJobsStatsSelect<T extends boolean = true> {
  * via the `definition` "unave-orders-today_widget".
  */
 export interface UnaveOrdersTodayWidget {
-  data?: {
-    [k: string]: unknown;
-  };
-  width: 'x-small' | 'small' | 'medium';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "unave-open-requests_widget".
- */
-export interface UnaveOpenRequestsWidget {
   data?: {
     [k: string]: unknown;
   };

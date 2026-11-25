@@ -140,6 +140,14 @@ export const createOrderEndpoint: Endpoint = {
     }
 
     const items = cart.usable.map((line) => ({
+      // A snapshot of the ticked extras; unitPrice below already includes them.
+      addons: line.addons.map((addon) => ({
+        addonId: addon.id,
+        addonRef: addon.id,
+        price: addon.price,
+        title: addon.title,
+      })),
+      basePrice: line.basePrice ?? line.price ?? 0,
       components: line.components?.map((component) => ({
         days: component.days,
         durationLabel: component.durationLabel,

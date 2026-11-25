@@ -46,7 +46,6 @@ import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/component
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { default as default_9539be258f7ba9a25f6e22ba8e972ca0 } from '@/components/Admin/DashboardNavLink'
 import { default as default_d0389295b019118111ab6d64c9074102 } from '@/components/Admin/Widgets/OrdersToday'
-import { default as default_cdbe4e10a295c9adf65d55ecd509887b } from '@/components/Admin/Widgets/OpenRequests'
 import { default as default_77dc216e238ca52c43df16992d268357 } from '@/components/Admin/Widgets/UnhandledEnquiries'
 import { default as default_b62bb9d316d2f79fbb6edcdfc71542ec } from '@/components/Admin/Widgets/SalesTrend'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -101,7 +100,6 @@ export const importMap = {
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/Admin/DashboardNavLink#default": default_9539be258f7ba9a25f6e22ba8e972ca0,
   "@/components/Admin/Widgets/OrdersToday#default": default_d0389295b019118111ab6d64c9074102,
-  "@/components/Admin/Widgets/OpenRequests#default": default_cdbe4e10a295c9adf65d55ecd509887b,
   "@/components/Admin/Widgets/UnhandledEnquiries#default": default_77dc216e238ca52c43df16992d268357,
   "@/components/Admin/Widgets/SalesTrend#default": default_b62bb9d316d2f79fbb6edcdfc71542ec,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1

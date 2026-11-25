@@ -1,3 +1,4 @@
+import { cleanAddonIds } from './addons'
 import { readCookie, serializeCookie } from './customerSession'
 
 /**
@@ -37,6 +38,8 @@ export type CartLineIdentity = {
   duration: string
   /** The product slug, never a title or an id. */
   product: string
+  /** The ticked add-ons' ids, sorted and unique. Absent or empty means no extras. */
+  addons?: number[]
 }
 
 export type CartLine = CartLineIdentity & {
@@ -54,7 +57,18 @@ const MAX_DURATION = 80
 const clean = (value: unknown, max: number): string =>
   typeof value === 'string' ? value.trim().slice(0, max) : ''
 
-export const cartLineKey = (line: CartLineIdentity): string => `${line.product}\u0000${line.duration}`
+/** The add-on ids a line carries, sorted and unique; an empty list when it has none. */
+export const lineAddons = (line: CartLineIdentity): number[] => cleanAddonIds(line.addons ?? [])
+
+/**
+ * A line's identity as one string. The same product with different add-ons is
+ * a different line; a line with none keys exactly as it did before add-ons.
+ */
+export const cartLineKey = (line: CartLineIdentity): string => {
+  const addons = lineAddons(line)
+  const base = `${line.product}\u0000${line.duration}`
+  return addons.length > 0 ? `${base}\u0000${addons.join(',')}` : base
+}
 
 export const sameCartLine = (a: CartLineIdentity, b: CartLineIdentity): boolean =>
   cartLineKey(a) === cartLineKey(b)
@@ -108,7 +122,11 @@ export const parseCartEntries = (raw: null | string | undefined): CartLine[] => 
     const duration = clean((entry as { duration?: unknown }).duration, MAX_DURATION)
 
     if (product && duration) {
+      const rawAddons = (entry as { addons?: unknown }).addons
+      const addons = Array.isArray(rawAddons) ? cleanAddonIds(rawAddons) : []
+
       lines.push({
+        ...(addons.length > 0 ? { addons } : {}),
         duration,
         product,
         qty: qtyAsWritten((entry as { qty?: unknown }).qty),
@@ -183,16 +201,18 @@ export const addOneTimeCartLine = (
   product: string,
   qty: number = 1,
   duration: string = ONE_TIME_DURATION,
+  addons: number[] = [],
 ): CartAddResult => {
   const slug = clean(product, MAX_SLUG)
   const label = clean(duration, MAX_DURATION) || ONE_TIME_DURATION
   const amount = clampQty(qty)
+  const extras = cleanAddonIds(addons)
+  const identity: CartLineIdentity = { ...(extras.length > 0 ? { addons: extras } : {}), duration: label, product: slug }
 
   if (!slug) return { lines, ok: false, reason: 'full' }
 
-  const existing = lines.find(
-    (line) => line.product === slug && line.duration === label,
-  )
+  // The same product with other add-ons is its own line.
+  const existing = lines.find((line) => sameCartLine(line, identity))
 
   if (existing) {
     if (existing.qty >= CART_MAX_QTY) {
@@ -210,7 +230,7 @@ export const addOneTimeCartLine = (
   if (lines.length >= CART_MAX_LINES) return { lines, ok: false, reason: 'full' }
 
   return {
-    lines: [...lines, { duration: label, product: slug, qty: amount }],
+    lines: [...lines, { ...identity, qty: amount }],
     ok: true,
   }
 }
@@ -223,11 +243,14 @@ export const removeCartLine = (lines: CartLine[], key: string): CartLine[] =>
  *
  * The in memory key joins with a NUL, which must never travel in an HTML
  * attribute. On the wire a line is a two element JSON array, so any slug or
- * duration label survives the round trip untouched. The quantity is not on the
+ * duration label survives the round trip untouched, with the add-on ids as a
+ * third element when the line has any. The quantity is not on the
  * wire: it lives in the cookie, and the quantity route reads it there.
  */
-export const encodeCartLine = (line: CartLineIdentity): string =>
-  JSON.stringify([line.product, line.duration])
+export const encodeCartLine = (line: CartLineIdentity): string => {
+  const addons = lineAddons(line)
+  return JSON.stringify(addons.length > 0 ? [line.product, line.duration, addons] : [line.product, line.duration])
+}
 
 export const decodeCartLine = (value: string): null | CartLineIdentity => {
   let parsed: unknown
@@ -238,14 +261,17 @@ export const decodeCartLine = (value: string): null | CartLineIdentity => {
     return null
   }
 
-  if (!Array.isArray(parsed) || parsed.length !== 2) return null
+  if (!Array.isArray(parsed) || (parsed.length !== 2 && parsed.length !== 3)) return null
 
-  const [product, duration] = parsed as unknown[]
+  const [product, duration, rawAddons] = parsed as unknown[]
 
   if (typeof product !== 'string' || typeof duration !== 'string') return null
   if (!product.trim() || !duration.trim()) return null
+  if (rawAddons !== undefined && !Array.isArray(rawAddons)) return null
 
-  return { duration, product }
+  const addons = Array.isArray(rawAddons) ? cleanAddonIds(rawAddons) : []
+
+  return { ...(addons.length > 0 ? { addons } : {}), duration, product }
 }
 
 /** The cart the pages render, read from a `Cookie` header or a cookie store value. */

@@ -12,7 +12,16 @@ export type OrderIntentComponent = {
   productTitle: string
 }
 
+export type OrderIntentAddon = {
+  addon: number | null
+  price: number
+  title: string
+}
+
 export type OrderIntentItem = {
+  addons?: OrderIntentAddon[]
+  /** The product's own unit price; unitPrice is this plus every add-on. */
+  basePrice?: number
   components?: OrderIntentComponent[]
   days: number
   durationLabel: string
@@ -100,6 +109,23 @@ const readComponents = (value: unknown): OrderIntentComponent[] | null => {
   return components.length > 0 && components.length <= 10 ? components : null
 }
 
+const readAddons = (value: unknown): OrderIntentAddon[] | null => {
+  if (value === undefined || value === null) return []
+  if (!Array.isArray(value) || value.length > 6) return null
+
+  const addons: OrderIntentAddon[] = []
+
+  for (const entry of value) {
+    if (!isRecord(entry) || typeof entry.title !== 'string' || !entry.title.trim()) return null
+    if (numericId(entry.addonId) === null) return null
+    if (!Number.isSafeInteger(entry.price) || (entry.price as number) < 1) return null
+
+    addons.push({ addon: numericId(entry.addonRef), price: entry.price as number, title: entry.title })
+  }
+
+  return addons
+}
+
 const readItems = (value: unknown): OrderIntentItem[] | null => {
   if (!Array.isArray(value) || value.length < 1 || value.length > 10) return null
   const items: OrderIntentItem[] = []
@@ -120,6 +146,20 @@ const readItems = (value: unknown): OrderIntentItem[] | null => {
     // A built plan carries no product id; anything else must carry a real one.
     const noProduct = entry.productId === null || entry.productId === undefined
 
+    /* Add-ons: the unit price must be the product's own price plus each one,
+       so no row can charge for extras it does not list, or list free ones. */
+    const addons = readAddons(entry.addons)
+    if (addons === null) return null
+    const hasBase = entry.basePrice !== undefined && entry.basePrice !== null
+    if (hasBase && (!Number.isSafeInteger(entry.basePrice) || (entry.basePrice as number) < 1)) return null
+    if (!hasBase && addons.length > 0) return null
+    if (
+      hasBase &&
+      (entry.basePrice as number) + addons.reduce((sum, addon) => sum + addon.price, 0) !== entry.unitPrice
+    ) {
+      return null
+    }
+
     if (
       (!noProduct && productId === null) ||
       typeof entry.productTitle !== 'string' ||
@@ -134,6 +174,8 @@ const readItems = (value: unknown): OrderIntentItem[] | null => {
     }
 
     items.push({
+      ...(addons.length > 0 ? { addons } : {}),
+      ...(hasBase ? { basePrice: entry.basePrice as number } : {}),
       components: components ?? undefined,
       days: entry.days as number,
       durationLabel: entry.durationLabel,

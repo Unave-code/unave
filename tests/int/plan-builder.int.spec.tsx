@@ -48,7 +48,7 @@ const data: PlanBuilderData = {
   ],
   slug: 'kids',
   subcategory: null,
-  thisWeek: { days: [{ day: 'Mon', dinner: { main: 'Dal', sides: ['Rice'] }, full: 'Monday', lunch: { main: 'Khichdi', sides: [] } }], range: '1–6 Dec' },
+  thisWeek: { days: [{ date: '', day: 'Mon', dinner: { main: 'Dal', sides: ['Rice'] }, full: 'Monday', lunch: { main: 'Khichdi', sides: [] } }], range: '1–6 Dec' },
   title: 'Kids plan',
 }
 
@@ -62,7 +62,7 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Build your Kids plan' })).toBeTruthy()
     expect(screen.queryByRole('link', { name: /Build your plan/ })).toBeNull()
     expect(screen.queryByText('From, for one person')).toBeNull()
-    expect(screen.getByRole('link', { name: 'Meal plans' }).getAttribute('href')).toBe('/meal-subscription')
+    expect(screen.getByRole('link', { name: 'Meal subscription' }).getAttribute('href')).toBe('/meal-subscription')
     expect(screen.getByText('Tasty')).toBeTruthy()
   })
 
@@ -138,7 +138,7 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
   it('shows only the trial days of the menu for a trial length', () => {
     const base = data.plans[0]
     const dish = { main: 'Dal', sides: [] }
-    const day = (d: string, full: string, has: boolean) => ({ day: d, dinner: has ? dish : null, full, lunch: has ? dish : null })
+    const day = (d: string, full: string, has: boolean) => ({ date: '', day: d, dinner: has ? dish : null, full, lunch: has ? dish : null })
     renderBuilder({
       plans: [{ ...base, days: 3, label: 'Trial', note: '', trial: true }, ...data.plans],
       thisWeek: {

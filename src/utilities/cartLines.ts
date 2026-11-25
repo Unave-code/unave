@@ -3,8 +3,9 @@ import type { Payload } from 'payload'
 
 import type { Product } from '@/payload-types'
 
+import { pickAddons, type ProductAddon } from './addons'
 import type { CartLine } from './cart'
-import { cartLineKey, ONE_TIME_DURATION } from './cart'
+import { cartLineKey, lineAddons, ONE_TIME_DURATION } from './cart'
 import { comboComponents, isProductSellable, type ComboComponentSnapshot } from './combos'
 import {
   decodePlanSelection,
@@ -38,9 +39,15 @@ export type CartDuration = {
   price: number
 }
 
-export type StaleReason = 'missing-duration' | 'paused' | 'unknown-product'
+export type StaleReason = 'addon-unavailable' | 'missing-duration' | 'paused' | 'unknown-product'
 
 export type ResolvedCartLine = {
+  /** The ticked extras, priced from the live records; empty when none. */
+  addons: ProductAddon[]
+  /** The add-on ids the cookie names, priced or not: what the line's key and forms carry. */
+  addonIds: number[]
+  /** The product's own unit price, before add-ons. */
+  basePrice: null | number
   days: null | number
   components?: ComboComponentSnapshot[]
   /** A plain description to show instead of the raw duration (a built plan's choices). */
@@ -170,6 +177,9 @@ export const resolveCartLines = async ({
       const qty = 1
 
       return {
+        addonIds: [],
+        addons: [],
+        basePrice: priced?.total ?? null,
         days: priced?.days ?? null,
         detail: priced?.detail ?? null,
         duration: line.duration,
@@ -217,13 +227,24 @@ export const resolveCartLines = async ({
       days = duration?.days ?? null
     }
 
+    /* Each ticked add-on is charged once per item, on top of the product's
+       own price. One that is paused or no longer offered makes the line stale. */
+    const ids = lineAddons(line)
+    const addons = product ? pickAddons(product, ids) : ids.length > 0 ? null : []
+    const basePrice = price
+    if (price !== null && addons) price += addons.reduce((sum, addon) => sum + addon.price, 0)
+
     let reason: null | StaleReason = null
 
     if (!product) reason = 'unknown-product'
     else if (!isProductSellable(product)) reason = 'paused'
     else if (price === null) reason = 'missing-duration'
+    else if (addons === null || (type === 'plan' && ids.length > 0)) reason = 'addon-unavailable'
 
     return {
+      addonIds: ids,
+      addons: addons ?? [],
+      basePrice,
       days,
       ...(components ? { components } : {}),
       duration: line.duration,

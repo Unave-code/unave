@@ -273,7 +273,6 @@ const week = (
 ): MealPlan['thisWeek'] => {
   const keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
   return {
-    range: '23 – 28 Nov',
     ...Object.fromEntries(
       keys.map((k, i) => {
         const [lunchMain, lunchSides, dinnerMain, dinnerSides] = days[i]

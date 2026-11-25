@@ -51,7 +51,14 @@ export function MenuStep({ data, state }: { data: PlanBuilderData; state: PlanBu
               <tr className="align-top" key={d.day}>
                 <th className="px-4 py-4 font-extrabold text-green-700" scope="row">
                   {/* A trial counts its days, not weekdays: it can start on any day. */}
-                  {plan?.trial ? di + 1 : d.day}
+                  {plan?.trial ? (
+                    di + 1
+                  ) : (
+                    <>
+                      {d.day}
+                      {d.date ? <span className="text-ink-600 block text-xs font-semibold">{d.date}</span> : null}
+                    </>
+                  )}
                 </th>
                 {offered.map((m) => {
                   const dish = d[m]

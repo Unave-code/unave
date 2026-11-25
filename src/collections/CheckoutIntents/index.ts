@@ -50,6 +50,19 @@ export const CheckoutIntents: CollectionConfig = {
         { name: 'days', type: 'number', required: true },
         { name: 'qty', type: 'number', required: true, min: 1 },
         { name: 'unitPrice', type: 'number', required: true, min: 1 },
+        // The product's own price; unitPrice adds every add-on below to it.
+        { name: 'basePrice', type: 'number', min: 1 },
+        {
+          name: 'addons',
+          type: 'array',
+          maxRows: 6,
+          fields: [
+            { name: 'addonRef', type: 'relationship', relationTo: 'addons' },
+            { name: 'addonId', type: 'number', required: true },
+            { name: 'title', type: 'text', required: true },
+            { name: 'price', type: 'number', required: true, min: 1 },
+          ],
+        },
         {
           name: 'components',
           type: 'array',

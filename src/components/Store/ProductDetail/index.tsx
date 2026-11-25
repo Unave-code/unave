@@ -4,6 +4,7 @@ import React from 'react'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { Section } from '@/components/home/Section'
 import type { Product } from '@/payload-types'
+import { productAddons } from '@/utilities/addons'
 import { audienceTitle } from '@/utilities/audiences'
 import { productSizes } from '@/utilities/cartLines'
 import {
@@ -256,6 +257,7 @@ export const ProductDetail: React.FC<{
             ) : null}
 
             <BuyPanel
+              addons={productAddons(product)}
               buyableOneTime={buyableOneTime}
               compareAt={compareAt}
               durations={durations}

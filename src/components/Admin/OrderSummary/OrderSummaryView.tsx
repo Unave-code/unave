@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { Order, OrderRequest } from '@/payload-types'
+import type { Order } from '@/payload-types'
 import { FOOD_PREFERENCE_LABELS, isFoodPreference } from '@/utilities/foodPreference'
 import { formatPaise } from '@/utilities/money'
 import { orderKindSummary, type OrderLineView } from '@/utilities/orderLines'
@@ -11,30 +11,24 @@ import './OrderSummary.scss'
  * The admin order page, read like a receipt (design:
  * docs/superpowers/specs/2026-11-21-admin-order-detail-design.md).
  *
- * Presentational only: `OrderSummary` loads the order, its customer, its
- * requests and the meal plans its lines name, and passes plain values here.
+ * Presentational only: `OrderSummary` loads the order, its customer and the meal plans its lines name, and passes plain values here.
  * Nothing renders as an input; the one editable value, the delivery start day,
  * stays in Payload's own sidebar, beside the payment (`OrderPaymentView`).
  *
  * Only what the order holds is shown: an empty value leaves its row out
- * rather than printing a placeholder, and the requests card appears only when
- * the customer has asked for something.
+ * rather than printing a placeholder.
  */
 
 export type OrderSummaryProps = {
   order: Pick<Order, 'createdAt' | 'delivery' | 'gatewayOrderId' | 'gatewayPaymentId' | 'id' | 'paidAt' | 'subtotal' | 'total' | 'updatedAt'>
   customer: { id: number; name: null | string; email: string; phone: null | string } | null
   lines: OrderLineView[]
-  requests: Pick<OrderRequest, 'createdAt' | 'id' | 'pauseFrom' | 'pauseTo' | 'reason' | 'staffNote' | 'status' | 'type'>[]
 }
 
 const IST = 'Asia/Kolkata'
 
 export const dateTime = (value: string): string =>
   new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: IST }).format(new Date(value))
-
-const dateOnly = (value: string): string =>
-  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: IST }).format(new Date(value))
 
 const present = (value: null | string | undefined): value is string => typeof value === 'string' && value.trim().length > 0
 
@@ -99,6 +93,7 @@ const LineBody: React.FC<{ line: OrderLineView }> = ({ line }) => {
         <dl className="order-summary__rows">
           <Row label="Quantity">{`${line.qty} × ${formatPaise(line.unitPrice)}`}</Row>
           <Row label="Includes">{line.includes.join(' · ')}</Row>
+          {line.addons.length > 0 ? <Row label="With">{line.addons.join(' · ')}</Row> : null}
         </dl>
       )
     case 'item':
@@ -106,6 +101,7 @@ const LineBody: React.FC<{ line: OrderLineView }> = ({ line }) => {
         <dl className="order-summary__rows">
           {line.size ? <Row label="Size">{line.size}</Row> : null}
           <Row label="Quantity">{`${line.qty} × ${formatPaise(line.unitPrice)}`}</Row>
+          {line.addons.length > 0 ? <Row label="With">{line.addons.join(' · ')}</Row> : null}
         </dl>
       )
     default:
@@ -141,7 +137,7 @@ const Line: React.FC<{ line: OrderLineView }> = ({ line }) => (
   </li>
 )
 
-export function OrderSummaryView({ customer, lines, order, requests }: OrderSummaryProps): React.JSX.Element {
+export function OrderSummaryView({ customer, lines, order }: OrderSummaryProps): React.JSX.Element {
   const delivery = order.delivery ?? {}
   // "No preference" is the default, not something the customer told us.
   const preference =
@@ -244,43 +240,6 @@ export function OrderSummaryView({ customer, lines, order, requests }: OrderSumm
           ) : null}
         </div>
       </div>
-
-      {requests.length > 0 ? (
-        <Section title="Requests">
-          <ul className="order-summary__requests">
-            {requests.map((request) => {
-              const pause = [
-                request.pauseFrom ? `from ${dateOnly(request.pauseFrom)}` : null,
-                request.pauseTo ? `to ${dateOnly(request.pauseTo)}` : null,
-              ].filter(present)
-
-              return (
-                <li className="order-summary__request" key={request.id}>
-                  <p className="order-summary__meta">
-                    <strong>{request.type === 'pause' ? 'Pause' : 'Cancellation'}</strong>
-                    <span
-                      className={`order-summary__pill order-summary__pill--${request.status === 'handled' ? 'ok' : 'new'}`}
-                    >
-                      {request.status === 'handled' ? 'Handled' : 'New'}
-                    </span>
-                    {request.createdAt ? (
-                      <span className="order-summary__muted">{`Asked ${dateTime(request.createdAt)}`}</span>
-                    ) : null}
-                  </p>
-                  {request.type === 'pause' && pause.length > 0 ? <p>{`Pause ${pause.join(' ')}`}</p> : null}
-                  {present(request.reason) ? <p>{request.reason}</p> : null}
-                  {present(request.staffNote) ? (
-                    <p className="order-summary__muted">{`Kitchen note: ${request.staffNote}`}</p>
-                  ) : null}
-                  <a className="order-summary__link" href={`/admin/collections/order-requests/${request.id}`}>
-                    Open request
-                  </a>
-                </li>
-              )
-            })}
-          </ul>
-        </Section>
-      ) : null}
 
       {record.length > 0 ? <p className="order-summary__record">{record.join(' · ')}</p> : null}
     </div>

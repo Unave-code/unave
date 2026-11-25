@@ -20,7 +20,8 @@ import { relationId } from './relationId'
  * guessed into the wrong group.
  */
 
-export type OrderItemLike = Omit<NonNullable<Order['items']>[number], 'components'> & {
+export type OrderItemLike = Omit<NonNullable<Order['items']>[number], 'addons' | 'components'> & {
+  addons?: { title?: null | string }[] | null
   components?: { product?: unknown; productTitle?: null | string }[] | null
 }
 
@@ -32,8 +33,8 @@ export type PlanLookup = { groups: PlanGroups; trialLengths: string[] }
 export type PickGroup = { title: string; picks: string[] }
 
 export type OrderLineView =
-  | { kind: 'item'; title: string; qty: number; unitPrice: number; lineTotal: number; size: null | string; productId: null | number }
-  | { kind: 'combo'; title: string; qty: number; unitPrice: number; lineTotal: number; includes: string[]; productId: null | number }
+  | { kind: 'item'; title: string; qty: number; unitPrice: number; lineTotal: number; size: null | string; addons: string[]; productId: null | number }
+  | { kind: 'combo'; title: string; qty: number; unitPrice: number; lineTotal: number; includes: string[]; addons: string[]; productId: null | number }
   | { kind: 'plan'; title: string; duration: string; days: number; lineTotal: number; perDay: number; productId: null | number }
   | {
       kind: 'subscription'
@@ -137,6 +138,7 @@ export function describeOrderLine(item: OrderItemLike, lookup?: null | PlanLooku
   }
 
   const title = item.productTitle?.trim() || 'Product'
+  const addons = (item.addons ?? []).map((addon) => addon.title?.trim() ?? '').filter(Boolean)
 
   if (item.components?.length) {
     return {
@@ -146,12 +148,13 @@ export function describeOrderLine(item: OrderItemLike, lookup?: null | PlanLooku
       unitPrice,
       lineTotal,
       includes: item.components.map((component) => component.productTitle?.trim() || 'Product'),
+      addons,
       productId,
     }
   }
 
   if (isOneTimeOrderItem(item)) {
-    return { kind: 'item', title, qty, unitPrice, lineTotal, size: label && label !== ONE_TIME_DURATION ? label : null, productId }
+    return { kind: 'item', title, qty, unitPrice, lineTotal, size: label && label !== ONE_TIME_DURATION ? label : null, addons, productId }
   }
 
   return { kind: 'plan', title, duration: label, days, lineTotal, perDay: days > 0 ? Math.round(lineTotal / days) : 0, productId }

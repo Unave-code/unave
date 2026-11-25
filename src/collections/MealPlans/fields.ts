@@ -30,12 +30,6 @@ export const menuWeekField = (name: string, label: string, description: string):
   type: 'group',
   admin: { description },
   fields: [
-    {
-      name: 'range',
-      type: 'text',
-      label: 'Dates',
-      admin: { description: 'Shown on the week switch, for example 23 – 28 Nov.' },
-    },
     ...MENU_DAYS.map(
       (day): Field => ({
         name: day.name,

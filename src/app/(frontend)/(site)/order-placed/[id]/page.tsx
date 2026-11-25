@@ -8,6 +8,7 @@ import React from 'react'
 
 import { Cta } from '@/components/Cta'
 import type { Order } from '@/payload-types'
+import { addonsLabel } from '@/utilities/addons'
 import { formatPaise } from '@/utilities/money'
 import { paymentMethodLabel } from '@/utilities/razorpayPaymentDetails'
 import {
@@ -174,6 +175,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                 const isOneTime = isOneTimeOrderItem(item)
                 const unitPrice = Number(item.unitPrice)
                 const components = orderComponentsLabel(item.components)
+                const extras = addonsLabel(item.addons)
 
                 return (
                   <li className="flex items-start justify-between gap-4 py-4" key={item.id ?? index}>
@@ -191,6 +193,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                       {components ? (
                         <p className="text-ink-600 mt-1 text-sm">Includes: {components}</p>
                       ) : null}
+                      {extras ? <p className="text-ink-600 mt-1 text-sm">With: {extras}</p> : null}
                     </div>
 
                     <p className="text-ink-900 shrink-0 text-right font-bold tabular-nums">

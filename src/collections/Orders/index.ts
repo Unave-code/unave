@@ -152,6 +152,41 @@ export const Orders: CollectionConfig = {
           label: 'Unit price (₹)',
         },
         {
+          // The product's own price at purchase; empty on orders from before add-ons.
+          name: 'basePrice',
+          type: 'number',
+          admin: {
+            components: {
+              Field: '@/components/Admin/RupeeField#RupeeField',
+            },
+            readOnly: true,
+          },
+          label: 'Product price (₹)',
+        },
+        {
+          name: 'addons',
+          type: 'array',
+          maxRows: 6,
+          admin: {
+            description: 'The extras ticked with this line, copied at purchase time. Each is charged once per item.',
+          },
+          fields: [
+            { name: 'addon', type: 'relationship', relationTo: 'addons', maxDepth: 0 },
+            { name: 'title', type: 'text', required: true },
+            {
+              name: 'price',
+              type: 'number',
+              required: true,
+              min: 1,
+              label: 'Price (₹)',
+              admin: {
+                components: { Field: '@/components/Admin/RupeeField#RupeeField' },
+                readOnly: true,
+              },
+            },
+          ],
+        },
+        {
           name: 'components',
           type: 'array',
           maxRows: 10,

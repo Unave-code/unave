@@ -506,13 +506,6 @@ a {
   padding-top: calc(var(--navbar-height) + 2rem);
 }
 
-/* The account's request dialogs (design.md §6.15). A native <dialog>, so the
-   browser owns the focus trap, the Escape key and the inert page behind it; only
-   the scrim and the centring are ours. */
-.request-dialog::backdrop {
-  background-color: color-mix(in oklab, var(--green-900) 55%, transparent);
-}
-
 .site-header {
   /* One bar everywhere (design.md §6.2): solid deep green with a gold logo,
      gold links and cream text, on every page and at every scroll position.

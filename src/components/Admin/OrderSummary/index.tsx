@@ -1,7 +1,7 @@
 import type { UIFieldServerProps } from 'payload'
 import React from 'react'
 
-import type { Customer, MealPlan, Order, OrderRequest } from '@/payload-types'
+import type { Customer, MealPlan, Order } from '@/payload-types'
 import { describeOrderLine, mealPlanTitle, type PlanLookup } from '@/utilities/orderLines'
 import { normalizeMealPlan } from '@/utilities/planBuilder'
 
@@ -11,8 +11,7 @@ import { OrderSummaryView, type OrderSummaryProps } from './OrderSummaryView'
  * The order page's summary, as a `ui` field at the top of the Orders form
  * (design: docs/superpowers/specs/2026-11-21-admin-order-detail-design.md).
  *
- * Loads what one order row does not hold: the customer, the customer's
- * requests on this order, and the meal plans its subscription lines name, so
+ * Loads what one order row does not hold: the customer and the meal plans its subscription lines name, so
  * each pick can sit under its option group. A meal plan that has since been
  * renamed or removed leaves its picks as a plain list, never an error.
  */
@@ -30,7 +29,7 @@ export const OrderSummary: React.FC<UIFieldServerProps> = async ({ id, payload }
   const customerId = typeof order.customer === 'object' && order.customer ? order.customer.id : order.customer
   const titles = [...new Set((order.items ?? []).map((item) => mealPlanTitle(item.productTitle)).filter((t): t is string => t !== null))]
 
-  const [customer, requests, plans] = await Promise.all([
+  const [customer, plans] = await Promise.all([
     payload
       .findByID({
         collection: 'customers',
@@ -41,17 +40,6 @@ export const OrderSummary: React.FC<UIFieldServerProps> = async ({ id, payload }
       })
       .then((doc) => doc as Pick<Customer, 'email' | 'id' | 'name' | 'phone'>)
       .catch(() => null),
-    payload
-      .find({
-        collection: 'order-requests',
-        depth: 0,
-        limit: 50,
-        overrideAccess: true,
-        sort: '-createdAt',
-        where: { order: { equals: order.id } },
-      })
-      .then((found) => found.docs as OrderRequest[])
-      .catch(() => [] as OrderRequest[]),
     titles.length === 0
       ? Promise.resolve([] as MealPlan[])
       : payload
@@ -78,7 +66,6 @@ export const OrderSummary: React.FC<UIFieldServerProps> = async ({ id, payload }
       return describeOrderLine(item, title ? (lookups.get(title) ?? null) : null)
     }),
     order,
-    requests,
   }
 
   return <OrderSummaryView {...props} />

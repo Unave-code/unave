@@ -332,5 +332,19 @@ export const pricingTab: Tab = {
         return true
       },
     },
+    {
+      name: 'addons',
+      type: 'relationship',
+      label: 'Add-ons',
+      relationTo: 'addons',
+      hasMany: true,
+      maxRows: 6,
+      admin: {
+        // Single items and combos only: a meal plan prices by duration.
+        condition: (data) => !isMealPlan(data as PricingData),
+        description:
+          'Optional extras a customer can tick under the price, such as almond milk or toast, in this order. Up to six. Create them under Catalogue → Add-ons.',
+      },
+    },
   ],
 }

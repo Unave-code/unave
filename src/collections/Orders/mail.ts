@@ -5,6 +5,7 @@ import { loadEmailDesign } from '@/email/design'
 import { renderOrder } from '@/email/templates/render'
 import { sendOrderMail } from '@/email/send'
 import { formatPaise } from '@/utilities/money'
+import { addonsLabel } from '@/utilities/addons'
 import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
 
 /**
@@ -140,6 +141,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
     const unitPrice = Number(item.unitPrice ?? 0)
 
     return {
+      addonsLabel: addonsLabel(item.addons) ?? undefined,
       amountLabel: formatPaise(unitPrice * qty),
       componentsLabel: orderComponentsLabel(item.components) ?? undefined,
       durationLabel: orderItemKind(item),

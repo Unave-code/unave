@@ -8,6 +8,7 @@ import {
   ONE_TIME_DURATION,
   readCartFromHeaders,
 } from '@/utilities/cart'
+import { cleanAddonIds, pickAddons } from '@/utilities/addons'
 import { productDuration, productSize, productSizes } from '@/utilities/cartLines'
 import { isProductSellable } from '@/utilities/combos'
 import { isSameOriginRequest, safeReturnPath, seeOther } from '@/utilities/formPost'
@@ -71,6 +72,13 @@ export async function POST(request: Request): Promise<Response> {
 
   const cart = readCartFromHeaders(request.headers.get('cookie'))
 
+  /* Ticked add-ons arrive as ids only, one "addon" field each. Every one must
+     be offered on this product and available now, or nothing is added. */
+  const wantedAddons = form.getAll('addon').map((value) => String(value).trim()).filter(Boolean)
+  const addonIds = cleanAddonIds(wantedAddons)
+
+  if (addonIds.length !== wantedAddons.length) return back('/cart?notice=changed')
+
   // A one-time product has no durations to choose: its line carries the
   // reserved duration label exactly, and the quantity carries the rest.
   if (product.type === 'one-time' || product.type === 'combo') {
@@ -83,6 +91,8 @@ export async function POST(request: Request): Promise<Response> {
       return back('/cart?notice=changed')
     }
 
+    if (pickAddons(product, addonIds) === null) return back('/cart?notice=changed')
+
     // The product page's stepper may send a quantity; the card never does.
     const qty = Number.parseInt(String(form.get('qty') ?? '1'), 10)
     const result = addOneTimeCartLine(
@@ -90,6 +100,7 @@ export async function POST(request: Request): Promise<Response> {
       product.slug,
       Number.isFinite(qty) ? qty : 1,
       size?.label ?? ONE_TIME_DURATION,
+      addonIds,
     )
 
     if (!result.ok) {
@@ -98,6 +109,9 @@ export async function POST(request: Request): Promise<Response> {
 
     return back(returnPath, [cartCookie(result.lines)])
   }
+
+  // A meal plan prices by duration and takes no add-ons.
+  if (addonIds.length > 0) return back('/cart?notice=changed')
 
   const duration = productDuration(product, durationLabel)
 

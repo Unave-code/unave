@@ -40,7 +40,14 @@ export const allowedSlots = (meals: MealsOffered): PlanSlot[] =>
   meals === 'lunch' ? ['lunch'] : meals === 'dinner' ? ['dinner'] : PLAN_SLOTS
 
 export type PlanMenuMeal = { main: string; sides: string[] }
-export type PlanMenuDay = { day: string; dinner: null | PlanMenuMeal; full: string; lunch: null | PlanMenuMeal }
+export type PlanMenuDay = {
+  /** The calendar date this weekday falls on in the current week, "23 Nov"; empty until dated. */
+  date: string
+  day: string
+  dinner: null | PlanMenuMeal
+  full: string
+  lunch: null | PlanMenuMeal
+}
 export type PlanMenuWeek = { days: PlanMenuDay[]; range: string }
 
 /** A trial length always runs this many delivery days. */
@@ -110,6 +117,7 @@ const readWeek = (week: MealPlan['thisWeek'] | null | undefined): null | PlanMen
       | null
       | undefined
     return {
+      date: '',
       day,
       dinner: meal(entry?.dinnerMain, entry?.dinnerSides),
       full,
@@ -117,7 +125,45 @@ const readWeek = (week: MealPlan['thisWeek'] | null | undefined): null | PlanMen
     }
   })
   if (!days.some((d) => d.lunch || d.dinner)) return null
-  return { days, range: text(week.range) }
+  return { days, range: '' }
+}
+
+const IST_OFFSET_MS = 330 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/**
+ * The Monday to Saturday the menu is for, as calendar dates in India. On a
+ * Sunday, when nothing is delivered, that is the week starting tomorrow.
+ */
+export const currentMenuWeek = (now: Date = new Date()): { dates: string[]; range: string } => {
+  const local = new Date(now.getTime() + IST_OFFSET_MS)
+  const weekday = local.getUTCDay() // 0 is Sunday
+  const toMonday = weekday === 0 ? 1 : 1 - weekday
+  const monday = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) + toMonday * DAY_MS
+  const days = DAYS.map((_, i) => new Date(monday + i * DAY_MS))
+  const label = (d: Date) => `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
+  const first = days[0]
+  const last = days[days.length - 1]
+  const range =
+    first.getUTCMonth() === last.getUTCMonth()
+      ? `${first.getUTCDate()} – ${label(last)}`
+      : `${label(first)} – ${label(last)}`
+
+  return { dates: days.map(label), range }
+}
+
+/** The plan with its menu dated to the current week (Mon–Sat, India time). */
+export const withCurrentWeek = (data: PlanBuilderData, now: Date = new Date()): PlanBuilderData => {
+  if (!data.thisWeek) return data
+  const week = currentMenuWeek(now)
+  return {
+    ...data,
+    thisWeek: {
+      days: data.thisWeek.days.map((day, i) => ({ ...day, date: week.dates[i] ?? '' })),
+      range: week.range,
+    },
+  }
 }
 
 const readImage = (image: MealPlan['image']): PlanImage =>
