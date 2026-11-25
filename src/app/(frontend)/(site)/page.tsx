@@ -7,8 +7,6 @@ import { Faq } from '@/components/home/Faq'
 import { Gallery } from '@/components/home/Gallery'
 import { Hero } from '@/components/home/Hero'
 import { Testimonials } from '@/components/home/Testimonials'
-import type { Footer } from '@/payload-types'
-import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
   FAQ,
   HOME_DESCRIPTION,
@@ -17,13 +15,7 @@ import {
   HOME_TWITTER_DESCRIPTION,
 } from '@/utilities/homeCopy'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import {
-  faqJsonLd,
-  homePageJsonLd,
-  kitchenJsonLd,
-  organizationJsonLd,
-  websiteJsonLd,
-} from '@/utilities/structuredData'
+import { faqJsonLd, homePageJsonLd } from '@/utilities/structuredData'
 
 export const metadata: Metadata = {
   alternates: {
@@ -45,21 +37,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function HomePage() {
-  const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
-
+export default function HomePage() {
   return (
     <main>
-      {/* The kitchen, the site and the questions on this page (design.md §13). */}
-      <JsonLd
-        data={[
-          organizationJsonLd(),
-          websiteJsonLd(),
-          homePageJsonLd(HOME_TITLE, HOME_DESCRIPTION),
-          kitchenJsonLd(footer?.contact),
-          faqJsonLd(FAQ),
-        ]}
-      />
+      {/* This page and its questions (design.md §13); the organisation, site and
+          kitchen are in the root layout's head. */}
+      <JsonLd data={[homePageJsonLd(HOME_TITLE, HOME_DESCRIPTION), faqJsonLd(FAQ)]} />
 
       <Hero />
       <Gallery />

@@ -5,12 +5,16 @@ import { GeistMono } from 'geist/font/mono'
 import { Nunito } from 'next/font/google'
 import React from 'react'
 
+import { JsonLd } from '@/components/JsonLd'
+import type { Footer } from '@/payload-types'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
+import { getCachedGlobal } from '@/utilities/getGlobals'
+import { kitchenJsonLd, organizationJsonLd, websiteJsonLd } from '@/utilities/structuredData'
 
 // Nunito replaces the site's previous heading and body families; the type scale stays unchanged.
 const nunito = Nunito({
@@ -22,6 +26,10 @@ const nunito = Nunito({
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // The kitchen's contact details for the site-wide structured data. A failed
+  // read only drops the phone, email and address from it, never the page.
+  const footer = (await getCachedGlobal('footer', 1)().catch(() => null)) as Footer | null
+
   return (
     <html
       className={cn(nunito.variable, GeistMono.variable)}
@@ -34,6 +42,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link href="/favicon-32.png" rel="icon" sizes="32x32" type="image/png" />
         <link href="/favicon-192.png" rel="icon" sizes="192x192" type="image/png" />
         <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
+        {/* Who runs the site, the site and the kitchen, the same on every page.
+            Each page adds its own nodes (WebPage, FAQ, breadcrumb) in its body. */}
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd(), kitchenJsonLd(footer?.contact)]} />
       </head>
       <body>
         <Providers>{children}</Providers>

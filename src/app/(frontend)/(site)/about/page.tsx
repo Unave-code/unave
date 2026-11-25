@@ -68,13 +68,7 @@ import {
   ABOUT_VISION_EYEBROW,
 } from '@/utilities/aboutCopy'
 import type { Footer } from '@/payload-types'
-import {
-  breadcrumbJsonLd,
-  kitchenJsonLd,
-  organizationJsonLd,
-  webPageJsonLd,
-  websiteJsonLd,
-} from '@/utilities/structuredData'
+import { breadcrumbJsonLd, webPageJsonLd } from '@/utilities/structuredData'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/about' },
@@ -129,13 +123,10 @@ export default async function AboutPage() {
     <main>
       <JsonLd
         data={[
-          organizationJsonLd(),
-          websiteJsonLd(),
           webPageJsonLd('AboutPage', '/about', ABOUT_PAGE_TITLE, ABOUT_PAGE_DESCRIPTION, {
             about: 'organization',
             breadcrumb: true,
           }),
-          kitchenJsonLd(footer?.contact),
           breadcrumbJsonLd([
             { href: '/', label: 'Home' },
             { href: '/about', label: 'About' },
