@@ -13,10 +13,22 @@ import React from 'react'
 
 import { formatPaise } from '@/utilities/money'
 import type { OrderReport } from '@/utilities/orderReport/build'
-import { istFormat, reportRange, shiftRange, type ReportPeriod } from '@/utilities/orderReport/range'
+import {
+  istFormat,
+  periodAdjective,
+  REPORT_PERIODS,
+  reportRange,
+  shiftRange,
+  type ReportPeriod,
+} from '@/utilities/orderReport/range'
 
-const viewHref = (period: ReportPeriod, key?: string) =>
-  `/admin/reports?period=${period}${key ? `&key=${encodeURIComponent(key)}` : ''}`
+/** Orders shown per page in the table; the downloads always carry every order. */
+export const ORDERS_PER_PAGE = 25
+
+const viewHref = (period: ReportPeriod, key?: string, page?: number) =>
+  `/admin/reports?period=${period}${key ? `&key=${encodeURIComponent(key)}` : ''}${
+    page ? `${page > 1 ? `&page=${page}` : ''}#orders` : ''
+  }`
 
 const downloadHref = (period: ReportPeriod, key: string, format: 'pdf' | 'xlsx') =>
   `/api/orders/report?period=${period}&key=${encodeURIComponent(key)}&format=${format}`
@@ -30,7 +42,7 @@ const Change: React.FC<{ report: OrderReport; noun: string }> = ({ noun, report 
 
   if (!report.previous) return null
   if (before <= 0) {
-    return <span className="unave-rpt__badge">No sales the {noun} before</span>
+    return <span className="unave-rpt__badge">No sales the previous {noun}</span>
   }
 
   const pct = Math.round(((now - before) / before) * 100)
@@ -40,7 +52,7 @@ const Change: React.FC<{ report: OrderReport; noun: string }> = ({ noun, report 
   return (
     <span className={`unave-rpt__badge unave-rpt__badge--${tone}`}>
       <Icon aria-hidden size={14} strokeWidth={2.5} />
-      {pct === 0 ? 'Level' : `${Math.abs(pct)}%`} vs last {noun}
+      {pct === 0 ? 'Level' : `${Math.abs(pct)}%`} vs previous {noun}
       <span className="unave-rpt__badge-sub">{formatPaise(before)}</span>
     </span>
   )
@@ -53,15 +65,35 @@ const Share: React.FC<{ value: number }> = ({ value }) => (
   </span>
 )
 
+/** Page numbers to show: the first, the last, and two either side of the current one. */
+export const pageList = (current: number, count: number): (number | 'gap')[] => {
+  const pages: (number | 'gap')[] = []
+  for (let n = 1; n <= count; n += 1) {
+    if (n === 1 || n === count || Math.abs(n - current) <= 1) pages.push(n)
+    else if (pages[pages.length - 1] !== 'gap') pages.push('gap')
+  }
+  return pages
+}
+
 /** The report page's content, without the admin chrome around it. */
-export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }> = ({ period, report }) => {
+export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod; page?: number }> = ({
+  page: requestedPage = 1,
+  period,
+  report,
+}) => {
   const { range, totals } = report
   const previous = shiftRange(range, -1)
   const next = shiftRange(range, 1)
   const current = reportRange(period)
   const isCurrent = range.key === current.key
   const nextIsFuture = next.from.getTime() > current.from.getTime()
-  const noun = period === 'week' ? 'week' : 'month'
+  const noun = period
+  const hourly = period === 'day'
+  const currentLabel = hourly ? 'Today' : `This ${noun}`
+  const pageCount = Math.max(1, Math.ceil(report.rows.length / ORDERS_PER_PAGE))
+  const page = Math.min(Math.max(1, Math.floor(requestedPage) || 1), pageCount)
+  const firstIndex = (page - 1) * ORDERS_PER_PAGE
+  const pageRows = report.rows.slice(firstIndex, firstIndex + ORDERS_PER_PAGE)
   const busiest = Math.max(1, ...report.days.map((day) => day.revenue))
   const best = report.days.reduce((top, day) => (day.revenue > top.revenue ? day : top), report.days[0])
   const empty = totals.orders === 0
@@ -91,14 +123,14 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
           </p>
         </div>
         <nav aria-label="Report length" className="unave-rpt__seg">
-          {(['week', 'month'] as const).map((option) => (
+          {REPORT_PERIODS.map((option) => (
             <Link
               aria-current={option === period ? 'page' : undefined}
               className="unave-rpt__seg-item"
               href={viewHref(option)}
               key={option}
             >
-              {option === 'week' ? 'Weekly' : 'Monthly'}
+              {periodAdjective(option)}
             </Link>
           ))}
         </nav>
@@ -114,7 +146,7 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
             <ChevronLeft aria-hidden size={20} />
           </Link>
           <div className="unave-rpt__period-text">
-            <span className="unave-rpt__period-kind">{isCurrent ? `This ${noun}` : period === 'week' ? 'Week' : 'Month'}</span>
+            <span className="unave-rpt__period-kind">{isCurrent ? currentLabel : hourly ? 'Day' : period === 'week' ? 'Week' : 'Month'}</span>
             <h2 className="unave-rpt__period-label">{range.label}</h2>
           </div>
           {nextIsFuture ? (
@@ -132,7 +164,7 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
           )}
           {!isCurrent && (
             <Link className="unave-rpt__text-btn" href={viewHref(period)}>
-              Back to this {noun}
+              Back to {hourly ? 'today' : `this ${noun}`}
             </Link>
           )}
         </div>
@@ -166,28 +198,32 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
 
       {empty ? (
         <div className="unave-rpt__card unave-rpt__empty">
-          <h3>No paid orders this {noun}</h3>
-          <p>Step back to an earlier {noun}, or switch to the {period === 'week' ? 'monthly' : 'weekly'} view.</p>
+          <h3>No paid orders {hourly ? 'on this day' : `this ${noun}`}</h3>
+          <p>
+            Step back to an earlier {noun}, or switch to the {period === 'month' ? 'weekly' : 'monthly'} view.
+          </p>
         </div>
       ) : (
         <>
           <section className="unave-rpt__card unave-rpt__chart-card">
             <div className="unave-rpt__card-head">
-              <h3>Day by day</h3>
+              <h3>{hourly ? 'Hour by hour' : 'Day by day'}</h3>
               {best && best.revenue > 0 && (
                 <p className="unave-rpt__muted">
-                  Best day {best.label}, {formatPaise(best.revenue)}
+                  {hourly ? 'Busiest hour' : 'Best day'} {best.label}, {formatPaise(best.revenue)}
                 </p>
               )}
             </div>
             <ol
-              aria-label="Revenue per day"
+              aria-label={hourly ? 'Revenue per hour' : 'Revenue per day'}
               className={`unave-rpt__chart unave-rpt__chart--${period}`}
               style={{ gridTemplateColumns: `repeat(${report.days.length}, minmax(0, 1fr))` }}
             >
               {report.days.map((day, index) => {
                 const [weekday, ...rest] = day.label.split(', ')
-                const showLabel = period === 'week' || index % 5 === 0 || index === report.days.length - 1
+                const showLabel =
+                  period === 'week' ||
+                  (hourly ? index % 3 === 0 : index % 5 === 0 || index === report.days.length - 1)
                 return (
                   <li
                     className="unave-rpt__col"
@@ -205,6 +241,8 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
                         <>
                           <strong>{weekday}</strong> {rest.join(', ')}
                         </>
+                      ) : hourly ? (
+                        day.label
                       ) : (
                         rest.join(', ').split(' ')[0]
                       )}
@@ -279,11 +317,13 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
             </div>
           </div>
 
-          <section className="unave-rpt__card unave-rpt__orders">
+          <section className="unave-rpt__card unave-rpt__orders" id="orders">
             <div className="unave-rpt__card-head">
               <h3>Orders</h3>
               <p className="unave-rpt__muted">
-                {report.rows.length} paid order{report.rows.length === 1 ? '' : 's'}, oldest first
+                {pageCount > 1
+                  ? `Showing ${firstIndex + 1}–${firstIndex + pageRows.length} of ${report.rows.length}, oldest first`
+                  : `${report.rows.length} paid order${report.rows.length === 1 ? '' : 's'}, oldest first`}
               </p>
             </div>
             <div className="unave-rpt__table-wrap" role="region" aria-label="Orders" tabIndex={0}>
@@ -301,7 +341,7 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
                   </tr>
                 </thead>
                 <tbody>
-                  {report.rows.map((row) => (
+                  {pageRows.map((row) => (
                     <tr key={row.id}>
                       <td>
                         <Link className="unave-rpt__order-link" href={`/admin/collections/orders/${row.id}`}>
@@ -354,6 +394,57 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
                 </tbody>
               </table>
             </div>
+            {pageCount > 1 && (
+              <nav aria-label="Orders pages" className="unave-rpt__pager">
+                {page > 1 ? (
+                  <Link className="unave-rpt__pager-step" href={viewHref(period, range.key, page - 1)} rel="prev">
+                    <ChevronLeft aria-hidden size={16} />
+                    Previous
+                  </Link>
+                ) : (
+                  <span aria-disabled="true" className="unave-rpt__pager-step is-disabled">
+                    <ChevronLeft aria-hidden size={16} />
+                    Previous
+                  </span>
+                )}
+                <ol className="unave-rpt__pager-pages">
+                  {pageList(page, pageCount).map((item, index) =>
+                    item === 'gap' ? (
+                      <li aria-hidden className="unave-rpt__pager-gap" key={`gap-${index}`}>
+                        …
+                      </li>
+                    ) : (
+                      <li key={item}>
+                        {item === page ? (
+                          <span aria-current="page" className="unave-rpt__pager-page is-current">
+                            {item}
+                          </span>
+                        ) : (
+                          <Link
+                            aria-label={`Page ${item}`}
+                            className="unave-rpt__pager-page"
+                            href={viewHref(period, range.key, item)}
+                          >
+                            {item}
+                          </Link>
+                        )}
+                      </li>
+                    ),
+                  )}
+                </ol>
+                {page < pageCount ? (
+                  <Link className="unave-rpt__pager-step" href={viewHref(period, range.key, page + 1)} rel="next">
+                    Next
+                    <ChevronRight aria-hidden size={16} />
+                  </Link>
+                ) : (
+                  <span aria-disabled="true" className="unave-rpt__pager-step is-disabled">
+                    Next
+                    <ChevronRight aria-hidden size={16} />
+                  </span>
+                )}
+              </nav>
+            )}
           </section>
         </>
       )}

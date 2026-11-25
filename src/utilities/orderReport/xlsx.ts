@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 
 import { changeText, type OrderReport } from './build'
-import { IST_OFFSET_MS, istFormat } from './range'
+import { IST_OFFSET_MS, istFormat, periodAdjective } from './range'
 
 const GREEN = 'FF1A4B36'
 const GREEN_TINT = 'FFE6F0EA'
@@ -59,7 +59,8 @@ export const renderReportXlsx = async (
   book.creator = 'UNAVE admin'
   book.created = report.generatedAt
 
-  const kind = report.range.period === 'week' ? 'Weekly' : 'Monthly'
+  const kind = periodAdjective(report.range.period)
+  const hourly = report.range.period === 'day'
   const { totals } = report
 
   // Summary
@@ -105,10 +106,15 @@ export const renderReportXlsx = async (
     row.getCell(2).numFmt = RUPEES
   }
 
-  // Daily
-  const daily = book.addWorksheet('Daily')
+  // Daily, or hourly for a day report
+  const daily = book.addWorksheet(hourly ? 'Hourly' : 'Daily')
   table(daily, [
-    { header: 'Date', key: 'date', numFmt: 'ddd dd mmm yyyy', width: 18 },
+    {
+      header: hourly ? 'Hour (IST)' : 'Date',
+      key: 'date',
+      numFmt: hourly ? 'h AM/PM' : 'ddd dd mmm yyyy',
+      width: 18,
+    },
     { header: 'Orders', key: 'orders', width: 10 },
     { header: 'Revenue', key: 'revenue', numFmt: RUPEES, width: 16 },
   ])

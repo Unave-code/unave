@@ -134,6 +134,7 @@ export type OrderReport = {
   totals: ReportTotals
   /** The period before, for the "up / down" comparison. */
   previous: { orders: number; revenue: number } | null
+  /** One slot per hour for a day report, else one per day. */
   days: { date: Date; label: string; orders: number; revenue: number }[]
   products: { title: string; duration: string; qty: number; orders: number; revenue: number }[]
   methods: { method: string; orders: number; revenue: number }[]
@@ -223,7 +224,10 @@ export const buildOrderReport = ({
 }): OrderReport => {
   const days = range.days.map((date) => ({
     date,
-    label: istFormat(date, { day: 'numeric', month: 'short', weekday: 'short' }),
+    label:
+      range.period === 'day'
+        ? istFormat(date, { hour: 'numeric', hour12: true })
+        : istFormat(date, { day: 'numeric', month: 'short', weekday: 'short' }),
     orders: 0,
     revenue: 0,
   }))
@@ -244,7 +248,7 @@ export const buildOrderReport = ({
     const total = order.total ?? 0
     revenue += total
 
-    const day = days[Math.floor((at.getTime() - range.from.getTime()) / (24 * 60 * 60 * 1000))]
+    const day = days[Math.floor((at.getTime() - range.from.getTime()) / range.step)]
     if (day) {
       day.orders += 1
       day.revenue += total
@@ -386,7 +390,7 @@ export const buildOrderReport = ({
 export const changeText = (report: OrderReport): string | null => {
   if (!report.previous) return null
   const before = report.previous.revenue
-  const noun = report.range.period === 'week' ? 'week' : 'month'
+  const noun = report.range.period
   if (before <= 0) return `No sales the ${noun} before`
   const now = report.totals.revenue
   const pct = Math.abs(Math.round(((now - before) / before) * 100))
@@ -394,6 +398,6 @@ export const changeText = (report: OrderReport): string | null => {
   return `${now > before ? 'Up' : 'Down'} ${pct}% on the ${noun} before (${formatPaise(before)})`
 }
 
-/** "unave-orders-week-2026-11-23" — the download's file name, without extension. */
+/** "unave-orders-day-2026-11-25", "unave-orders-week-2026-11-23" — the download's file name, without extension. */
 export const reportFileName = (report: OrderReport): string =>
   `unave-orders-${report.range.period}-${report.range.key}`

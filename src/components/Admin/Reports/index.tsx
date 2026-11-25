@@ -21,9 +21,10 @@ const ReportsView = async ({ initPageResult, params, searchParams }: AdminViewSe
   const periodParam = first(searchParams?.period)
   const period: ReportPeriod = isReportPeriod(periodParam) ? periodParam : 'week'
   const key = first(searchParams?.key)
+  const page = Number(first(searchParams?.page)) || 1
 
   const content = isStaffRequest(req) ? (
-    <ReportsBody period={period} report={await loadOrderReport(req, period, key)} />
+    <ReportsBody page={page} period={period} report={await loadOrderReport(req, period, key)} />
   ) : (
     <p>Only staff can see reports.</p>
   )

@@ -3,7 +3,7 @@ import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from 'pdf
 import { formatPaise } from '@/utilities/money'
 
 import { changeText, type OrderReport } from './build'
-import { istFormat } from './range'
+import { istFormat, periodAdjective } from './range'
 
 const GREEN = rgb(0x1a / 255, 0x4b / 255, 0x36 / 255)
 const GREEN_TINT = rgb(0xe6 / 255, 0xf0 / 255, 0xea / 255)
@@ -56,7 +56,8 @@ export const renderReportPdf = async (
   const regular = await doc.embedFont(StandardFonts.Helvetica)
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
   const safe = makeSafe(regular)
-  const kind = report.range.period === 'week' ? 'Weekly' : 'Monthly'
+  const kind = periodAdjective(report.range.period)
+  const hourly = report.range.period === 'day'
 
   doc.setTitle(`UNAVE ${kind.toLowerCase()} orders report, ${safe(report.range.label)}`)
   doc.setAuthor('UNAVE')
@@ -265,14 +266,18 @@ export const renderReportPdf = async (
     y -= 18
   }
 
-  heading('Day by day')
+  heading(hourly ? 'Hour by hour' : 'Day by day')
   drawTable(
     [
-      { header: 'Date', width: 3 },
+      { header: hourly ? 'Hour (IST)' : 'Date', width: 3 },
       { align: 'right', header: 'Orders', width: 1 },
       { align: 'right', header: 'Revenue', width: 2 },
     ],
-    report.days.map((day) => [day.label, String(day.orders), money(day.revenue)]),
+    (hourly ? report.days.filter((slot) => slot.orders > 0) : report.days).map((day) => [
+      day.label,
+      String(day.orders),
+      money(day.revenue),
+    ]),
     { total: ['Total', String(totals.orders), money(totals.revenue)] },
   )
 
