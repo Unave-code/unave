@@ -9,9 +9,15 @@
  * the business. Search this file for `—` before launch.
  */
 
-export const HOME_TITLE = 'UNAVE | Healthy food, cooked in our own kitchen'
+/** Primary query: "cloud kitchen in Chennai" (docs/seo/keyword-map.md). The brand is in it, so it is absolute. */
+export const HOME_TITLE = 'UNAVE | Cloud Kitchen in Chennai – Fresh Food Delivery'
 export const HOME_DESCRIPTION =
-  'Healthy, nutrition-conscious and diabetes-conscious meals cooked fresh in our cloud kitchen. Tell us what you need and we will cook it.'
+  'UNAVE is a cloud kitchen in Chennai delivering fresh produce, ready-to-cook and ready-to-eat meals. Hygienic, homestyle, preservative-free. Order now.'
+/** The longer sentence for link previews (Open Graph); the X card gets the short one. */
+export const HOME_SHARE_DESCRIPTION =
+  'Fresh produce, ready-to-cook and ready-to-eat meals from UNAVE, a hygienic cloud kitchen in Chennai. Homestyle food delivered to your door.'
+export const HOME_TWITTER_DESCRIPTION =
+  'Fresh produce, ready-to-cook and ready-to-eat meals from UNAVE, a hygienic cloud kitchen in Chennai.'
 
 /**
  * Placeholder photography: free-licence stock, already cropped and compressed to
@@ -27,9 +33,14 @@ export const IMAGES = {
 
 /** 1. Announcement bar now lives in the site chrome (Header global), above the navbar. */
 
-/** 2. The visible home hero heading. */
+/** 2. The visible home hero heading. The small line above it carries the page's query. */
+export const HERO_EYEBROW = 'Cloud kitchen in Chennai'
 export const HERO_HEADLINE = 'Good food, cooked in'
 export const HERO_HEADLINE_ACCENT = 'our own kitchen.'
+
+/** The direct answer under the heading: what UNAVE is, what it sells and where. */
+export const HERO_ANSWER =
+  'UNAVE is a cloud kitchen in Chennai. We cook ready-to-eat home-style meals, prepare ready-to-cook food and pack fresh produce in our own kitchen, then deliver it to your door. Look around without an account, or message us and we will plan your week with you.'
 
 /** 4. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
  * three with an `image` are the ones the bento gives a wide or tall tile to, so the
@@ -165,7 +176,7 @@ export const FAQ = [
   {
     question: 'When and where do you deliver?',
     answer:
-      'We deliver on the schedule the kitchen agrees with you. Tell us your address when you get in touch and we will confirm whether we reach you before anything is cooked.',
+      'UNAVE cooks in Chennai and delivers within the city, on the schedule the kitchen agrees with you. Tell us your address when you get in touch and we will confirm whether we reach you before anything is cooked.',
   },
   {
     question: 'Can I pause or cancel?',

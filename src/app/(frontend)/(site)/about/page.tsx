@@ -19,11 +19,12 @@ import {
 import React from 'react'
 
 import { Cta } from '@/components/Cta'
+import { JsonLd } from '@/components/JsonLd'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { Section } from '@/components/home/Section'
 import { Swoosh } from '@/components/Swoosh'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { DEFAULT_OG_IMAGE, mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { productCategoryHref } from '@/utilities/productsCategoryCopy'
 import { WHATSAPP_FALLBACK_LABEL, whatsappHref } from '@/utilities/whatsapp'
 import {
@@ -49,6 +50,8 @@ import {
   ABOUT_NEEDS_INTRO,
   ABOUT_PAGE_DESCRIPTION,
   ABOUT_PAGE_TITLE,
+  ABOUT_SHARE_DESCRIPTION,
+  ABOUT_TWITTER_DESCRIPTION,
   ABOUT_PROMISE,
   ABOUT_PROMISE_HEADING,
   ABOUT_PROMISE_TITLE,
@@ -65,16 +68,31 @@ import {
   ABOUT_VISION_EYEBROW,
 } from '@/utilities/aboutCopy'
 import type { Footer } from '@/payload-types'
+import {
+  breadcrumbJsonLd,
+  kitchenJsonLd,
+  organizationJsonLd,
+  webPageJsonLd,
+  websiteJsonLd,
+} from '@/utilities/structuredData'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/about' },
   description: ABOUT_PAGE_DESCRIPTION,
   openGraph: mergeOpenGraph({
-    description: ABOUT_PAGE_DESCRIPTION,
+    description: ABOUT_SHARE_DESCRIPTION,
+    images: [{ ...DEFAULT_OG_IMAGE, alt: 'About UNAVE cloud kitchen in Chennai', url: '/og.png' }],
     title: ABOUT_PAGE_TITLE,
     url: '/about',
   }),
-  title: ABOUT_PAGE_TITLE,
+  // The title already names UNAVE, so the layout's suffix is skipped.
+  title: { absolute: ABOUT_PAGE_TITLE },
+  twitter: {
+    card: 'summary_large_image',
+    description: ABOUT_TWITTER_DESCRIPTION,
+    images: [{ alt: 'About UNAVE cloud kitchen in Chennai', url: '/og.png' }],
+    title: ABOUT_PAGE_TITLE,
+  },
 }
 
 /** One icon per nutrition focus, in ABOUT_NEEDS order. No medical symbols (design.md §8). */
@@ -109,6 +127,22 @@ export default async function AboutPage() {
 
   return (
     <main>
+      <JsonLd
+        data={[
+          organizationJsonLd(),
+          websiteJsonLd(),
+          webPageJsonLd('AboutPage', '/about', ABOUT_PAGE_TITLE, ABOUT_PAGE_DESCRIPTION, {
+            about: 'organization',
+            breadcrumb: true,
+          }),
+          kitchenJsonLd(footer?.contact),
+          breadcrumbJsonLd([
+            { href: '/', label: 'Home' },
+            { href: '/about', label: 'About' },
+          ]),
+        ]}
+      />
+
       {/* Hero: the promise of the brand over a warm home meal. */}
       <Section
         className="opening-band overflow-hidden bg-green-900 md:py-24"
@@ -118,9 +152,9 @@ export default async function AboutPage() {
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
 
         <div className="relative max-w-[46rem]">
-          <p className="text-eyebrow text-gold-400 uppercase">{ABOUT_HERO_EYEBROW}</p>
-
-          <h1 className="text-display mt-4 text-balance">
+          {/* The eyebrow sits inside the h1 so the heading names the brand and the city. */}
+          <h1 className="text-display text-balance">
+            <span className="text-eyebrow text-gold-400 mb-4 block uppercase">{ABOUT_HERO_EYEBROW}</span>
             {ABOUT_HERO_HEADLINE}{' '}
             <span className="text-gold-400 whitespace-nowrap italic">{ABOUT_HERO_HEADLINE_ACCENT}</span>
           </h1>

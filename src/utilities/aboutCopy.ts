@@ -6,17 +6,23 @@
 import type { ProductCategoryValue } from '@/utilities/productsCategoryCopy'
 import { WHATSAPP_CTA_LABEL } from '@/utilities/whatsapp'
 
-export const ABOUT_PAGE_TITLE = 'About us'
+/** Primary query: "Unave cloud kitchen" (docs/seo/keyword-map.md). Names the brand, so the page sets it absolute. */
+export const ABOUT_PAGE_TITLE = 'About UNAVE Cloud Kitchen | Fresh Food in Chennai'
 export const ABOUT_PAGE_DESCRIPTION =
-  'UNAVE is a woman-led food and lifestyle platform making healthy living simple: ready to cook, ready to eat, and farm-fresh food products under one roof.'
+  'Learn about UNAVE cloud kitchen in Chennai: how we prepare fresh produce, ready-to-cook and ready-to-eat meals with hygiene and homestyle taste.'
+/** The longer sentence for link previews (Open Graph); the X card gets the short one. */
+export const ABOUT_SHARE_DESCRIPTION =
+  'Meet UNAVE, a cloud kitchen in Chennai preparing fresh produce, ready-to-cook and ready-to-eat meals with hygiene and homestyle taste.'
+export const ABOUT_TWITTER_DESCRIPTION =
+  'Meet UNAVE, a cloud kitchen in Chennai preparing fresh, homestyle food with hygiene and care.'
 
 export const ABOUT_TAGLINE = 'Your Complete Health Partner'
 
-export const ABOUT_HERO_EYEBROW = 'About UNAVE'
+export const ABOUT_HERO_EYEBROW = 'About UNAVE, a cloud kitchen in Chennai'
 export const ABOUT_HERO_HEADLINE = 'Healthy living.'
 export const ABOUT_HERO_HEADLINE_ACCENT = 'Made easy.'
 export const ABOUT_HERO_SUB =
-  'At UNAVE, we believe healthy living should not be complicated. It should be simple, convenient and within everyone’s reach.'
+  'UNAVE is a woman-led cloud kitchen in Chennai. We believe healthy living should not be complicated, so we cook ready-to-eat meals, prepare ready-to-cook food and pack fresh produce in our own kitchen, and bring it to your door.'
 export const ABOUT_HERO_CTA = WHATSAPP_CTA_LABEL
 
 /** Photography (design.md §8): the band photos are decorative; the others are content. */

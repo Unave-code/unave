@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       className={cn(nunito.variable, GeistMono.variable)}
       data-theme="light"
-      lang="en"
+      lang="en-IN"
       suppressHydrationWarning
     >
       <head>
@@ -44,9 +44,34 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 export const metadata: Metadata = {
   metadataBase: new URL(getServerSideURL()),
+  authors: [{ name: 'UNAVE' }],
   openGraph: mergeOpenGraph(),
+  /* Indexable by default with full-size image previews and unlimited snippets.
+     Private pages (cart, checkout, sign-in) set their own noindex, which wins. */
+  robots: {
+    follow: true,
+    index: true,
+    'max-image-preview': 'large',
+    'max-snippet': -1,
+    'max-video-preview': -1,
+  },
+  // The kitchen serves Chennai, Tamil Nadu.
+  other: {
+    'geo.placename': 'Chennai',
+    'geo.region': 'IN-TN',
+  },
+  /* Every page title ends in the brand, once. A page whose own title already
+     names UNAVE sets `title: { absolute }` to skip the suffix. */
+  title: {
+    default: 'UNAVE | Cloud kitchen in Chennai',
+    template: '%s | UNAVE',
+  },
   twitter: {
     card: 'summary_large_image',
-    creator: '@payloadcms',
   },
+}
+
+/** The browser chrome colour on mobile: the brand's deep green (--green-700). */
+export const viewport: Viewport = {
+  themeColor: '#1a4b36',
 }
