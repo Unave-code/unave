@@ -1,0 +1,259 @@
+@import '@payloadcms/ui/scss';
+
+/**
+ * The orders report view (/admin/reports) and the link above the orders list.
+ * Payload's theme variables carry the colours, so light and dark both work.
+ */
+.unave-reports {
+  padding-bottom: base(3);
+  padding-top: base(1.5);
+
+  &__header {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: base(1);
+    justify-content: space-between;
+    margin-bottom: base(1);
+  }
+
+  &__back {
+    color: var(--theme-elevation-500);
+    display: inline-block;
+    font-size: 13px;
+    margin-bottom: base(0.5);
+  }
+
+  &__title {
+    font-family: var(--font-serif);
+    margin: 0;
+  }
+
+  &__meta,
+  &__muted {
+    color: var(--theme-elevation-500);
+    margin: 0;
+  }
+
+  &__tabs {
+    background: var(--theme-elevation-50);
+    border-radius: 999px;
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  &__tab {
+    align-items: center;
+    border-radius: 999px;
+    color: var(--theme-elevation-700);
+    display: inline-flex;
+    min-height: 44px;
+    padding: 0 base(1);
+    text-decoration: none;
+
+    &[aria-current='page'] {
+      background: var(--theme-success-500);
+      color: var(--theme-bg);
+      font-weight: 600;
+    }
+  }
+
+  &__bar {
+    align-items: center;
+    border-bottom: 1px solid var(--theme-elevation-100);
+    border-top: 1px solid var(--theme-elevation-100);
+    display: flex;
+    flex-wrap: wrap;
+    gap: base(1);
+    justify-content: space-between;
+    margin-bottom: base(1);
+    padding: base(0.75) 0;
+  }
+
+  &__stepper {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: base(0.5);
+  }
+
+  &__range {
+    font-family: var(--font-serif);
+    margin: 0;
+    min-width: 12ch;
+    text-align: center;
+  }
+
+  &__step {
+    align-items: center;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 999px;
+    color: var(--theme-text);
+    display: inline-flex;
+    font-size: 22px;
+    height: 44px;
+    justify-content: center;
+    line-height: 1;
+    text-decoration: none;
+    width: 44px;
+
+    &--off {
+      opacity: 0.35;
+    }
+  }
+
+  &__today {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  &__downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: base(0.5);
+  }
+
+  &__download.btn {
+    border-radius: 999px;
+    margin: 0;
+    min-height: 44px;
+  }
+
+  &__figures {
+    display: grid;
+    gap: base(0.5);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin: 0 0 base(0.5);
+  }
+
+  &__figure {
+    margin: 0;
+    min-width: 0;
+
+    dt {
+      color: var(--theme-elevation-500);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      line-height: 1.2;
+      margin: base(0.25) 0 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__change {
+    color: var(--theme-warning-600);
+    font-weight: 600;
+    margin: base(0.5) 0 base(1);
+  }
+
+  &__grid {
+    display: grid;
+    gap: base(1.5);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: base(1);
+
+    @include mid-break {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: base(1.5);
+    min-width: 0;
+  }
+
+  &__panel {
+    min-width: 0;
+
+    h3 {
+      margin: 0 0 base(0.5);
+    }
+  }
+
+  &__table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+      border-bottom: 1px solid var(--theme-elevation-100);
+      font-weight: 400;
+      padding: base(0.35) base(0.25);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    thead th {
+      color: var(--theme-elevation-500);
+      font-size: 12px;
+    }
+
+    tfoot th,
+    tfoot td {
+      border-bottom: 0;
+      border-top: 2px solid var(--theme-elevation-200);
+      font-weight: 600;
+    }
+
+    .is-num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+
+  &__barcell {
+    position: relative;
+    width: 50%;
+  }
+
+  &__bar-fill {
+    background: var(--theme-success-100);
+    border-radius: 3px;
+    bottom: 6px;
+    position: absolute;
+    right: 0;
+    top: 6px;
+  }
+
+  &__bar-value {
+    padding-left: base(0.25);
+    position: relative;
+  }
+
+  &__footnote {
+    margin-top: base(1.5);
+  }
+}
+
+.unave-reports-link {
+  align-items: center;
+  background: var(--theme-elevation-50);
+  border-radius: var(--style-radius-m);
+  display: flex;
+  flex-wrap: wrap;
+  gap: base(0.5) base(1);
+  justify-content: space-between;
+  margin-bottom: base(1);
+  padding: base(0.5) base(0.75);
+
+  &__text {
+    margin: 0;
+  }
+
+  &__button.btn {
+    border-radius: 999px;
+    margin: 0;
+    min-height: 44px;
+  }
+}

@@ -58,6 +58,14 @@ export default buildConfig({
       logout: {
         Button: '@/components/Admin/NoSidebarLogout',
       },
+      // Weekly and monthly orders reports, downloadable as PDF and Excel.
+      views: {
+        reports: {
+          Component: '@/components/Admin/Reports',
+          meta: { title: 'Order reports' },
+          path: '/reports',
+        },
+      },
     },
     /**
      * The header's top-right slot renders the staff user menu — initials,

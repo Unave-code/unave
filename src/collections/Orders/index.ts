@@ -3,6 +3,7 @@ import type { Access, CollectionConfig } from 'payload'
 import { hasStaffRole, isStaff } from '../../access/isStaff'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
+import { orderReportEndpoint } from './report'
 
 type OrderUser = { id?: number | string } & Record<string, unknown>
 
@@ -55,6 +56,9 @@ export const Orders: CollectionConfig = {
     update: isStaff,
   },
   admin: {
+    components: {
+      beforeList: ['@/components/Admin/Reports/ReportsLink'],
+    },
     defaultColumns: ['customer', 'total', 'createdAt'],
     description:
       'One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.',
@@ -394,7 +398,7 @@ export const Orders: CollectionConfig = {
       label: 'Deliveries start on',
     },
   ],
-  endpoints: [createOrderEndpoint, verifyOrderEndpoint],
+  endpoints: [orderReportEndpoint, createOrderEndpoint, verifyOrderEndpoint],
   graphQL: false,
   labels: {
     plural: 'Orders',

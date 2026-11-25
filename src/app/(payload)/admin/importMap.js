@@ -4,6 +4,7 @@ import { HiddenField as HiddenField_e6ccfc82cbf35023135a5c40655cd208 } from '@/c
 import { RupeeField as RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27 } from '@/components/Admin/RupeeField'
 import { RupeeCell as RupeeCell_bd976b46085bdf8ab53e7abd04517138 } from '@/components/Admin/RupeeCell'
 import { OrderPayment as OrderPayment_dc6d9f1fe14515efd09573ade57d6a2c } from '@/components/Admin/OrderSummary/OrderPayment'
+import { default as default_772d8bda7486936629a1ff66ada92bee } from '@/components/Admin/Reports/ReportsLink'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -45,6 +46,7 @@ import { default as default_aa0a2d19d38a4839dbd373417e210b89 } from '@/component
 import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/components/BeforeDashboard'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { default as default_9539be258f7ba9a25f6e22ba8e972ca0 } from '@/components/Admin/DashboardNavLink'
+import { default as default_8837c32f0d7e9d3b69094d123bd402d3 } from '@/components/Admin/Reports'
 import { default as default_d0389295b019118111ab6d64c9074102 } from '@/components/Admin/Widgets/OrdersToday'
 import { default as default_77dc216e238ca52c43df16992d268357 } from '@/components/Admin/Widgets/UnhandledEnquiries'
 import { default as default_b62bb9d316d2f79fbb6edcdfc71542ec } from '@/components/Admin/Widgets/SalesTrend'
@@ -58,6 +60,7 @@ export const importMap = {
   "@/components/Admin/RupeeField#RupeeField": RupeeField_7236db9f43dcb07d3e6c72e3d1bf6a27,
   "@/components/Admin/RupeeCell#RupeeCell": RupeeCell_bd976b46085bdf8ab53e7abd04517138,
   "@/components/Admin/OrderSummary/OrderPayment#OrderPayment": OrderPayment_dc6d9f1fe14515efd09573ade57d6a2c,
+  "@/components/Admin/Reports/ReportsLink#default": default_772d8bda7486936629a1ff66ada92bee,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -99,6 +102,7 @@ export const importMap = {
   "@/components/BeforeDashboard#default": default_1a7510af427896d367a49dbf838d2de6,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/Admin/DashboardNavLink#default": default_9539be258f7ba9a25f6e22ba8e972ca0,
+  "@/components/Admin/Reports#default": default_8837c32f0d7e9d3b69094d123bd402d3,
   "@/components/Admin/Widgets/OrdersToday#default": default_d0389295b019118111ab6d64c9074102,
   "@/components/Admin/Widgets/UnhandledEnquiries#default": default_77dc216e238ca52c43df16992d268357,
   "@/components/Admin/Widgets/SalesTrend#default": default_b62bb9d316d2f79fbb6edcdfc71542ec,
