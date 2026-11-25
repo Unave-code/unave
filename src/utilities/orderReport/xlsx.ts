@@ -46,7 +46,8 @@ const table = (
 }
 
 /**
- * The report as an .xlsx workbook: Summary, Daily, Products and Orders sheets.
+ * The report as an .xlsx workbook: Summary, Daily, Products, Orders (every
+ * field of every order) and Order lines (one row per product) sheets.
  * `logo` is the green stacked lockup (public/brand/lockup-stacked-green.png),
  * placed above the title on the Summary sheet.
  */
@@ -132,25 +133,100 @@ export const renderReportXlsx = async (
     products.addRow({ qty: totals.items, revenue: rupees(totals.revenue), title: 'Total' }),
   )
 
-  // Orders
+  // Orders: one row per order, every field the order holds
   const orders = book.addWorksheet('Orders')
+  const DATE_TIME = 'dd mmm yyyy hh:mm'
   table(orders, [
-    { header: 'Paid at (IST)', key: 'paidAt', numFmt: 'dd mmm yyyy hh:mm', width: 18 },
+    { header: 'Paid at (IST)', key: 'paidAt', numFmt: DATE_TIME, width: 18 },
     { header: 'Order', key: 'id', width: 8 },
     { header: 'Customer', key: 'customer', width: 22 },
+    { header: 'Email', key: 'email', width: 28 },
     { header: 'Phone', key: 'phone', width: 15 },
+    { header: 'Address line 1', key: 'addressLine1', width: 30 },
+    { header: 'Address line 2', key: 'addressLine2', width: 24 },
     { header: 'City', key: 'city', width: 14 },
+    { header: 'State', key: 'state', width: 14 },
+    { header: 'Pincode', key: 'pincode', width: 10 },
+    { header: 'Food preference', key: 'foodPreference', width: 16 },
+    { header: 'Delivery note', key: 'note', width: 30 },
     { header: 'Items', key: 'items', width: 50 },
     { header: 'Qty', key: 'qty', width: 6 },
-    { header: 'Total', key: 'total', numFmt: RUPEES, width: 14 },
+    { header: 'Subtotal', key: 'subtotal', numFmt: RUPEES, width: 13 },
+    { header: 'Total', key: 'total', numFmt: RUPEES, width: 13 },
+    { header: 'Deliveries start', key: 'startsOn', numFmt: 'dd mmm yyyy', width: 15 },
     { header: 'Method', key: 'method', width: 13 },
+    { header: 'Paid with', key: 'paymentDetail', width: 26 },
+    { header: 'Bank reference (RRN)', key: 'bankReference', width: 20 },
+    { header: 'Razorpay fee', key: 'fee', numFmt: RUPEES, width: 13 },
+    { header: 'GST on fee', key: 'tax', numFmt: RUPEES, width: 12 },
+    { header: 'Payer email', key: 'payerEmail', width: 26 },
+    { header: 'Payer phone', key: 'payerPhone', width: 15 },
+    { header: 'Captured at (IST)', key: 'capturedAt', numFmt: DATE_TIME, width: 18 },
+    { header: 'Razorpay order', key: 'gatewayOrderId', width: 22 },
     { header: 'Razorpay payment', key: 'paymentId', width: 22 },
+    { header: 'Created at (IST)', key: 'createdAt', numFmt: DATE_TIME, width: 18 },
   ])
   for (const row of report.rows) {
-    orders.addRow({ ...row, paidAt: istCellDate(row.paidAt), total: rupees(row.total) })
+    orders.addRow({
+      ...row,
+      capturedAt: row.capturedAt ? istCellDate(row.capturedAt) : null,
+      createdAt: row.createdAt ? istCellDate(row.createdAt) : null,
+      fee: rupees(row.fee),
+      paidAt: istCellDate(row.paidAt),
+      startsOn: row.startsOn ? istCellDate(row.startsOn) : null,
+      subtotal: rupees(row.subtotal),
+      tax: rupees(row.tax),
+      total: rupees(row.total),
+    })
   }
-  styleTotal(orders.addRow({ paidAt: 'Total', qty: totals.items, total: rupees(totals.revenue) }))
-  orders.autoFilter = { from: 'A1', to: 'J1' }
+  styleTotal(
+    orders.addRow({
+      fee: rupees(report.rows.reduce((sum, row) => sum + row.fee, 0)),
+      paidAt: 'Total',
+      qty: totals.items,
+      subtotal: rupees(report.rows.reduce((sum, row) => sum + row.subtotal, 0)),
+      tax: rupees(report.rows.reduce((sum, row) => sum + row.tax, 0)),
+      total: rupees(totals.revenue),
+    }),
+  )
+  orders.autoFilter = { from: { column: 1, row: 1 }, to: { column: orders.columnCount, row: 1 } }
+  orders.views = [{ state: 'frozen', xSplit: 3, ySplit: 1 }]
+
+  // Order lines: one row per product in each order
+  const lines = book.addWorksheet('Order lines')
+  table(lines, [
+    { header: 'Paid at (IST)', key: 'paidAt', numFmt: DATE_TIME, width: 18 },
+    { header: 'Order', key: 'orderId', width: 8 },
+    { header: 'Customer', key: 'customer', width: 22 },
+    { header: 'Product', key: 'product', width: 32 },
+    { header: 'Duration', key: 'duration', width: 12 },
+    { header: 'Days', key: 'days', width: 7 },
+    { header: 'Qty', key: 'qty', width: 6 },
+    { header: 'Product price', key: 'basePrice', numFmt: RUPEES, width: 14 },
+    { header: 'Add-ons', key: 'addons', width: 28 },
+    { header: 'Add-ons price', key: 'addonsPrice', numFmt: RUPEES, width: 14 },
+    { header: 'Unit price', key: 'unitPrice', numFmt: RUPEES, width: 13 },
+    { header: 'Line total', key: 'lineTotal', numFmt: RUPEES, width: 13 },
+    { header: 'Combo contents', key: 'contents', width: 40 },
+  ])
+  for (const line of report.lines) {
+    lines.addRow({
+      ...line,
+      addonsPrice: line.addonsPrice ? rupees(line.addonsPrice) : null,
+      basePrice: line.basePrice === null ? null : rupees(line.basePrice),
+      lineTotal: rupees(line.lineTotal),
+      paidAt: istCellDate(line.paidAt),
+      unitPrice: rupees(line.unitPrice),
+    })
+  }
+  styleTotal(
+    lines.addRow({
+      lineTotal: rupees(report.lines.reduce((sum, line) => sum + line.lineTotal, 0)),
+      paidAt: 'Total',
+      qty: totals.items,
+    }),
+  )
+  lines.autoFilter = { from: { column: 1, row: 1 }, to: { column: lines.columnCount, row: 1 } }
 
   const buffer = await book.xlsx.writeBuffer()
   return Buffer.from(buffer as ArrayBuffer)

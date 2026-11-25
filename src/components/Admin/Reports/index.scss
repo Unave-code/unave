@@ -524,6 +524,83 @@
     height: 100%;
   }
 
+  // Orders table
+  &__table-wrap {
+    margin: 0 calc(#{base(0.9)} * -1);
+    overflow-x: auto;
+    padding: 0 base(0.9);
+
+    &:focus-visible {
+      outline: 2px solid var(--rpt-accent);
+    }
+  }
+
+  &__table {
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 900px;
+    width: 100%;
+
+    th,
+    td {
+      border-top: 1px solid var(--rpt-border);
+      padding: 10px 12px 10px 0;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    thead th {
+      border-top: 0;
+      color: var(--rpt-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding-top: 0;
+      text-transform: uppercase;
+    }
+
+    tbody tr:hover {
+      background: var(--theme-elevation-100);
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    .is-num {
+      font-variant-numeric: tabular-nums;
+      padding-right: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+
+  &__order-link {
+    color: var(--rpt-accent-ink);
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__line,
+  &__sub {
+    display: block;
+  }
+
+  &__sub {
+    color: var(--rpt-muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  &__mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+  }
+
   &__note p {
     color: var(--rpt-muted);
     margin-top: 6px !important;

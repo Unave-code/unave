@@ -1,7 +1,13 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
 import { hasStaffRole } from '@/access/isStaff'
-import { buildOrderReport, reportFileName, type OrderReport, type ReportOrder } from '@/utilities/orderReport/build'
+import {
+  buildOrderReport,
+  reportFileName,
+  type OrderReport,
+  type ReportCustomer,
+  type ReportOrder,
+} from '@/utilities/orderReport/build'
 import {
   isReportPeriod,
   reportRange,
@@ -55,8 +61,37 @@ export const loadOrderReport = async (
     }),
   ])
 
+  const orders = current.docs as unknown as ReportOrder[]
+  const ids = [
+    ...new Set(
+      orders
+        .map((order) => (typeof order.customer === 'object' ? order.customer?.id : order.customer))
+        .filter((id): id is number | string => id !== null && id !== undefined),
+    ),
+  ]
+
+  // The account email; a failed read only leaves the column to the payer email.
+  const customers: Record<string, ReportCustomer> = {}
+  if (ids.length) {
+    try {
+      const accounts = await req.payload.find({
+        collection: 'customers',
+        depth: 0,
+        overrideAccess: false,
+        pagination: false,
+        req,
+        select: { email: true, name: true },
+        where: { id: { in: ids } },
+      })
+      for (const account of accounts.docs) customers[String(account.id)] = account
+    } catch (error) {
+      req.payload.logger.warn({ err: error, msg: 'Order report could not read customer accounts' })
+    }
+  }
+
   return buildOrderReport({
-    orders: current.docs as unknown as ReportOrder[],
+    customers,
+    orders,
     previous: {
       orders: previous.docs.length,
       revenue: previous.docs.reduce((sum, order) => sum + (order.total ?? 0), 0),

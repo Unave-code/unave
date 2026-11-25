@@ -52,12 +52,24 @@ describe('reportRange', () => {
 const orders: ReportOrder[] = [
   {
     customer: 1,
-    delivery: { city: 'Chennai', name: 'Asha', phone: '9000000001' },
+    delivery: {
+      addressLine1: '12 Lake View Road',
+      addressLine2: 'Flat 3B',
+      city: 'Chennai',
+      foodPreference: 'vegetarian',
+      name: 'Asha',
+      note: 'Ring twice',
+      phone: '9000000001',
+      pincode: '600041',
+      state: 'Tamil Nadu',
+    },
+    gatewayOrderId: 'order_1',
     gatewayPaymentId: 'pay_1',
     id: 11,
     items: [{ durationLabel: 'one-time', productTitle: 'Ragi mix', qty: 2, unitPrice: 25000 }],
     paidAt: '2026-11-23T03:00:00.000Z', // Monday 8:30 am IST
-    payment: { fee: 1000, method: 'upi', tax: 180 },
+    payment: { bankReference: '123456789012', fee: 1000, method: 'upi', tax: 180, vpa: 'asha@okaxis' },
+    startsOn: '2026-11-24T00:00:00.000Z',
     total: 50000,
   },
   {
@@ -89,6 +101,7 @@ const orders: ReportOrder[] = [
 
 describe('buildOrderReport', () => {
   const report = buildOrderReport({
+    customers: { '1': { email: 'asha@example.com' } },
     generatedAt: NOW,
     orders,
     previous: { orders: 1, revenue: 250000 },
@@ -126,6 +139,31 @@ describe('buildOrderReport', () => {
     expect(report.rows[1].items).toBe('Toddler meal plan (30 days) + Extra ghee; Ragi mix (One-time)')
   })
 
+  it('carries the full address, contact and payment of each order', () => {
+    expect(report.rows[0]).toMatchObject({
+      address: '12 Lake View Road, Flat 3B, Chennai, Tamil Nadu 600041',
+      bankReference: '123456789012',
+      email: 'asha@example.com',
+      foodPreference: 'Vegetarian',
+      gatewayOrderId: 'order_1',
+      note: 'Ring twice',
+      paymentDetail: 'UPI · asha@okaxis',
+      pincode: '600041',
+      state: 'Tamil Nadu',
+    })
+    expect(report.rows[0].startsOn?.toISOString()).toBe('2026-11-24T00:00:00.000Z')
+  })
+
+  it('lists one line per product with its add-ons', () => {
+    expect(report.lines).toHaveLength(3)
+    expect(report.lines[1]).toMatchObject({
+      addons: 'Extra ghee',
+      lineTotal: 300000,
+      orderId: '12',
+      product: 'Toddler meal plan',
+    })
+  })
+
   it('compares with the period before', () => {
     expect(changeText(report)).toBe('Up 50% on the week before (₹2,500)')
     expect(reportFileName(report)).toBe('unave-orders-week-2026-11-23')
@@ -141,6 +179,23 @@ describe('buildOrderReport', () => {
 
     const xlsx = await renderReportXlsx(report, { logo: logos.xlsx })
     expect(xlsx.subarray(0, 2).toString()).toBe('PK')
+
+    const ExcelJS = (await import('exceljs')).default
+    const book = new ExcelJS.Workbook()
+    await book.xlsx.load(xlsx as unknown as ArrayBuffer)
+    expect(book.worksheets.map((sheet) => sheet.name)).toEqual([
+      'Summary',
+      'Daily',
+      'Products',
+      'Orders',
+      'Order lines',
+    ])
+    const sheet = book.getWorksheet('Orders')!
+    const headers = (sheet.getRow(1).values as unknown[]).filter(Boolean)
+    expect(headers).toEqual(
+      expect.arrayContaining(['Address line 1', 'Pincode', 'Email', 'Delivery note', 'Razorpay order']),
+    )
+    expect(sheet.getRow(2).getCell(6).value).toBe('12 Lake View Road')
   })
 
   it('renders an empty period and names it can not draw', async () => {

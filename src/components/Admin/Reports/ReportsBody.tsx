@@ -13,7 +13,7 @@ import React from 'react'
 
 import { formatPaise } from '@/utilities/money'
 import type { OrderReport } from '@/utilities/orderReport/build'
-import { reportRange, shiftRange, type ReportPeriod } from '@/utilities/orderReport/range'
+import { istFormat, reportRange, shiftRange, type ReportPeriod } from '@/utilities/orderReport/range'
 
 const viewHref = (period: ReportPeriod, key?: string) =>
   `/admin/reports?period=${period}${key ? `&key=${encodeURIComponent(key)}` : ''}`
@@ -269,15 +269,92 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod }
                 </ul>
               </section>
 
-              <section className="unave-rpt__card unave-rpt__note">
+<section className="unave-rpt__card unave-rpt__note">
                 <h3>In the downloads</h3>
                 <p>
-                  Both files add every order with its customer, city, items and Razorpay payment id. The
-                  Excel file has one sheet each for the summary, days, products and orders.
+                  The PDF lists every order with its address and payment on landscape pages. The Excel
+                  file adds every field of every order, plus one row per product in Order lines.
                 </p>
               </section>
             </div>
           </div>
+
+          <section className="unave-rpt__card unave-rpt__orders">
+            <div className="unave-rpt__card-head">
+              <h3>Orders</h3>
+              <p className="unave-rpt__muted">
+                {report.rows.length} paid order{report.rows.length === 1 ? '' : 's'}, oldest first
+              </p>
+            </div>
+            <div className="unave-rpt__table-wrap" role="region" aria-label="Orders" tabIndex={0}>
+              <table className="unave-rpt__table">
+                <thead>
+                  <tr>
+                    <th scope="col">Order</th>
+                    <th scope="col">Customer</th>
+                    <th scope="col">Delivery address</th>
+                    <th scope="col">Items</th>
+                    <th scope="col">Payment</th>
+                    <th className="is-num" scope="col">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.rows.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <Link className="unave-rpt__order-link" href={`/admin/collections/orders/${row.id}`}>
+                          #{row.id}
+                        </Link>
+                        <span className="unave-rpt__sub">
+                          {istFormat(row.paidAt, { day: 'numeric', hour: 'numeric', minute: '2-digit', month: 'short' })}
+                        </span>
+                        {row.startsOn && (
+                          <span className="unave-rpt__sub">
+                            Starts {istFormat(row.startsOn, { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <strong>{row.customer || 'No name'}</strong>
+                        {row.phone && <span className="unave-rpt__sub">{row.phone}</span>}
+                        {row.email && <span className="unave-rpt__sub">{row.email}</span>}
+                      </td>
+                      <td>
+                        {[row.addressLine1, row.addressLine2].filter(Boolean).map((line) => (
+                          <span className="unave-rpt__line" key={line}>
+                            {line}
+                          </span>
+                        ))}
+                        <span className="unave-rpt__line">
+                          {[row.city, [row.state, row.pincode].filter(Boolean).join(' ')]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </span>
+                        {row.foodPreference && <span className="unave-rpt__sub">Food: {row.foodPreference}</span>}
+                        {row.note && <span className="unave-rpt__sub">Note: {row.note}</span>}
+                      </td>
+                      <td>
+                        {row.items.split('; ').map((item, index) => (
+                          <span className="unave-rpt__line" key={`${item}-${index}`}>
+                            {item}
+                          </span>
+                        ))}
+                      </td>
+                      <td>
+                        <span className="unave-rpt__line">{row.paymentDetail || row.method}</span>
+                        {row.paymentId && <span className="unave-rpt__sub unave-rpt__mono">{row.paymentId}</span>}
+                      </td>
+                      <td className="is-num">
+                        <strong>{formatPaise(row.total)}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </>
       )}
     </>
