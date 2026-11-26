@@ -87,8 +87,6 @@ export const MealPlanCard: React.FC<{
           <p className={CARD_SUBLINE}>{plan.description}</p>
         ) : null}
 
-        <p className="text-ink-600 mt-1 line-clamp-1 text-xs">{plan.plans.map((length) => length.label).join(' · ')}</p>
-
         {price !== null ? (
           <p className="mt-2">
             <span className={CARD_PRICE}>From {formatPaise(price)}</span>
