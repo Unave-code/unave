@@ -307,7 +307,7 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     position: 0,
     aud: 'adults',
     sub: 'lunch',
-    meals: 'any',
+    meals: 'lunch-dinner',
     img: ['kitchen.jpg', 'Meals being prepared in the kitchen'],
     description: 'Home-style North and South Indian meals, cooked fresh each day with less oil and no maida.',
     prices: [
@@ -383,7 +383,7 @@ const plans: (Partial<MealPlan> & { slug: string; title: string; img: [string, s
     position: 3,
     aud: 'adults',
     sub: 'lunch',
-    meals: 'any',
+    meals: 'lunch-dinner',
     img: ['gallery-2.jpg', 'A fresh meal with vegetables'],
     description: 'Paneer, soya, dals and sprouts in every meal, built for training days, with add-ons to take the protein further.',
     prices: [

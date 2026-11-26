@@ -142,6 +142,28 @@ export const offeredMeals = (data: Pick<PlanBuilderData, 'meals' | 'plans'>): Me
     ),
   )
 
+type PriceRow = {
+  bothPrice?: null | number
+  breakfastPrice?: null | number
+  dinnerPrice?: null | number
+  lunchPrice?: null | number
+}
+
+/**
+ * The offered meals no plan length has a price for, so the site would hide
+ * them. Lunch and dinner count as priced through the lunch and dinner price too.
+ */
+export const unpricedMeals = (meals: MealsOffered, rows: null | PriceRow[] | undefined): Meal[] => {
+  const priced = (value: unknown) => typeof value === 'number' && value >= 1
+  const has = (meal: Meal) =>
+    (rows ?? []).some((row) =>
+      meal === 'breakfast'
+        ? priced(row?.breakfastPrice)
+        : priced(meal === 'lunch' ? row?.lunchPrice : row?.dinnerPrice) || (allowedSlots(meals).includes('both') && priced(row?.bothPrice)),
+    )
+  return mealsIn(meals).filter((meal) => !has(meal))
+}
+
 export type PlanMenuMeal = { main: string; sides: string[] }
 export type PlanMenuDay = {
   breakfast: null | PlanMenuMeal

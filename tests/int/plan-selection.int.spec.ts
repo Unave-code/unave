@@ -6,6 +6,7 @@ import {
   encodePlanSelection,
   type MealsOffered,
   offeredMeals,
+  unpricedMeals,
   type PlanBuilderData,
   pricePlanSelection,
 } from '@/utilities/planBuilder'
@@ -107,5 +108,18 @@ describe('meals offered', () => {
     expect(offeredMeals({ meals: 'breakfast-dinner', plans })).toEqual(['breakfast', 'dinner'])
     expect(offeredMeals({ meals: 'lunch-dinner', plans })).toEqual(['lunch', 'dinner'])
     expect(offeredMeals({ meals: 'any', plans: [{ ...plans[0], prices: { lunch: 1 } }] })).toEqual(['lunch'])
+  })
+})
+
+describe('offered meals need a price', () => {
+  it('names an offered meal no length prices', () => {
+    expect(unpricedMeals('breakfast-dinner', [{ dinnerPrice: 100 }])).toEqual(['breakfast'])
+    expect(unpricedMeals('breakfast-dinner', [{ breakfastPrice: 50, dinnerPrice: 100 }])).toEqual([])
+  })
+
+  it('counts the lunch and dinner price for both meals, only when both are offered', () => {
+    expect(unpricedMeals('lunch-dinner', [{ bothPrice: 100 }])).toEqual([])
+    expect(unpricedMeals('any', [{ bothPrice: 100 }])).toEqual(['breakfast'])
+    expect(unpricedMeals('lunch', [{ bothPrice: 100 }])).toEqual(['lunch'])
   })
 })

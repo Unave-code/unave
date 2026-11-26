@@ -1,12 +1,13 @@
-import type { CollectionAfterChangeHook, CollectionConfig, FieldHook, PayloadRequest, TextFieldSingleValidation, Where } from 'payload'
+import type { CollectionAfterChangeHook, CollectionBeforeValidateHook, CollectionConfig, FieldHook, PayloadRequest, TextFieldSingleValidation, Where } from 'payload'
 
 import { revalidatePath } from 'next/cache'
+import { ValidationError } from 'payload'
 
 import { anyone } from '../../access/anyone'
 import { isStaff } from '../../access/isStaff'
 import { menuWeekField, rupeeField } from './fields'
 import { slugifyTitle } from '../Products/hooks/autoProductSlug'
-import { TRIAL_DAYS } from '../../utilities/planBuilder'
+import { MEAL_LABEL, MEALS_OFFERED, type MealsOffered, TRIAL_DAYS, unpricedMeals } from '../../utilities/planBuilder'
 import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
 /**
@@ -45,6 +46,31 @@ const lengthName: TextFieldSingleValidation = (value) => {
   if (!value || !value.trim()) return 'Give this plan length a name, for example 2 weeks.'
   if (value.includes('|')) return 'The name cannot contain the | character.'
   return true
+}
+
+/**
+ * Every meal the plan offers needs a price on at least one length, or the site
+ * quietly hides it: a breakfast menu with no breakfast price never shows.
+ */
+const offeredMealsPriced: CollectionBeforeValidateHook = ({ collection, data, originalDoc, req }) => {
+  const raw = data?.meals ?? originalDoc?.meals
+  const meals: MealsOffered = MEALS_OFFERED.includes(raw) ? raw : 'any'
+  const missing = unpricedMeals(meals, data?.prices ?? originalDoc?.prices)
+  if (missing.length === 0) return data
+  const names = missing.map((meal) => MEAL_LABEL[meal])
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  throw new ValidationError(
+    {
+      collection: collection.slug,
+      errors: [
+        {
+          message: `This plan offers ${list.toLowerCase()}, but no plan length has a price for ${missing.length === 1 ? 'it' : 'them'}. Fill the ${list} price on at least one length, or change Meals offered.`,
+          path: 'prices',
+        },
+      ],
+    },
+    req.t,
+  )
 }
 
 const revalidate: CollectionAfterChangeHook = ({ doc, req: { context } }) => {
@@ -321,6 +347,7 @@ export const MealPlans: CollectionConfig = {
   ],
   hooks: {
     afterChange: [revalidate],
+    beforeValidate: [offeredMealsPriced],
   },
   labels: {
     plural: 'Meal plans',
