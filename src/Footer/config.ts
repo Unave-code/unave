@@ -1,3 +1,4 @@
+import { isStaff } from '@/access/isStaff'
 import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
@@ -13,6 +14,8 @@ export const Footer: GlobalConfig = {
   slug: 'footer',
   access: {
     read: () => true,
+    // Without this Payload lets any signed in user, customers included, edit it.
+    update: isStaff,
   },
   admin: {
     description: 'The closing band on every page: tagline, link columns, contact, disclaimer.',

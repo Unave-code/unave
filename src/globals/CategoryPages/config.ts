@@ -1,3 +1,4 @@
+import { isStaff } from '@/access/isStaff'
 import type { Field, GlobalAfterChangeHook, GlobalConfig } from 'payload'
 
 import { revalidateTag } from 'next/cache'
@@ -32,6 +33,8 @@ export const CategoryPages: GlobalConfig = {
   label: 'Category pages',
   access: {
     read: () => true,
+    // Without this Payload lets any signed in user, customers included, edit it.
+    update: isStaff,
   },
   admin: {
     description: 'The header photo on each product category page. Give each Media item descriptive alt text.',

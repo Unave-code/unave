@@ -1,3 +1,4 @@
+import { isStaff } from '@/access/isStaff'
 import type { Field, GlobalConfig } from 'payload'
 
 import { safeLinkHref } from '@/utilities/safeLinkHref'
@@ -38,6 +39,8 @@ export const Hero: GlobalConfig = {
   label: 'Home hero',
   access: {
     read: () => true,
+    // Without this Payload lets any signed in user, customers included, edit it.
+    update: isStaff,
   },
   admin: {
     description: 'Manage the home page slider and the three linked photos shown beneath it.',

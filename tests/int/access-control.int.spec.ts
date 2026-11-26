@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { hasAdminRole, isAdmin, isAdminField } from '@/access/isAdmin'
 import { hasStaffRole, isStaff } from '@/access/isStaff'
 import { staffOrPublished } from '@/access/staffOrPublished'
-import { staffOrSelf } from '@/access/staffOrSelf'
+import { adminOrSelf, staffOrSelf } from '@/access/staffOrSelf'
+import { safeReturnPath } from '@/utilities/formPost'
 
 const args = (user: unknown) => ({ req: { user } }) as any
 
@@ -90,20 +91,62 @@ describe('hasAdminRole', () => {
 })
 
 describe('staffOrSelf', () => {
+  const users = staffOrSelf('users')
+
   it('refuses an anonymous request', () => {
-    expect(staffOrSelf(args(null))).toBe(false)
+    expect(users(args(null))).toBe(false)
   })
 
   it('lets admins and staff reach every user record', () => {
-    expect(staffOrSelf(args(admin))).toBe(true)
-    expect(staffOrSelf(args(staff))).toBe(true)
+    expect(users(args(admin))).toBe(true)
+    expect(users(args(staff))).toBe(true)
   })
 
   it('limits a signed in user without a staff role to their own record', () => {
-    expect(staffOrSelf(args(plainUser))).toEqual({ id: { equals: 3 } })
+    expect(users(args({ ...plainUser, collection: 'users' }))).toEqual({ id: { equals: 3 } })
   })
 
-  it('does not grant staff access to a user whose role is unknown', () => {
-    expect(staffOrSelf(args(customer))).toEqual({ id: { equals: 4 } })
+  it('never lets a customer reach the staff user that shares its id', () => {
+    expect(users(args({ id: 1, collection: 'customers' }))).toBe(false)
+    expect(users(args({ id: 1, collection: 'customers', role: 'admin' }))).toBe(false)
+  })
+
+  it('limits a customer to their own customer record', () => {
+    expect(staffOrSelf('customers')(args({ id: 4, collection: 'customers' }))).toEqual({ id: { equals: 4 } })
+  })
+})
+
+describe('adminOrSelf', () => {
+  const users = adminOrSelf('users')
+
+  it('lets an admin change any user', () => {
+    expect(users(args({ ...admin, collection: 'users' }))).toBe(true)
+  })
+
+  it('limits staff to their own account', () => {
+    expect(users(args({ ...staff, collection: 'users' }))).toEqual({ id: { equals: 2 } })
+  })
+
+  it('never lets a customer change a staff account', () => {
+    expect(users(args({ id: 1, collection: 'customers' }))).toBe(false)
+  })
+})
+
+describe('a customer session is never staff', () => {
+  it('ignores any role on a customer document', () => {
+    expect(hasStaffRole({ collection: 'customers', role: 'admin' })).toBe(false)
+    expect(hasAdminRole({ collection: 'customers', role: 'admin' })).toBe(false)
+  })
+})
+
+describe('safeReturnPath', () => {
+  it('keeps a plain path on this site', () => {
+    expect(safeReturnPath('/checkout')).toBe('/checkout')
+  })
+
+  it('refuses a path a browser would turn into another site', () => {
+    expect(safeReturnPath('//evil.com')).toBeNull()
+    expect(safeReturnPath('/' + String.fromCharCode(9) + '/evil.com')).toBeNull()
+    expect(safeReturnPath('/' + String.fromCharCode(10) + '/evil.com')).toBeNull()
   })
 })

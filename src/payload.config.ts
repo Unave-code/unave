@@ -1,3 +1,4 @@
+import { hasStaffRole } from './access/isStaff'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import sharp from 'sharp'
 import path from 'path'
@@ -202,8 +203,8 @@ export default buildConfig({
   jobs: {
     access: {
       run: ({ req }: { req: PayloadRequest }): boolean => {
-        // Allow logged in users to execute this endpoint (default)
-        if (req.user) return true
+        // Staff may run the queue by hand; a signed in customer may not.
+        if (hasStaffRole(req.user)) return true
 
         const secret = process.env.CRON_SECRET
         if (!secret) return false

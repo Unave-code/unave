@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isAdminField } from '../../access/isAdmin'
 import { hasStaffRole } from '../../access/isStaff'
-import { staffOrSelf } from '../../access/staffOrSelf'
+import { adminOrSelf, staffOrSelf } from '../../access/staffOrSelf'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -10,8 +10,9 @@ export const Users: CollectionConfig = {
     admin: ({ req: { user } }) => hasStaffRole(user),
     create: isAdmin,
     delete: isAdmin,
-    read: staffOrSelf,
-    update: staffOrSelf,
+    read: staffOrSelf('users'),
+    // Staff may change only their own account; only an admin changes another's.
+    update: adminOrSelf('users'),
   },
   admin: {
     group: 'Settings',

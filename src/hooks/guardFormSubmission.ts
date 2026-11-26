@@ -1,5 +1,6 @@
 import { APIError, type CollectionBeforeChangeHook } from 'payload'
 
+import { hasStaffRole } from '@/access/isStaff'
 import { isSameOriginRequest } from '@/utilities/formPost'
 import { checkFormSubmissionIpLimit, getClientIp } from '@/utilities/rateLimit'
 import { confirmHuman, TURNSTILE_HEADER } from '@/utilities/turnstile'
@@ -19,7 +20,7 @@ const MAX_VALUE_LENGTH = 5000
  * JSON), and a size cap on what it may store. Staff working in the admin are not limited.
  */
 export const guardFormSubmission: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
-  if (operation !== 'create' || req.user) return data
+  if (operation !== 'create' || hasStaffRole(req.user)) return data
 
   if (!req.headers || !isSameOriginRequest({ headers: req.headers })) {
     req.payload.logger.warn({ msg: 'form_submission_cross_site_rejected' })

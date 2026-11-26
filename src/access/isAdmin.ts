@@ -1,14 +1,16 @@
 import type { Access, FieldAccess } from 'payload'
 
-type RoleHolder = { role?: string | null }
+type RoleHolder = { collection?: string; role?: string | null }
 
 /**
  * The one place that knows what "admin" means. `req.user` is a union once customer
  * accounts exist, so reading `.role` off it directly is a type error and, worse, a
  * silent assumption. Every check goes through here instead.
  */
-export const hasAdminRole = (user: unknown): boolean =>
-  (user as RoleHolder | null)?.role === 'admin'
+export const hasAdminRole = (user: unknown): boolean => {
+  const holder = user as null | RoleHolder
+  return Boolean(holder) && holder?.collection !== 'customers' && holder?.role === 'admin'
+}
 
 export const isAdmin: Access = ({ req: { user } }) => hasAdminRole(user)
 

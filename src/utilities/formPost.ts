@@ -61,6 +61,8 @@ export const safeReturnPath = (value: unknown): string | null => {
   const path = value.trim().slice(0, 200)
 
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) return null
+  // A browser drops tabs and newlines from a URL, so "/<tab>/evil.com" would land off site.
+  if ([...path].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127)) return null
 
   return path
 }

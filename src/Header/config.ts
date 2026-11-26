@@ -1,3 +1,4 @@
+import { isStaff } from '@/access/isStaff'
 import type { FieldHook, GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
@@ -30,6 +31,8 @@ export const Header: GlobalConfig = {
   slug: 'header',
   access: {
     read: () => true,
+    // Without this Payload lets any signed in user, customers included, edit it.
+    update: isStaff,
   },
   admin: {
     description: 'The top of every page: the announcement strip, menu links, WhatsApp.',

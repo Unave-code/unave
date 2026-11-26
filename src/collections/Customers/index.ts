@@ -51,7 +51,7 @@ export const Customers: CollectionConfig = {
     delete: isAdmin,
     // A customer may read their own record; nobody may write it over REST. Profile
     // edits are a staff action until there is a reason for them to be self service.
-    read: staffOrSelf,
+    read: staffOrSelf('customers'),
     update: isAdmin,
   },
   admin: {

@@ -8,6 +8,8 @@ import { NextRequest } from 'next/server'
 
 import configPromise from '@payload-config'
 
+import { hasStaffRole } from '@/access/isStaff'
+
 export type PreviewSearchParams = {
   path: string
   previewSecret: string
@@ -50,7 +52,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const draft = await draftMode()
 
-  if (!user) {
+  if (!hasStaffRole(user)) {
     draft.disable()
     return new Response('You are not allowed to preview this page', { status: 403 })
   }
