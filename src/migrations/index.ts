@@ -51,6 +51,7 @@ import * as migration_20261125_120000_product_addons from './20261125_120000_pro
 import * as migration_20261125_140000_meal_plan_breakfast from './20261125_140000_meal_plan_breakfast';
 import * as migration_20261126_120000_drop_header_cta from './20261126_120000_drop_header_cta';
 import * as migration_20261126_140000_meal_plan_combo_prices from './20261126_140000_meal_plan_combo_prices';
+import * as migration_20261126_160000_product_name_fixes from './20261126_160000_product_name_fixes';
 
 export const migrations = [
   {
@@ -317,5 +318,10 @@ export const migrations = [
     up: migration_20261126_140000_meal_plan_combo_prices.up,
     down: migration_20261126_140000_meal_plan_combo_prices.down,
     name: '20261126_140000_meal_plan_combo_prices',
+  },
+  {
+    up: migration_20261126_160000_product_name_fixes.up,
+    down: migration_20261126_160000_product_name_fixes.down,
+    name: '20261126_160000_product_name_fixes',
   },
 ];

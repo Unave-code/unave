@@ -13,6 +13,14 @@ export const productTab: Tab = {
       name: 'title',
       type: 'text',
       required: true,
+      hooks: {
+        /* A stray space at the end of a name ("Chettinad Veg Crunch Sandwich ")
+           printed as "Name  | UNAVE" in the page title. Trim the ends and fold
+           runs of spaces before the title is saved or slugified. */
+        beforeValidate: [
+          ({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value),
+        ],
+      },
     },
     {
       type: 'row',
