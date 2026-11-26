@@ -14,7 +14,14 @@ node_modules
 # Local logs, screenshots and scratch scripts.
 tmp-*
 
-# Tests and tooling that the image never runs.
+# Tests and tooling that the image never runs. The test configs go too:
+# vitest.setup.ts imports from tests/, so leaving it in makes the build's
+# type check fail on a module the image does not have.
 tests
+vitest.setup.ts
+vitest.config.mts
+playwright.config.ts
+playwright.audit.config.ts
+docker-compose.test.yml
 playwright-report
 test-results
