@@ -29,7 +29,15 @@ export const AnnouncementBar: React.FC<Props> = ({ announcement }) => {
 
   if (!announcement?.enabled || !messages.length || dismissed) return null
 
-  const renderMessage = (message: AnnouncementMessage, index: number, duplicate = false) => {
+  /* Each half of the track repeats the messages enough times to be wider than
+     any screen, with one even gap throughout, so the loop is continuous: text
+     follows text with no stretch of empty bar. Only the first run is real and
+     focusable; the repeats are decoration for the eye. The pace stays the same
+     whatever the number of messages. */
+  const repeats = Math.max(2, Math.ceil(10 / messages.length))
+  const duration = `${messages.length * repeats * 16}s`
+
+  const renderMessage = (message: AnnouncementMessage, index: number, duplicate = false, run = 0) => {
     const content = (
       <>
         {message.text ? (
@@ -53,11 +61,15 @@ export const AnnouncementBar: React.FC<Props> = ({ announcement }) => {
         ) : null}
       </>
     )
-    const className = 'announcement-message group text-green-900'
+    const className = `announcement-message group text-green-900${run > 0 ? ' announcement-repeat' : ''}`
 
     if (duplicate || !message.linkUrl) {
       return (
-        <span className={className} key={`${message.id ?? index}-${duplicate ? 'copy' : 'item'}`}>
+        <span
+          aria-hidden={duplicate || undefined}
+          className={className}
+          key={`${message.id ?? index}-${duplicate ? 'copy' : 'item'}-${run}`}
+        >
           {content}
         </span>
       )
@@ -78,12 +90,20 @@ export const AnnouncementBar: React.FC<Props> = ({ announcement }) => {
   return (
     <div aria-label="Announcements" className="announcement-marquee bg-gold-400" role="region">
       <div className="announcement-viewport">
-        <div className="announcement-track">
+        <div
+          className="announcement-track"
+          style={{ '--announcement-duration': duration } as React.CSSProperties}
+        >
           <div className="announcement-group">
             {messages.map((message, index) => renderMessage(message, index))}
+            {Array.from({ length: repeats - 1 }, (_, run) =>
+              messages.map((message, index) => renderMessage(message, index, true, run + 1)),
+            )}
           </div>
           <div aria-hidden="true" className="announcement-group announcement-group-copy">
-            {messages.map((message, index) => renderMessage(message, index, true))}
+            {Array.from({ length: repeats }, (_, run) =>
+              messages.map((message, index) => renderMessage(message, index, true, run)),
+            )}
           </div>
         </div>
       </div>

@@ -671,17 +671,18 @@ html {
 .announcement-track {
   display: flex;
   width: max-content;
-  animation: announcement-marquee 36s linear infinite;
+  animation: announcement-marquee var(--announcement-duration, 40s) linear infinite;
 }
 
+/* One even gap between every message, and the same gap again at the end of
+   each half, so the seam where the loop restarts is invisible. */
 .announcement-group {
+  --announcement-gap: clamp(32px, 4vw, 56px);
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  justify-content: space-around;
-  gap: clamp(24px, 3vw, 48px);
-  min-width: calc(100vw - 44px);
-  padding-inline: 16px;
+  gap: var(--announcement-gap);
+  padding-inline-end: var(--announcement-gap);
 }
 
 .announcement-message {
@@ -728,7 +729,8 @@ html {
   padding: 8px 12px;
 }
 
-.announcement-viewport:focus-within .announcement-group-copy {
+.announcement-viewport:focus-within .announcement-group-copy,
+.announcement-viewport:focus-within .announcement-repeat {
   display: none;
 }
 
@@ -775,7 +777,8 @@ html {
     padding: 8px 12px;
   }
 
-  .announcement-group-copy {
+  .announcement-group-copy,
+  .announcement-repeat {
     display: none;
   }
 
