@@ -32,7 +32,7 @@ export const Gallery: React.FC = async () => {
           const image = (
             <Image
               alt={alt}
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               fill
               quality={75}
               sizes="(min-width: 88rem) 27rem, (min-width: 64rem) 33vw, (min-width: 48rem) 50vw, 100vw"
@@ -59,7 +59,7 @@ export const Gallery: React.FC = async () => {
           )
         })}
       </div>
-      <div className="max-w-3xl container relative z-10 px-4 text-center pt-10 md:px-6 md:pt-16">
+      <div className="max-w-3xl container relative z-10 px-4 text-center pt-8 md:px-6 md:pt-12">
         <h1
           className="text-hero text-green-900 text-balance font-bold leading-[1.1] pb-1"
           id="home-hero-heading"

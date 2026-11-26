@@ -32,7 +32,7 @@ export const ComboContents: React.FC<{ comboItems: ComboItem[] }> = ({ comboItem
             <span className="relative block aspect-square overflow-hidden rounded-md bg-green-50">
               <Image
                 alt={item.image ? item.image.alt?.trim() || item.title : ''}
-                className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
+                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
                 fill
                 sizes="(min-width: 64rem) 9vw, 30vw"
                 src={item.image ? srcOf(item.image) : PRODUCT_PLACEHOLDER}

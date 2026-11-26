@@ -124,7 +124,7 @@
   @media (hover: hover) and (pointer: fine) {
     .card-reveal {
       opacity: 0;
-      transition: opacity 0.2s ease;
+      transition: opacity 150ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     article:hover .card-reveal,
@@ -410,6 +410,30 @@
   }
   body {
     @apply bg-background text-foreground font-body min-h-[100vh] flex flex-col;
+    /* Crisp type: greyscale antialiasing (sharper light-on-dark and heavy
+       weights on macOS), real kerning and ligatures. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+  }
+
+  /* Fraunces draws its optical size from the font size, so the small 22px
+     headings use the sturdier, lower-contrast cut that holds up on screen. A
+     hair of negative tracking keeps the heavy weights tight. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  /* No lone word on the last line of a paragraph. */
+  p,
+  blockquote {
+    text-wrap: pretty;
   }
 }
 
@@ -526,7 +550,7 @@ a {
    the utility classes on the element. */
 .site-header {
   transition-property: background-color, border-color, box-shadow;
-  transition-duration: 200ms;
+  transition-duration: 150ms;
   transition-timing-function: ease-out;
 }
 
@@ -553,7 +577,7 @@ a {
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 200ms ease-out;
+  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .header-link:hover::after,
@@ -801,8 +825,8 @@ html[data-theme='light'] {
     block-size: 0;
     overflow: clip;
     transition:
-      block-size 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      content-visibility 260ms allow-discrete;
+      block-size 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      content-visibility 200ms allow-discrete;
   }
 
   .faq-item[open]::details-content {
@@ -817,8 +841,8 @@ html[data-theme='light'] {
 
 @keyframes rise-in {
   from {
-    opacity: 0.35;
-    translate: 0 18px;
+    opacity: 0.7;
+    translate: 0 10px;
   }
   to {
     opacity: 1;
@@ -848,8 +872,8 @@ html[data-theme='light'] {
 /* Tiles that respond to the pointer with a small lift. */
 .tile-lift {
   transition:
-    translate 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    translate 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tile-lift:hover {
@@ -868,7 +892,7 @@ html[data-theme='light'] {
     main section > .container > * {
       animation: rise-in linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 55%;
+      animation-range: entry 0% entry 35%;
     }
   }
 }

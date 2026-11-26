@@ -6,13 +6,13 @@ import { cn } from '@/utilities/ui'
  * meal plan card so the two shelves read as one shop.
  */
 export const CARD_FRAME =
-  'group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-[box-shadow,translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0'
+  'group bg-card flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-[box-shadow,translate] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0'
 
 export const CARD_PHOTO_LINK =
   'relative block aspect-square overflow-hidden rounded-md bg-green-50'
 
 export const CARD_PHOTO_ZOOM =
-  'object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100'
+  'object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100'
 
 export const CARD_BODY =
   'flex flex-1 flex-col px-2 pt-3 pb-1'

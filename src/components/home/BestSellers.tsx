@@ -4,6 +4,7 @@ import { Cta } from '@/components/Cta'
 import { ProductCard } from '@/components/Store/ProductCard'
 import { BEST_SELLERS_EMPTY, BEST_SELLERS_HEADING } from '@/utilities/homeCopy'
 import { getFeaturedHomeProducts } from '@/utilities/products'
+import { cn } from '@/utilities/ui'
 
 import { Section } from './Section'
 
@@ -17,7 +18,11 @@ export const BestSellers: React.FC = async () => {
       {products.length > 0 ? (
         <ul
           aria-label="Best sellers"
-          className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+          className={cn(
+            'mt-8 grid grid-cols-2 gap-4',
+            /* Four or fewer fill one row exactly instead of leaving a gap at the end. */
+            products.length <= 4 ? 'lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-5',
+          )}
         >
           {products.map((product) => (
             <li className="min-w-0" key={product.id}>

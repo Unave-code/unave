@@ -219,7 +219,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
       <div className="sticky top-0 z-20">
         <div
           className={cn(
-            'grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none',
+            'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
             stripHidden ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
           )}
           inert={stripHidden}

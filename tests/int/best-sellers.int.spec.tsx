@@ -46,12 +46,32 @@ describe('the homepage Best sellers shelf', () => {
 
     const grid = screen.getByRole('list', { name: 'Best sellers' })
     expect(grid.className).toContain('grid-cols-2')
-    expect(grid.className).toContain('lg:grid-cols-5')
+    // Four or fewer fill one row of four; five or more use five columns.
+    expect(grid.className).toContain('lg:grid-cols-4')
     expect(screen.getByRole('link', { name: 'Brown rice' }).getAttribute('href')).toBe(
       '/products/brown-rice',
     )
     expect(screen.getByRole('heading', { name: 'Brown rice' }).className).not.toContain('min-h-')
     expect(screen.getByText('₹50').className).toContain('text-green-700')
+  })
+
+  it('uses five columns once there are more than four products', async () => {
+    const products = [1, 2, 3, 4, 5].map(
+      (id) =>
+        ({
+          available: true,
+          featured: true,
+          id,
+          price: 5000,
+          slug: `product-${id}`,
+          title: `Product ${id}`,
+          type: 'one-time',
+        }) as unknown as Product,
+    )
+
+    await renderBestSellers(products)
+
+    expect(screen.getByRole('list', { name: 'Best sellers' }).className).toContain('lg:grid-cols-5')
   })
 
   it('shows a one-time product’s pack size, old price, discount, and cart form', async () => {

@@ -9,6 +9,8 @@ import { Fraunces, Inter } from 'next/font/google'
 export const fraunces = Fraunces({
   subsets: ['latin'],
   style: ['normal', 'italic'],
+  /* The optical-size axis, so headings get the cut drawn for their size. */
+  axes: ['opsz'],
   variable: '--font-fraunces',
   display: 'swap',
 })

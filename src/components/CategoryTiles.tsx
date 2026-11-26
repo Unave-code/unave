@@ -66,13 +66,13 @@ export const CategoryTiles: React.FC<{
                 <Media
                   alt=""
                   fill
-                  imgClassName="object-cover transition-transform duration-500 ease-out group-hover:scale-110 motion-reduce:group-hover:scale-100"
+                  imgClassName="object-cover transition-transform duration-300 ease-out group-hover:scale-110 motion-reduce:group-hover:scale-100"
                   resource={image}
                   size="56px"
                 />
               ) : (
                 <Icon
-                  className="size-11 text-green-700 transition-[color,transform] duration-300 ease-out group-hover:scale-110 group-hover:text-green-800 motion-reduce:group-hover:scale-100 sm:size-12"
+                  className="size-11 text-green-700 transition-[color,transform] duration-200 ease-out group-hover:scale-110 group-hover:text-green-800 motion-reduce:group-hover:scale-100 sm:size-12"
                   strokeWidth={1.5}
                 />
               )}
@@ -103,7 +103,7 @@ export const CategoryTiles: React.FC<{
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'bg-gold-400 absolute inset-x-6 bottom-0 h-1 origin-center rounded-t-full transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none',
+                    'bg-gold-400 absolute inset-x-6 bottom-0 h-1 origin-center rounded-t-full transition-transform duration-200 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none',
                     item.current ? 'scale-x-100' : 'scale-x-0',
                   )}
                 />

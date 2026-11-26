@@ -41,7 +41,7 @@ export const Categories: React.FC = () => (
             <div className="relative aspect-[4/3]">
               <Image
                 alt=""
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
                 fill
                 quality={75}
                 sizes="(min-width: 64rem) 300px, (min-width: 40rem) 50vw, 100vw"

@@ -4,7 +4,7 @@ import React from 'react'
 import { cn } from '@/utilities/ui'
 
 /**
- * Section wrapper. Holds the vertical rhythm (96px desktop / 56px mobile) and the
+ * Section wrapper. Holds the vertical rhythm (80px desktop / 48px mobile) and the
  * alternating background bands from design.md §3.6, so no section invents its own.
  *
  * A section can also carry a full-bleed photograph behind its content. The photo is
@@ -45,7 +45,7 @@ export const Section: React.FC<Props> = ({
   tone = 'cream',
 }) => (
   <section
-    className={cn('py-14 md:py-24', TONES[tone], image && 'relative overflow-hidden', className)}
+    className={cn('py-12 md:py-20', TONES[tone], image && 'relative overflow-hidden', className)}
     id={id}
   >
     {image ? (

@@ -13,7 +13,7 @@ const OPTION_TILE = cn(
   'rounded-pill relative isolate inline-flex min-h-12 items-center gap-2 overflow-hidden border-2 border-green-700 bg-white px-4 py-2 whitespace-nowrap text-green-900',
   'transition-[background-color,border-color,color,box-shadow,translate] duration-200 ease-out',
   // The overlay: a soft green wash that sweeps in from the left on hover.
-  "before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:bg-green-700/12 before:transition-transform before:duration-300 before:ease-out before:content-['']",
+  "before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:bg-green-700/12 before:transition-transform before:duration-200 before:ease-out before:content-['']",
   'hover:-translate-y-0.5 hover:shadow-sm hover:before:scale-x-100',
   'motion-reduce:before:transition-none',
   'peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-checked:shadow-md',

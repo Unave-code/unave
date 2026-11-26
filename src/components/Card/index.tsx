@@ -49,7 +49,7 @@ export const Card: React.FC<{
         <div className="bg-green-50 relative aspect-[4/3]">
           <Image
             alt={image.alt ?? ''}
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
             fill
             quality={75}
             sizes="(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw"

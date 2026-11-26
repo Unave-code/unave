@@ -61,7 +61,7 @@ export const HeaderNav: React.FC<Props> = ({ items, onNavigate, variant = 'deskt
             className={cn(
               variant === 'drawer' && 'text-h3',
               variant === 'drawer' &&
-                'animate-in fade-in slide-in-from-right-4 fill-mode-backwards duration-300 ease-out motion-reduce:animate-none',
+                'animate-in fade-in slide-in-from-right-4 fill-mode-backwards duration-200 ease-out motion-reduce:animate-none',
             )}
             key={link?.label ?? index}
             onClick={onNavigate}

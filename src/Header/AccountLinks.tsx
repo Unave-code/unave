@@ -12,7 +12,7 @@ const DRAWER_LINK =
   'text-gold-400 hover:text-cream focus-visible:ring-gold-400 rounded-sm flex min-h-14 items-center px-1 font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none'
 
 const DRAWER_ROW =
-  'text-h3 animate-in fade-in slide-in-from-right-4 fill-mode-backwards duration-300 ease-out motion-reduce:animate-none'
+  'text-h3 animate-in fade-in slide-in-from-right-4 fill-mode-backwards duration-200 ease-out motion-reduce:animate-none'
 
 interface Props {
   /** The signed in customer's name, for the bar's account menu. */

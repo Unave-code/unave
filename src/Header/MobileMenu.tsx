@@ -41,7 +41,7 @@ export const MobileMenu: React.FC<Props> = ({
     <div
       aria-label="Menu"
       aria-modal="true"
-      className="bg-green-900 animate-in fade-in slide-in-from-right fixed inset-0 z-50 flex flex-col duration-300 ease-out lg:hidden motion-reduce:animate-none"
+      className="bg-green-900 animate-in fade-in slide-in-from-right fixed inset-0 z-50 flex flex-col duration-200 ease-out lg:hidden motion-reduce:animate-none"
       id="mobile-menu"
       ref={drawerRef}
       role="dialog"

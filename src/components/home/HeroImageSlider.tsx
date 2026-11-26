@@ -122,7 +122,7 @@ export const HeroImageSlider: React.FC<{
                 aria-label={`${index + 1} of ${count}`}
                 aria-roledescription="slide"
                 className={cn(
-                  'absolute inset-0 transition-opacity duration-700 ease-out motion-reduce:transition-none',
+                  'absolute inset-0 transition-opacity duration-500 ease-out motion-reduce:transition-none',
                   isActive ? 'opacity-100' : 'pointer-events-none opacity-0',
                 )}
                 data-hero-slide=""

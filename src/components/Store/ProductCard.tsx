@@ -156,7 +156,7 @@ export const ProductCard: React.FC<{
         {image?.url && hoverImage?.url ? (
           <Media
             alt=""
-            className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
+            className="absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
             fill
             imgClassName={CARD_PHOTO_ZOOM}
             pictureClassName="absolute inset-0"
