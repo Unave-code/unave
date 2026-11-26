@@ -5,6 +5,7 @@ import {
   decodePlanSelection,
   encodePlanSelection,
   type MealsOffered,
+  mealPickPrice,
   offeredMeals,
   unpricedMeals,
   type PlanBuilderData,
@@ -91,9 +92,9 @@ describe('breakfast in a plan', () => {
 
 describe('meals offered', () => {
   const cases: [MealsOffered, string[]][] = [
-    ['any', ['breakfast', 'lunch', 'dinner', 'both']],
-    ['breakfast-lunch', ['breakfast', 'lunch']],
-    ['breakfast-dinner', ['breakfast', 'dinner']],
+    ['any', ['breakfast', 'lunch', 'dinner', 'breakfastLunch', 'breakfastDinner', 'both', 'all']],
+    ['breakfast-lunch', ['breakfast', 'lunch', 'breakfastLunch']],
+    ['breakfast-dinner', ['breakfast', 'dinner', 'breakfastDinner']],
     ['lunch-dinner', ['lunch', 'dinner', 'both']],
     ['breakfast', ['breakfast']],
     ['lunch', ['lunch']],
@@ -121,5 +122,22 @@ describe('offered meals need a price', () => {
     expect(unpricedMeals('lunch-dinner', [{ bothPrice: 100 }])).toEqual([])
     expect(unpricedMeals('any', [{ bothPrice: 100 }])).toEqual(['breakfast'])
     expect(unpricedMeals('lunch', [{ bothPrice: 100 }])).toEqual(['lunch'])
+  })
+})
+
+describe('combination prices', () => {
+  const prices = { all: 500, breakfast: 100, both: 380, breakfastLunch: 260, lunch: 200 }
+  it('charges a combination its own price', () => {
+    expect(mealPickPrice({ prices }, { breakfast: true, slot: 'lunch' })).toBe(260)
+    expect(mealPickPrice({ prices }, { breakfast: true, slot: 'both' })).toBe(500)
+  })
+
+  it('adds breakfast to the other meals when the combination has no price', () => {
+    expect(mealPickPrice({ prices: { breakfast: 100, dinner: 250 } }, { breakfast: true, slot: 'dinner' })).toBe(350)
+    expect(mealPickPrice({ prices: { dinner: 250 } }, { breakfast: true, slot: 'dinner' })).toBeUndefined()
+  })
+
+  it('counts a meal as priced through a combination that includes it', () => {
+    expect(unpricedMeals('breakfast-lunch', [{ breakfastLunchPrice: 260 }])).toEqual([])
   })
 })

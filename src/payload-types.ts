@@ -789,7 +789,7 @@ export interface MealPlan {
   lunchTime?: string | null;
   dinnerTime?: string | null;
   /**
-   * One row per plan length this plan is sold in, priced for one person. Fill the prices for the meals this plan offers; a length with no price for a meal choice is not offered for it.
+   * One row per plan length this plan is sold in, priced for one person. Only the combinations Meals offered allows are shown. Fill a price for each combination customers can pick; a length with no price for a combination does not sell it.
    */
   prices?:
     | {
@@ -803,13 +803,22 @@ export interface MealPlan {
          * A short trial length: it runs 3 delivery days, and the plan page shows only those 3 days of the menu.
          */
         trial?: boolean | null;
+        breakfastPrice?: number | null;
         lunchPrice?: number | null;
         dinnerPrice?: number | null;
+        /**
+         * Leave empty to charge breakfast plus the other meals.
+         */
+        breakfastLunchPrice?: number | null;
+        /**
+         * Leave empty to charge breakfast plus the other meals.
+         */
+        breakfastDinnerPrice?: number | null;
         bothPrice?: number | null;
         /**
-         * Breakfast on its own, and what it adds on top of a lunch or dinner choice. Leave empty if this length has no breakfast.
+         * Leave empty to charge breakfast plus the other meals.
          */
-        breakfastPrice?: number | null;
+        allMealsPrice?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -2090,10 +2099,13 @@ export interface MealPlansSelect<T extends boolean = true> {
         days?: T;
         note?: T;
         trial?: T;
+        breakfastPrice?: T;
         lunchPrice?: T;
         dinnerPrice?: T;
+        breakfastLunchPrice?: T;
+        breakfastDinnerPrice?: T;
         bothPrice?: T;
-        breakfastPrice?: T;
+        allMealsPrice?: T;
         id?: T;
       };
   optionGroups?:

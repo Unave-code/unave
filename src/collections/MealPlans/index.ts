@@ -7,7 +7,15 @@ import { anyone } from '../../access/anyone'
 import { isStaff } from '../../access/isStaff'
 import { menuWeekField, rupeeField } from './fields'
 import { slugifyTitle } from '../Products/hooks/autoProductSlug'
-import { MEAL_LABEL, MEALS_OFFERED, type MealsOffered, TRIAL_DAYS, unpricedMeals } from '../../utilities/planBuilder'
+import {
+  allowedSlots,
+  MEAL_LABEL,
+  PRICE_FIELD,
+  type PriceKey,
+  readMealsOffered,
+  TRIAL_DAYS,
+  unpricedMeals,
+} from '../../utilities/planBuilder'
 import { CATEGORY_LABEL, PRODUCT_CATEGORY_VALUES } from '../../utilities/productsCategoryCopy'
 
 /**
@@ -53,8 +61,7 @@ const lengthName: TextFieldSingleValidation = (value) => {
  * quietly hides it: a breakfast menu with no breakfast price never shows.
  */
 const offeredMealsPriced: CollectionBeforeValidateHook = ({ collection, data, originalDoc, req }) => {
-  const raw = data?.meals ?? originalDoc?.meals
-  const meals: MealsOffered = MEALS_OFFERED.includes(raw) ? raw : 'any'
+  const meals = readMealsOffered(data?.meals ?? originalDoc?.meals)
   const missing = unpricedMeals(meals, data?.prices ?? originalDoc?.prices)
   if (missing.length === 0) return data
   const names = missing.map((meal) => MEAL_LABEL[meal])
@@ -72,6 +79,19 @@ const offeredMealsPriced: CollectionBeforeValidateHook = ({ collection, data, or
     req.t,
   )
 }
+
+/** One price on a plan length, shown only when Meals offered includes all its meals. */
+const priceField = (key: PriceKey, label: string, description?: string) =>
+  rupeeField(PRICE_FIELD[key], label, {
+    admin: {
+      width: '33%',
+      description,
+      components: { Field: '@/components/Admin/RupeeField#RupeeField' },
+      condition: (data) => allowedSlots(readMealsOffered((data as { meals?: unknown } | undefined)?.meals)).includes(key),
+    },
+  })
+
+const ADDS_UP = 'Leave empty to charge breakfast plus the other meals.'
 
 const revalidate: CollectionAfterChangeHook = ({ doc, req: { context } }) => {
   if (!context.disableRevalidate) revalidatePath('/meal-subscription', 'layout')
@@ -206,7 +226,7 @@ export const MealPlans: CollectionConfig = {
               maxRows: 6,
               admin: {
                 description:
-                  'One row per plan length this plan is sold in, priced for one person. Fill the prices for the meals this plan offers; a length with no price for a meal choice is not offered for it.',
+                  'One row per plan length this plan is sold in, priced for one person. Only the combinations Meals offered allows are shown. Fill a price for each combination customers can pick; a length with no price for a combination does not sell it.',
               },
               fields: [
                 {
@@ -242,23 +262,22 @@ export const MealPlans: CollectionConfig = {
                 {
                   type: 'row',
                   fields: [
-                    rupeeField('lunchPrice', 'Lunch only (₹)'),
-                    rupeeField('dinnerPrice', 'Dinner only (₹)'),
-                    rupeeField('bothPrice', 'Lunch and dinner (₹)'),
+                    priceField('breakfast', 'Breakfast only (₹)'),
+                    priceField('lunch', 'Lunch only (₹)'),
+                    priceField('dinner', 'Dinner only (₹)'),
                   ],
                 },
                 {
                   type: 'row',
                   fields: [
-                    rupeeField('breakfastPrice', 'Breakfast (₹)', {
-                      admin: {
-                        width: '33%',
-                        description:
-                          'Breakfast on its own, and what it adds on top of a lunch or dinner choice. Leave empty if this length has no breakfast.',
-                        components: { Field: '@/components/Admin/RupeeField#RupeeField' },
-                      },
-                    }),
+                    priceField('breakfastLunch', 'Breakfast and lunch (₹)', ADDS_UP),
+                    priceField('breakfastDinner', 'Breakfast and dinner (₹)', ADDS_UP),
+                    priceField('both', 'Lunch and dinner (₹)'),
                   ],
+                },
+                {
+                  type: 'row',
+                  fields: [priceField('all', 'Breakfast, lunch and dinner (₹)', ADDS_UP)],
                 },
               ],
             },

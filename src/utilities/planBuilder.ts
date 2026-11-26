@@ -40,10 +40,31 @@ export const MEALS: Meal[] = ['breakfast', 'lunch', 'dinner']
 export const MEAL_LABEL: Record<Meal, string> = { breakfast: 'Breakfast', dinner: 'Dinner', lunch: 'Lunch' }
 
 /**
- * Every price a plan length can carry. Breakfast is its own price: it is added
- * on top of the lunch and dinner choice, or charged alone for breakfast only.
+ * Every price a plan length can carry: one for each combination of meals.
+ * "both" is lunch and dinner, "all" is breakfast, lunch and dinner.
  */
-export type PriceKey = 'breakfast' | PlanSlot
+export type PriceKey = 'all' | 'breakfast' | 'breakfastDinner' | 'breakfastLunch' | PlanSlot
+export const PRICE_KEYS: PriceKey[] = ['breakfast', 'lunch', 'dinner', 'breakfastLunch', 'breakfastDinner', 'both', 'all']
+/** The meals each price covers. */
+export const PRICE_MEALS: Record<PriceKey, Meal[]> = {
+  all: ['breakfast', 'lunch', 'dinner'],
+  both: ['lunch', 'dinner'],
+  breakfast: ['breakfast'],
+  breakfastDinner: ['breakfast', 'dinner'],
+  breakfastLunch: ['breakfast', 'lunch'],
+  dinner: ['dinner'],
+  lunch: ['lunch'],
+}
+/** The plan length field each price is kept in. */
+export const PRICE_FIELD: Record<PriceKey, string> = {
+  all: 'allMealsPrice',
+  both: 'bothPrice',
+  breakfast: 'breakfastPrice',
+  breakfastDinner: 'breakfastDinnerPrice',
+  breakfastLunch: 'breakfastLunchPrice',
+  dinner: 'dinnerPrice',
+  lunch: 'lunchPrice',
+}
 
 /**
  * The meals a plan may sell, any one or more of the three: "any" is all three,
@@ -71,16 +92,14 @@ export const MEALS_OFFERED: MealsOffered[] = [
 export const mealsIn = (meals: MealsOffered): Meal[] =>
   meals === 'any' ? MEALS : MEALS.filter((meal) => meals.split('-').includes(meal))
 
-/** The prices a plan can be bought with: each meal it offers, and lunch and dinner together when it offers both. */
+/** Meals offered as stored, or "any" for anything else. */
+export const readMealsOffered = (value: unknown): MealsOffered =>
+  MEALS_OFFERED.includes(value as MealsOffered) ? (value as MealsOffered) : 'any'
+
+/** The prices a plan can be bought with: every combination of the meals it offers. */
 export const allowedSlots = (meals: MealsOffered): PriceKey[] => {
   const offered = mealsIn(meals)
-  const has = (meal: Meal) => offered.includes(meal)
-  return [
-    ...(has('breakfast') ? (['breakfast'] as const) : []),
-    ...(has('lunch') ? (['lunch'] as const) : []),
-    ...(has('dinner') ? (['dinner'] as const) : []),
-    ...(has('lunch') && has('dinner') ? (['both'] as const) : []),
-  ]
+  return PRICE_KEYS.filter((key) => PRICE_MEALS[key].every((meal) => offered.includes(meal)))
 }
 
 /** The meals a customer has picked: breakfast or not, and the lunch and dinner choice, if any. */
@@ -120,13 +139,24 @@ export const decodeMealPick = (value: string): MealPick | null => {
   return { breakfast, slot: slot as null | PlanSlot }
 }
 
-/** What one person pays for these meals at this length, or undefined when the length does not sell them. */
+/** The price that covers exactly these meals. */
+export const pickPriceKey = ({ breakfast, slot }: MealPick): null | PriceKey =>
+  !breakfast ? slot : slot === 'both' ? 'all' : slot === 'lunch' ? 'breakfastLunch' : slot === 'dinner' ? 'breakfastDinner' : 'breakfast'
+
+/**
+ * What one person pays for these meals at this length, or undefined when the
+ * length does not sell them. A combination with its own price costs that; a
+ * breakfast combination without one costs breakfast plus the lunch or dinner price.
+ */
 export const mealPickPrice = (plan: Pick<PlanLength, 'prices'>, pick: MealPick): number | undefined => {
-  if (!pick.breakfast && !pick.slot) return undefined
-  const breakfast = pick.breakfast ? plan.prices.breakfast : 0
-  const main = pick.slot ? plan.prices[pick.slot] : 0
-  if (breakfast === undefined || main === undefined) return undefined
-  return breakfast + main
+  const key = pickPriceKey(pick)
+  if (!key) return undefined
+  const own = plan.prices[key]
+  if (own !== undefined) return own
+  if (!pick.breakfast || !pick.slot) return undefined
+  const breakfast = plan.prices.breakfast
+  const main = plan.prices[pick.slot]
+  return breakfast === undefined || main === undefined ? undefined : breakfast + main
 }
 
 /**
@@ -136,32 +166,21 @@ export const mealPickPrice = (plan: Pick<PlanLength, 'prices'>, pick: MealPick):
 export const offeredMeals = (data: Pick<PlanBuilderData, 'meals' | 'plans'>): Meal[] =>
   mealsIn(data.meals).filter((meal) =>
     data.plans.some((plan) =>
-      meal === 'breakfast'
-        ? plan.prices.breakfast !== undefined
-        : plan.prices[meal] !== undefined || plan.prices.both !== undefined,
+      (Object.keys(plan.prices) as PriceKey[]).some((key) => PRICE_MEALS[key].includes(meal)),
     ),
   )
 
-type PriceRow = {
-  bothPrice?: null | number
-  breakfastPrice?: null | number
-  dinnerPrice?: null | number
-  lunchPrice?: null | number
-}
-
 /**
  * The offered meals no plan length has a price for, so the site would hide
- * them. Lunch and dinner count as priced through the lunch and dinner price too.
+ * them. A meal counts as priced through any price that includes it.
  */
-export const unpricedMeals = (meals: MealsOffered, rows: null | PriceRow[] | undefined): Meal[] => {
+export const unpricedMeals = (meals: MealsOffered, rows: null | Record<string, unknown>[] | undefined): Meal[] => {
   const priced = (value: unknown) => typeof value === 'number' && value >= 1
-  const has = (meal: Meal) =>
-    (rows ?? []).some((row) =>
-      meal === 'breakfast'
-        ? priced(row?.breakfastPrice)
-        : priced(meal === 'lunch' ? row?.lunchPrice : row?.dinnerPrice) || (allowedSlots(meals).includes('both') && priced(row?.bothPrice)),
-    )
-  return mealsIn(meals).filter((meal) => !has(meal))
+  const keys = allowedSlots(meals)
+  return mealsIn(meals).filter(
+    (meal) =>
+      !(rows ?? []).some((row) => keys.some((key) => PRICE_MEALS[key].includes(meal) && priced(row?.[PRICE_FIELD[key]]))),
+  )
 }
 
 export type PlanMenuMeal = { main: string; sides: string[] }
@@ -321,19 +340,16 @@ const readOptionGroups = (groups: MealPlan['optionGroups']): PlanOptionGroup[] =
 
 /** One meal plan, trimmed and typed: broken rows dropped, lengths keep only the prices it sets. */
 export const normalizeMealPlan = (doc: MealPlan): PlanBuilderData => {
-  const meals: MealsOffered = MEALS_OFFERED.includes(doc.meals as MealsOffered) ? (doc.meals as MealsOffered) : 'any'
+  const meals = readMealsOffered(doc.meals)
   const allowed = allowedSlots(meals)
   const seen = new Set<string>()
 
   const plans: PlanLength[] = (doc.prices ?? [])
     .map((row) => {
       const prices: Partial<Record<PriceKey, number>> = {}
-      const raw: Record<PriceKey, unknown> = {
-        both: row?.bothPrice,
-        breakfast: row?.breakfastPrice,
-        dinner: row?.dinnerPrice,
-        lunch: row?.lunchPrice,
-      }
+      const raw = Object.fromEntries(
+        PRICE_KEYS.map((key) => [key, (row as Record<string, unknown> | null | undefined)?.[PRICE_FIELD[key]]]),
+      ) as Record<PriceKey, unknown>
       for (const slot of allowed) {
         const value = paise(raw[slot])
         if (Number.isSafeInteger(value) && value >= 1) prices[slot] = value
