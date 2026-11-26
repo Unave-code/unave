@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
         pathname: '/images/**',
       },
     ],
-    qualities: [75, 100],
+    qualities: [75],
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
         const url = new URL(item)
@@ -84,6 +84,9 @@ const nextConfig: NextConfig = {
     return webpackConfig
   },
   experimental: {
+    // Two root layouts ((frontend), (payload)) leave no app/not-found to compose a
+    // 404 from; app/global-not-found.tsx serves unmatched URLs with full SSR HTML.
+    globalNotFound: true,
     // Each build worker loads Payload; one per core (11 here) ran out of memory
     // and crashed with "Jest worker encountered 2 child process exceptions".
     cpus: 4,

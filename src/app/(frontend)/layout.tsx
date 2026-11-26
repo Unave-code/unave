@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 
 import { cn } from '@/utilities/ui'
-import { GeistMono } from 'geist/font/mono'
-import { Fraunces, Inter } from 'next/font/google'
 import React from 'react'
 
 import { JsonLd } from '@/components/JsonLd'
@@ -16,19 +14,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { kitchenJsonLd, organizationJsonLd, websiteJsonLd } from '@/utilities/structuredData'
 
-// Fraunces sets the headings, Inter the body and UI; the type scale stays unchanged.
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  style: ['normal', 'italic'],
-  variable: '--font-fraunces',
-  display: 'swap',
-})
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
+import { fraunces, inter } from './fonts'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // The kitchen's contact details for the site-wide structured data. A failed
@@ -37,7 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      className={cn(fraunces.variable, inter.variable, GeistMono.variable)}
+      className={cn(fraunces.variable, inter.variable)}
       data-theme="light"
       lang="en-IN"
       suppressHydrationWarning
