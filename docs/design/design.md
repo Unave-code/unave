@@ -116,11 +116,12 @@ Alternate sections to keep pages calm and scannable:
 
 ## 4. Typography
 
-The site uses Nunito for headings, body text and UI. Its rounded geometric forms complement the supplied wordmark; hierarchy comes from the existing size and weight scale, not a second type family.
+The site sets headings in Fraunces, a soft, warm serif, and body text and UI in Inter, a neutral sans that stays legible at small sizes. Hierarchy comes from the existing size and weight scale.
 
 | Role | Font | Fallback |
 | --- | --- | --- |
-| Headings / body / UI | **Nunito** (variable weights, normal and italic), rounded geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| Headings | **Fraunces** (variable weights, normal and italic), soft serif | `Georgia, "Times New Roman", serif` |
+| Body / UI | **Inter** (variable weights), neutral sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Wordmark | Use supplied logo artwork only, never retype | n/a |
 
 Load via `next/font` with `display=swap` on the site and Google Fonts for the Payload admin. Include real fallback stacks.
@@ -302,7 +303,7 @@ Utility screens, not campaign pages. The four account screens drop the site head
 
 **Sign in (`/sign-in`), Sign up (`/sign-up`), Forgot password (`/forgot-password`), Reset password (`/reset-password`)**
 
-All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Nunito line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
+All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Fraunces line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
 
 
 - The shrink rules: two height variants, `short` (under 66rem tall) and `shorter` (under 44rem), drop the fields from 52px to 44px, tighten the gaps, the divider and the half's padding, and shrink the intro. The threshold is set by the tallest form: sign-up with Google switched off needs about 1040px of viewport before the roomy spacing fits without a scroll. The form column centres itself while there is room and starts from the top once there is not, so a scroll never hides the heading; if even that cannot fit, a phone in landscape say, the column scrolls on its own rather than the page, so nothing becomes unreachable.
@@ -477,11 +478,12 @@ Alternate sections to keep pages calm and scannable:
 
 ## 4. Typography
 
-The site uses Nunito for headings, body text and UI. Its rounded geometric forms complement the supplied wordmark; hierarchy comes from the existing size and weight scale, not a second type family.
+The site sets headings in Fraunces, a soft, warm serif, and body text and UI in Inter, a neutral sans that stays legible at small sizes. Hierarchy comes from the existing size and weight scale.
 
 | Role | Font | Fallback |
 | --- | --- | --- |
-| Headings / body / UI | **Nunito** (variable weights, normal and italic), rounded geometric sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
+| Headings | **Fraunces** (variable weights, normal and italic), soft serif | `Georgia, "Times New Roman", serif` |
+| Body / UI | **Inter** (variable weights), neutral sans | `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Wordmark | Use supplied logo artwork only, never retype | n/a |
 
 Load via `next/font` with `display=swap` on the site and Google Fonts for the Payload admin. Include real fallback stacks.
@@ -663,7 +665,7 @@ Utility screens, not campaign pages. The four account screens drop the site head
 
 **Sign in (`/sign-in`), Sign up (`/sign-up`), Forgot password (`/forgot-password`), Reset password (`/reset-password`)**
 
-All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Nunito line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
+All four share one full-bleed frame and fill exactly one viewport (`h-dvh`, `overflow-hidden`). Two halves meet edge to edge, with no page margin, no card and no divider between them: the left half is the kitchen photograph (`/images/gallery-3.jpg`) under a `green-900` scrim, and the right half is cream and holds everything a person types. The logo, linked home, and one quiet *"Back home"* link sit at the top of the cream half. A floating card was tried and dropped: on a wide screen it left two thirds of the viewport empty, and a short screen such as forgot-password put a small form beside a tall blank column. From `lg` the halves split the width evenly; below that the photograph is dropped and the cream half takes the whole screen, because a panel above the form would push the submit button below the fold. The photograph half carries the eyebrow *"Your account"*, the Fraunces line *"Your details, always in reach"*, one paragraph of context and three short reassurance points along its bottom edge, the points divided by hairlines, with the swoosh cropped at low opacity in the top corner.
 
 
 - The shrink rules: two height variants, `short` (under 66rem tall) and `shorter` (under 44rem), drop the fields from 52px to 44px, tighten the gaps, the divider and the half's padding, and shrink the intro. The threshold is set by the tallest form: sign-up with Google switched off needs about 1040px of viewport before the roomy spacing fits without a scroll. The form column centres itself while there is room and starts from the top once there is not, so a scroll never hides the heading; if even that cannot fit, a phone in landscape say, the column scrolls on its own rather than the page, so nothing becomes unreachable.
@@ -734,14 +736,14 @@ Added with the products and payments feature (spec 0007). Copy lives beside each
 The admin is a staff tool rather than a customer surface, and it wears the brand without pretending to be the site. It is themed in one file, `src/app/(payload)/custom.scss`, by overriding Payload's own variables instead of rewriting its components:
 
 - **Colour** — Payload's neutral `--color-base-*` scale becomes the UNAVE warm greys, from cream white at `0` to green black at `1000`. Payload reverses that one scale for dark mode, so light and dark are branded by the same definition. Green carries `success`, gold carries `warning`, and errors stay a warm brick that reads on white and on deep green.
-- **Type** — Nunito loads from Google Fonts in `custom.scss`, which points Payload's `--font-body` and `--font-serif` at the site's typeface. (A provider component registered under `admin.components.providers` cannot reliably resolve through the dev import map, so the stylesheet route is the one the admin actually wears.)
+- **Type** — Fraunces and Inter load from Google Fonts in `custom.scss`, which points Payload's `--font-body` at Inter and `--font-serif` at Fraunces. (A provider component registered under `admin.components.providers` cannot reliably resolve through the dev import map, so the stylesheet route is the one the admin actually wears.)
 - **Shape** — `--style-radius-s/m/l` are 6/10/16px, tighter than the site's pills, because the admin is a working tool.
-- **Brand moments** — sign in is the deep green band with a gold-edged card and Nunito headings, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions, and three desk widgets sit above the collection cards: orders paid today (with the rupee total), open customer requests (cancellations and pauses), and messages still to answer. The widgets are Payload's experimental modular dashboard (`admin.dashboard` in `src/payload.config.ts`) — server components in `src/components/Admin/Widgets` that query through the local API and wear Payload's `card` class, so the `custom.scss` theme colours them for free. Staff can rearrange or resize them; the configured layout is only the first visit. "Today" is measured from midnight IST, the kitchen's day, not the server's own timezone. The header's top-right slot holds the staff chip (`src/components/Admin/UserMenu`) — `admin.avatar` points at it — with a menu offering *Account* and *Sign out*; Payload's stock default there is a gravatar image with no fallback, which renders as an empty box whenever gravatar.com is unreachable. The sidebar's bottom controls carry no user control (`logout.Button` is the empty `src/components/Admin/NoSidebarLogout`, replacing Payload's bare log-out icon) — one user control, top-right, is the rule. Payload UI components imported inside admin customs come from the `@payloadcms/ui` root, never subpaths — the root barrel inlines its own providers, so subpath imports hold different context objects and hooks like `useConfig` come back empty. An order opens on a plain summary rather than form inputs (`src/components/Admin/OrderSummary`): every line read by its kind — single item, size, combo, meal plan, or a built subscription with its picks under their option groups and a **Trial** tag — then the customer, the delivery and any pause or cancellation requests. Only values the order holds are shown, never placeholders. The payment sits in the sidebar above **Deliveries start on**, the one field staff can edit: what Razorpay sent when the payment was confirmed (method, UPI id, card network, type and last four digits, bank or wallet, bank reference, fee and GST, payer email and phone), the Razorpay order and payment ids, and the paid time. The order keeps those details in its `payment` group, written once by the browser return or the webhook; it never keeps a card's IIN or the cardholder's name.
+- **Brand moments** — sign in is the deep green band with a gold-edged card and Fraunces headings, the sidebar is green tinted with uppercase groups and a gold bar on the active item, and enabled primary buttons are green in light mode and gold in dark. The dashboard opens with a short UNAVE welcome and four desk links (Orders, Enquiries, Products, Customers) rather than Payload's template instructions, and three desk widgets sit above the collection cards: orders paid today (with the rupee total), open customer requests (cancellations and pauses), and messages still to answer. The widgets are Payload's experimental modular dashboard (`admin.dashboard` in `src/payload.config.ts`) — server components in `src/components/Admin/Widgets` that query through the local API and wear Payload's `card` class, so the `custom.scss` theme colours them for free. Staff can rearrange or resize them; the configured layout is only the first visit. "Today" is measured from midnight IST, the kitchen's day, not the server's own timezone. The header's top-right slot holds the staff chip (`src/components/Admin/UserMenu`) — `admin.avatar` points at it — with a menu offering *Account* and *Sign out*; Payload's stock default there is a gravatar image with no fallback, which renders as an empty box whenever gravatar.com is unreachable. The sidebar's bottom controls carry no user control (`logout.Button` is the empty `src/components/Admin/NoSidebarLogout`, replacing Payload's bare log-out icon) — one user control, top-right, is the rule. Payload UI components imported inside admin customs come from the `@payloadcms/ui` root, never subpaths — the root barrel inlines its own providers, so subpath imports hold different context objects and hooks like `useConfig` come back empty. An order opens on a plain summary rather than form inputs (`src/components/Admin/OrderSummary`): every line read by its kind — single item, size, combo, meal plan, or a built subscription with its picks under their option groups and a **Trial** tag — then the customer, the delivery and any pause or cancellation requests. Only values the order holds are shown, never placeholders. The payment sits in the sidebar above **Deliveries start on**, the one field staff can edit: what Razorpay sent when the payment was confirmed (method, UPI id, card network, type and last four digits, bank or wallet, bank reference, fee and GST, payer email and phone), the Razorpay order and payment ids, and the paid time. The order keeps those details in its `payment` group, written once by the browser return or the webhook; it never keeps a card's IIN or the cardholder's name.
 - **Money** — staff read and type rupees. `RupeeField` (with `RupeeCell` for list columns) shows rupees and still stores paise, so the database and the gateway are never touched.
 
 ### 6.17 The 404 page
 
-The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group, so it draws its own header and footer — an unmatched URL must never land somewhere with no way back. It wears the shared opening band (§6.3): deep green with the swoosh, a gold uppercase eyebrow (*Error 404*), a Nunito headline with the gold italic phrase (*This page is not on the menu*), and one lead line that says what happened and that the kitchen is still open. One primary pill (*Browse the products*) sits beside one quiet secondary (*Back to the home page*); no account is needed anywhere on it, and every link leads somewhere that sells.
+The page lives at `src/app/(frontend)/not-found.tsx`, outside the `(site)` group, so it draws its own header and footer — an unmatched URL must never land somewhere with no way back. It wears the shared opening band (§6.3): deep green with the swoosh, a gold uppercase eyebrow (*Error 404*), a Fraunces headline with the gold italic phrase (*This page is not on the menu*), and one lead line that says what happened and that the kitchen is still open. One primary pill (*Browse the products*) sits beside one quiet secondary (*Back to the home page*); no account is needed anywhere on it, and every link leads somewhere that sells.
 
 ### 6.18 Home photo row
 
@@ -820,13 +822,13 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
 ### 10.4 Blog
 
 1. Index (`/blog`) and its paged URLs: the shared green band hero, then the range line (*Showing 1 to 12 of 15 blog posts*), the Grid / List switch whose choice is a query string (`?view=list`) so it can be shared and survives without JavaScript, then the cards three-up, two-up, one-up, or one per row in list view, then the numbered pager: first, last, the current page and one either side, each a 44px target, the current page set as text rather than a link.
-2. Article (`/blog/[slug]`): the green band hero, carrying the post's categories as the eyebrow, the title in Nunito and the byline, on the post's own photograph, and running up behind the dark green navbar. Below it the post's photograph again, this time as the article's picture, 3:2 at 48rem with real alt text, then the body and the related posts. A post with no photograph still gets the band, just without the picture.
+2. Article (`/blog/[slug]`): the green band hero, carrying the post's categories as the eyebrow, the title in Fraunces and the byline, on the post's own photograph, and running up behind the dark green navbar. Below it the post's photograph again, this time as the article's picture, 3:2 at 48rem with real alt text, then the body and the related posts. A post with no photograph still gets the band, just without the picture.
 
 ### 10.5 Our kitchen
 
 `/our-kitchen`, a static content page in the same voice as the about page, with every string in `src/utilities/ourKitchenCopy.ts`:
 
-1. The shared green band (§6.3): eyebrow "Inside our kitchen", a Nunito headline with the gold accent phrase, one lead line, then Message us on WhatsApp with Browse the plans as the quiet second action, and three small icon chips under them.
+1. The shared green band (§6.3): eyebrow "Inside our kitchen", a Fraunces headline with the gold accent phrase, one lead line, then Message us on WhatsApp with Browse the plans as the quiet second action, and three small icon chips under them.
 2. What happens before your meal reaches you: five numbered steps in the How-it-works rail (§6.6), fresh produce in, washed and cut, cooked in batches, portioned and packed, checked and dispatched, drawn by the same `StepRail` component the home page uses.
 3. Clean ingredients, careful preparation: three photographs at 4:3, each with real alt text and its caption set under the picture rather than on it.
 4. How we plan a plate: four points in two columns, each with a hairline `--line` rule above it, followed by the gold goals notice (§6.9), because the copy names diabetes, allergies and food preferences.
@@ -903,8 +905,8 @@ Sign in, Sign up, Forgot password, Reset password, Account, Contact. The header 
   --warning: #8A5A00;
 
   /* Type */
-  --font-heading: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Shape */
   --r-sm: 8px;
@@ -937,8 +939,8 @@ theme: {
       ink:   { 900:'#1B2620',600:'#4A5A52',400:'#7C8A83' },
     },
     fontFamily: {
-      heading: ['Nunito','system-ui','sans-serif'],
-      body: ['Nunito','system-ui','sans-serif'],
+      heading: ['Fraunces','Georgia','serif'],
+      body: ['Inter','system-ui','sans-serif'],
     },
     borderRadius: { sm:'8px', md:'16px', lg:'24px' },
   },
@@ -969,7 +971,7 @@ theme: {
 
 ## 16. Open Items to Confirm with the Client
 
-1. Additional typeface choices, if any; Nunito is used site-wide and the existing type-size scale is unchanged.
+1. Additional typeface choices, if any; Fraunces and Inter are used site-wide and the existing type-size scale is unchanged.
 2. Delivery areas and timings.
 3. Photography source (shoot vs. licensed) and menu dish list.
 4. Whether to include a Hindi/Tamil language toggle.

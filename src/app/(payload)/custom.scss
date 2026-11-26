@@ -1,10 +1,10 @@
-/* Match the site's Nunito family; Next self-hosts it on the frontend and
-   Payload loads it here through Google Fonts. */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+/* Match the site's families, Fraunces headings and Inter body; Next self-hosts
+   them on the frontend and Payload loads them here through Google Fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-serif: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
 
 /* The Dashboard row (DashboardNavLink) sits above the nav groups with the
