@@ -782,9 +782,10 @@ export interface MealPlan {
    */
   subcategory?: (number | null) | Subcategory;
   /**
-   * Lunch only suits a lunch-box plan, for example.
+   * The meals customers can pick from; they can take one or any mix of them. Lunch only suits a lunch-box plan, for example. Customers see each offered meal that has a price under Lengths and prices.
    */
-  meals: 'any' | 'lunch' | 'dinner';
+  meals: 'any' | 'breakfast-lunch' | 'breakfast-dinner' | 'lunch-dinner' | 'breakfast' | 'lunch' | 'dinner';
+  breakfastTime?: string | null;
   lunchTime?: string | null;
   dinnerTime?: string | null;
   /**
@@ -805,6 +806,10 @@ export interface MealPlan {
         lunchPrice?: number | null;
         dinnerPrice?: number | null;
         bothPrice?: number | null;
+        /**
+         * Breakfast on its own, and what it adds on top of a lunch or dinner choice. Leave empty if this length has no breakfast.
+         */
+        breakfastPrice?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -834,38 +839,50 @@ export interface MealPlan {
    */
   thisWeek?: {
     mon?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
     tue?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
     wed?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
     thu?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
     fri?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
     sat?: {
+      breakfastMain?: string | null;
       lunchMain?: string | null;
       dinnerMain?: string | null;
+      breakfastSides?: string | null;
       lunchSides?: string | null;
       dinnerSides?: string | null;
     };
@@ -2063,6 +2080,7 @@ export interface MealPlansSelect<T extends boolean = true> {
   category?: T;
   subcategory?: T;
   meals?: T;
+  breakfastTime?: T;
   lunchTime?: T;
   dinnerTime?: T;
   prices?:
@@ -2075,6 +2093,7 @@ export interface MealPlansSelect<T extends boolean = true> {
         lunchPrice?: T;
         dinnerPrice?: T;
         bothPrice?: T;
+        breakfastPrice?: T;
         id?: T;
       };
   optionGroups?:
@@ -2098,48 +2117,60 @@ export interface MealPlansSelect<T extends boolean = true> {
         mon?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };
         tue?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };
         wed?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };
         thu?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };
         fri?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };
         sat?:
           | T
           | {
+              breakfastMain?: T;
               lunchMain?: T;
               dinnerMain?: T;
+              breakfastSides?: T;
               lunchSides?: T;
               dinnerSides?: T;
             };

@@ -1,4 +1,8 @@
-import { allowedSlots, type PlanBuilderData, type PlanSlot } from './planBuilder'
+import { offeredMeals, type PlanBuilderData, type PlanSlot } from './planBuilder'
+
+/** The meals the shelf can be filtered to: breakfast, or a lunch and dinner choice. */
+export type MealsFilter = 'breakfast' | PlanSlot
+const MEALS_FILTERS: MealsFilter[] = ['breakfast', 'lunch', 'dinner', 'both']
 
 /**
  * The meal plan shelf on /meal-subscription: search, filters and sort, the same
@@ -22,7 +26,8 @@ export const MEAL_PLAN_SORT_LABEL: Record<MealPlanSortKey, string> = {
   recommended: 'Recommended',
 }
 
-export const MEALS_FILTER_LABEL: Record<PlanSlot, string> = {
+export const MEALS_FILTER_LABEL: Record<MealsFilter, string> = {
+  breakfast: 'Breakfast',
   both: 'Lunch and dinner',
   dinner: 'Dinner',
   lunch: 'Lunch',
@@ -32,7 +37,7 @@ export interface MealPlanShelfState {
   audience: null | string
   /** The low end of the price range, in whole rupees, for one person. */
   from: null | number
-  meals: null | PlanSlot
+  meals: MealsFilter | null
   q: string
   sort: MealPlanSortKey
   to: null | number
@@ -68,7 +73,7 @@ export const parseMealPlanShelf = (raw: MealPlanSearchParams = {}): MealPlanShel
   return {
     audience: audience && SLUG_PATTERN.test(audience) ? audience : null,
     from: wholeRupees(last(raw.from)),
-    meals: meals === 'lunch' || meals === 'dinner' || meals === 'both' ? meals : null,
+    meals: meals && (MEALS_FILTERS as string[]).includes(meals) ? (meals as MealsFilter) : null,
     q: (last(raw.q) ?? '').trim().slice(0, 80),
     sort: sort && (MEAL_PLAN_SORT_ORDER as string[]).includes(sort) ? (sort as MealPlanSortKey) : 'recommended',
     to: wholeRupees(last(raw.to)),
@@ -94,17 +99,23 @@ export const hasMealPlanFilters = (state: MealPlanShelfState): boolean =>
  * The price a plan leads with for one person, in paise: its cheapest length for
  * the meals asked for, or for any meals it sells when none were asked for.
  */
-export const mealPlanLeadPrice = (plan: PlanBuilderData, meals: null | PlanSlot = null): null | number => {
+export const mealPlanLeadPrice = (plan: PlanBuilderData, meals: MealsFilter | null = null): null | number => {
   const prices = plan.plans.flatMap((length) =>
     meals ? (length.prices[meals] !== undefined ? [length.prices[meals]!] : []) : Object.values(length.prices),
   )
   return prices.length ? Math.min(...prices) : null
 }
 
+/** Whether a plan sells the meals a filter asks for. */
+const offersMeals = (plan: PlanBuilderData, meals: MealsFilter): boolean => {
+  const offered = offeredMeals(plan)
+  return meals === 'both' ? offered.includes('lunch') && offered.includes('dinner') : offered.includes(meals)
+}
+
 const matchesSearch = (plan: PlanBuilderData, q: string): boolean => {
   const needle = q.toLowerCase()
   const dishes = (plan.thisWeek?.days ?? []).flatMap((day) =>
-    [day.lunch, day.dinner].flatMap((meal) => (meal ? [meal.main, ...meal.sides] : [])),
+    [day.breakfast, day.lunch, day.dinner].flatMap((meal) => (meal ? [meal.main, ...meal.sides] : [])),
   )
   return [plan.title, plan.description, plan.audience?.title ?? '', ...dishes].some((text) =>
     text.toLowerCase().includes(needle),
@@ -115,7 +126,7 @@ const matchesSearch = (plan: PlanBuilderData, q: string): boolean => {
 export const filterMealPlans = (plans: PlanBuilderData[], state: MealPlanShelfState): PlanBuilderData[] => {
   const shown = plans.filter((plan) => {
     if (state.audience && plan.audience?.slug !== state.audience) return false
-    if (state.meals && !allowedSlots(plan.meals).includes(state.meals)) return false
+    if (state.meals && !offersMeals(plan, state.meals)) return false
     const price = mealPlanLeadPrice(plan, state.meals)
     if (price === null) return false
     if (state.from !== null && price < state.from * 100) return false

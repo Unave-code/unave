@@ -69,12 +69,12 @@ export function CartForm({
   slug: string
   state: PlanBuilderState
 }) {
-  const { choices, plan, slot, step, valid } = state
+  const { choices, mealsValue, plan, step, valid } = state
   // Only on the last step, so every choice has been seen before it goes in the cart.
   const ready = valid && step === STEPS.length - 1
   return (
     <form action="/api/cart/plan" className={className} method="post">
-      <input name="slot" type="hidden" value={slot ?? ''} />
+      <input name="slot" type="hidden" value={mealsValue} />
       <input name="plan" type="hidden" value={plan?.label ?? ''} />
       <input name="mealPlan" type="hidden" value={slug} />
       {choices.flatMap((group, i) =>

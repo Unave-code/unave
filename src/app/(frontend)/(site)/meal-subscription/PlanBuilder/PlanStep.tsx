@@ -1,24 +1,25 @@
 import React from 'react'
 
 import { formatPaise } from '@/utilities/money'
-import type { PlanBuilderData } from '@/utilities/planBuilder'
+import { mealPickPrice, type PlanBuilderData } from '@/utilities/planBuilder'
 import { cn } from '@/utilities/ui'
 
 import { ChoiceCard, FieldLabel, MEAL_ICON, MEAL_LABEL } from './ui'
 import type { PlanBuilderState } from './usePlanBuilder'
 
 export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBuilderState }) {
-  const { meals, offered, planLabel, setPlanLabel, slot, times, toggleMeal } = state
+  const { meals, offered, pick, planLabel, setPlanLabel, times, toggleMeal } = state
+  const anyPicked = pick.breakfast || pick.slot !== null
   return (
     <div className="space-y-8">
       <div aria-labelledby="lbl-meals" role="group">
         <FieldLabel
-          hint={offered.length > 1 ? 'Choose one or both. We deliver Monday to Saturday.' : `This plan is ${MEAL_LABEL[offered[0]].toLowerCase()} only. We deliver Monday to Saturday.`}
+          hint={offered.length > 1 ? `Choose ${offered.length > 2 ? 'any of them' : 'one or both'}. We deliver Monday to Saturday.` : `This plan is ${MEAL_LABEL[offered[0]].toLowerCase()} only. We deliver Monday to Saturday.`}
           id="lbl-meals"
         >
           Which meals?
         </FieldLabel>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={cn('grid gap-3', offered.length > 2 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
           {offered.map((m) => {
             const Icon = MEAL_ICON[m]
             return (
@@ -43,7 +44,7 @@ export function PlanStep({ data, state }: { data: PlanBuilderData; state: PlanBu
         </FieldLabel>
         <div className="grid gap-3 sm:grid-cols-3">
           {data.plans.map((p) => {
-            const price = slot ? p.prices[slot] : undefined
+            const price = anyPicked ? mealPickPrice(p, pick) : undefined
             return (
               <ChoiceCard key={p.label} onClick={() => setPlanLabel(p.label)} selected={planLabel === p.label}>
                 <span className="font-extrabold">{p.label}</span>

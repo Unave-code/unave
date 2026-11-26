@@ -145,17 +145,25 @@ export const MealPlans: CollectionConfig = {
               defaultValue: 'any',
               required: true,
               options: [
-                { label: 'Lunch, dinner or both', value: 'any' },
+                { label: 'Breakfast, lunch and dinner', value: 'any' },
+                { label: 'Breakfast and lunch', value: 'breakfast-lunch' },
+                { label: 'Breakfast and dinner', value: 'breakfast-dinner' },
+                { label: 'Lunch and dinner', value: 'lunch-dinner' },
+                { label: 'Breakfast only', value: 'breakfast' },
                 { label: 'Lunch only', value: 'lunch' },
                 { label: 'Dinner only', value: 'dinner' },
               ],
-              admin: { description: 'Lunch only suits a lunch-box plan, for example.' },
+              admin: {
+                description:
+                  'The meals customers can pick from; they can take one or any mix of them. Lunch only suits a lunch-box plan, for example. Customers see each offered meal that has a price under Lengths and prices.',
+              },
             },
             {
               type: 'row',
               fields: [
-                { name: 'lunchTime', type: 'text', label: 'Lunch delivery time', defaultValue: '12:00 – 1:30 PM', admin: { width: '50%' } },
-                { name: 'dinnerTime', type: 'text', label: 'Dinner delivery time', defaultValue: '7:00 – 8:30 PM', admin: { width: '50%' } },
+                { name: 'breakfastTime', type: 'text', label: 'Breakfast delivery time', defaultValue: '7:00 – 8:30 AM', admin: { width: '33%' } },
+                { name: 'lunchTime', type: 'text', label: 'Lunch delivery time', defaultValue: '12:00 – 1:30 PM', admin: { width: '33%' } },
+                { name: 'dinnerTime', type: 'text', label: 'Dinner delivery time', defaultValue: '7:00 – 8:30 PM', admin: { width: '33%' } },
               ],
             },
           ],
@@ -211,6 +219,19 @@ export const MealPlans: CollectionConfig = {
                     rupeeField('lunchPrice', 'Lunch only (₹)'),
                     rupeeField('dinnerPrice', 'Dinner only (₹)'),
                     rupeeField('bothPrice', 'Lunch and dinner (₹)'),
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    rupeeField('breakfastPrice', 'Breakfast (₹)', {
+                      admin: {
+                        width: '33%',
+                        description:
+                          'Breakfast on its own, and what it adds on top of a lunch or dinner choice. Leave empty if this length has no breakfast.',
+                        components: { Field: '@/components/Admin/RupeeField#RupeeField' },
+                      },
+                    }),
                   ],
                 },
               ],
@@ -273,7 +294,7 @@ export const MealPlans: CollectionConfig = {
         {
           label: 'Menu',
           description:
-            'One fixed lunch and dinner per day. Write the main dish with its roti or rice, and the sides separated by commas. Update it each week.',
+            'One fixed breakfast, lunch and dinner per day; leave a meal empty if the plan does not serve it. Write the main dish with its roti, rice or dosa, and the sides separated by commas. Update it each week.',
           fields: [menuWeekField('thisWeek', 'This week', 'The menu customers see on the plan page and its card.')],
         },
       ],

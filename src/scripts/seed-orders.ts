@@ -102,7 +102,7 @@ const subscriptionLine = async (seed: Extract<LineSeed, { kind: 'subscription' }
     payload.logger.warn(`Meal plan ${seed.slug} has no trial length; run pnpm seed:catalogue. Line skipped.`)
     return null
   }
-  const priced = pricePlanSelection(data, { choices: seed.choices, plan: length, slot: seed.slot })
+  const priced = pricePlanSelection(data, { breakfast: false, choices: seed.choices, plan: length, slot: seed.slot })
   if (!priced) {
     payload.logger.warn(`Meal plan ${seed.slug}: the selection no longer prices. Line skipped.`)
     return null

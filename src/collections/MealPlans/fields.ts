@@ -23,7 +23,7 @@ export const rupeeField = (name: string, label: string, extra: Partial<Field> = 
     ...extra,
   }) as Field
 
-/** A week of menu: one fixed lunch and dinner per delivery day, text only. */
+/** A week of menu: one fixed breakfast, lunch and dinner per delivery day, text only. Leave a meal empty when the plan does not serve it. */
 export const menuWeekField = (name: string, label: string, description: string): Field => ({
   name,
   label,
@@ -39,15 +39,17 @@ export const menuWeekField = (name: string, label: string, description: string):
           {
             type: 'row',
             fields: [
-              { name: 'lunchMain', type: 'text', label: 'Lunch', admin: { width: '50%', placeholder: 'Kadhai Paneer with carrot roti' } },
-              { name: 'dinnerMain', type: 'text', label: 'Dinner', admin: { width: '50%', placeholder: 'No-Butter Soya Masala with multigrain roti' } },
+              { name: 'breakfastMain', type: 'text', label: 'Breakfast', admin: { width: '33%', placeholder: 'Ragi dosa with tomato chutney' } },
+              { name: 'lunchMain', type: 'text', label: 'Lunch', admin: { width: '33%', placeholder: 'Kadhai Paneer with carrot roti' } },
+              { name: 'dinnerMain', type: 'text', label: 'Dinner', admin: { width: '33%', placeholder: 'No-Butter Soya Masala with multigrain roti' } },
             ],
           },
           {
             type: 'row',
             fields: [
-              { name: 'lunchSides', type: 'text', label: 'Lunch sides', admin: { width: '50%', placeholder: 'Sprouted moong salad, Matki dal, Capsicum besan subzi' } },
-              { name: 'dinnerSides', type: 'text', label: 'Dinner sides', admin: { width: '50%', placeholder: 'Mixed bean salad, Homestyle chole, Aloo gobi' } },
+              { name: 'breakfastSides', type: 'text', label: 'Breakfast sides', admin: { width: '33%', placeholder: 'Sambar, Fruit bowl' } },
+              { name: 'lunchSides', type: 'text', label: 'Lunch sides', admin: { width: '33%', placeholder: 'Sprouted moong salad, Matki dal, Capsicum besan subzi' } },
+              { name: 'dinnerSides', type: 'text', label: 'Dinner sides', admin: { width: '33%', placeholder: 'Mixed bean salad, Homestyle chole, Aloo gobi' } },
             ],
           },
         ],

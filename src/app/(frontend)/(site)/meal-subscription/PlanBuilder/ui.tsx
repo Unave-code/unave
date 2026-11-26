@@ -1,12 +1,10 @@
-import { Check, Moon, Sun } from 'lucide-react'
+import { Check, Moon, Sun, Sunrise } from 'lucide-react'
 import React from 'react'
 
 import { cn } from '@/utilities/ui'
 
-export type Meal = 'lunch' | 'dinner'
-export const MEALS: Meal[] = ['lunch', 'dinner']
-export const MEAL_ICON = { dinner: Moon, lunch: Sun }
-export const MEAL_LABEL = { dinner: 'Dinner', lunch: 'Lunch' }
+export { MEAL_LABEL, MEALS, type Meal } from '@/utilities/planBuilder'
+export const MEAL_ICON = { breakfast: Sunrise, dinner: Moon, lunch: Sun }
 
 export const STEPS = [
   { heading: 'Choose your plan', label: 'Plan' },

@@ -25,6 +25,7 @@ afterEach(cleanup)
 
 const data: PlanBuilderData = {
   audience: { slug: 'kids', title: 'Kids' },
+  breakfastTime: '8am',
   description: 'Tasty',
   dinnerTime: '7pm',
   image: { alt: '', url: '/a.jpg' },
@@ -48,7 +49,7 @@ const data: PlanBuilderData = {
   ],
   slug: 'kids',
   subcategory: null,
-  thisWeek: { days: [{ date: '', day: 'Mon', dinner: { main: 'Dal', sides: ['Rice'] }, full: 'Monday', lunch: { main: 'Khichdi', sides: [] } }], range: '1–6 Dec' },
+  thisWeek: { days: [{ breakfast: null, date: '', day: 'Mon', dinner: { main: 'Dal', sides: ['Rice'] }, full: 'Monday', lunch: { main: 'Khichdi', sides: [] } }], range: '1–6 Dec' },
   title: 'Kids plan',
 }
 
@@ -138,7 +139,7 @@ describe('the meal plan builder', { timeout: 20_000 }, () => {
   it('shows only the trial days of the menu for a trial length', () => {
     const base = data.plans[0]
     const dish = { main: 'Dal', sides: [] }
-    const day = (d: string, full: string, has: boolean) => ({ date: '', day: d, dinner: has ? dish : null, full, lunch: has ? dish : null })
+    const day = (d: string, full: string, has: boolean) => ({ breakfast: null, date: '', day: d, dinner: has ? dish : null, full, lunch: has ? dish : null })
     renderBuilder({
       plans: [{ ...base, days: 3, label: 'Trial', note: '', trial: true }, ...data.plans],
       thisWeek: {

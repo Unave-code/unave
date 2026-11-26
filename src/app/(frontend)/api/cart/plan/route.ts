@@ -4,14 +4,13 @@ import { getPayload } from 'payload'
 import { CART_MAX_LINES, cartCookie, readCartFromHeaders, sameCartLine } from '@/utilities/cart'
 import { isSameOriginRequest, seeOther } from '@/utilities/formPost'
 import {
+  decodeMealPick,
   encodePlanSelection,
   MEAL_PLANS_PATH,
   mealPlanLineProduct,
   mealPlanPath,
   normalizeMealPlan,
-  PLAN_SLOTS,
   type PlanSelection,
-  type PlanSlot,
   pricePlanSelection,
 } from '@/utilities/planBuilder'
 
@@ -40,8 +39,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!doc) return seeOther(`${MEAL_PLANS_PATH}?notice=changed`)
 
   const data = normalizeMealPlan(doc)
-  const slot = String(form.get('slot') ?? '') as PlanSlot
+  // The meals arrive as one "slot" field, for example "breakfast+both" (encodeMealPick).
+  const pick = decodeMealPick(String(form.get('slot') ?? '').slice(0, 40))
+  if (!pick) return seeOther(`${back}?notice=changed`)
   const selection: PlanSelection = {
+    ...pick,
     // Every picked add-on in a group arrives as its own choice-<group> field; none is fine.
     choices: data.optionGroups.map((_, i) =>
       form
@@ -50,10 +52,9 @@ export async function POST(request: Request): Promise<Response> {
         .map((v) => Number.parseInt(String(v), 10)),
     ),
     plan: String(form.get('plan') ?? '').trim().slice(0, 40),
-    slot,
   }
 
-  if (!PLAN_SLOTS.includes(slot) || !pricePlanSelection(data, selection)) {
+  if (!pricePlanSelection(data, selection)) {
     return seeOther(`${back}?notice=changed`)
   }
 
