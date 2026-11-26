@@ -38,6 +38,7 @@ import {
   ACCOUNT_ORDERS_HEADING,
   ACCOUNT_ORDERS_INTRO,
   ACCOUNT_ORDER_STATUS_PAID,
+  ORDER_NUMBER_LABEL,
   ORDER_PAYMENT_ID_LABEL,
 } from '../order-placed/copy'
 
@@ -144,7 +145,8 @@ export const OrdersPanel: React.FC<{
                   className="hover:opacity-75 font-bold transition-opacity focus-visible:ring-[3px] focus-visible:ring-current focus-visible:outline-none motion-reduce:transition-none"
                   href={`/order-placed/${order.id}`}
                 >
-                  {formatPaise(Number(order.total))}
+                  {ORDER_NUMBER_LABEL} <span className="tabular-nums">#{order.id}</span>
+                  <span className="text-ink-600 font-semibold"> · {formatPaise(Number(order.total))}</span>
                 </Link>
 
                 <span className="bg-green-100 text-green-700 rounded-pill px-3 py-1 text-xs font-bold tracking-wide uppercase">
