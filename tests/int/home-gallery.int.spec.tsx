@@ -34,7 +34,8 @@ describe('homepage photo gallery', () => {
     render(await Gallery({}))
 
     expect(
-      screen.getByRole('heading', { name: 'Good food, cooked in our own kitchen.' }).className,
+      // The h1 opens with the page's search phrase, then the brand headline.
+      screen.getByRole('heading', { level: 1, name: /Good food, cooked in our own kitchen\./ }).className,
     ).toContain('text-balance')
     expect(screen.queryByText('The 20% offer depends on portion size and product type.')).toBeNull()
   })

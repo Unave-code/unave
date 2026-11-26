@@ -4,6 +4,8 @@ import React from 'react'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { CategoryTiles, type CategoryTile } from '@/components/CategoryTiles'
 import { Cta } from '@/components/Cta'
+import { JsonLd } from '@/components/JsonLd'
+import { Faq } from '@/components/home/Faq'
 import { Section } from '@/components/home/Section'
 import { MealPlanCard } from '@/components/Store/MealPlanCard'
 import { ProductShelf } from '@/components/Store/ProductShelf'
@@ -30,6 +32,7 @@ import {
   type ProductCategoryValue,
 } from '@/utilities/productsCategoryCopy'
 import { PRODUCTS_CTA_MESSAGE } from '@/utilities/productsCopy'
+import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd } from '@/utilities/structuredData'
 import { cn } from '@/utilities/ui'
 import { whatsappHref } from '@/utilities/whatsapp'
 
@@ -44,6 +47,13 @@ import { whatsappHref } from '@/utilities/whatsapp'
  * tile writes `?subcategory=` into the address, so a narrowed shelf can be
  * linked and reloaded like any other view, and "All" clears it.
  */
+/** The photograph beside each category's questions: the same one the about page gives the range. */
+const FAQ_IMAGES: Record<ProductCategoryValue, { alt: string; src: string }> = {
+  'fresh-from-produce': { alt: 'Fresh vegetables and fruit from the market', src: '/images/about/farm-products.webp' },
+  'ready-to-cook': { alt: 'Cut vegetables and measured masalas, ready to cook', src: '/images/about/ready-to-cook.webp' },
+  'ready-to-eat': { alt: 'A home-style meal cooked in the UNAVE kitchen', src: '/images/category-healthy.jpg' },
+}
+
 export const ProductCategoryView: React.FC<{
   category: ProductCategoryValue
   searchParams?: ShelfSearchParams
@@ -106,8 +116,22 @@ export const ProductCategoryView: React.FC<{
   const rawImage = pages?.[headerField[category]]
   const headerImage = rawImage && typeof rawImage === 'object' && rawImage.url ? rawImage : null
 
+  const crumbs = [
+    { href: '/', label: 'Home' },
+    { href: '/products', label: 'Products' },
+    { href: basePath, label: CATEGORY_LABEL[category] },
+  ]
+
   return (
     <main>
+      <JsonLd
+        data={[
+          webPageJsonLd('CollectionPage', basePath, copy.metaTitle, copy.metaDescription),
+          breadcrumbJsonLd(crumbs),
+          faqJsonLd(copy.faq),
+        ]}
+      />
+
       <Section
         className={cn(
           'opening-band relative overflow-hidden bg-green-900',
@@ -123,16 +147,15 @@ export const ProductCategoryView: React.FC<{
         <div className="relative max-w-[46rem]">
           <Breadcrumbs
             className="mb-4"
-            items={[
-              { href: '/', label: 'Home' },
-              { href: '/products', label: 'Products' },
-              { label: CATEGORY_LABEL[category] },
-            ]}
+            items={crumbs.map((crumb, index) =>
+              index === crumbs.length - 1 ? { label: crumb.label } : crumb,
+            )}
             tone="onDark"
           />
-          <p className="text-eyebrow text-gold-400 uppercase">{copy.eyebrow}</p>
 
-          <h1 className="text-display mt-4 text-balance">
+          {/* The eyebrow sits inside the h1 so the heading names the page's query. */}
+          <h1 className="text-display text-balance">
+            <span className="text-eyebrow text-gold-400 mb-4 block uppercase">{copy.eyebrow}</span>
             {copy.headline}{' '}
             <span className="text-gold-400 whitespace-nowrap italic">{copy.headlineAccent}</span>
           </h1>
@@ -182,7 +205,9 @@ export const ProductCategoryView: React.FC<{
         </div>
       </Section>
 
-      <Section tone="white">
+      <Faq heading={copy.faqHeading} image={FAQ_IMAGES[category]} items={copy.faq} />
+
+      <Section tone="tint">
         <div className="max-w-[52ch]">
           <h2 className="text-h2">{PRODUCTS_CATEGORY_FINAL_HEADING}</h2>
           <p className="text-body text-ink-600 mt-3">{PRODUCTS_CATEGORY_FINAL_BODY}</p>

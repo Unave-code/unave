@@ -2,12 +2,17 @@ import { fetchAudiences } from '@/utilities/audiences'
 import type { Metadata } from 'next'
 import React from 'react'
 
+import Link from 'next/link'
+
 import { Cta } from '@/components/Cta'
+import { JsonLd } from '@/components/JsonLd'
 import { Section } from '@/components/home/Section'
 import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
 import type { Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { CATEGORY_LABEL, productCategoryHref } from '@/utilities/productsCategoryCopy'
+import { breadcrumbJsonLd, itemListJsonLd, webPageJsonLd } from '@/utilities/structuredData'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import {
   fetchProductShelf,
@@ -29,6 +34,10 @@ import {
   PRODUCTS_HOW_STEPS,
   PRODUCTS_PAGE_DESCRIPTION,
   PRODUCTS_PAGE_TITLE,
+  PRODUCTS_RANGES,
+  PRODUCTS_RANGES_COLUMNS,
+  PRODUCTS_RANGES_HEADING,
+  PRODUCTS_RANGES_INTRO,
 } from '@/utilities/productsCopy'
 
 /**
@@ -83,13 +92,30 @@ export default async function ProductsPage({
 
   return (
     <main>
+      <JsonLd
+        data={[
+          webPageJsonLd('CollectionPage', '/products', PRODUCTS_PAGE_TITLE, PRODUCTS_PAGE_DESCRIPTION),
+          breadcrumbJsonLd([
+            { href: '/', label: 'Home' },
+            { href: '/products', label: 'Products' },
+          ]),
+          itemListJsonLd(
+            'UNAVE product ranges',
+            PRODUCTS_RANGES.map((range) => ({
+              href: productCategoryHref(range.category),
+              name: CATEGORY_LABEL[range.category],
+            })),
+          ),
+        ]}
+      />
+
       <Section className="opening-band relative overflow-hidden bg-green-900 md:py-20" tone="green">
         <Swoosh className="-top-40 -right-32 w-[42rem] text-gold-400/[0.08]" />
 
         <div className="relative max-w-[46rem]">
-          <p className="text-eyebrow text-gold-400 uppercase">{PRODUCTS_HERO_EYEBROW}</p>
-
-          <h1 className="text-display mt-4 text-balance">
+          {/* The eyebrow sits inside the h1 so the heading names the page's query. */}
+          <h1 className="text-display text-balance">
+            <span className="text-eyebrow text-gold-400 mb-4 block uppercase">{PRODUCTS_HERO_EYEBROW}</span>
             {PRODUCTS_HERO_HEADLINE}{' '}
             <span className="text-gold-400 whitespace-nowrap italic">
               {PRODUCTS_HERO_HEADLINE_ACCENT}
@@ -103,6 +129,43 @@ export default async function ProductsPage({
               {PRODUCTS_CTA_BROWSE}
             </Cta>
           </div>
+        </div>
+      </Section>
+
+      {/* The three ranges side by side, each linking to its own page. */}
+      <Section tone="cream">
+        <h2 className="text-h2">{PRODUCTS_RANGES_HEADING}</h2>
+        <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{PRODUCTS_RANGES_INTRO}</p>
+
+        <div className="border-line mt-8 overflow-x-auto rounded-2xl border bg-white">
+          <table className="text-body w-full min-w-[40rem] text-left">
+            <thead className="bg-green-50 text-green-900">
+              <tr>
+                {PRODUCTS_RANGES_COLUMNS.map((column) => (
+                  <th className="px-5 py-4 font-bold" key={column} scope="col">
+                    {column}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-line divide-y">
+              {PRODUCTS_RANGES.map((range) => (
+                <tr key={range.category}>
+                  <th className="px-5 py-4 align-top font-bold" scope="row">
+                    <Link
+                      className="inline-flex min-h-11 items-center rounded-sm text-green-700 underline underline-offset-4 hover:text-green-600 focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none"
+                      href={productCategoryHref(range.category)}
+                    >
+                      {CATEGORY_LABEL[range.category]}
+                    </Link>
+                  </th>
+                  <td className="text-ink-600 px-5 py-4 align-top">{range.what}</td>
+                  <td className="text-ink-600 px-5 py-4 align-top">{range.cooking}</td>
+                  <td className="text-ink-600 px-5 py-4 align-top">{range.bestFor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Section>
 

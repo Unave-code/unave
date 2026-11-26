@@ -42,6 +42,7 @@ export const generateMeta = async (args: {
       title,
       url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
     }),
-    title,
+    // The title already carries the brand, so the layout's suffix is skipped.
+    title: { absolute: title },
   }
 }

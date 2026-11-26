@@ -81,12 +81,20 @@ describe('the per category copy', () => {
     for (const value of PRODUCT_CATEGORY_VALUES) {
       const copy = PRODUCT_CATEGORY_COPY[value]
 
-      expect(copy.eyebrow).toBe(CATEGORY_LABEL[value])
+      // The eyebrow sits inside the h1 and names the page's query, which always carries the city.
+      expect(copy.eyebrow.trim()).toBeTruthy()
+      expect(copy.eyebrow).toMatch(/Chennai/)
       expect(copy.headline.trim()).toBeTruthy()
       expect(copy.headlineAccent.trim()).toBeTruthy()
       expect(copy.intro.trim()).toBeTruthy()
       expect(copy.metaTitle.trim()).toBeTruthy()
       expect(copy.metaDescription.trim()).toBeTruthy()
+      expect(copy.faqHeading.trim()).toBeTruthy()
+      expect(copy.faq.length).toBeGreaterThanOrEqual(5)
+      for (const item of copy.faq) {
+        expect(item.question.trim()).toBeTruthy()
+        expect(item.answer.trim()).toBeTruthy()
+      }
     }
   })
 })

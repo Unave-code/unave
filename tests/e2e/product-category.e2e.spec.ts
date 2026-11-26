@@ -247,7 +247,7 @@ test.describe('a category page', () => {
     test.setTimeout(90_000)
 
     await page.goto(`${BASE}/products/ready-to-cook`)
-    await expect(page).toHaveTitle(/Ready to cook products/i)
+    await expect(page).toHaveTitle(/Ready to Cook Food in Chennai/i)
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       /\/products\/ready-to-cook$/,

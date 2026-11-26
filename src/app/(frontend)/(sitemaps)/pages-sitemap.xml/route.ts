@@ -46,7 +46,16 @@ const getPagesSitemap = unstable_cache(
 
     const dateFallback = new Date().toISOString()
 
+    /* The pages built in code rather than in the Pages collection. Without
+       these the home, about, contact and kitchen pages were missing from the
+       sitemap entirely. */
+    const codeRoutes = ['/', '/about', '/our-kitchen', '/contact', '/meal-subscription']
+
     const defaultSitemap = [
+      ...codeRoutes.map((route) => ({
+        loc: route === '/' ? `${SITE_URL}/` : `${SITE_URL}${route}`,
+        lastmod: dateFallback,
+      })),
       {
         loc: `${SITE_URL}/blog`,
         lastmod: dateFallback,
@@ -81,7 +90,13 @@ const getPagesSitemap = unstable_cache(
         lastmod: product.updatedAt || dateFallback,
       }))
 
-    return [...defaultSitemap, ...productSitemap, ...sitemap]
+    // A Pages document can share an address with a code route (a "home" page, say); list each address once.
+    const seen = new Set<string>()
+    return [...defaultSitemap, ...productSitemap, ...sitemap].filter((entry) => {
+      if (seen.has(entry.loc)) return false
+      seen.add(entry.loc)
+      return true
+    })
   },
   ['pages-sitemap'],
   {

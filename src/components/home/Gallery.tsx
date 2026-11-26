@@ -4,7 +4,7 @@ import React from 'react'
 
 import type { Hero as HeroGlobal } from '@/payload-types'
 
-import { GALLERY, HERO_HEADLINE, HERO_HEADLINE_ACCENT } from '@/utilities/homeCopy'
+import { GALLERY, HERO_ANSWER, HERO_EYEBROW, HERO_HEADLINE, HERO_HEADLINE_ACCENT } from '@/utilities/homeCopy'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { safeLinkHref } from '@/utilities/safeLinkHref'
@@ -64,8 +64,10 @@ export const Gallery: React.FC = async () => {
           className="text-hero text-green-900 text-balance font-bold leading-[1.1] pb-1"
           id="home-hero-heading"
         >
+          <span className="text-eyebrow text-gold-600 mb-3 block uppercase">{HERO_EYEBROW}</span>
           {HERO_HEADLINE} <span className="text-gold-600 italic">{HERO_HEADLINE_ACCENT}</span>
         </h1>
+        <p className="text-lead text-ink-600 mx-auto mt-5 max-w-[60ch] text-pretty">{HERO_ANSWER}</p>
       </div>
     </Section>
   )

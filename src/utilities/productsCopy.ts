@@ -9,15 +9,42 @@
 
 import { WHATSAPP_CTA_LABEL } from '@/utilities/whatsapp'
 
-export const PRODUCTS_PAGE_TITLE = 'Meal products'
+/** Primary query: "buy food products online Chennai" (docs/seo/keyword-map.md). The layout adds "| UNAVE". */
+export const PRODUCTS_PAGE_TITLE = 'Buy Food Products Online in Chennai'
 export const PRODUCTS_PAGE_DESCRIPTION =
-  'Home style meals as a product: a week or a month of lunches and dinners, cooked in our kitchen and delivered to your door. Pay once, eat well every day.'
+  'Buy fresh, home-style food online in Chennai: ready-to-eat meals, ready-to-cook food and fresh produce from the UNAVE kitchen, delivered to your door. Pay once.'
 
-export const PRODUCTS_HERO_EYEBROW = 'Meal products'
+export const PRODUCTS_HERO_EYEBROW = 'Food products online in Chennai'
 export const PRODUCTS_HERO_HEADLINE = 'Plan your week,'
 export const PRODUCTS_HERO_HEADLINE_ACCENT = 'skip the daily question'
 export const PRODUCTS_HERO_SUB =
-  'Choose how long you want home style meals to arrive for, and add it to your cart. Pay once for the whole basket. No account needed to look around.'
+  'Buy UNAVE food online in Chennai: ready-to-eat meals, ready-to-cook food and fresh produce, all from our own kitchen. Add a single item or a weekly plan to your cart and pay once for the whole basket. No account needed to look around.'
+
+/** The three ranges side by side (the hub's comparison table). Facts only, from each category page. */
+export const PRODUCTS_RANGES_HEADING = 'Three ways to shop'
+export const PRODUCTS_RANGES_INTRO =
+  'Every range is prepared in the same Chennai kitchen. Pick the one that matches how much cooking you want to do.'
+export const PRODUCTS_RANGES_COLUMNS = ['Range', 'What it is', 'Cooking at home', 'Best for'] as const
+export const PRODUCTS_RANGES = [
+  {
+    category: 'ready-to-eat',
+    what: 'Home-style meals cooked fresh in our kitchen each morning',
+    cooking: 'None: heat and eat',
+    bestFor: 'Busy weekdays, office lunches and anyone who would rather not cook',
+  },
+  {
+    category: 'ready-to-cook',
+    what: 'Vegetables cleaned and cut, masalas measured',
+    cooking: 'The last step only',
+    bestFor: 'Cooking home-style without the prep work',
+  },
+  {
+    category: 'fresh-from-produce',
+    what: 'Fruits and vegetables chosen for the week, cleaned and cut or cooked simply',
+    cooking: 'As much as you like',
+    bestFor: 'Fresh produce delivered without the washing and chopping',
+  },
+] as const
 
 export const PRODUCTS_CTA_BROWSE = 'Browse the products'
 export const PRODUCTS_CTA_MESSAGE = WHATSAPP_CTA_LABEL
