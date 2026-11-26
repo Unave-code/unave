@@ -33,14 +33,9 @@ export const IMAGES = {
 
 /** 1. Announcement bar now lives in the site chrome (Header global), above the navbar. */
 
-/** 2. The visible home hero heading. The small line above it carries the page's query. */
-export const HERO_EYEBROW = 'Cloud kitchen in Chennai'
+/** 2. The visible home hero heading. */
 export const HERO_HEADLINE = 'Good food, cooked in'
 export const HERO_HEADLINE_ACCENT = 'our own kitchen.'
-
-/** The direct answer under the heading: what UNAVE is, what it sells and where. */
-export const HERO_ANSWER =
-  'UNAVE is a cloud kitchen in Chennai. We cook ready-to-eat home-style meals, prepare ready-to-cook food and pack fresh produce in our own kitchen, then deliver it to your door. Look around without an account, or message us and we will plan your week with you.'
 
 /** 4. What makes us different. `icon` is resolved to a glyph in Benefits.tsx, and the
  * three with an `image` are the ones the bento gives a wide or tall tile to, so the
@@ -121,9 +116,8 @@ export const CATEGORIES = [
   },
 ] as const
 
-/** Best sellers selected by the kitchen. */
+/** The home shelf of products the kitchen features. */
 export const BEST_SELLERS_HEADING = 'Best sellers'
-export const BEST_SELLERS_INTRO = 'Products selected by the kitchen.'
 export const BEST_SELLERS_EMPTY = 'No products are featured right now.'
 
 /** The notice block required wherever a medical or dietary claim is made (design.md §6.11). */

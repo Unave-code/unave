@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Cta } from '@/components/Cta'
 import { ProductCard } from '@/components/Store/ProductCard'
-import { BEST_SELLERS_EMPTY, BEST_SELLERS_HEADING, BEST_SELLERS_INTRO } from '@/utilities/homeCopy'
+import { BEST_SELLERS_EMPTY, BEST_SELLERS_HEADING } from '@/utilities/homeCopy'
 import { getFeaturedHomeProducts } from '@/utilities/products'
 
 import { Section } from './Section'
@@ -13,7 +13,6 @@ export const BestSellers: React.FC = async () => {
   return (
     <Section id="best-sellers" tone="tint">
       <h2 className="text-h2">{BEST_SELLERS_HEADING}</h2>
-      <p className="text-body text-ink-600 mt-4 max-w-[65ch]">{BEST_SELLERS_INTRO}</p>
 
       {products.length > 0 ? (
         <ul
