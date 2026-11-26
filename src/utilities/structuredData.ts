@@ -1,4 +1,4 @@
-import type { Footer } from '@/payload-types'
+import type { Footer, Media, Product } from '@/payload-types'
 
 import { getServerSideURL } from './getURL'
 
@@ -195,6 +195,81 @@ export const itemListJsonLd = (name: string, items: { href: string; name: string
     url: absolute(item.href),
   })),
 })
+
+/** Paise to the decimal rupee string schema.org expects for a price ("499.00"). */
+const rupees = (paise: number): string => (paise / 100).toFixed(2)
+
+const validPaise = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 1
+
+/**
+ * One product's own page as a schema.org Product, so search can show its price
+ * and whether it can be ordered. Every price comes from the product record (in
+ * paise, as the database keeps it); a product sold in sizes or by duration gets
+ * one offer per size or duration, named the way the page names it. A product
+ * with no price it can be bought at gets no offers rather than an invented one,
+ * and nothing here claims a rating or a review the kitchen does not have.
+ */
+export const productJsonLd = (
+  product: Pick<
+    Product,
+    'compareAtPrice' | 'durations' | 'packSize' | 'price' | 'sizes' | 'slug' | 'title' | 'type'
+  >,
+  options: {
+    available: boolean
+    category?: string
+    description: string
+    images: Pick<Media, 'updatedAt' | 'url'>[]
+  },
+) => {
+  const url = absolute(`/products/${product.slug}`)
+  const availability = options.available
+    ? 'https://schema.org/InStock'
+    : 'https://schema.org/OutOfStock'
+
+  const offer = (paise: number, name?: string) => ({
+    '@type': 'Offer',
+    ...(name ? { name } : {}),
+    price: rupees(paise),
+    priceCurrency: 'INR',
+    availability,
+    url,
+    seller: { '@id': organizationId() },
+  })
+
+  const sized = (product.sizes ?? []).filter((size) => size?.label?.trim() && validPaise(size.price))
+  const durations = (product.durations ?? []).filter(
+    (duration) => duration?.label?.trim() && validPaise(duration.price),
+  )
+
+  const offers =
+    product.type === 'plan'
+      ? durations.map((duration) => offer(duration.price, duration.label.trim()))
+      : sized.length > 0
+        ? sized.map((size) => offer(size.price, size.label.trim()))
+        : validPaise(product.price)
+          ? [offer(product.price)]
+          : []
+
+  const images = options.images
+    .map((image) => image.url)
+    .filter((src): src is string => typeof src === 'string' && src.length > 0)
+    .map((src) => absolute(src))
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${url}#product`,
+    name: product.title.trim(),
+    description: options.description,
+    url,
+    ...(images.length ? { image: images } : {}),
+    brand: { '@type': 'Brand', name: BRAND_NAME },
+    ...(options.category ? { category: options.category } : {}),
+    ...(product.packSize?.trim() ? { size: product.packSize.trim() } : {}),
+    ...(offers.length === 1 ? { offers: offers[0] } : offers.length > 1 ? { offers } : {}),
+  }
+}
 
 /** Serialises JSON-LD for a script tag; the less-than sign is escaped so content cannot close it. */
 export const jsonLdHtml = (data: unknown): string => JSON.stringify(data).replace(/</g, '\\u003c')

@@ -7,14 +7,19 @@ import React from 'react'
 
 import { slugifyTitle } from '@/collections/Products/hooks/autoProductSlug'
 import { ProductCategoryView } from '@/components/Store/ProductCategoryView'
+import { JsonLd } from '@/components/JsonLd'
 import { ProductDetail } from '@/components/Store/ProductDetail'
 import type { Footer, Product } from '@/payload-types'
+import { isProductSellable } from '@/utilities/combos'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import { productPageDescription } from '@/utilities/productPageCopy'
+import { PRODUCT_BACK_LABEL, productPageDescription } from '@/utilities/productPageCopy'
+import { productPhotos } from '@/utilities/productPhotos'
 import { hasShelfFilters, parseShelfState } from '@/utilities/productShelf'
 import { fetchRelatedProducts } from '@/utilities/products'
+import { breadcrumbJsonLd, productJsonLd } from '@/utilities/structuredData'
 import {
+  CATEGORY_LABEL,
   isProductCategory,
   PRODUCT_CATEGORY_COPY,
   productCategoryHref,
@@ -90,17 +95,19 @@ export async function generateMetadata({
 
   if (!product) return {}
 
-  const description = productPageDescription(product.title)
+  /* Trimmed: a title saved with a stray space would print "Name  | UNAVE". */
+  const title = product.title.trim()
+  const description = productPageDescription(title)
 
   return {
     alternates: { canonical: productHref(product.slug) },
     description,
     openGraph: mergeOpenGraph({
       description,
-      title: product.title,
+      title,
       url: productHref(product.slug),
     }),
-    title: product.title,
+    title,
   }
 }
 
@@ -142,12 +149,35 @@ export default async function ProductsSegmentPage(props: PageProps<'/products/[s
         )?.planHowItWorks ?? null)
       : null
 
+  const category = product.category ? CATEGORY_LABEL[product.category] : undefined
+
   return (
-    <ProductDetail
-      planHowItWorks={planHowItWorks}
-      product={product}
-      related={related}
-      whatsapp={whatsapp}
-    />
+    <>
+      {/* The product with its price and stock (so search can show them), and the
+          same trail the visible breadcrumbs show. */}
+      <JsonLd
+        data={[
+          productJsonLd(product, {
+            available: isProductSellable(product),
+            category,
+            description: productPageDescription(product.title.trim()),
+            images: productPhotos(product),
+          }),
+          breadcrumbJsonLd([
+            { href: '/products', label: PRODUCT_BACK_LABEL },
+            ...(product.category && category
+              ? [{ href: productCategoryHref(product.category), label: category }]
+              : []),
+            { href: productHref(product.slug), label: product.title.trim() },
+          ]),
+        ]}
+      />
+      <ProductDetail
+        planHowItWorks={planHowItWorks}
+        product={product}
+        related={related}
+        whatsapp={whatsapp}
+      />
+    </>
   )
 }
