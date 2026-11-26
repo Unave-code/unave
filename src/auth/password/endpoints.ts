@@ -4,7 +4,8 @@ import type { Endpoint } from 'payload'
 
 import type { Customer } from '@/payload-types'
 
-import { ACCOUNT_PATH, FORGOT_PATH, RESET_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from '@/auth/paths'
+import { landingAfterSignIn } from '@/auth/landing'
+import { FORGOT_PATH, RESET_PATH, SIGN_IN_PATH, SIGN_UP_PATH } from '@/auth/paths'
 import { sessionCookie } from '@/utilities/customerSession'
 import {
   backWithError,
@@ -142,7 +143,7 @@ export const customerLoginEndpoint: Endpoint = {
         req.payload.logger.warn({ msg: 'customer_login_password_flag_failed' })
       }
 
-      return seeOther(returnTo ?? ACCOUNT_PATH, [sessionCookie(result.token)])
+      return seeOther(landingAfterSignIn(returnTo, req.headers.get('cookie')), [sessionCookie(result.token)])
     } catch (error) {
       const name = errorName(error)
 
@@ -472,7 +473,7 @@ export const customerResetPasswordEndpoint: Endpoint = {
         })
       }
 
-      return seeOther(ACCOUNT_PATH, [sessionCookie(result.token)])
+      return seeOther(landingAfterSignIn(null, req.headers.get('cookie')), [sessionCookie(result.token)])
     } catch (error) {
       if (errorName(error) === 'ValidationError') {
         return backWithError(RESET_PATH, 'password', keep)

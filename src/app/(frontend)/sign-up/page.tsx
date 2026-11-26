@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
+import { landingAfterSignIn } from '@/auth/landing'
 import { CustomerAuth } from '@/components/CustomerAuth'
 import { CUSTOMER_AUTH_COPY } from '@/components/CustomerAuth/copy'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
@@ -22,8 +24,8 @@ type Args = {
 }
 
 export default async function SignUpPage({ searchParams }: Args) {
-  // A signed in customer has no use for a second sign up form.
-  if (await getSignedInCustomer()) redirect('/account')
+  // A signed in customer has no use for a second sign up form: checkout when the cart holds something, else the account.
+  if (await getSignedInCustomer()) redirect(landingAfterSignIn(null, (await cookies()).toString()))
 
   const { error } = await searchParams
 

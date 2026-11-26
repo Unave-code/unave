@@ -8,7 +8,8 @@ import {
   mintCustomerSession,
   revokeCustomerSession,
 } from '@/auth/customerSession'
-import { ACCOUNT_PATH, SIGN_IN_PATH } from '@/auth/paths'
+import { landingAfterSignIn } from '@/auth/landing'
+import { SIGN_IN_PATH } from '@/auth/paths'
 import {
   clearOauthCookie,
   clearSessionCookie,
@@ -310,7 +311,7 @@ export const googleCallbackEndpoint: Endpoint = {
 
     const headers = new Headers()
 
-    headers.set('Location', safeReturnPath(stored.returnTo) ?? ACCOUNT_PATH)
+    headers.set('Location', landingAfterSignIn(safeReturnPath(stored.returnTo), req.headers.get('cookie')))
     // Clear the round trip cookie, then set the session.
     headers.append(
       'Set-Cookie',
