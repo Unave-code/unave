@@ -32,7 +32,6 @@ export const auditRoutes: AuditRoute[] = [
   { id: 'our-kitchen', path: '/our-kitchen' },
   { id: 'contact', path: '/contact' },
   { id: 'contact-error', path: '/contact', setup: 'formError' },
-  { id: 'blog', path: '/blog' },
   { id: 'search', path: '/search?q=podi' },
   { id: 'not-found', path: '/this-page-does-not-exist' },
 ]

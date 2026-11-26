@@ -16,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
       // The admin must never be indexed or followed.
       disallow: ['/admin/'],
     },
-    sitemap: [`${base}/sitemap.xml`, `${base}/pages-sitemap.xml`, `${base}/posts-sitemap.xml`],
+    sitemap: [`${base}/sitemap.xml`, `${base}/pages-sitemap.xml`],
   }
 }

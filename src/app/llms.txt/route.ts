@@ -35,10 +35,6 @@ ${categories}
 - [About UNAVE](${base}/about): the founder's story and what the name means.
 - [Our kitchen](${base}/our-kitchen): how meals are prepared, cooked, packed and checked each day.
 - [Contact](${base}/contact): WhatsApp, phone, email and the contact form.
-
-## Optional
-
-- [Blog](${base}/blog): articles from the UNAVE kitchen.
 `
 
   return new Response(body, {

@@ -57,10 +57,6 @@ const getPagesSitemap = unstable_cache(
         lastmod: dateFallback,
       })),
       {
-        loc: `${SITE_URL}/blog`,
-        lastmod: dateFallback,
-      },
-      {
         loc: `${SITE_URL}/products`,
         lastmod: dateFallback,
       },
