@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef } from 'react'
 
+import type { TurnstileAction } from '@/utilities/turnstileActions'
+
 type TurnstileApi = {
   remove: (widgetId: string) => void
   render: (container: HTMLElement, options: Record<string, unknown>) => string | undefined
@@ -41,9 +43,10 @@ const loadTurnstile = (): Promise<TurnstileApi> => {
  * The Cloudflare Turnstile check inside a form. Most visitors never see it: it
  * only shows a box when Cloudflare wants an interaction. It writes its token
  * into a hidden `cf-turnstile-response` input inside this container, so a plain
- * HTML form posts it with everything else.
+ * HTML form posts it with everything else. The `action` names the form, and the
+ * endpoint refuses a token made for a different one.
  */
-export const TurnstileWidget: React.FC<{ siteKey: string }> = ({ siteKey }) => {
+export const TurnstileWidget: React.FC<{ action: TurnstileAction; siteKey: string }> = ({ action, siteKey }) => {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export const TurnstileWidget: React.FC<{ siteKey: string }> = ({ siteKey }) => {
       .then((api) => {
         if (cancelled || !ref.current) return
         widgetId = api.render(ref.current, {
+          action,
           appearance: 'interaction-only',
           sitekey: siteKey,
           size: 'flexible',
@@ -68,7 +72,7 @@ export const TurnstileWidget: React.FC<{ siteKey: string }> = ({ siteKey }) => {
       cancelled = true
       if (widgetId && window.turnstile) window.turnstile.remove(widgetId)
     }
-  }, [siteKey])
+  }, [action, siteKey])
 
   return <div className="empty:hidden" ref={ref} />
 }

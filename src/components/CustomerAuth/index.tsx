@@ -3,6 +3,7 @@ import React from 'react'
 
 import { CTA_BASE, CTA_VARIANTS, Cta } from '@/components/Cta'
 import { FormGuardFields } from '@/components/FormGuardFields'
+import { TURNSTILE_ACTIONS } from '@/utilities/turnstileActions'
 import { issueFormStamp } from '@/utilities/formGuard'
 import { cn } from '@/utilities/ui'
 import { isCustomerSignInConfigured } from '@/utilities/customerSession'
@@ -150,7 +151,12 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
             label={CUSTOMER_AUTH_EMAIL_LABEL}
             name="email"
           />
-          <FormGuardFields challenge={challenge} idPrefix="resend" stamp={stamp} />
+          <FormGuardFields
+            challenge={challenge}
+            challengeAction={TURNSTILE_ACTIONS.resend}
+            idPrefix="resend"
+            stamp={stamp}
+          />
           <button className={cn(CTA_BASE, CTA_VARIANTS.secondary, 'w-full')} type="submit">
             {CUSTOMER_AUTH_RESEND}
           </button>
@@ -161,6 +167,7 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
         <PasswordForm
           action={mode === 'sign-up' ? '/api/customers/register' : '/api/customers/login'}
           challenge={challenge}
+          challengeAction={mode === 'sign-up' ? TURNSTILE_ACTIONS.register : TURNSTILE_ACTIONS.login}
           emailField
           fields={mode === 'sign-up' ? SIGN_UP_FIELDS : undefined}
           idPrefix={mode === 'sign-up' ? 'signup' : 'signin'}

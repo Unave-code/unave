@@ -65,6 +65,7 @@ Ubuntu 24.04, 4 CPUs, 8 GB RAM:
    | `ZEPTOMAIL_API_URL` | `https://cpaas.zoho.in/v1.1/email`. The account is in the India region, and the default `.com` host does not know it |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` | The fallback when the API fails: `smtp.zeptomail.in`, `465`, `true`, `emailapikey`, and the same agent key as the password. With `587`, set `SMTP_SECURE=false` |
    | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile keys for `unave.in`. With both set, the contact, sign-in, sign-up, forgot-password, resend-verification and CMS forms ask Cloudflare whether the visitor is a person; leave both unset to switch the check off. Read at run time, so no rebuild is needed |
+   | `TURNSTILE_HOSTNAMES` | Optional, comma separated: the site hostnames a Turnstile token may come from, for example `unave.in,www.unave.in`. Unset, it is the host of `NEXT_PUBLIC_SERVER_URL`. Never list `localhost` in production. Each form's token must also carry that form's action, so a token solved on one form is refused on another |
    | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For checkout |
 
    `NEXT_PUBLIC_SERVER_URL` is baked into the client bundles at build time, so

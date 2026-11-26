@@ -6,6 +6,8 @@ import { turnstileSiteKey } from '@/utilities/turnstile'
 import { cn } from '@/utilities/ui'
 
 import { AuthShell } from './AuthShell'
+import { TURNSTILE_ACTIONS } from '@/utilities/turnstileActions'
+
 import { PasswordForm } from './PasswordForm'
 import { FORGOT_COPY, customerAuthError, customerAuthNotice } from './copy'
 import { AUTH_INLINE_LINK, AUTH_NOTICE, AUTH_PROBLEM } from './styles'
@@ -50,6 +52,7 @@ export const ForgotPassword: React.FC<Props> = ({ error, sent }) => {
         <PasswordForm
           action="/api/customers/forgot-password"
           challenge={turnstileSiteKey()}
+          challengeAction={TURNSTILE_ACTIONS.forgot}
           emailField
           idPrefix="forgot"
           intent="forgot"

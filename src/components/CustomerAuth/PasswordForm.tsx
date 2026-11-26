@@ -13,6 +13,8 @@ import {
 import { cn } from '@/utilities/ui'
 
 import { PasswordField } from './PasswordField'
+import type { TurnstileAction } from '@/utilities/turnstileActions'
+
 import { AuthField, AuthTextField, type TextFieldProps } from './fields'
 import { CUSTOMER_AUTH_EMAIL_LABEL, CUSTOMER_AUTH_PASSWORD_HINT } from './copy'
 
@@ -38,6 +40,8 @@ interface Props {
   action: string
   /** The Turnstile site key from `turnstileSiteKey()`, when the endpoint checks it. */
   challenge?: string
+  /** The form's Turnstile action, which its endpoint checks the token against. Needed with `challenge`. */
+  challengeAction?: TurnstileAction
   /** Hidden fields, used by the reset form to carry its token back. */
   children?: React.ReactNode
   emailField?: boolean
@@ -75,6 +79,7 @@ interface Props {
 export const PasswordForm: React.FC<Props> = ({
   action,
   challenge,
+  challengeAction,
   children,
   emailField = false,
   fields,
@@ -190,7 +195,7 @@ export const PasswordForm: React.FC<Props> = ({
 
       {children}
 
-      <FormGuardFields challenge={challenge} idPrefix={idPrefix} stamp={stamp} />
+      <FormGuardFields challenge={challenge} challengeAction={challengeAction} idPrefix={idPrefix} stamp={stamp} />
 
       <button
         className={cn(CTA_BASE, CTA_VARIANTS.primary, 'mt-2 short:mt-1 w-full')}

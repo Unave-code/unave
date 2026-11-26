@@ -3,6 +3,7 @@ import React from 'react'
 import { AUTH_INPUT, AUTH_LABEL, AUTH_PROBLEM } from '@/components/CustomerAuth/styles'
 import { Button } from '@/components/ui/button'
 import { FormGuardFields } from '@/components/FormGuardFields'
+import { TURNSTILE_ACTIONS } from '@/utilities/turnstileActions'
 import { cn } from '@/utilities/ui'
 import {
   CONTACT_EMAIL_LABEL,
@@ -97,7 +98,7 @@ export const ContactForm: React.FC<{ challenge?: string; error?: string; stamp?:
       />
     </div>
 
-    <FormGuardFields challenge={challenge} idPrefix="contact" stamp={stamp} />
+    <FormGuardFields challenge={challenge} challengeAction={TURNSTILE_ACTIONS.contact} idPrefix="contact" stamp={stamp} />
 
     <div>
       <Button type="submit">{CONTACT_SUBMIT}</Button>

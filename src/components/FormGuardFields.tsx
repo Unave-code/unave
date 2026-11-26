@@ -1,5 +1,7 @@
 import React from 'react'
 
+import type { TurnstileAction } from '@/utilities/turnstileActions'
+
 import { TurnstileWidget } from './TurnstileWidget'
 
 /** Kept in sync with `src/utilities/formGuard.ts`, which is server only. */
@@ -18,9 +20,11 @@ const STAMP_FIELD = 'form_stamp'
  */
 export const FormGuardFields: React.FC<{
   challenge?: string
+  /** The form's Turnstile action; its endpoint checks the token against it. The widget needs both. */
+  challengeAction?: TurnstileAction
   idPrefix: string
   stamp?: string
-}> = ({ challenge, idPrefix, stamp }) => (
+}> = ({ challenge, challengeAction, idPrefix, stamp }) => (
   <>
     <div
       aria-hidden="true"
@@ -36,6 +40,6 @@ export const FormGuardFields: React.FC<{
       />
     </div>
     {stamp ? <input name={STAMP_FIELD} type="hidden" value={stamp} /> : null}
-    {challenge ? <TurnstileWidget siteKey={challenge} /> : null}
+    {challenge && challengeAction ? <TurnstileWidget action={challengeAction} siteKey={challenge} /> : null}
   </>
 )

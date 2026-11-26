@@ -11,6 +11,7 @@ import type { DefaultTypedEditorState } from '@payloadcms/richtext-lexical'
 import { fields } from './fields'
 import { getClientSideURL } from '@/utilities/getURL'
 import { TurnstileWidget } from '@/components/TurnstileWidget'
+import { TURNSTILE_ACTIONS } from '@/utilities/turnstileActions'
 
 /** Kept in sync with `src/utilities/turnstile.ts`, which is server only. */
 const TURNSTILE_FIELD = 'cf-turnstile-response'
@@ -194,7 +195,7 @@ export const FormBlock: React.FC<
                   })}
               </div>
 
-              {challenge ? <TurnstileWidget key={challengeRound} siteKey={challenge} /> : null}
+              {challenge ? <TurnstileWidget action={TURNSTILE_ACTIONS.form} key={challengeRound} siteKey={challenge} /> : null}
 
               <Button form={formID} type="submit" variant="default">
                 {submitButtonLabel}
