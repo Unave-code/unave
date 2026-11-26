@@ -75,10 +75,6 @@ export const PRODUCT_CHOOSE_SIZE = 'Choose size'
 export const PRODUCT_START_DATE_NOTE =
   'No start date to pick: after you order, our team calls you to confirm when your plan begins.'
 
-export const PRODUCTS_FINAL_HEADING = 'Ready when you are'
-export const PRODUCTS_FINAL_BODY =
-  'Add the products and durations you want to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'
-
 export const PRODUCTS_GRID_HEADING = 'The products'
 export const PRODUCTS_GRID_INTRO =
   'Every product is cooked fresh in our own kitchen. Add a one-time item or a combo straight from its card, or open a meal plan to choose how long it runs, then pay once at checkout.'

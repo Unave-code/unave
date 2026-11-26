@@ -7,8 +7,6 @@ import {
   CATEGORY_LABEL,
   categoryBadgeAriaLabel,
   PRODUCTS_CATEGORY_CTA_BROWSE,
-  PRODUCTS_CATEGORY_FINAL_BODY,
-  PRODUCTS_CATEGORY_FINAL_HEADING,
   PRODUCT_CATEGORY_COPY,
   PRODUCT_CATEGORY_VALUES,
   isProductCategory,
@@ -100,9 +98,7 @@ describe('the per category copy', () => {
 })
 
 describe('the shared page words', () => {
-  it('carry a browse label and a closing section', () => {
+  it('carry a browse label', () => {
     expect(PRODUCTS_CATEGORY_CTA_BROWSE.trim()).toBeTruthy()
-    expect(PRODUCTS_CATEGORY_FINAL_HEADING.trim()).toBeTruthy()
-    expect(PRODUCTS_CATEGORY_FINAL_BODY.trim()).toBeTruthy()
   })
 })

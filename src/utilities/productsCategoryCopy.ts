@@ -168,8 +168,3 @@ export const PRODUCT_CATEGORY_COPY: Record<ProductCategoryValue, ProductCategory
 
 /** The band call to action, which scrolls down to the grid on the same page. */
 export const PRODUCTS_CATEGORY_CTA_BROWSE = 'Browse these products'
-
-/** The closing section, shared word for word by all three category pages. */
-export const PRODUCTS_CATEGORY_FINAL_HEADING = 'Ready when you are'
-export const PRODUCTS_CATEGORY_FINAL_BODY =
-  'Add a product from this shelf to your cart, pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.'

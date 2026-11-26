@@ -17,7 +17,6 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import { parseMealPlanShelf, type MealPlanSearchParams } from '@/utilities/mealPlanShelf'
 import { MEAL_PLANS_PATH, normalizeMealPlan } from '@/utilities/planBuilder'
 import { CATEGORY_LABEL, productCategoryHref } from '@/utilities/productsCategoryCopy'
-import { PRODUCTS_CTA_MESSAGE } from '@/utilities/productsCopy'
 import { whatsappHref } from '@/utilities/whatsapp'
 
 export const dynamic = 'force-dynamic'
@@ -31,9 +30,6 @@ const COPY = {
   noMatch: 'No meal plan is for that audience yet.',
   showAll: 'Show all meal plans',
   otherShelves: 'Not quite what you need? The other shelves:',
-  finalHeading: 'Ready when you are',
-  finalBody:
-    'Pick a plan, choose your options and pay once at checkout, and the kitchen takes it from there. Questions first? We are one message away.',
 }
 
 /** Audiences carry no photo, so each well-known one gets its own icon. */
@@ -204,28 +200,6 @@ export default async function MealPlansPage({ searchParams }: { searchParams: Pr
           </p>
         </div>
       </Section>
-
-      {plans.length > 0 ? (
-        <Section tone="white">
-          <div className="max-w-[52ch]">
-            <h2 className="text-h2">{COPY.finalHeading}</h2>
-            <p className="text-body text-ink-600 mt-3">{COPY.finalBody}</p>
-
-            <div className="mt-8">
-              {whatsapp ? (
-                <Cta href={whatsappHref(whatsapp)} rel="noopener noreferrer" target="_blank" variant="primary">
-                  <WhatsAppIcon className="size-4" />
-                  {PRODUCTS_CTA_MESSAGE}
-                </Cta>
-              ) : (
-                <Cta href="#meal-plans" variant="primary">
-                  {COPY.browse}
-                </Cta>
-              )}
-            </div>
-          </div>
-        </Section>
-      ) : null}
     </main>
   )
 }

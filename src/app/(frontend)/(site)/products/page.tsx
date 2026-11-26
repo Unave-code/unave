@@ -22,8 +22,6 @@ import {
 } from '@/utilities/productShelf'
 import {
   PRODUCTS_CTA_BROWSE,
-  PRODUCTS_FINAL_BODY,
-  PRODUCTS_FINAL_HEADING,
   PRODUCTS_GRID_HEADING,
   PRODUCTS_GRID_INTRO,
   PRODUCTS_HERO_EYEBROW,
@@ -204,19 +202,6 @@ export default async function ProductsPage({
               </li>
             ))}
           </ol>
-        </div>
-      </Section>
-
-      <Section tone="white">
-        <div className="max-w-[52ch]">
-          <h2 className="text-h2">{PRODUCTS_FINAL_HEADING}</h2>
-          <p className="text-body text-ink-600 mt-3">{PRODUCTS_FINAL_BODY}</p>
-
-          <div className="mt-8">
-            <Cta href="#products" variant="primary">
-              {PRODUCTS_CTA_BROWSE}
-            </Cta>
-          </div>
         </div>
       </Section>
     </main>

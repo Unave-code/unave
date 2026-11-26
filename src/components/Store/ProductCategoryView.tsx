@@ -10,7 +10,6 @@ import { Section } from '@/components/home/Section'
 import { MealPlanCard } from '@/components/Store/MealPlanCard'
 import { ProductShelf } from '@/components/Store/ProductShelf'
 import { Swoosh } from '@/components/Swoosh'
-import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { CategoryPage, Footer } from '@/payload-types'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import {
@@ -25,16 +24,12 @@ import { fetchCategorySubcategories, fetchCategoryMealPlans } from '@/utilities/
 import {
   CATEGORY_LABEL,
   PRODUCTS_CATEGORY_CTA_BROWSE,
-  PRODUCTS_CATEGORY_FINAL_BODY,
-  PRODUCTS_CATEGORY_FINAL_HEADING,
   PRODUCT_CATEGORY_COPY,
   productCategoryHref,
   type ProductCategoryValue,
 } from '@/utilities/productsCategoryCopy'
-import { PRODUCTS_CTA_MESSAGE } from '@/utilities/productsCopy'
 import { breadcrumbJsonLd, faqJsonLd, webPageJsonLd } from '@/utilities/structuredData'
 import { cn } from '@/utilities/ui'
-import { whatsappHref } from '@/utilities/whatsapp'
 
 /**
  * A page per product category (spec 0008; design.md §6.19):
@@ -206,31 +201,6 @@ export const ProductCategoryView: React.FC<{
       </Section>
 
       <Faq heading={copy.faqHeading} image={FAQ_IMAGES[category]} items={copy.faq} />
-
-      <Section tone="tint">
-        <div className="max-w-[52ch]">
-          <h2 className="text-h2">{PRODUCTS_CATEGORY_FINAL_HEADING}</h2>
-          <p className="text-body text-ink-600 mt-3">{PRODUCTS_CATEGORY_FINAL_BODY}</p>
-
-          <div className="mt-8">
-            {whatsapp ? (
-              <Cta
-                href={whatsappHref(whatsapp)}
-                rel="noopener noreferrer"
-                target="_blank"
-                variant="primary"
-              >
-                <WhatsAppIcon className="size-4" />
-                {PRODUCTS_CTA_MESSAGE}
-              </Cta>
-            ) : (
-              <Cta href="/products" variant="primary">
-                {PRODUCTS_CATEGORY_CTA_BROWSE}
-              </Cta>
-            )}
-          </div>
-        </div>
-      </Section>
     </main>
   )
 }
