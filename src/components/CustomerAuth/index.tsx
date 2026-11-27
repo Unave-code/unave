@@ -60,12 +60,6 @@ interface Props {
  * the kitchen needs on every order. The delivery address is not here — it is the
  * account page's onboarding form, asked for right after the account exists.
  */
-/** The two halves of the switch over the card, labelled with each screen's own action. */
-const AUTH_TABS = [
-  { href: '/sign-in', label: CUSTOMER_AUTH_COPY['sign-in'].submit, mode: 'sign-in' },
-  { href: '/sign-up', label: CUSTOMER_AUTH_COPY['sign-up'].submit, mode: 'sign-up' },
-] as const
-
 const SIGN_UP_FIELDS = [
   {
     autoComplete: 'name',
@@ -95,34 +89,9 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
 
   return (
     <AuthShell>
-      {/* Sign in and sign up are two views of one card: a two-part switch
-          over the heading says which one is open and moves to the other. */}
-      <nav aria-label="Account" className="bg-green-50 grid grid-cols-2 gap-1 rounded-pill p-1">
-        {AUTH_TABS.map((tab) => {
-          const current = tab.mode === mode
-          return (
-            <Link
-              aria-current={current ? 'page' : undefined}
-              className={cn(
-                'focus-visible:ring-green-500 inline-flex min-h-11 items-center justify-center rounded-pill text-sm font-bold transition-colors focus-visible:ring-[3px] focus-visible:outline-none motion-reduce:transition-none',
-                current
-                  ? 'bg-white text-green-900 shadow-sm'
-                  : 'text-green-700 hover:bg-white/60 hover:text-green-900',
-              )}
-              href={
-                returnTo && tab.mode === 'sign-in'
-                  ? `${tab.href}?return=${encodeURIComponent(returnTo)}`
-                  : tab.href
-              }
-              key={tab.mode}
-            >
-              {tab.label}
-            </Link>
-          )
-        })}
-      </nav>
 
-      <h1 className="mt-7 text-[26px] leading-[1.2] font-extrabold tracking-[-0.01em] text-balance text-green-900 short:mt-4">
+
+      <h1 className="text-[28px] leading-[1.2] font-extrabold tracking-[-0.01em] text-balance text-green-900 short:mt-4">
         {copy.title}
       </h1>
       <p className="text-body text-ink-600 mt-2 short:text-sm">{copy.intro}</p>
@@ -222,6 +191,21 @@ export const CustomerAuth: React.FC<Props> = ({ error, mode, notice, returnTo })
           {CUSTOMER_AUTH_UNAVAILABLE}
         </p>
       )}
+
+      {/* Neither screen is a dead end: each points at the other in one line. */}
+      <p className="text-body text-ink-600 mt-6 text-center short:mt-4">
+        {copy.switchPrompt}{' '}
+        <Link
+          className={AUTH_INLINE_LINK}
+          href={
+            returnTo && copy.switchHref === '/sign-in'
+              ? `${copy.switchHref}?return=${encodeURIComponent(returnTo)}`
+              : copy.switchHref
+          }
+        >
+          {copy.switchLabel}
+        </Link>
+      </p>
 
       <p className="text-ink-600 border-line mt-6 border-t pt-5 text-sm leading-6 short:mt-4 short:pt-3">
         {CUSTOMER_AUTH_PRIVACY}
