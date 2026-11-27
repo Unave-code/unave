@@ -1,4 +1,5 @@
 import { withPayload } from '@payloadcms/next/withPayload'
+import { withSentryConfig } from '@sentry/nextjs/config'
 import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -98,4 +99,21 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPayload(nextConfig, { devBundleServerPackages: false })
+/**
+ * Sentry wraps the config for source maps. They upload only when
+ * SENTRY_AUTH_TOKEN, SENTRY_ORG and SENTRY_PROJECT are set at build time;
+ * without them the build is unchanged and stack traces stay minified. The maps
+ * are deleted after upload, so the browser never gets them.
+ */
+export default withSentryConfig(withPayload(nextConfig, { devBundleServerPackages: false }), {
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+    deleteSourcemapsAfterUpload: true,
+  },
+  telemetry: false,
+  widenClientFileUpload: true,
+})

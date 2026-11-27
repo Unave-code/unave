@@ -67,6 +67,7 @@ Ubuntu 24.04, 4 CPUs, 8 GB RAM:
    | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile keys for `unave.in`. With both set, the contact, sign-in, sign-up, forgot-password, resend-verification and CMS forms ask Cloudflare whether the visitor is a person; leave both unset to switch the check off. Read at run time, so no rebuild is needed |
    | `TURNSTILE_HOSTNAMES` | Optional, comma separated: the site hostnames a Turnstile token may come from, for example `unave.in,www.unave.in`. Unset, it is the host of `NEXT_PUBLIC_SERVER_URL`. Never list `localhost` in production. Each form's token must also carry that form's action, so a token solved on one form is refused on another |
    | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For checkout |
+   | `NEXT_PUBLIC_SENTRY_DSN` | Optional: the DSN of the Sentry project. Set, it turns on error tracking for the server and the browser (see **Error tracking**). Baked in at build time like the site URL, so changing it takes a rebuild |
 
    `NEXT_PUBLIC_SERVER_URL` is baked into the client bundles at build time, so
    it must be set before the first build, not after.
@@ -119,6 +120,34 @@ registered in `index.ts`; the compose `migrate` service applies it on the next
 deploy. Development pushes its own schema with the dev server and is never
 migrated; production only ever migrates. The retired combo audit table stays
 registered as hidden so development sync keeps its existing records.
+
+## Error tracking
+
+Sentry gets the errors nobody would otherwise see: anything a page, route or
+server action throws, errors in visitors' browsers and the admin, every
+`payload.logger.error`, and the payment warnings listed in `ALERT_WARNINGS`
+in `src/sentry/scrub.ts` (an amount mismatch, a webhook with no checkout
+intent, an order mail that did not send). Each log code is its own issue, so
+`razorpay_webhook_write_failed` reads as that, not as a database message.
+
+Turning it on: create a free Sentry project (platform Next.js), set
+`NEXT_PUBLIC_SENTRY_DSN` on the Dokploy service and redeploy. In Sentry, add
+an alert rule that mails on every new issue. It sends only from a production
+build, so `next dev` and the tests never report.
+
+What it never gets: `beforeSend` in `src/sentry/scrub.ts` drops cookies,
+request bodies, query strings, the user, and any field whose name looks like an
+email, phone, address, name, password, token or signature, and it masks emails
+and Indian mobile numbers inside messages. Tracing and session replay are off.
+Wrong passwords, 404s and validation errors are dropped as expected behaviour.
+Set `SENTRY_ENVIRONMENT` (and `NEXT_PUBLIC_SENTRY_ENVIRONMENT` at build) to
+`staging` on a staging deploy so its issues stay apart.
+
+Readable stack traces need source maps. They upload during the build when
+`SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are present, and are
+deleted afterwards. The Docker build does not pass them yet: a token given as a
+build argument would stay readable in the `migrate` image, so wire it as a
+BuildKit secret when it is wanted.
 
 ## Load testing
 

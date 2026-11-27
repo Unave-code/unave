@@ -24,6 +24,15 @@ declare global {
       RAZORPAY_KEY_ID: string
       RAZORPAY_KEY_SECRET: string
       RAZORPAY_WEBHOOK_SECRET: string
+
+      // Sentry (optional: blank keeps error tracking off)
+      NEXT_PUBLIC_SENTRY_DSN?: string
+      NEXT_PUBLIC_SENTRY_ENVIRONMENT?: string
+      SENTRY_DSN?: string
+      SENTRY_ENVIRONMENT?: string
+      SENTRY_AUTH_TOKEN?: string
+      SENTRY_ORG?: string
+      SENTRY_PROJECT?: string
     }
   }
 }

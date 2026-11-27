@@ -32,6 +32,10 @@ RUN corepack enable
 # site URL has to be known while building, not only at run time.
 ARG NEXT_PUBLIC_SERVER_URL=https://unave.in
 ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
+# Sentry's DSN is public by design; it goes into the browser bundle the same
+# way. Left empty, error tracking stays off.
+ARG NEXT_PUBLIC_SENTRY_DSN=
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN \

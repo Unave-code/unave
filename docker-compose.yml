@@ -50,6 +50,7 @@ services:
       target: builder
       args:
         NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://unave.in}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     restart: 'no'
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-unave}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-unave}
@@ -65,6 +66,7 @@ services:
       target: runner
       args:
         NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://unave.in}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     restart: unless-stopped
     ports:
       - '3000:3000'
