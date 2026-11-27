@@ -4,11 +4,9 @@ import Link from 'next/link'
 import React from 'react'
 
 import { getMediaUrl } from '@/utilities/getMediaUrl'
-import { formatPaise } from '@/utilities/money'
 import { MEAL_LABEL, mealPlanPath, offeredMeals, type PlanBuilderData } from '@/utilities/planBuilder'
-import { mealPlanLeadPrice, type MealsFilter } from '@/utilities/mealPlanShelf'
 
-import { CARD_ACTIONS, CARD_BODY, CARD_CTA, CARD_EYEBROW, CARD_FRAME, CARD_PHOTO_LINK, CARD_PHOTO_ZOOM, CARD_PRICE, CARD_SUBLINE, CARD_TITLE, CARD_TITLE_LINK } from './cardStyles'
+import { CARD_ACTIONS, CARD_BODY, CARD_CTA, CARD_EYEBROW, CARD_FRAME, CARD_PHOTO_LINK, CARD_PHOTO_ZOOM, CARD_SUBLINE, CARD_TITLE, CARD_TITLE_LINK } from './cardStyles'
 import { PRODUCT_PLACEHOLDER } from './productPlaceholder'
 
 const MEAL_ICON = { breakfast: Sunrise, dinner: Moon, lunch: Sun } as const
@@ -27,17 +25,15 @@ const mealsLabel = (meals: string[]): string =>
 /**
  * One meal plan on the /meal-subscription shelf, built like the product card
  * (design.md §6.15) so the two shelves read as one shop: a square photo, a small
- * label, the name, one real dish from this week, the price it starts at and one
- * Choose plan button to its page, where it is built.
+ * label, the name, one real dish from this week and one Choose plan button to
+ * its page, where it is built and priced. The card carries no price: a plan's
+ * cost depends on the meals, length and people chosen on that page.
  */
 export const MealPlanCard: React.FC<{
-  /** The meals the shelf is filtered to, so the price shown matches. */
-  meals?: MealsFilter | null
   plan: PlanBuilderData
   sizes?: string
-}> = ({ meals = null, plan, sizes = '(min-width: 64rem) 25vw, (min-width: 48rem) 30vw, 45vw' }) => {
+}> = ({ plan, sizes = '(min-width: 64rem) 25vw, (min-width: 48rem) 30vw, 45vw' }) => {
   const href = mealPlanPath(plan.slug)
-  const price = mealPlanLeadPrice(plan, meals)
   const offered = offeredMeals(plan)
   // One real dish from this week, lunch first since it is the meal most plans lead with.
   const order = (['lunch', 'dinner', 'breakfast'] as const).filter((m) => offered.includes(m))
@@ -85,13 +81,6 @@ export const MealPlanCard: React.FC<{
           </p>
         ) : plan.description ? (
           <p className={CARD_SUBLINE}>{plan.description}</p>
-        ) : null}
-
-        {price !== null ? (
-          <p className="mt-2">
-            <span className={CARD_PRICE}>From {formatPaise(price)}</span>
-            <span className="text-ink-600 text-xs"> for one person</span>
-          </p>
         ) : null}
 
         <div className={CARD_ACTIONS}>
