@@ -42,8 +42,20 @@ describe('sliding window rate limit', () => {
 })
 
 describe('client IP extraction', () => {
-  it('takes the first forwarded address', () => {
-    expect(getClientIp(headers({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }))).toBe('1.2.3.4')
+  it('takes the address the nearest proxy appended, not the one the client sent', () => {
+    expect(getClientIp(headers({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }))).toBe('5.6.7.8')
+  })
+
+  it('cannot be steered by a forged forwarded address', () => {
+    const real = '203.0.113.7'
+    const forged = ['10.0.0.1', '10.0.0.2'].map((fake) =>
+      getClientIp(headers({ 'x-forwarded-for': `${fake}, ${real}` })),
+    )
+    expect(forged).toEqual([real, real])
+  })
+
+  it('ignores empty forwarded entries', () => {
+    expect(getClientIp(headers({ 'x-forwarded-for': '1.2.3.4, ' }))).toBe('1.2.3.4')
   })
 
   it('falls back to x-real-ip', () => {

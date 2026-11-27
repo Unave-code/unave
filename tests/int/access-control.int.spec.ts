@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { hasAdminRole, isAdmin, isAdminField } from '@/access/isAdmin'
 import { hasStaffRole, isStaff } from '@/access/isStaff'
 import { staffOrPublished } from '@/access/staffOrPublished'
+import { staffOrOrderOwner } from '@/access/staffOrOrderOwner'
 import { adminOrSelf, staffOrSelf } from '@/access/staffOrSelf'
 import { safeReturnPath } from '@/utilities/formPost'
 
@@ -148,5 +149,27 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('//evil.com')).toBeNull()
     expect(safeReturnPath('/' + String.fromCharCode(9) + '/evil.com')).toBeNull()
     expect(safeReturnPath('/' + String.fromCharCode(10) + '/evil.com')).toBeNull()
+  })
+})
+
+describe('staffOrOrderOwner', () => {
+  it('lets admins and staff read every order', () => {
+    expect(staffOrOrderOwner(args({ ...admin, collection: 'users' }))).toBe(true)
+    expect(staffOrOrderOwner(args({ ...staff, collection: 'users' }))).toBe(true)
+  })
+
+  it('limits a signed in customer to their own orders', () => {
+    expect(staffOrOrderOwner(args({ collection: 'customers', id: 3 }))).toEqual({
+      customer: { equals: 3 },
+    })
+  })
+
+  it('never matches a staff users account to a customer with the same id', () => {
+    expect(staffOrOrderOwner(args({ collection: 'users', id: 3, role: undefined }))).toBe(false)
+  })
+
+  it('refuses an anonymous request', () => {
+    expect(staffOrOrderOwner(args(null))).toBe(false)
+    expect(staffOrOrderOwner(args(undefined))).toBe(false)
   })
 })

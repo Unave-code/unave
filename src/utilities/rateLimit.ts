@@ -148,16 +148,21 @@ export const checkOrderIpLimit = (ip: string | null, now: number = Date.now()): 
 type HeaderLike = { get: (name: string) => string | null | undefined }
 
 /**
- * First value of `x-forwarded-for`, else `x-real-ip`, else none. With no
+ * The last value of `x-forwarded-for`, else `x-real-ip`, else none. With no
  * address the caller skips the IP limits rather than bucketing everyone under
  * one shared key.
+ *
+ * The last entry, not the first: each proxy appends the address it saw, so the
+ * rightmost one was written by Traefik in front of the app, while anything to
+ * its left came from the client and can be anything. Trusting the first entry
+ * let a script dodge every IP limit by sending a new made-up address each time.
  */
 export const getClientIp = (headers: HeaderLike): string | null => {
   const forwarded = headers.get('x-forwarded-for')
 
   if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim()
-    if (first) return first
+    const last = forwarded.split(',').map((part) => part.trim()).filter(Boolean).at(-1)
+    if (last) return last
   }
 
   const real = headers.get('x-real-ip')

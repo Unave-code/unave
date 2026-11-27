@@ -1,32 +1,10 @@
-import type { Access, CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
 
-import { hasStaffRole, isStaff } from '../../access/isStaff'
+import { isStaff } from '../../access/isStaff'
+import { staffOrOrderOwner } from '../../access/staffOrOrderOwner'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
 import { orderReportEndpoint } from './report'
-
-type OrderUser = { id?: number | string } & Record<string, unknown>
-
-/**
- * Orders are read by the kitchen and by the one customer who owns the row.
- *
- * `req.user` is a customer only when the `unave-customer` session verified, so
- * an anonymous caller and a caller with somebody else's id both fall through to
- * `false`. Staff see every row.
- */
-const staffOrOrderOwner: Access = ({ req: { user } }) => {
-  if (hasStaffRole(user)) return true
-
-  const reader = user as unknown as OrderUser | undefined
-
-  if (!reader || typeof reader.id === 'undefined') return false
-
-  return {
-    customer: {
-      equals: reader.id,
-    },
-  }
-}
 
 /** Takes a snapshot field out of the edit form; OrderSummary shows it instead. */
 const HIDDEN_IN_FORM = '@/components/Admin/HiddenField#HiddenField'
