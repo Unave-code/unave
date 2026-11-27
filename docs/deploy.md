@@ -120,6 +120,55 @@ deploy. Development pushes its own schema with the dev server and is never
 migrated; production only ever migrates. The retired combo audit table stays
 registered as hidden so development sync keeps its existing records.
 
+## Load testing
+
+Every public page renders on each request (the site layout is `force-dynamic`
+because the header reads the cart and the customer session), so the number of
+visitors one server holds is worth knowing before a launch or a campaign.
+`scripts/load/browse.k6.js` simulates them with [k6](https://k6.io): 70% read
+the home page and `/products`, 20% open a product or meal plan, 10% add a line to
+the cart, view it and remove it. Nothing ever reaches checkout or Razorpay.
+
+**Where to point it.** A staging deploy with a copy of the production database
+is best. Production works only at a quiet hour and announced in advance: the
+VPS also runs the Dokploy dashboard, and a stress run slows everything on it.
+Aim at the origin, not through Cloudflare, so the numbers are the server's own.
+On staging leave `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` unset; the
+browse and cart paths are not rate limited.
+
+**Running it.** Install k6 (`winget install k6`, `brew install k6` or the
+Docker image `grafana/k6`), then start with the smoke profile, which also
+proves the script finds real products:
+
+```bash
+k6 run -e BASE_URL=https://staging.unave.in scripts/load/browse.k6.js
+k6 run -e BASE_URL=https://staging.unave.in -e PROFILE=load scripts/load/browse.k6.js
+k6 run -e BASE_URL=https://staging.unave.in -e PROFILE=stress scripts/load/browse.k6.js
+```
+
+| Profile | Visitors | Length | Question it answers |
+|---|---|---|---|
+| `smoke` (default) | 2 | 30 s | Does the script work against this deploy? |
+| `load` | 10 → 25 → 50 | about 13 min | Does a busy day stay fast? |
+| `stress` | 25 → 100 | about 12 min | Where does it break, and how? |
+
+**Pass line.** 95% of requests under 800 ms and under 1% failing, overall and
+separately for the home, `/products` and product pages. k6 prints a red ✗ against
+any threshold it misses and exits non-zero. While it runs, watch the host:
+
+```bash
+docker stats
+docker exec CONTAINER_OF_POSTGRES psql -U unave -c "select count(*) from pg_stat_activity"
+```
+
+**Reading a failure.** The app container pinned near 100% of one core means
+rendering is the limit: put Cloudflare in front for images and media, or run a
+second `app` replica. Postgres busy or connections climbing towards the 50 in
+the compose file means a query is the limit: cache it with `unstable_cache`
+and a tag its afterChange hook revalidates, the way `getCachedGlobal` does. CMS
+pages read through `queryPageBySlug` are the first suspect, since only React
+`cache()` sits in front of that query.
+
 ## Moving content off Neon
 
 Two paths, and the honest advice is to prefer the first:
