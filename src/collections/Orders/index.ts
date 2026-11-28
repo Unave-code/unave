@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { isStaff } from '../../access/isStaff'
+import { hasStaffRole, isStaff } from '../../access/isStaff'
 import { staffOrOrderOwner } from '../../access/staffOrOrderOwner'
 
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
@@ -402,7 +402,7 @@ export const Orders: CollectionConfig = {
       name: 'cashKey',
       type: 'text',
       access: {
-        read: isStaff,
+        read: ({ req }) => hasStaffRole(req.user),
         update: () => false,
       },
       admin: {

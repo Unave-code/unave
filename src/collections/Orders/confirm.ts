@@ -81,6 +81,8 @@ export const recordPaidOrder = async (
         ...(input.signature ? { gatewaySignature: input.signature } : {}),
         items: input.intent.items,
         paidAt: new Date().toISOString(),
+        paymentState: 'paid',
+        paymentType: 'online',
         ...(input.payment && Object.keys(input.payment).length > 0 ? { payment: input.payment } : {}),
         subtotal: input.intent.total,
         total: input.intent.total,

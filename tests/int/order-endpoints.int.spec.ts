@@ -1146,6 +1146,8 @@ describe('the orders collection', () => {
         items: [
           { days: 5, durationLabel: 'One week', productTitle: 'Lunch plan', unitPrice: 150000 },
         ],
+        paymentState: 'paid',
+        paymentType: 'online',
         subtotal: 150000,
         total: 150000,
       },

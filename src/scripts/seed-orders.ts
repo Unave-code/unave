@@ -312,6 +312,8 @@ for (const seed of orders) {
         gatewayPaymentId: `pay_${seed.key}`,
         items,
         paidAt: daysAgo(seed.paidDaysAgo),
+        paymentState: 'paid',
+        paymentType: 'online',
         payment: paymentFor(seed.key, total, daysAgo(seed.paidDaysAgo)),
         ...(seed.startsInDays !== undefined ? { startsOn: daysAgo(-seed.startsInDays) } : {}),
         subtotal: total,
