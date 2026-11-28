@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { CheckCircle2, Hash, MapPin, TriangleAlert } from 'lucide-react'
+import Image from 'next/image'
 import React from 'react'
 
 import { CTA_BASE, CTA_VARIANTS, Cta } from '@/components/Cta'
@@ -8,8 +9,12 @@ import { Section } from '@/components/home/Section'
 import { Swoosh } from '@/components/Swoosh'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import type { Footer } from '@/payload-types'
-import { areaForPincode, deliveryCheck, parseMapPin, readDeliveryAreas } from '@/utilities/deliveryArea'
+import { areaForPincode, deliveryCheck, parseMapPin, readDeliveryAreas, readPhoto } from '@/utilities/deliveryArea'
 import {
+  DELIVERY_AREAS_HERO_IMAGE,
+  DELIVERY_PHOTOS_FALLBACK,
+  DELIVERY_PHOTOS_HEADING,
+  DELIVERY_PHOTOS_INTRO,
   DELIVERY_AREAS_EYEBROW,
   DELIVERY_AREAS_HEADLINE,
   DELIVERY_AREAS_HEADLINE_ACCENT,
@@ -35,6 +40,7 @@ import {
 } from '@/utilities/deliveryAreaCopy'
 import { placeDeliveryAreas, placeKitchen } from '@/utilities/deliveryAreaPlaces'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { firstParam } from '@/utilities/searchParams'
 import { breadcrumbJsonLd, webPageJsonLd } from '@/utilities/structuredData'
@@ -79,10 +85,20 @@ export default async function DeliveryAreasPage({ searchParams }: { searchParams
   const typed = (firstParam(params.pincode) ?? '').trim()
 
   const [source, footer] = await Promise.all([
-    getCachedGlobal('delivery-areas')(),
+    // Depth 1, so the uploads arrive as media documents with their URLs.
+    getCachedGlobal('delivery-areas', 1)(),
     getCachedGlobal('footer', 1)() as Promise<Footer | null>,
   ])
   const listed = readDeliveryAreas(source)
+  const heroPhoto = readPhoto(source?.heroImage)
+  const heroSrc = heroPhoto ? getMediaUrl(heroPhoto.url, heroPhoto.updatedAt) : DELIVERY_AREAS_HERO_IMAGE
+  const uploaded = (source?.photos ?? []).flatMap((row) => {
+    const photo = readPhoto(row.image)
+    return photo
+      ? [{ alt: photo.alt, caption: row.caption?.trim() ?? '', src: getMediaUrl(photo.url, photo.updatedAt) }]
+      : []
+  })
+  const photos = uploaded.length > 0 ? uploaded : DELIVERY_PHOTOS_FALLBACK
   const [areas, kitchen] = await Promise.all([
     placeDeliveryAreas(listed),
     placeKitchen(parseMapPin(source?.kitchenPin), footer?.contact?.address),
@@ -119,7 +135,12 @@ export default async function DeliveryAreasPage({ searchParams }: { searchParams
       />
 
       <DeliveryAreasProvider initial={area?.name ?? null}>
-        <Section className="opening-band overflow-hidden bg-green-900 md:py-16" tone="green">
+        <Section
+          className="opening-band overflow-hidden bg-green-900 md:py-16"
+          image={{ priority: true, src: heroSrc }}
+          overlay="bg-green-900/85"
+          tone="green"
+        >
           <Swoosh className="-top-40 -left-40 w-[42rem] text-gold-400/[0.07]" />
 
           <div className="relative grid items-stretch gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
@@ -226,6 +247,35 @@ export default async function DeliveryAreasPage({ searchParams }: { searchParams
           ) : null}
         </Section>
       </DeliveryAreasProvider>
+
+      <Section tone="white">
+        <div className="max-w-[46rem]">
+          <h2 className="text-h2">{DELIVERY_PHOTOS_HEADING}</h2>
+          <p className="text-body text-ink-600 mt-3">{DELIVERY_PHOTOS_INTRO}</p>
+        </div>
+
+        <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {photos.map((photo, index) => (
+            <li key={`${photo.src}-${index}`}>
+              <figure>
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-green-50 shadow-sm">
+                  <Image
+                    alt={photo.alt}
+                    className="object-cover"
+                    fill
+                    quality={75}
+                    sizes="(min-width: 64rem) 26rem, (min-width: 40rem) 50vw, 100vw"
+                    src={photo.src}
+                  />
+                </div>
+                {photo.caption ? (
+                  <figcaption className="text-ink-600 mt-3 text-sm leading-6">{photo.caption}</figcaption>
+                ) : null}
+              </figure>
+            </li>
+          ))}
+        </ul>
+      </Section>
 
       <Section className="relative overflow-hidden text-center" tone="green">
         <Swoosh className="-top-32 left-1/2 w-[40rem] -translate-x-1/2 text-gold-400/[0.08]" />

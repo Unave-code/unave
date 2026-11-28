@@ -9,7 +9,13 @@
  * the page and the tests all read the same rules.
  */
 
-export type DeliveryAreaRow = { name?: null | string; pin?: null | string; pincodes?: null | string }
+export type DeliveryAreaRow = {
+  name?: null | string
+  /** An upload: a media document at depth 1, a bare id at depth 0. */
+  photo?: unknown
+  pin?: null | string
+  pincodes?: null | string
+}
 
 export type DeliveryAreasSource = {
   areas?: DeliveryAreaRow[] | null
@@ -18,7 +24,17 @@ export type DeliveryAreasSource = {
 
 export type MapPin = { lat: number; lng: number }
 
-export type DeliveryArea = { name: string; pin: MapPin | null; pincodes: string[] }
+/** A photo as the page needs it: the stored URL, its alt text and its version. */
+export type AreaPhoto = { alt: string; updatedAt: null | string; url: string }
+
+export type DeliveryArea = { name: string; photo?: AreaPhoto | null; pin: MapPin | null; pincodes: string[] }
+
+/** An uploaded image read at depth 1; a bare id or a missing file is no photo. */
+export const readPhoto = (value: unknown): AreaPhoto | null => {
+  const media = value as null | { alt?: null | string; updatedAt?: null | string; url?: null | string }
+  if (!media || typeof media !== 'object' || typeof media.url !== 'string' || !media.url) return null
+  return { alt: media.alt?.trim() ?? '', updatedAt: media.updatedAt ?? null, url: media.url }
+}
 
 export type DeliveryCheck = 'not-served' | 'served' | 'unchecked'
 
@@ -55,7 +71,9 @@ export const parseMapPin = (text: null | string | undefined): MapPin | null => {
 export const readDeliveryAreas = (source: DeliveryAreasSource | null | undefined): DeliveryArea[] =>
   (source?.areas ?? []).flatMap((row) => {
     const name = row?.name?.trim()
-    return name ? [{ name, pin: parseMapPin(row.pin), pincodes: parsePincodes(row.pincodes) }] : []
+    return name
+      ? [{ name, photo: readPhoto(row.photo), pin: parseMapPin(row.pin), pincodes: parsePincodes(row.pincodes) }]
+      : []
   })
 
 export const areaForPincode = (areas: DeliveryArea[], pincode: string): DeliveryArea | null => {

@@ -8,6 +8,7 @@ import {
   invalidPincodeTokens,
   parseMapPin,
   parsePincodes,
+  readPhoto,
   readDeliveryAreas,
 } from '@/utilities/deliveryArea'
 import { kitchenJsonLd } from '@/utilities/structuredData'
@@ -50,6 +51,19 @@ describe('parseMapPin', () => {
     expect(parseMapPin('Adyar')).toBeNull()
     expect(parseMapPin('')).toBeNull()
     expect(parseMapPin(null)).toBeNull()
+  })
+})
+
+describe('readPhoto', () => {
+  it('reads an upload at depth 1, and nothing from a bare id or a missing file', () => {
+    expect(readPhoto({ alt: ' Adyar bridge ', updatedAt: '2026-11-28', url: '/api/media/file/adyar.jpg' })).toEqual({
+      alt: 'Adyar bridge',
+      updatedAt: '2026-11-28',
+      url: '/api/media/file/adyar.jpg',
+    })
+    expect(readPhoto(12)).toBeNull()
+    expect(readPhoto({ alt: 'x', url: null })).toBeNull()
+    expect(readPhoto(null)).toBeNull()
   })
 })
 

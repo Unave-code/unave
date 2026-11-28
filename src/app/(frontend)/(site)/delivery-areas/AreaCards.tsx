@@ -1,9 +1,11 @@
 'use client'
 
 import { MapPin } from 'lucide-react'
+import Image from 'next/image'
 import React from 'react'
 
 import type { DeliveryArea } from '@/utilities/deliveryArea'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { DELIVERY_MAP_SHOW, DELIVERY_MAP_SHOWN, DELIVERY_STAT_PINCODES } from '@/utilities/deliveryAreaCopy'
 import { cn } from '@/utilities/ui'
 
@@ -25,11 +27,25 @@ export const AreaCards: React.FC<{ areas: DeliveryArea[] }> = ({ areas }) => {
         return (
           <li
             className={cn(
-              'bg-card flex flex-col rounded-2xl border p-5 transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none',
+              'bg-card flex flex-col overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none',
               active ? 'border-gold-500 shadow-md ring-2 ring-gold-400/60' : 'border-line hover:shadow-sm',
             )}
             key={area.name}
           >
+            {area.photo ? (
+              <div className="relative aspect-[16/9] bg-green-50">
+                <Image
+                  alt={area.photo.alt}
+                  className="object-cover"
+                  fill
+                  quality={75}
+                  sizes="(min-width: 64rem) 26rem, (min-width: 40rem) 50vw, 100vw"
+                  src={getMediaUrl(area.photo.url, area.photo.updatedAt)}
+                />
+              </div>
+            ) : null}
+
+            <div className="flex flex-1 flex-col p-5">
             <div className="flex items-start gap-3">
               <span
                 aria-hidden="true"
@@ -75,6 +91,7 @@ export const AreaCards: React.FC<{ areas: DeliveryArea[] }> = ({ areas }) => {
                 {active ? DELIVERY_MAP_SHOWN : DELIVERY_MAP_SHOW}
               </button>
             ) : null}
+            </div>
           </li>
         )
       })}

@@ -3167,6 +3167,10 @@ export interface DeliveryArea {
    */
   intro?: string | null;
   /**
+   * Optional. The photo behind the green band at the top of /delivery-areas, under a green tint. Leave empty for the built-in photo.
+   */
+  heroImage?: (number | null) | Media;
+  /**
    * Optional. Leave empty and the map places the kitchen from the address in Footer → Contact. To place it exactly: Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
    */
   kitchenPin?: string | null;
@@ -3180,6 +3184,10 @@ export interface DeliveryArea {
          */
         name: string;
         /**
+         * Optional. Shown at the top of the area card, for example a street or landmark there. Give it alt text in Media.
+         */
+        photo?: (number | null) | Media;
+        /**
          * Optional. Leave empty and the map places the area from its name and pincode. To place it exactly: Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
          */
         pin?: string | null;
@@ -3187,6 +3195,19 @@ export interface DeliveryArea {
          * One or more 6-digit pincodes, separated by commas, spaces or new lines.
          */
         pincodes: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Up to three photos in the "From our kitchen to your door" band near the bottom of /delivery-areas. Leave empty for the built-in photos.
+   */
+  photos?:
+    | {
+        image: number | Media;
+        /**
+         * Optional. A short line under the photo.
+         */
+        caption?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -3470,13 +3491,22 @@ export interface TestimonialsSelect<T extends boolean = true> {
 export interface DeliveryAreasSelect<T extends boolean = true> {
   enforce?: T;
   intro?: T;
+  heroImage?: T;
   kitchenPin?: T;
   areas?:
     | T
     | {
         name?: T;
+        photo?: T;
         pin?: T;
         pincodes?: T;
+        id?: T;
+      };
+  photos?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
         id?: T;
       };
   updatedAt?: T;

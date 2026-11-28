@@ -27,6 +27,19 @@ export const DELIVERY_MAP_SHOW = 'Show on map'
 export const DELIVERY_MAP_SHOWN = 'On the map'
 export const DELIVERY_MAP_EMPTY = 'We couldn’t place the areas on the map just now. The list below holds every area we deliver to.'
 
+/** The band photo behind the green opening band; decorative, so no alt text. */
+export const DELIVERY_AREAS_HERO_IMAGE = '/images/hero-table.jpg'
+
+export const DELIVERY_PHOTOS_HEADING = 'From our kitchen to your door'
+export const DELIVERY_PHOTOS_INTRO = 'Every order is cooked and packed in our Chennai kitchen, then brought to the areas above.'
+
+/** Shown until staff add their own photos under Website → Delivery areas. */
+export const DELIVERY_PHOTOS_FALLBACK = [
+  { alt: 'Two cooks tasting a dish together at a kitchen counter', caption: '', src: '/images/kitchen.jpg' },
+  { alt: 'A spinach, avocado and pomegranate salad on a patterned plate', caption: '', src: '/images/gallery-2.jpg' },
+  { alt: 'Three plated dishes with fresh herbs, chillies and cashews on a wooden table', caption: '', src: '/images/hero-table.jpg' },
+] as const
+
 export const DELIVERY_FINAL_HEADING = 'Not on the list yet?'
 export const DELIVERY_FINAL_BODY =
   'We add areas as the kitchen grows. Message us your pincode and we’ll tell you honestly whether we can reach you.'

@@ -56,6 +56,17 @@ export const DeliveryAreas: GlobalConfig = {
       admin: { description: 'The short line under the heading on /delivery-areas.' },
     },
     {
+      name: 'heroImage',
+      type: 'upload',
+      label: 'Top band photo',
+      relationTo: 'media',
+      filterOptions: { mimeType: { contains: 'image' } },
+      admin: {
+        description:
+          'Optional. The photo behind the green band at the top of /delivery-areas, under a green tint. Leave empty for the built-in photo.',
+      },
+    },
+    {
       name: 'kitchenPin',
       type: 'text',
       label: 'Kitchen on the map',
@@ -91,6 +102,17 @@ export const DeliveryAreas: GlobalConfig = {
           admin: { description: 'As customers know it, for example "Adyar" or "Anna Nagar".' },
         },
         {
+          name: 'photo',
+          type: 'upload',
+          label: 'Photo',
+          relationTo: 'media',
+          filterOptions: { mimeType: { contains: 'image' } },
+          admin: {
+            description:
+              'Optional. Shown at the top of the area card, for example a street or landmark there. Give it alt text in Media.',
+          },
+        },
+        {
           name: 'pin',
           type: 'text',
           label: 'Map pin',
@@ -112,6 +134,35 @@ export const DeliveryAreas: GlobalConfig = {
             if (invalid.length > 0) return `${invalid[0]} is not a 6-digit pincode.`
             return parsePincodes(text).length > 0 ? true : 'Add at least one 6-digit pincode.'
           },
+        },
+      ],
+    },
+    {
+      name: 'photos',
+      type: 'array',
+      label: 'Kitchen to your door photos',
+      labels: { singular: 'Photo', plural: 'Photos' },
+      maxRows: 3,
+      defaultValue: () => [],
+      admin: {
+        description:
+          'Up to three photos in the "From our kitchen to your door" band near the bottom of /delivery-areas. Leave empty for the built-in photos.',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          label: 'Photo',
+          relationTo: 'media',
+          required: true,
+          filterOptions: { mimeType: { contains: 'image' } },
+        },
+        {
+          name: 'caption',
+          type: 'text',
+          label: 'Caption',
+          maxLength: 80,
+          admin: { description: 'Optional. A short line under the photo.' },
         },
       ],
     },
