@@ -211,3 +211,64 @@ describe('buildOrderReport', () => {
     await expect(renderReportPdf(empty)).resolves.toBeInstanceOf(Uint8Array)
   })
 })
+
+describe('buildOrderReport with cash on delivery', () => {
+  const range = reportRange('week', '2026-11-23')
+  const paidOnline = {
+    createdAt: '2026-11-24T05:00:00.000Z',
+    id: 21,
+    items: [{ productTitle: 'Lunch plan', qty: 1, unitPrice: 100000 }],
+    paidAt: '2026-11-24T05:00:00.000Z',
+    payment: { method: 'upi' },
+    paymentState: 'paid' as const,
+    paymentType: 'online' as const,
+    total: 100000,
+  }
+  const cashDue = {
+    createdAt: '2026-11-24T06:00:00.000Z',
+    id: 22,
+    items: [{ productTitle: 'Lunch plan', qty: 1, unitPrice: 50000 }],
+    paidAt: null,
+    paymentState: 'cashDue' as const,
+    paymentType: 'cash' as const,
+    total: 50000,
+  }
+  const collected = {
+    createdAt: '2026-11-20T06:00:00.000Z',
+    id: 23,
+    items: [{ productTitle: 'Lunch plan', qty: 1, unitPrice: 70000 }],
+    paidAt: '2026-11-25T06:00:00.000Z',
+    paymentState: 'collected' as const,
+    paymentType: 'cash' as const,
+    total: 70000,
+  }
+
+  it('keeps cash due out of revenue and lists it apart', () => {
+    const report = buildOrderReport({ cashDue: [cashDue], orders: [paidOnline, cashDue], range })
+
+    expect(report.totals.revenue).toBe(100000)
+    expect(report.totals.orders).toBe(1)
+    expect(report.cashDue).toEqual({ count: 1, total: 50000 })
+  })
+
+  it('counts collected cash on its collection day, as Cash', () => {
+    const report = buildOrderReport({ orders: [collected], range })
+
+    expect(report.totals.revenue).toBe(70000)
+    expect(report.days[2]).toMatchObject({ orders: 1, revenue: 70000 })
+    expect(report.methods).toEqual([{ method: 'Cash', orders: 1, revenue: 70000 }])
+    expect(report.cashDue).toEqual({ count: 0, total: 0 })
+  })
+
+  it('renders a Cash still due line in the PDF and the spreadsheet', async () => {
+    const report = buildOrderReport({ cashDue: [cashDue], orders: [paidOnline], range })
+    const { renderReportXlsx } = await import('../../src/utilities/orderReport/xlsx')
+    const ExcelJS = (await import('exceljs')).default
+    const book = new ExcelJS.Workbook()
+    await book.xlsx.load((await renderReportXlsx(report)) as never)
+    const cells: string[] = []
+    book.getWorksheet('Summary')?.eachRow((row) => cells.push(String(row.getCell(1).value)))
+
+    expect(cells).toContain('Cash still due')
+  })
+})

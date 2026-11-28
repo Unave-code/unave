@@ -1,6 +1,8 @@
 import React from 'react'
 
+import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
+import { PAYMENT_STATE_LABELS } from '@/utilities/paymentState'
 import { type OrderPaymentDetails, paymentMethodLabel } from '@/utilities/razorpayPaymentDetails'
 
 import { CopyValue } from './CopyValue'
@@ -12,13 +14,25 @@ import './OrderSummary.scss'
  * Only what Razorpay gave us is shown, row by row; the signature stays hidden.
  * The time is Razorpay's capture time when it sent one, else the moment the
  * order was written.
+ *
+ * A cash on delivery order has no Razorpay rows: it shows its state, who took
+ * the cash and when, and, while the cash is due, the staff actions.
  */
 export function OrderPaymentView({
+  actions,
+  cash,
   details = {},
   gatewayOrderId,
   gatewayPaymentId,
   paidAt,
 }: {
+  /** The collect and cancel buttons, passed in while the cash is due. */
+  actions?: React.ReactNode
+  cash?: null | {
+    cancelledAt?: null | string
+    collectedBy?: null | string
+    state: Order['paymentState']
+  }
   details?: null | OrderPaymentDetails
   gatewayOrderId?: null | string
   gatewayPaymentId?: null | string
@@ -30,6 +44,30 @@ export function OrderPaymentView({
   const when = d.capturedAt ?? paidAt ?? null
 
   const rows: [string, React.ReactNode][] = []
+
+  if (cash) {
+    rows.push(['Paid by', 'Cash on delivery'])
+    rows.push(['State', PAYMENT_STATE_LABELS[cash.state]])
+    if (cash.state === 'collected' && paidAt) rows.push(['Collected at', dateTime(paidAt)])
+    if (cash.collectedBy) rows.push(['Collected by', cash.collectedBy])
+    if (cash.cancelledAt) rows.push(['Cancelled at', dateTime(cash.cancelledAt)])
+
+    return (
+      <section className="order-payment">
+        <h3 className="order-summary__card-title">Payment</h3>
+        <dl className="order-payment__rows">
+          {rows.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {actions}
+      </section>
+    )
+  }
+
   if (d.method) rows.push(['Method', paymentMethodLabel(d.method)])
   if (d.vpa) rows.push(['UPI id', d.vpa])
   if (cardLabel) rows.push(['Card used', cardLabel])

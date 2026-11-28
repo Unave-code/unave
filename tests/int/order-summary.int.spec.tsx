@@ -234,3 +234,75 @@ describe('the payment block in the sidebar', () => {
     expect(screen.queryByText('Razorpay fee')).toBeNull()
   })
 })
+
+describe('the payment block for a cash on delivery order', () => {
+  it('shows a cash-due order with the staff actions', () => {
+    render(
+      <OrderPaymentView
+        actions={<button type="button">Mark cash collected</button>}
+        cash={{ state: 'cashDue' }}
+        paidAt={null}
+      />,
+    )
+
+    expect(screen.getByText('Cash on delivery')).toBeTruthy()
+    expect(screen.getByText('Cash due')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Mark cash collected' })).toBeTruthy()
+    expect(screen.queryByText('Razorpay order')).toBeNull()
+  })
+
+  it('shows who collected the cash and when, without actions', () => {
+    render(
+      <OrderPaymentView
+        actions={null}
+        cash={{ collectedBy: 'Kitchen staff', state: 'collected' }}
+        paidAt="2026-11-21T06:00:00.000Z"
+      />,
+    )
+
+    expect(screen.getByText('Collected')).toBeTruthy()
+    expect(screen.getByText('Kitchen staff')).toBeTruthy()
+    expect(screen.getByText('21 Nov 2026, 11:30 am')).toBeTruthy()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('shows when a cash order was cancelled', () => {
+    render(<OrderPaymentView cash={{ cancelledAt: '2026-11-21T06:00:00.000Z', state: 'cancelled' }} />)
+
+    expect(screen.getByText('Cancelled')).toBeTruthy()
+    expect(screen.getByText('Cancelled at')).toBeTruthy()
+  })
+})
+
+describe('the admin order summary for a cash on delivery order', () => {
+  const cashOrder = (paymentState: 'cancelled' | 'cashDue' | 'collected') =>
+    props({
+      order: {
+        ...props().order,
+        gatewayOrderId: null,
+        gatewayPaymentId: null,
+        paidAt: paymentState === 'collected' ? '2026-11-21T06:00:00.000Z' : null,
+        paymentState,
+        paymentType: 'cash',
+      },
+    })
+
+  it('says Cash due, not Paid, while the cash is owed', () => {
+    render(<OrderSummaryView {...cashOrder('cashDue')} />)
+
+    expect(screen.getByText('Cash due')).toBeTruthy()
+    expect(screen.queryByText('Paid')).toBeNull()
+  })
+
+  it('says Collected once the cash is in', () => {
+    render(<OrderSummaryView {...cashOrder('collected')} />)
+
+    expect(screen.getByText('Collected')).toBeTruthy()
+  })
+
+  it('says Cancelled for a cancelled cash order', () => {
+    render(<OrderSummaryView {...cashOrder('cancelled')} />)
+
+    expect(screen.getByText('Cancelled')).toBeTruthy()
+  })
+})

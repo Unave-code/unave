@@ -340,4 +340,17 @@
       overflow-wrap: anywhere;
     }
   }
+
+  // Mark cash collected / Cancel order, while a cash order waits for its cash.
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: var(--base);
+
+    .btn {
+      margin: 0;
+      min-height: 44px;
+    }
+  }
 }

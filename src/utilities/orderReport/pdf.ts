@@ -161,6 +161,9 @@ export const renderReportPdf = async (
     ['Items sold', String(totals.items)],
     ['Razorpay fees', money(totals.fees)],
     ['Net after fees', money(totals.net)],
+    ...(report.cashDue.count > 0
+      ? ([['Cash still due', `${money(report.cashDue.total)} · ${report.cashDue.count} orders`]] as [string, string][])
+      : []),
   ]
   const cardGap = 10
   const cardWidth = (width() - cardGap * 3) / 4

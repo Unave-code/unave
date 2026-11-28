@@ -4,6 +4,7 @@ import type { Order } from '@/payload-types'
 import { FOOD_PREFERENCE_LABELS, isFoodPreference } from '@/utilities/foodPreference'
 import { formatPaise } from '@/utilities/money'
 import { orderKindSummary, type OrderLineView } from '@/utilities/orderLines'
+import { PAYMENT_STATE_LABELS } from '@/utilities/paymentState'
 
 import './OrderSummary.scss'
 
@@ -20,7 +21,8 @@ import './OrderSummary.scss'
  */
 
 export type OrderSummaryProps = {
-  order: Pick<Order, 'createdAt' | 'delivery' | 'gatewayOrderId' | 'gatewayPaymentId' | 'id' | 'paidAt' | 'subtotal' | 'total' | 'updatedAt'>
+  order: Pick<Order, 'createdAt' | 'delivery' | 'gatewayOrderId' | 'gatewayPaymentId' | 'id' | 'paidAt' | 'subtotal' | 'total' | 'updatedAt'> &
+    Partial<Pick<Order, 'paymentState' | 'paymentType'>>
   customer: { id: number; name: null | string; email: string; phone: null | string } | null
   lines: OrderLineView[]
 }
@@ -161,7 +163,15 @@ export function OrderSummaryView({ customer, lines, order }: OrderSummaryProps):
         <div>
           <h2 className="order-summary__title">{`Order ${order.id}`}</h2>
           <p className="order-summary__meta">
-            <span className="order-summary__pill order-summary__pill--ok">Paid</span>
+            {order.paymentType === 'cash' && order.paymentState ? (
+              <span
+                className={`order-summary__pill ${order.paymentState === 'collected' ? 'order-summary__pill--ok' : 'order-summary__pill--new'}`}
+              >
+                {PAYMENT_STATE_LABELS[order.paymentState]}
+              </span>
+            ) : (
+              <span className="order-summary__pill order-summary__pill--ok">Paid</span>
+            )}
             {order.paidAt ? <span>{`Paid ${dateTime(order.paidAt)}`}</span> : null}
           </p>
           {summary ? <p className="order-summary__muted">{summary}</p> : null}

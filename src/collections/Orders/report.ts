@@ -40,7 +40,7 @@ export const loadOrderReport = async (
   const range = reportRange(period, key)
   const before = shiftRange(range, -1)
 
-  const [current, previous] = await Promise.all([
+  const [current, previous, owed] = await Promise.all([
     req.payload.find({
       collection: 'orders',
       depth: 0,
@@ -58,6 +58,22 @@ export const loadOrderReport = async (
       req,
       select: { total: true },
       where: paidIn(before),
+    }),
+    // Cash on delivery placed in the period and still owed: shown apart, never revenue.
+    req.payload.find({
+      collection: 'orders',
+      depth: 0,
+      overrideAccess: false,
+      pagination: false,
+      req,
+      select: { paymentState: true, paymentType: true, total: true },
+      where: {
+        and: [
+          { paymentState: { equals: 'cashDue' } },
+          { createdAt: { greater_than_equal: range.from.toISOString() } },
+          { createdAt: { less_than: range.to.toISOString() } },
+        ],
+      },
     }),
   ])
 
@@ -90,6 +106,7 @@ export const loadOrderReport = async (
   }
 
   return buildOrderReport({
+    cashDue: owed.docs as unknown as ReportOrder[],
     customers,
     orders,
     previous: {

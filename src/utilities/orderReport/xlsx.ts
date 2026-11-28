@@ -90,6 +90,12 @@ export const renderReportXlsx = async (
     ['Customers', totals.customers],
     ['Razorpay fees (incl. GST)', rupees(totals.fees), RUPEES],
     ['Net after fees', rupees(totals.net), RUPEES],
+    ...(report.cashDue.count > 0
+      ? ([
+          ['Cash still due', rupees(report.cashDue.total), RUPEES],
+          ['Cash due orders', report.cashDue.count],
+        ] as [string, number, string?][])
+      : []),
   ]
   styleHeader(summary.addRow(['Figure', 'Value']))
   for (const [label, value, numFmt] of figures) {

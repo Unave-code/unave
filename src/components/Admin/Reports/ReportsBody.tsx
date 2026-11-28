@@ -105,6 +105,9 @@ export const ReportsBody: React.FC<{ report: OrderReport; period: ReportPeriod; 
     ['Items sold', String(totals.items)],
     ['Razorpay fees', formatPaise(totals.fees)],
     ['Net after fees', formatPaise(totals.net)],
+    ...(report.cashDue.count > 0
+      ? ([['Cash still due', `${formatPaise(report.cashDue.total)} · ${report.cashDue.count} orders`]] as [string, string][])
+      : []),
   ]
 
   return (

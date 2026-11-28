@@ -35,6 +35,9 @@ export type ReportOrder = {
   total?: Maybe<number>
   paidAt?: Maybe<string>
   createdAt?: Maybe<string>
+  /** Cash on delivery (spec 2026-11-28); absent on orders written before it. */
+  paymentType?: Maybe<'cash' | 'online'>
+  paymentState?: Maybe<'cancelled' | 'cashDue' | 'collected' | 'paid'>
   startsOn?: Maybe<string>
   gatewayOrderId?: Maybe<string>
   gatewayPaymentId?: Maybe<string>
@@ -140,10 +143,13 @@ export type OrderReport = {
   methods: { method: string; orders: number; revenue: number }[]
   rows: ReportRow[]
   lines: ReportLine[]
+  /** Cash on delivery orders placed in the period and not yet collected; never revenue. */
+  cashDue: { count: number; total: number }
 }
 
 const METHOD_LABELS: Record<string, string> = {
   card: 'Card',
+  cash: 'Cash',
   emi: 'EMI',
   netbanking: 'Net banking',
   paylater: 'Pay later',
@@ -208,7 +214,12 @@ const clean = (value?: Maybe<string>) => value?.trim() ?? ''
  * downloads. Pure, so the admin view, the PDF and the spreadsheet all read the
  * same numbers. Orders outside the range are ignored.
  */
+/** Only money that came in counts: cash on delivery only once staff collected it. */
+const isReceived = (order: ReportOrder): boolean =>
+  order.paymentType !== 'cash' || order.paymentState === 'collected'
+
 export const buildOrderReport = ({
+  cashDue: owed = [],
   customers: accounts = {},
   generatedAt = new Date(),
   orders,
@@ -217,6 +228,8 @@ export const buildOrderReport = ({
 }: {
   orders: ReportOrder[]
   range: ReportRange
+  /** Cash on delivery orders placed in the period that are still waiting for the cash. */
+  cashDue?: ReportOrder[]
   previous?: { orders: number; revenue: number } | null
   /** Customer accounts by id, for the email address. */
   customers?: Record<string, ReportCustomer>
@@ -242,6 +255,7 @@ export const buildOrderReport = ({
   let fees = 0
 
   for (const order of orders) {
+    if (!isReceived(order)) continue
     const at = toDate(order.paidAt) ?? toDate(order.createdAt)
     if (!at || at < range.from || at >= range.to) continue
 
@@ -264,7 +278,7 @@ export const buildOrderReport = ({
     const tax = order.payment?.tax ?? 0
     fees += fee + tax
 
-    const method = paymentMethodLabel(order.payment?.method)
+    const method = paymentMethodLabel(order.paymentType === 'cash' ? 'cash' : order.payment?.method)
     const methodRow = methods.get(method) ?? { method, orders: 0, revenue: 0 }
     methodRow.orders += 1
     methodRow.revenue += total
@@ -365,6 +379,10 @@ export const buildOrderReport = ({
 
   const count = rows.length
 
+  const cashDue = owed.filter(
+    (order) => order.paymentType === 'cash' && order.paymentState === 'cashDue',
+  )
+
   return {
     days,
     generatedAt,
@@ -382,6 +400,10 @@ export const buildOrderReport = ({
       net: revenue - fees,
       orders: count,
       revenue,
+    },
+    cashDue: {
+      count: cashDue.length,
+      total: cashDue.reduce((sum, order) => sum + (order.total ?? 0), 0),
     },
   }
 }
