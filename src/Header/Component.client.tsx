@@ -24,9 +24,15 @@ const HEADER_SEARCH_LABEL = 'Search products'
 
 interface HeaderClientProps {
   data: HeaderType
+  /**
+   * The footer's WhatsApp number, the kitchen's single source for it. The
+   * floating button uses it when the header's own number is left empty, so the
+   * button shows wherever the site has a number at all.
+   */
+  fallbackWhatsapp?: null | string
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
+export const HeaderClient: React.FC<HeaderClientProps> = ({ data, fallbackWhatsapp }) => {
   /* Storing the value in a useState to avoid hydration errors */
   const [theme, setTheme] = useState<string | null>(null)
   /* Past the top of the page the bar turns green and the logo gold (design.md §6.2) */
@@ -62,8 +68,9 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         { link: { type: 'custom', label: CART_LINK_LABEL, newTab: false, url: '/cart' } },
       ]
   const announcement = data?.announcement
-  const whatsappNumber = data?.whatsapp?.number
-  const whatsappMessage = data?.whatsapp?.message
+  const whatsappNumber = data?.whatsapp?.number?.trim() || fallbackWhatsapp?.trim() || null
+  // An empty message falls back to the site's shared opening line.
+  const whatsappMessage = data?.whatsapp?.message?.trim() || undefined
 
   useEffect(() => {
     setHeaderTheme(null)
@@ -322,7 +329,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         <a
           aria-label="Message UNAVE on WhatsApp"
           className="whatsapp-fab bg-green-600 text-cream hover:bg-green-700 rounded-pill focus-visible:ring-gold-400 fixed right-4 bottom-4 z-30 inline-flex size-13 items-center justify-center shadow-md transition-colors focus-visible:ring-[3px] focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none"
-          href={whatsappHref(whatsappNumber, whatsappMessage || null)}
+          href={whatsappHref(whatsappNumber, whatsappMessage)}
           rel="noopener noreferrer"
           target="_blank"
         >

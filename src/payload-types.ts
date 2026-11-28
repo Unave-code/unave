@@ -2958,7 +2958,7 @@ export interface Header {
       }[]
     | null;
   /**
-   * The floating button at the bottom right. Leave the number empty and it stays hidden.
+   * The floating button at the bottom right. Leave the number empty to use the WhatsApp number in Footer → Contact; the button hides only when neither is set.
    */
   whatsapp?: {
     /**
@@ -2966,7 +2966,7 @@ export interface Header {
      */
     number?: string | null;
     /**
-     * Optional. Appears in the chat box when the customer taps the button.
+     * Optional. Appears in the chat box when the customer taps the button. Empty uses the standard opening line.
      */
     message?: string | null;
   };

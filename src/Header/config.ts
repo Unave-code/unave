@@ -171,7 +171,7 @@ export const Header: GlobalConfig = {
       label: 'WhatsApp button',
       admin: {
         description:
-          'The floating button at the bottom right. Leave the number empty and it stays hidden.',
+          'The floating button at the bottom right. Leave the number empty to use the WhatsApp number in Footer → Contact; the button hides only when neither is set.',
       },
       fields: [
         {
@@ -187,7 +187,8 @@ export const Header: GlobalConfig = {
           type: 'text',
           label: 'Pre-filled message',
           admin: {
-            description: 'Optional. Appears in the chat box when the customer taps the button.',
+            description:
+              'Optional. Appears in the chat box when the customer taps the button. Empty uses the standard opening line.',
           },
         },
       ],
