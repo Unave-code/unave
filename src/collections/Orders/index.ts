@@ -4,6 +4,7 @@ import { hasStaffRole, isStaff } from '../../access/isStaff'
 import { staffOrOrderOwner } from '../../access/staffOrOrderOwner'
 
 import { cashOrderEndpoint } from './cash'
+import { cancelCashEndpoint, collectCashEndpoint } from './cashActions'
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
 import { orderReportEndpoint } from './report'
 
@@ -466,7 +467,7 @@ export const Orders: CollectionConfig = {
       label: 'Deliveries start on',
     },
   ],
-  endpoints: [orderReportEndpoint, createOrderEndpoint, verifyOrderEndpoint, cashOrderEndpoint],
+  endpoints: [orderReportEndpoint, createOrderEndpoint, verifyOrderEndpoint, cashOrderEndpoint, collectCashEndpoint, cancelCashEndpoint],
   graphQL: false,
   labels: {
     plural: 'Orders',
