@@ -24,6 +24,7 @@ import { Users } from './collections/Users'
 import { unaveEmailAdapter } from './email/adapter'
 import { emailTestEndpoint } from './endpoints/emailTest'
 import { DeliveryAreas } from './globals/DeliveryAreas/config'
+import { PaymentSettings } from './globals/PaymentSettings/config'
 import { Footer } from './Footer/config'
 import { EmailSettings } from './globals/EmailSettings'
 import { Hero } from './globals/Hero/config'
@@ -194,7 +195,7 @@ export default buildConfig({
   cors: [getServerSideURL()].filter(Boolean),
   email: unaveEmailAdapter,
   endpoints: [emailTestEndpoint],
-  globals: [Header, Footer, Hero, CategoryPages, Testimonials, DeliveryAreas, ProductPage, EmailSettings],
+  globals: [Header, Footer, Hero, CategoryPages, Testimonials, DeliveryAreas, PaymentSettings, ProductPage, EmailSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

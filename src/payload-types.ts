@@ -139,6 +139,7 @@ export interface Config {
     'category-pages': CategoryPage;
     testimonials: Testimonial;
     'delivery-areas': DeliveryArea;
+    'payment-settings': PaymentSetting;
     'product-page': ProductPage;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
@@ -150,6 +151,7 @@ export interface Config {
     'category-pages': CategoryPagesSelect<false> | CategoryPagesSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'delivery-areas': DeliveryAreasSelect<false> | DeliveryAreasSelect<true>;
+    'payment-settings': PaymentSettingsSelect<false> | PaymentSettingsSelect<true>;
     'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
@@ -212,7 +214,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.
+ * One row per order, holding up to ten product lines. Online orders are written once payment is captured; cash orders are written at checkout and show as Cash due until staff mark them collected. Amounts are shown in rupees.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders".
@@ -279,6 +281,11 @@ export interface Order {
   gatewayPaymentId?: string | null;
   gatewaySignature?: string | null;
   paidAt?: string | null;
+  paymentType: 'online' | 'cash';
+  paymentState: 'paid' | 'cashDue' | 'collected' | 'cancelled';
+  collectedBy?: (number | null) | User;
+  cancelledAt?: string | null;
+  cashKey?: string | null;
   payment?: {
     method?: string | null;
     vpa?: string | null;
@@ -736,6 +743,37 @@ export interface Audience {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name?: string | null;
+  /**
+   * Admins manage users. Staff run the content and the enquiries.
+   */
+  role: 'admin' | 'staff';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
  * Messages from the contact form. One row per message, newest last.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1051,37 +1089,6 @@ export interface Category {
     | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name?: string | null;
-  /**
-   * Admins manage users. Staff run the content and the enquiries.
-   */
-  role: 'admin' | 'staff';
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1922,6 +1929,11 @@ export interface OrdersSelect<T extends boolean = true> {
   gatewayPaymentId?: T;
   gatewaySignature?: T;
   paidAt?: T;
+  paymentType?: T;
+  paymentState?: T;
+  collectedBy?: T;
+  cancelledAt?: T;
+  cashKey?: T;
   payment?:
     | T
     | {
@@ -3215,6 +3227,22 @@ export interface DeliveryArea {
   createdAt?: string | null;
 }
 /**
+ * Whether customers can choose to pay in cash at their first delivery.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-settings".
+ */
+export interface PaymentSetting {
+  id: number;
+  codEnabled?: boolean | null;
+  /**
+   * Orders above this total must be paid online. Leave empty for no limit. 3000 means ₹3,000.
+   */
+  codMaxTotal?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Text shared by every product page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3509,6 +3537,17 @@ export interface DeliveryAreasSelect<T extends boolean = true> {
         caption?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-settings_select".
+ */
+export interface PaymentSettingsSelect<T extends boolean = true> {
+  codEnabled?: T;
+  codMaxTotal?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

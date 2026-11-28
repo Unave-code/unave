@@ -15,7 +15,9 @@ const HIDDEN_IN_FORM = '@/components/Admin/HiddenField#HiddenField'
  * A row is written exactly once, by the payment confirmation with
  * `overrideAccess` — public REST create stays off, so no browser can mint one
  * or choose its amounts, and it is written only when a payment has been
- * captured, so a row always means one completed order. Every money and delivery
+ * captured, so a row always means one completed order. Cash on delivery is the
+ * one exception: a cash order is written at checkout as Cash due, and only
+ * staff move it to Collected or Cancelled (cash.ts, cashActions.ts). Every money and delivery
  * value is snapshotted at creation and never edited again: editing a product's
  * title or price afterwards must never rewrite history, so the snapshot fields
  * below refuse updates at the field level, for staff too. The one staff writable
@@ -37,9 +39,9 @@ export const Orders: CollectionConfig = {
     components: {
       beforeList: ['@/components/Admin/Reports/ReportsLink'],
     },
-    defaultColumns: ['customer', 'total', 'createdAt'],
+    defaultColumns: ['customer', 'total', 'paymentState', 'createdAt'],
     description:
-      'One row per paid order, holding up to ten product lines. A row is written only once the payment is captured, so an abandoned checkout leaves nothing behind. Amounts are shown in rupees.',
+      'One row per order, holding up to ten product lines. Online orders are written once payment is captured; cash orders are written at checkout and show as Cash due until staff mark them collected. Amounts are shown in rupees.',
     group: 'Orders',
     useAsTitle: 'id',
   },
@@ -321,6 +323,93 @@ export const Orders: CollectionConfig = {
         readOnly: true,
       },
       label: 'Paid at',
+    },
+    {
+      // Online orders arrive paid; cash orders are written at checkout and
+      // wait for the cash (spec 2026-11-28 cash on delivery). `payment.method`
+      // below is Razorpay's own method (upi, card), hence a different name.
+      name: 'paymentType',
+      type: 'select',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        components: { Field: HIDDEN_IN_FORM },
+        position: 'sidebar',
+      },
+      defaultValue: 'online',
+      index: true,
+      label: 'Paid by',
+      options: [
+        { label: 'Online', value: 'online' },
+        { label: 'Cash on delivery', value: 'cash' },
+      ],
+      required: true,
+    },
+    {
+      // Changed only through the collect and cancel endpoints (cashActions.ts),
+      // which allow nothing but cashDue → collected or cashDue → cancelled.
+      name: 'paymentState',
+      type: 'select',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        components: { Field: HIDDEN_IN_FORM },
+        position: 'sidebar',
+      },
+      defaultValue: 'paid',
+      index: true,
+      label: 'Payment',
+      options: [
+        { label: 'Online', value: 'paid' },
+        { label: 'Cash due', value: 'cashDue' },
+        { label: 'Collected', value: 'collected' },
+        { label: 'Cancelled', value: 'cancelled' },
+      ],
+      required: true,
+    },
+    {
+      name: 'collectedBy',
+      type: 'relationship',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        components: { Field: HIDDEN_IN_FORM },
+        position: 'sidebar',
+      },
+      label: 'Cash collected by',
+      maxDepth: 0,
+      relationTo: 'users',
+    },
+    {
+      name: 'cancelledAt',
+      type: 'date',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        components: { Field: HIDDEN_IN_FORM },
+        position: 'sidebar',
+        readOnly: true,
+      },
+      label: 'Cancelled at',
+    },
+    {
+      // A key the checkout page makes once per visit: a second "Place order"
+      // with the same key finds the first order instead of writing another.
+      name: 'cashKey',
+      type: 'text',
+      access: {
+        read: isStaff,
+        update: () => false,
+      },
+      admin: {
+        hidden: true,
+      },
+      index: true,
+      unique: true,
     },
     {
       // What Razorpay told us about the payment, copied once when the order is
