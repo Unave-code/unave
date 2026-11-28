@@ -11,6 +11,7 @@ import type { Order } from '@/payload-types'
 import { addonsLabel } from '@/utilities/addons'
 import { formatPaise } from '@/utilities/money'
 import { paymentMethodLabel } from '@/utilities/razorpayPaymentDetails'
+import { orderPaymentView } from '@/utilities/orderPaymentView'
 import {
   isOneTimeOrderItem,
   orderComponentsLabel,
@@ -19,10 +20,15 @@ import {
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 
 import {
-  ACCOUNT_ORDER_STATUS_PAID,
-  ORDER_AMOUNT_LABEL,
   ORDER_BACK_TO_ACCOUNT,
   ORDER_BROWSE_CTA,
+  ORDER_CANCELLED_BODY,
+  ORDER_CANCELLED_HEADING,
+  ORDER_CASH_BODY,
+  ORDER_CASH_HEADING,
+  ORDER_CASH_PLACED_STEP,
+  ORDER_PAYING_BY_CASH,
+  ORDER_PAYING_BY_LABEL,
   ORDER_DELIVERY_HEADING,
   ORDER_LINES_HEADING,
   ORDER_NEXT_HEADING,
@@ -115,6 +121,21 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
   if (!order || String(order.customer) !== String(customer.id)) notFound()
 
   const paidOn = order.paidAt ? PAID_ON.format(new Date(order.paidAt)) : null
+  // A cash order is placed, not paid, until staff collect the cash.
+  const view = orderPaymentView(order)
+  const cancelled = order.paymentState === 'cancelled'
+  const heading = view.cash ? (cancelled ? ORDER_CANCELLED_HEADING : ORDER_CASH_HEADING) : ORDER_PAID_HEADING
+  const intro = view.cash
+    ? cancelled
+      ? ORDER_CANCELLED_BODY
+      : [ORDER_CASH_BODY, view.cashLine].filter(Boolean).join(' ')
+    : ORDER_PAID_BODY
+  const nextSteps = view.cash
+    ? [
+        { body: view.cashLine ?? ORDER_CASH_BODY, title: ORDER_CASH_PLACED_STEP },
+        ...ORDER_NEXT_STEPS.slice(1),
+      ]
+    : ORDER_NEXT_STEPS
   const method = paidWith(order.payment)
   const delivery = order.delivery
   const address = [
@@ -136,10 +157,10 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
           </span>
 
           <h1 className="text-cream mt-6 text-[28px] leading-tight font-extrabold tracking-[-0.02em] text-balance md:text-[40px]">
-            {ORDER_PAID_HEADING}
+            {heading}
           </h1>
           <p className="text-cream/80 mx-auto mt-3 max-w-[56ch] text-base leading-relaxed text-pretty">
-            {ORDER_PAID_BODY}
+            {intro}
           </p>
 
           <ul className="mt-7 flex flex-wrap items-center justify-center gap-2 text-sm">
@@ -152,7 +173,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
               </li>
             ) : null}
             <li className="border-cream/25 rounded-pill border px-3.5 py-1.5">
-              {ORDER_AMOUNT_LABEL}{' '}
+              {view.amountLabel}{' '}
               <span className="text-gold-400 font-bold tabular-nums">{formatPaise(Number(order.total))}</span>
             </li>
           </ul>
@@ -205,7 +226,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
             </ul>
 
             <div className="border-line flex items-baseline justify-between gap-4 border-t pt-5">
-              <p className="text-ink-900 font-bold">{ORDER_AMOUNT_LABEL}</p>
+              <p className="text-ink-900 font-bold">{view.amountLabel}</p>
               <p className="text-[28px] leading-none font-extrabold text-green-900 tabular-nums">
                 {formatPaise(Number(order.total))}
               </p>
@@ -217,17 +238,21 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                 value={
                   <span className="rounded-pill inline-flex items-center gap-1.5 bg-green-100 px-2.5 py-0.5 text-green-800">
                     <Check aria-hidden="true" className="size-3.5" strokeWidth={3} />
-                    {ACCOUNT_ORDER_STATUS_PAID}
+                    {view.statusLabel}
                   </span>
                 }
               />
               {method ? <Detail label={ORDER_PAID_WITH_LABEL} value={method} /> : null}
-              <div className="sm:col-span-2">
-                <Detail
-                  label={ORDER_PAYMENT_ID_LABEL}
-                  value={<span className="tabular-nums select-all">{order.gatewayPaymentId ?? ORDER_NOT_GIVEN}</span>}
-                />
-              </div>
+              {view.cash ? (
+                <Detail label={ORDER_PAYING_BY_LABEL} value={ORDER_PAYING_BY_CASH} />
+              ) : (
+                <div className="sm:col-span-2">
+                  <Detail
+                    label={ORDER_PAYMENT_ID_LABEL}
+                    value={<span className="tabular-nums select-all">{order.gatewayPaymentId ?? ORDER_NOT_GIVEN}</span>}
+                  />
+                </div>
+              )}
             </dl>
           </section>
 
@@ -254,7 +279,7 @@ export default async function OrderPlacedPage({ params }: { params: Promise<{ id
                 {ORDER_NEXT_HEADING}
               </h2>
               <ol className="mt-4 grid gap-5">
-                {ORDER_NEXT_STEPS.map((step, index) => (
+                {nextSteps.map((step, index) => (
                   <li className="flex gap-3.5" key={step.title}>
                     <span
                       aria-hidden="true"

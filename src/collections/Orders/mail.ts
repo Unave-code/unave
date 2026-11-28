@@ -7,6 +7,7 @@ import { sendOrderMail } from '@/email/send'
 import { formatPaise } from '@/utilities/money'
 import { addonsLabel } from '@/utilities/addons'
 import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
+import { cashDueLine, kitchenCashLine } from '@/utilities/orderPaymentView'
 
 /**
  * The two emails a paid order sends (spec 0007, AC-7).
@@ -37,6 +38,17 @@ export const ORDER_MAIL_DEFAULTS: OrderMailCopy = {
   confirmationSubject: 'Your UNAVE order is confirmed',
   kitchenIntro: 'An order was paid on the website. The details are below.',
   kitchenSubject: 'New paid order from the website',
+}
+
+/**
+ * A cash on delivery order has not been paid, so the editable copy above, which
+ * speaks of a payment, is replaced for it (spec 2026-11-28 cash on delivery).
+ */
+export const CASH_ORDER_MAIL_COPY = {
+  confirmationIntro: 'Thank you. The kitchen has your order. You pay in cash at your first delivery.',
+  confirmationSubject: 'Your UNAVE order is placed',
+  kitchenIntro: 'A cash on delivery order was placed on the website. The details are below.',
+  kitchenSubject: 'New cash on delivery order from the website',
 }
 
 export const loadOrderMailCopy = async (payload: Payload): Promise<OrderMailCopy> => {
@@ -131,7 +143,11 @@ const addressLabel = (order: Order): string => {
 }
 
 export const sendOrderMails = async (payload: Payload, order: Order): Promise<void> => {
-  const [copy, design] = await Promise.all([loadOrderMailCopy(payload), loadEmailDesign(payload)])
+  const [loadedCopy, design] = await Promise.all([loadOrderMailCopy(payload), loadEmailDesign(payload)])
+  const cash = order.paymentType === 'cash'
+  const copy: OrderMailCopy = cash ? { ...loadedCopy, ...CASH_ORDER_MAIL_COPY } : loadedCopy
+  const customerCashLine = cash ? cashDueLine(Number(order.total ?? 0)) : undefined
+  const kitchenLine = cash ? kitchenCashLine(Number(order.total ?? 0)) : undefined
 
   // The line reads "2 × Phulka box · One-time purchase · ₹198": a quantity
   // more than one prefixes the title, and a one-time line names itself instead
@@ -170,6 +186,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
 
   if (customer?.email) {
     const rendered = await renderOrder({
+      cashLine: customerCashLine,
       design,
       intro: copy.confirmationIntro,
       lines,
@@ -201,6 +218,7 @@ export const sendOrderMails = async (payload: Payload, order: Order): Promise<vo
 
   if (kitchen) {
     const rendered = await renderOrder({
+      cashLine: kitchenLine,
       delivery: {
         addressLabel: addressLabel(order),
         name,

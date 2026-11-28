@@ -6,6 +6,7 @@ import type { Order } from '@/payload-types'
 import { formatPaise } from '@/utilities/money'
 import { addonsLabel } from '@/utilities/addons'
 import { orderComponentsLabel, orderItemKind } from '@/utilities/orderDisplay'
+import { orderPaymentView } from '@/utilities/orderPaymentView'
 import { Phone } from 'lucide-react'
 
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
@@ -38,8 +39,8 @@ import {
   ACCOUNT_ORDERS_EMPTY,
   ACCOUNT_ORDERS_HEADING,
   ACCOUNT_ORDERS_INTRO,
-  ACCOUNT_ORDER_STATUS_PAID,
   ORDER_NUMBER_LABEL,
+  ORDER_PAYING_BY_CASH,
   ORDER_PAYMENT_ID_LABEL,
 } from '../order-placed/copy'
 
@@ -151,7 +152,7 @@ export const OrdersPanel: React.FC<{
                 </Link>
 
                 <span className="bg-green-100 text-green-700 rounded-pill px-3 py-1 text-xs font-bold tracking-wide uppercase">
-                  {ACCOUNT_ORDER_STATUS_PAID}
+                  {orderPaymentView(order).statusLabel}
                 </span>
               </div>
 
@@ -173,7 +174,9 @@ export const OrdersPanel: React.FC<{
               </p>
 
               <p className="text-ink-600 mt-1 text-sm">
-                {ORDER_PAYMENT_ID_LABEL}: {order.gatewayPaymentId ?? ACCOUNT_NOT_GIVEN}
+                {order.paymentType === 'cash'
+                  ? (orderPaymentView(order).cashLine ?? ORDER_PAYING_BY_CASH)
+                  : `${ORDER_PAYMENT_ID_LABEL}: ${order.gatewayPaymentId ?? ACCOUNT_NOT_GIVEN}`}
               </p>
 
               {contact.whatsapp || phone ? (

@@ -33,6 +33,11 @@ export type OrderEmailDelivery = {
 }
 
 export type OrderEmailProps = {
+  /**
+   * Set for a cash on delivery order: the sentence saying what cash is due,
+   * shown where an online order shows its payment id.
+   */
+  cashLine?: string
   delivery?: OrderEmailDelivery
   /** Staff-chosen images and content (Settings → Email settings). */
   design?: EmailDesign
@@ -61,6 +66,18 @@ const COPY: Record<OrderMailVariant, { heading: string; preview: string }> = {
   kitchenNotice: {
     heading: 'New paid order from the website',
     preview: 'An order was paid on the website.',
+  },
+}
+
+/** The same two messages for a cash on delivery order, which nobody has paid yet. */
+const CASH_COPY: Record<OrderMailVariant, { heading: string; preview: string }> = {
+  confirmation: {
+    heading: 'Your UNAVE order is placed',
+    preview: 'The kitchen has your order. You pay in cash at your first delivery.',
+  },
+  kitchenNotice: {
+    heading: 'New cash on delivery order from the website',
+    preview: 'A cash on delivery order was placed on the website.',
   },
 }
 
@@ -134,6 +151,7 @@ const rule = {
 }
 
 export const OrderEmail: React.FC<OrderEmailProps> = ({
+  cashLine,
   delivery,
   design,
   intro,
@@ -144,7 +162,7 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
   totalLabel,
   variant,
 }) => {
-  const copy = COPY[variant]
+  const copy = (cashLine ? CASH_COPY : COPY)[variant]
 
   return (
     <Html lang="en">
@@ -181,7 +199,7 @@ export const OrderEmail: React.FC<OrderEmailProps> = ({
             ) : null}
 
             <Hr style={rule} />
-            <Text style={small}>{`Payment id: ${paymentId}`}</Text>
+            <Text style={small}>{cashLine ?? `Payment id: ${paymentId}`}</Text>
 
             {outro ? <Text style={paragraph}>{outro}</Text> : null}
             {variant === 'confirmation' ? <RichContent state={design?.orderContent} /> : null}
