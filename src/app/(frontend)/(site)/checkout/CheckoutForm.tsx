@@ -1,6 +1,6 @@
 'use client'
 
-import { Lock, Mail, MapPin } from 'lucide-react'
+import { Banknote, CreditCard, Lock, Mail, MapPin } from 'lucide-react'
 import React, { useState } from 'react'
 import Script from 'next/script'
 
@@ -12,6 +12,7 @@ import { toFieldErrors, type FieldErrors } from '@/utilities/fieldErrors'
 import { cn } from '@/utilities/ui'
 
 import {
+  checkoutCashNote,
   CHECKOUT_ADDRESS_LABEL,
   CHECKOUT_ADDRESS_OPTIONAL_LABEL,
   CHECKOUT_CITY_LABEL,
@@ -20,13 +21,21 @@ import {
   CHECKOUT_NAME_LABEL,
   CHECKOUT_NOTE_LABEL,
   CHECKOUT_NOTE_PLACEHOLDER,
+  CHECKOUT_PAY_BY_LEGEND,
+  CHECKOUT_PAY_CASH_HINT,
+  CHECKOUT_PAY_CASH_LABEL,
   CHECKOUT_PAY_CTA,
+  CHECKOUT_PAY_ONLINE_HINT,
+  CHECKOUT_PAY_ONLINE_LABEL,
   CHECKOUT_PAY_PENDING,
+  CHECKOUT_PLACE_CTA,
+  CHECKOUT_PLACE_PENDING,
   CHECKOUT_PHONE_LABEL,
   CHECKOUT_PINCODE_LABEL,
   CHECKOUT_STATE_LABEL,
 } from './copy'
 import { type KitchenContact, PincodeNotServedDialog } from './PincodeNotServedDialog'
+import { useCashCheckout } from './useCashCheckout'
 import { useRazorpayCheckout } from './useRazorpayCheckout'
 
 /**
@@ -43,6 +52,9 @@ import { useRazorpayCheckout } from './useRazorpayCheckout'
  * payment to the signed webhook and shows one plain sentence instead of a page
  * for an order that may not exist.
  *
+ * With cash on delivery offered and chosen, the same details go to
+ * `/api/orders/cash` instead, which places the order at once (useCashCheckout).
+ *
  * The delivery rules are the same Zod schema the endpoint enforces, so a value
  * the browser accepts is a value the server accepts too.
  */
@@ -51,6 +63,43 @@ const FIELD_LABEL = 'text-ink-900 block text-sm font-semibold'
 const FIELD_ERROR = 'text-error mt-1.5 text-sm'
 const FIELD_INPUT =
   'border-line text-ink-900 hover:border-ink-400 bg-white focus:border-green-700 focus:ring-green-500 mt-2 block h-12 w-full rounded-sm border px-4 text-base transition-colors focus:ring-[3px] focus:outline-none motion-reduce:transition-none'
+
+type PayBy = 'cash' | 'online'
+
+/** One payment choice: a card of at least 44px holding a native radio, so keyboards and screen readers get a real radio group. */
+const PayOption: React.FC<{
+  checked: boolean
+  hint: string
+  icon: React.ReactNode
+  label: string
+  onChange: () => void
+  value: PayBy
+}> = ({ checked, hint, icon, label, onChange, value }) => (
+  <label
+    className={cn(
+      'border-line flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border bg-white p-4 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-green-500 motion-reduce:transition-none',
+      checked ? 'border-green-700 bg-green-50' : 'hover:border-ink-400',
+    )}
+  >
+    <input
+      checked={checked}
+      className="mt-1 size-5 shrink-0 accent-green-700 focus:outline-none"
+      name="payBy"
+      onChange={onChange}
+      type="radio"
+      value={value}
+    />
+    <span className="min-w-0">
+      <span className="text-ink-900 flex items-center gap-2 text-base font-semibold">
+        <span aria-hidden="true" className="text-green-700">
+          {icon}
+        </span>
+        {label}
+      </span>
+      <span className="text-ink-600 mt-1 block text-sm leading-5">{hint}</span>
+    </span>
+  </label>
+)
 
 /** One delivery field: its label, the input (id `checkout-<name>`) and its error. */
 const CheckoutField: React.FC<{
@@ -94,19 +143,27 @@ export const CheckoutForm: React.FC<{
     pincode: string
     state: string
   }
+  /** Whether cash on delivery is on and this total is within its limit; the cash endpoint checks again. */
+  cashOffered: boolean
   email: string
   /** The cart total, already formatted, shown on the pay button. */
   total: string
-}> = ({ areas, contact, defaults, email, total }) => {
+}> = ({ areas, cashOffered, contact, defaults, email, total }) => {
   const [errors, setErrors] = useState<FieldErrors>({})
-  const { busy, clearPincodeRefused, message, pay, pincodeRefused } = useRazorpayCheckout(email)
+  const online = useRazorpayCheckout(email)
+  const cash = useCashCheckout()
+  const [payBy, setPayBy] = useState<PayBy>('online')
+  const payingCash = cashOffered && payBy === 'cash'
+  const busy = online.busy || cash.busy
+  const message = payingCash ? cash.message : online.message
   const [localRefusal, setLocalRefusal] = useState(false)
   const [refusedPincode, setRefusedPincode] = useState('')
-  const dialogOpen = localRefusal || pincodeRefused
+  const dialogOpen = localRefusal || online.pincodeRefused || cash.pincodeRefused
 
   const closeDialog = () => {
     setLocalRefusal(false)
-    clearPincodeRefused()
+    online.clearPincodeRefused()
+    cash.clearPincodeRefused()
     document.getElementById('checkout-pincode')?.focus()
   }
 
@@ -144,7 +201,8 @@ export const CheckoutForm: React.FC<{
     }
 
     setErrors({})
-    await pay(parsed, readNote())
+    if (payingCash) await cash.placeOrder(parsed, readNote())
+    else await online.pay(parsed, readNote())
   }
 
   return (
@@ -224,17 +282,49 @@ export const CheckoutForm: React.FC<{
           </p>
         ) : null}
 
-        <div className="border-line mt-1 border-t pt-5">
+        {cashOffered ? (
+          <fieldset className="border-line border-t pt-5">
+            <legend className="text-ink-900 float-left mb-3 w-full text-base font-bold">
+              {CHECKOUT_PAY_BY_LEGEND}
+            </legend>
+            <div className="clear-both grid gap-3 sm:grid-cols-2">
+              <PayOption
+                checked={payBy === 'online'}
+                hint={CHECKOUT_PAY_ONLINE_HINT}
+                icon={<CreditCard className="size-4" strokeWidth={2} />}
+                label={CHECKOUT_PAY_ONLINE_LABEL}
+                onChange={() => setPayBy('online')}
+                value="online"
+              />
+              <PayOption
+                checked={payBy === 'cash'}
+                hint={CHECKOUT_PAY_CASH_HINT}
+                icon={<Banknote className="size-4" strokeWidth={2} />}
+                label={CHECKOUT_PAY_CASH_LABEL}
+                onChange={() => setPayBy('cash')}
+                value="cash"
+              />
+            </div>
+          </fieldset>
+        ) : null}
+
+        <div className={cn(cashOffered ? 'pt-1' : 'border-line mt-1 border-t pt-5')}>
           <button
             className={cn(CTA_BASE, CTA_VARIANTS.primary, 'w-full disabled:opacity-70')}
             disabled={busy}
             type="submit"
           >
-            <Lock aria-hidden="true" className="size-4" strokeWidth={2.25} />
-            {busy ? CHECKOUT_PAY_PENDING : `${CHECKOUT_PAY_CTA} · ${total}`}
+            {payingCash ? (
+              busy ? CHECKOUT_PLACE_PENDING : `${CHECKOUT_PLACE_CTA} · ${total}`
+            ) : (
+              <>
+                <Lock aria-hidden="true" className="size-4" strokeWidth={2.25} />
+                {busy ? CHECKOUT_PAY_PENDING : `${CHECKOUT_PAY_CTA} · ${total}`}
+              </>
+            )}
           </button>
           <p className="text-ink-600 mt-3 text-center text-sm">
-            Payment opens in a secure Razorpay window.
+            {payingCash ? checkoutCashNote(total) : 'Payment opens in a secure Razorpay window.'}
           </p>
         </div>
       </form>

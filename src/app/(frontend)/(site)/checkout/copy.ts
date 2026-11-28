@@ -25,6 +25,16 @@ export const CHECKOUT_NOTE_PLACEHOLDER =
 export const CHECKOUT_PAY_CTA = 'Pay for the order'
 export const CHECKOUT_PAY_PENDING = 'Opening the payment window'
 
+export const CHECKOUT_PAY_BY_LEGEND = 'How would you like to pay?'
+export const CHECKOUT_PAY_ONLINE_LABEL = 'Pay online'
+export const CHECKOUT_PAY_ONLINE_HINT = 'UPI, card or net banking, in a secure Razorpay window.'
+export const CHECKOUT_PAY_CASH_LABEL = 'Cash on delivery'
+export const CHECKOUT_PAY_CASH_HINT = 'Pay the delivery person when the first meals arrive.'
+export const checkoutCashNote = (total: string): string => `Pay ${total} in cash at your first delivery.`
+export const CHECKOUT_PLACE_CTA = 'Place order'
+export const CHECKOUT_PLACE_PENDING = 'Placing your order'
+export const CHECKOUT_CASH_FAILED_MESSAGE = 'Your order could not be placed. Please try again in a moment.'
+
 export const CHECKOUT_CLOSED_MESSAGE =
   'The payment window closed before the payment finished. Nothing has been charged. Press the button to try again.'
 

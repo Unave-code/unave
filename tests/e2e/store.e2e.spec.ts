@@ -107,6 +107,11 @@ test.afterAll(async () => {
 
   const payload = await getPayload({ config })
 
+  // The cash on delivery test places a real order for this customer.
+  await payload
+    .delete({ collection: 'orders', overrideAccess: true, where: { customer: { equals: customerId } } })
+    .catch(() => undefined)
+
   try {
     await payload.delete({ collection: 'customers', id: customerId, overrideAccess: true })
   } catch {
@@ -301,6 +306,33 @@ test.describe('checkout', () => {
     await expect(page.getByText(/Online payment is not set up yet/i)).toBeVisible({
       timeout: 20_000,
     })
+  })
+  test('places a cash on delivery order', async ({ page }) => {
+    await addLine(page, 'Lunch plan', /^One week/)
+
+    await page.goto(`${BASE}/cart`)
+    await page.getByRole('link', { name: 'Go to checkout' }).click()
+
+    await signIn(page)
+    await expect(page).toHaveURL(`${BASE}/checkout`)
+
+    await page.fill('#checkout-name', 'E2E Customer')
+    await page.fill('#checkout-phone', '9876543210')
+    await page.fill('#checkout-line1', '12 Test Road')
+    await page.fill('#checkout-city', 'Pune')
+    await page.fill('#checkout-state', 'Maharashtra')
+    await page.fill('#checkout-pincode', '411001')
+
+    // Online stays the default; cash is a deliberate choice.
+    await expect(page.getByRole('radio', { name: /Pay online/ })).toBeChecked()
+    await page.getByRole('radio', { name: /Cash on delivery/ }).check()
+    await expect(page.getByText(/in cash at your first delivery/)).toBeVisible()
+
+    await page.getByRole('button', { name: /^Place order/ }).click()
+
+    // No payment window: the order is placed and the page moves on.
+    await expect(page).toHaveURL(new RegExp(`${BASE}/order-placed/\\d+$`), { timeout: 30_000 })
+    await expect(page.getByText(/due at your first delivery/i)).toBeVisible()
   })
 })
 

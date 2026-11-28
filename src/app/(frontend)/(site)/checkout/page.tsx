@@ -12,6 +12,7 @@ import { CheckoutSteps } from '@/components/Store/CheckoutSteps'
 import { PRODUCT_PLACEHOLDER } from '@/components/Store/productPlaceholder'
 import { StoreEmptyState, StorePageHeader } from '@/components/Store/StorePage'
 import { CART_COOKIE, readCart } from '@/utilities/cart'
+import { codOffered } from '@/utilities/cashCheckout'
 import { resolveCartLines } from '@/utilities/cartLines'
 import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
@@ -122,10 +123,20 @@ export default async function CheckoutPage() {
     },
   })) as CheckoutProfile | null
 
-  const [deliveryAreas, footer] = await Promise.all([
+  // The payment settings are read fresh: this page renders per request anyway,
+  // and a stale "cash is on" would only meet the cash endpoint's own refusal.
+  const [deliveryAreas, footer, paymentSettings] = await Promise.all([
     getCachedGlobal('delivery-areas')(),
     getCachedGlobal('footer', 1)(),
+    payload.findGlobal({ depth: 0, overrideAccess: true, slug: 'payment-settings' }),
   ])
+  const cashOffered = codOffered(
+    {
+      enabled: Boolean(paymentSettings.codEnabled),
+      maxTotal: typeof paymentSettings.codMaxTotal === 'number' ? paymentSettings.codMaxTotal : null,
+    },
+    cart.total,
+  )
   const contact = {
     email: footer?.contact?.email ?? null,
     phone: footer?.contact?.phone ?? null,
@@ -144,6 +155,7 @@ export default async function CheckoutPage() {
             areas: (deliveryAreas.areas ?? []).map((area) => ({ name: area.name, pincodes: area.pincodes })),
             enforce: deliveryAreas.enforce,
           }}
+          cashOffered={cashOffered}
           contact={contact}
           defaults={{
             city: profile?.address?.city ?? '',
