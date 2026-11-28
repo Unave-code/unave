@@ -34,6 +34,7 @@ import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
 import { RowLabel as RowLabel_1a851488169f8e97ecd9e24680b54632 } from '@/globals/Hero/RowLabel'
 import { RowLabel as RowLabel_baff87aaefb13d7fd679edb64ff4fdaa } from '@/globals/Testimonials/RowLabel'
+import { RowLabel as RowLabel_9f16c48bbb0924590aa6f89709bf8d25 } from '@/globals/DeliveryAreas/RowLabel'
 import { UploadFeatureClient as UploadFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { AlignFeatureClient as AlignFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { OrderedListFeatureClient as OrderedListFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
@@ -90,6 +91,7 @@ export const importMap = {
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
   "@/globals/Hero/RowLabel#RowLabel": RowLabel_1a851488169f8e97ecd9e24680b54632,
   "@/globals/Testimonials/RowLabel#RowLabel": RowLabel_baff87aaefb13d7fd679edb64ff4fdaa,
+  "@/globals/DeliveryAreas/RowLabel#RowLabel": RowLabel_9f16c48bbb0924590aa6f89709bf8d25,
   "@payloadcms/richtext-lexical/client#UploadFeatureClient": UploadFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#AlignFeatureClient": AlignFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#OrderedListFeatureClient": OrderedListFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,

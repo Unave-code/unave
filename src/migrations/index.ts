@@ -52,6 +52,7 @@ import * as migration_20261125_140000_meal_plan_breakfast from './20261125_14000
 import * as migration_20261126_120000_drop_header_cta from './20261126_120000_drop_header_cta';
 import * as migration_20261126_140000_meal_plan_combo_prices from './20261126_140000_meal_plan_combo_prices';
 import * as migration_20261126_160000_product_name_fixes from './20261126_160000_product_name_fixes';
+import * as migration_20261128_120000_delivery_areas from './20261128_120000_delivery_areas';
 
 export const migrations = [
   {
@@ -323,5 +324,10 @@ export const migrations = [
     up: migration_20261126_160000_product_name_fixes.up,
     down: migration_20261126_160000_product_name_fixes.down,
     name: '20261126_160000_product_name_fixes',
+  },
+  {
+    up: migration_20261128_120000_delivery_areas.up,
+    down: migration_20261128_120000_delivery_areas.down,
+    name: '20261128_120000_delivery_areas',
   },
 ];

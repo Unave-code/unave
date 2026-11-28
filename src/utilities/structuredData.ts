@@ -37,7 +37,11 @@ const CATALOGUE = [
 const absolute = (path: string): string => (path.startsWith('http') ? path : `${siteUrl()}${path}`)
 
 /** The kitchen as a business: who it is, where it cooks and how to reach it. */
-export const kitchenJsonLd = (contact?: Contact) => {
+/**
+ * The kitchen node. `areaNames` are the delivery areas staff keep in the admin;
+ * with none listed the kitchen says it serves the city.
+ */
+export const kitchenJsonLd = (contact?: Contact, areaNames: string[] = []) => {
   const phone = contact?.phone?.trim()
   const email = contact?.email?.trim()
   const address = contact?.address?.trim()
@@ -53,7 +57,14 @@ export const kitchenJsonLd = (contact?: Contact) => {
     logo: absolute('/favicon-192.png'),
     image: absolute('/og.png'),
     servesCuisine: ['South Indian', 'Indian', 'Healthy'],
-    areaServed: { '@type': 'City', name: BRAND_CITY },
+    areaServed:
+      areaNames.length > 0
+        ? areaNames.map((name) => ({
+            '@type': 'Place',
+            name: `${name}, ${BRAND_CITY}`,
+            containedInPlace: { '@type': 'City', name: BRAND_CITY },
+          }))
+        : { '@type': 'City', name: BRAND_CITY },
     parentOrganization: { '@id': organizationId() },
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
@@ -136,7 +147,7 @@ export const homePageJsonLd = (name: string, description: string) => ({
 
 /** A page about the kitchen itself (about, contact) or a shelf, tied to the business node. */
 export const webPageJsonLd = (
-  type: 'AboutPage' | 'CollectionPage' | 'ContactPage',
+  type: 'AboutPage' | 'CollectionPage' | 'ContactPage' | 'WebPage',
   path: string,
   name: string,
   description: string,

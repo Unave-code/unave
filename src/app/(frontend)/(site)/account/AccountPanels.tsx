@@ -11,6 +11,7 @@ import { Phone } from 'lucide-react'
 import { WhatsAppIcon } from '@/components/WhatsAppIcon'
 import { cn } from '@/utilities/ui'
 import { whatsappHref } from '@/utilities/whatsapp'
+import type { DeliveryAreasSource } from '@/utilities/deliveryArea'
 import { ProfileForm, type ProfileDefaults } from './ProfileForm'
 import {
   accountOrderMessage,
@@ -208,7 +209,10 @@ export const OrdersPanel: React.FC<{
 )
 
 /** The one editable view: the delivery address and the phone number. */
-export const DeliveryPanel: React.FC<{ defaults: ProfileDefaults }> = ({ defaults }) => (
+export const DeliveryPanel: React.FC<{ areas?: DeliveryAreasSource; defaults: ProfileDefaults }> = ({
+  areas,
+  defaults,
+}) => (
   <Card aria-labelledby="account-delivery-heading">
     <h2 className="text-h3" id="account-delivery-heading">
       {ACCOUNT_DELIVERY_HEADING}
@@ -216,7 +220,7 @@ export const DeliveryPanel: React.FC<{ defaults: ProfileDefaults }> = ({ default
     <p className="text-ink-600 mt-2 text-sm leading-6">{ACCOUNT_DELIVERY_INTRO}</p>
 
     <div className="mt-6">
-      <ProfileForm defaults={defaults} />
+      <ProfileForm areas={areas} defaults={defaults} />
     </div>
   </Card>
 )
@@ -226,7 +230,10 @@ export const DeliveryPanel: React.FC<{ defaults: ProfileDefaults }> = ({ default
  * delivery tab holds — one place that edits these details — with the one line of
  * context a new account needs and one quiet way past it.
  */
-export const OnboardingPanel: React.FC<{ defaults: ProfileDefaults }> = ({ defaults }) => (
+export const OnboardingPanel: React.FC<{ areas?: DeliveryAreasSource; defaults: ProfileDefaults }> = ({
+  areas,
+  defaults,
+}) => (
   <Card aria-labelledby="account-onboarding-heading">
     <h2 className="text-h3" id="account-onboarding-heading">
       {ACCOUNT_ONBOARDING_HEADING}
@@ -234,7 +241,7 @@ export const OnboardingPanel: React.FC<{ defaults: ProfileDefaults }> = ({ defau
     <p className="text-ink-600 mt-2 text-sm leading-6">{ACCOUNT_ONBOARDING_INTRO}</p>
 
     <div className="mt-6">
-      <ProfileForm defaults={defaults} />
+      <ProfileForm areas={areas} defaults={defaults} />
     </div>
 
     <p className="text-ink-600 mt-6 text-sm leading-6">

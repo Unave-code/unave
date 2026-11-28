@@ -31,6 +31,8 @@ import { recordPaidOrder } from './confirm'
 import { findCheckoutIntent } from './intent'
 import { orderCreateSchema, orderVerifySchema } from './schema'
 import { errorMessage } from '@/utilities/errorMessage'
+import { deliveryCheck } from '@/utilities/deliveryArea'
+import { CHECKOUT_PINCODE_NOT_SERVED } from '@/utilities/deliveryAreaCopy'
 
 /**
  * The two order endpoints (spec 0007).
@@ -117,6 +119,16 @@ export const createOrderEndpoint: Endpoint = {
     }
 
     const { delivery, note } = parsed.data
+
+    // The delivery area is checked here, before a gateway order exists, and
+    // never again after payment: once money has moved the order is written even
+    // if staff change the list in between.
+    const areas = await req.payload.findGlobal({ depth: 0, overrideAccess: true, slug: 'delivery-areas' })
+
+    if (deliveryCheck(areas, delivery.pincode) === 'not-served') {
+      req.payload.logger.info({ msg: 'order_create_pincode_not_served', pincode: delivery.pincode })
+      return json(CHECKOUT_PINCODE_NOT_SERVED, 422)
+    }
 
     // The lines come from the cart cookie read on the server, never from the
     // request body. Every price and day count is resolved here from the live

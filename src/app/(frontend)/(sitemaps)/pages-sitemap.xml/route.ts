@@ -49,7 +49,7 @@ const getPagesSitemap = unstable_cache(
     /* The pages built in code rather than in the Pages collection. Without
        these the home, about, contact and kitchen pages were missing from the
        sitemap entirely. */
-    const codeRoutes = ['/', '/about', '/our-kitchen', '/contact', '/meal-subscription']
+    const codeRoutes = ['/', '/about', '/our-kitchen', '/contact', '/delivery-areas', '/meal-subscription']
 
     const defaultSitemap = [
       ...codeRoutes.map((route) => ({

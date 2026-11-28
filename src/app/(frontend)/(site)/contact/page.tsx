@@ -43,6 +43,9 @@ import {
 
 import { ContactForm } from './ContactForm'
 import { firstParam } from '@/utilities/searchParams'
+import { readDeliveryAreas } from '@/utilities/deliveryArea'
+import { CONTACT_AREAS_HEADING, CONTACT_AREAS_LINK, DELIVERY_AREAS_PATH } from '@/utilities/deliveryAreaCopy'
+import Link from 'next/link'
 
 /** The page reads the query string for the form's answer, so it is never static. */
 export const dynamic = 'force-dynamic'
@@ -88,6 +91,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   const footer = (await getCachedGlobal('footer', 1)()) as Footer | null
   const contact = footer?.contact ?? null
   const hasWays = Boolean(contact?.phone || contact?.email || contact?.whatsapp)
+  const areaNames = readDeliveryAreas(await getCachedGlobal('delivery-areas')()).map((area) => area.name)
 
   return (
     <main>
@@ -234,6 +238,20 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
               {contact.address}
             </p>
           ) : null}
+        </Section>
+      ) : null}
+
+      {areaNames.length > 0 ? (
+        <Section tone="white">
+          <h2 className="text-h2">{CONTACT_AREAS_HEADING}</h2>
+          <p className="text-body text-ink-600 mt-3 max-w-[60ch]">{areaNames.join(', ')}.</p>
+          <Link
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-sm font-semibold text-green-700 underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:ring-green-500 focus-visible:outline-none"
+            href={DELIVERY_AREAS_PATH}
+          >
+            {CONTACT_AREAS_LINK}
+            <ArrowRight aria-hidden="true" className="size-4" strokeWidth={2} />
+          </Link>
         </Section>
       ) : null}
 

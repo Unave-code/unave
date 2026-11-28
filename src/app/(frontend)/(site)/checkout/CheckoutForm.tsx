@@ -6,6 +6,8 @@ import Script from 'next/script'
 
 import { CTA_BASE, CTA_VARIANTS } from '@/components/Cta'
 import { orderDeliverySchema } from '@/collections/Orders/schema'
+import { deliveryCheck, type DeliveryAreasSource } from '@/utilities/deliveryArea'
+import { CHECKOUT_PINCODE_NOT_SERVED } from '@/utilities/deliveryAreaCopy'
 import { toFieldErrors, type FieldErrors } from '@/utilities/fieldErrors'
 import { cn } from '@/utilities/ui'
 
@@ -77,6 +79,8 @@ const CheckoutField: React.FC<{
 )
 
 export const CheckoutForm: React.FC<{
+  /** The delivery areas, so an unserved pincode is caught before the popup; the endpoint is the real gate. */
+  areas: DeliveryAreasSource
   defaults: {
     city: string
     foodPreference: string
@@ -90,7 +94,7 @@ export const CheckoutForm: React.FC<{
   email: string
   /** The cart total, already formatted, shown on the pay button. */
   total: string
-}> = ({ defaults, email, total }) => {
+}> = ({ areas, defaults, email, total }) => {
   const [errors, setErrors] = useState<FieldErrors>({})
   const { busy, message, pay } = useRazorpayCheckout(email)
 
@@ -116,6 +120,12 @@ export const CheckoutForm: React.FC<{
 
     if (!parsed.success) {
       setErrors(toFieldErrors(parsed.error))
+      return
+    }
+
+    if (deliveryCheck(areas, parsed.data.pincode) === 'not-served') {
+      setErrors({ pincode: CHECKOUT_PINCODE_NOT_SERVED })
+      document.getElementById('checkout-pincode')?.focus()
       return
     }
 

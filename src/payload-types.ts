@@ -138,6 +138,7 @@ export interface Config {
     hero: Hero;
     'category-pages': CategoryPage;
     testimonials: Testimonial;
+    'delivery-areas': DeliveryArea;
     'product-page': ProductPage;
     'email-settings': EmailSetting;
     'payload-jobs-stats': PayloadJobsStat;
@@ -148,6 +149,7 @@ export interface Config {
     hero: HeroSelect<false> | HeroSelect<true>;
     'category-pages': CategoryPagesSelect<false> | CategoryPagesSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    'delivery-areas': DeliveryAreasSelect<false> | DeliveryAreasSelect<true>;
     'product-page': ProductPageSelect<false> | ProductPageSelect<true>;
     'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
@@ -3149,6 +3151,41 @@ export interface Testimonial {
   createdAt?: string | null;
 }
 /**
+ * The areas the kitchen delivers to, each with its pincodes. Shown on /delivery-areas and the contact page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "delivery-areas".
+ */
+export interface DeliveryArea {
+  id: number;
+  /**
+   * When ticked, checkout refuses a pincode that is not listed below. Leave it off until the list is complete.
+   */
+  enforce?: boolean | null;
+  /**
+   * The short line under the heading on /delivery-areas.
+   */
+  intro?: string | null;
+  /**
+   * Drag to reorder. Customers see the area names in this order.
+   */
+  areas?:
+    | {
+        /**
+         * As customers know it, for example "Adyar" or "Anna Nagar".
+         */
+        name: string;
+        /**
+         * One or more 6-digit pincodes, separated by commas, spaces or new lines.
+         */
+        pincodes: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Text shared by every product page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3412,6 +3449,24 @@ export interface TestimonialsSelect<T extends boolean = true> {
         quote?: T;
         video?: T;
         poster?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "delivery-areas_select".
+ */
+export interface DeliveryAreasSelect<T extends boolean = true> {
+  enforce?: T;
+  intro?: T;
+  areas?:
+    | T
+    | {
+        name?: T;
+        pincodes?: T;
         id?: T;
       };
   updatedAt?: T;

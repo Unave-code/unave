@@ -17,6 +17,7 @@ import { getSignedInCustomer } from '@/utilities/customerSessionServer'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 import { formatPaise } from '@/utilities/money'
 import { addonsLabel } from '@/utilities/addons'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import { cartLineKind, daysLabel } from '@/utilities/orderDisplay'
 
 import { CheckoutForm } from './CheckoutForm'
@@ -121,6 +122,8 @@ export default async function CheckoutPage() {
     },
   })) as CheckoutProfile | null
 
+  const deliveryAreas = await getCachedGlobal('delivery-areas')()
+
   return (
     <main className="container max-w-6xl py-10 sm:py-14">
       <CheckoutSteps current={1} />
@@ -129,6 +132,10 @@ export default async function CheckoutPage() {
 
       <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
         <CheckoutForm
+          areas={{
+            areas: (deliveryAreas.areas ?? []).map((area) => ({ name: area.name, pincodes: area.pincodes })),
+            enforce: deliveryAreas.enforce,
+          }}
           defaults={{
             city: profile?.address?.city ?? '',
             foodPreference: profile?.foodPreference ?? 'none',

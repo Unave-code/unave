@@ -12,6 +12,7 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { readDeliveryAreas } from '@/utilities/deliveryArea'
 import { kitchenJsonLd, organizationJsonLd, websiteJsonLd } from '@/utilities/structuredData'
 
 import { fraunces, inter } from './fonts'
@@ -20,6 +21,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // The kitchen's contact details for the site-wide structured data. A failed
   // read only drops the phone, email and address from it, never the page.
   const footer = (await getCachedGlobal('footer', 1)().catch(() => null)) as Footer | null
+  const deliveryAreas = await getCachedGlobal('delivery-areas')().catch(() => null)
+  const areaNames = readDeliveryAreas(deliveryAreas).map((area) => area.name)
 
   return (
     <html
@@ -35,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
         {/* Who runs the site, the site and the kitchen, the same on every page.
             Each page adds its own nodes (WebPage, FAQ, breadcrumb) in its body. */}
-        <JsonLd data={[organizationJsonLd(), websiteJsonLd(), kitchenJsonLd(footer?.contact)]} />
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd(), kitchenJsonLd(footer?.contact, areaNames)]} />
       </head>
       <body>
         <Providers>{children}</Providers>

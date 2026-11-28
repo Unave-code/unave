@@ -707,6 +707,69 @@ describe('POST /api/orders/create', () => {
   })
 })
 
+describe('POST /api/orders/create, delivery areas', () => {
+  /**
+   * The global is stubbed per call rather than saved, so parallel suites on the
+   * same database never see a checkout check they did not ask for.
+   */
+  const withAreas = (areas: { enforce: boolean; pincodes: string }) =>
+    vi.spyOn(payload, 'findGlobal').mockResolvedValueOnce({
+      areas: [{ id: 'a', name: 'Shivajinagar', pincodes: areas.pincodes }],
+      enforce: areas.enforce,
+      globalType: 'delivery-areas',
+      id: 1,
+    } as never)
+
+  const attempt = async (pincode: string) => {
+    const customer = await createCustomer()
+    const product = await createProduct()
+
+    return (await createOrderEndpoint.handler(
+      createRequest(
+        { delivery: { ...delivery, pincode } },
+        { cart: [cartFor(product, 0)], cookies: `${CUSTOMER_COOKIE}=${customer.token}` },
+      ),
+    )) as Response
+  }
+
+  it('refuses a pincode outside the areas with 422 and opens no gateway order', async () => {
+    mocks.createRazorpayOrder.mockClear()
+    const spy = withAreas({ enforce: true, pincodes: '411005' })
+
+    try {
+      const response = await attempt('411001')
+
+      expect(response.status).toBe(422)
+      expect(((await response.json()) as { message: string }).message).toContain('don’t deliver to this pincode')
+      expect(mocks.createRazorpayOrder).not.toHaveBeenCalled()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('accepts a pincode inside the areas', async () => {
+    mocks.createRazorpayOrder.mockResolvedValue({ amount: 150000, currency: 'INR', id: `order_${run}_area_in` })
+    const spy = withAreas({ enforce: true, pincodes: '411001\n411005' })
+
+    try {
+      expect((await attempt('411001')).status).toBe(200)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('accepts any pincode while the check is off', async () => {
+    mocks.createRazorpayOrder.mockResolvedValue({ amount: 150000, currency: 'INR', id: `order_${run}_area_off` })
+    const spy = withAreas({ enforce: false, pincodes: '411005' })
+
+    try {
+      expect((await attempt('411001')).status).toBe(200)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+})
+
 describe('POST /api/orders/verify', () => {
   it('writes one paid order with every line and clears the cart', async () => {
     const customer = await createCustomer()

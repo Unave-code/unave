@@ -11,6 +11,8 @@ import {
 } from '@/components/CustomerAuth/styles'
 import { Button } from '@/components/ui/button'
 import { customerProfileSchema } from '@/utilities/customerProfile'
+import { deliveryCheck, type DeliveryAreasSource } from '@/utilities/deliveryArea'
+import { PROFILE_PINCODE_NOT_SERVED } from '@/utilities/deliveryAreaCopy'
 import { type FieldErrors, toFieldErrors } from '@/utilities/fieldErrors'
 import { cn } from '@/utilities/ui'
 
@@ -34,6 +36,8 @@ interface FieldProps {
   autoComplete?: string
   defaultValue?: string
   error?: string
+  /** A quiet note under the field that does not block saving. */
+  hint?: string
   id: string
   inputMode?: 'numeric' | 'tel'
   label: string
@@ -46,6 +50,7 @@ const Field: React.FC<FieldProps> = ({
   autoComplete,
   defaultValue,
   error,
+  hint,
   id,
   inputMode,
   label,
@@ -57,7 +62,7 @@ const Field: React.FC<FieldProps> = ({
       {label}
     </label>
     <input
-      aria-describedby={error ? `${id}-error` : undefined}
+      aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
       aria-invalid={error ? true : undefined}
       autoComplete={autoComplete}
       className={cn(AUTH_INPUT, error && AUTH_INPUT_INVALID)}
@@ -70,6 +75,10 @@ const Field: React.FC<FieldProps> = ({
     {error ? (
       <p className={AUTH_FIELD_ERROR} id={`${id}-error`} role="alert">
         {error}
+      </p>
+    ) : hint ? (
+      <p className="text-ink-600 text-sm leading-6" id={`${id}-hint`} role="status">
+        {hint}
       </p>
     ) : null}
   </div>
@@ -85,6 +94,8 @@ export interface ProfileDefaults {
 }
 
 interface Props {
+  /** The delivery areas, to warn (never block) when the saved pincode is outside them. */
+  areas?: DeliveryAreasSource
   defaults: ProfileDefaults
 }
 
@@ -96,10 +107,15 @@ interface Props {
  * form stays a plain `<form>` with a server action, so it still posts without
  * JavaScript — the browser pass is a courtesy, not the gate.
  */
-export const ProfileForm: React.FC<Props> = ({ defaults }) => {
+export const ProfileForm: React.FC<Props> = ({ areas, defaults }) => {
   const [state, formAction, isPending] = useActionState(saveCustomerProfile, INITIAL)
   const formRef = useRef<HTMLFormElement>(null)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [pincode, setPincode] = useState(defaults.pincode)
+  const pincodeHint =
+    /^\d{6}$/.test(pincode.trim()) && deliveryCheck(areas, pincode) === 'not-served'
+      ? PROFILE_PINCODE_NOT_SERVED
+      : undefined
 
   const readValues = (): Record<string, string> =>
     formRef.current
@@ -126,6 +142,7 @@ export const ProfileForm: React.FC<Props> = ({ defaults }) => {
         ? target.name
         : ''
     if (!field) return
+    if (field === 'pincode') setPincode((target as HTMLInputElement).value)
 
     setErrors((current) => {
       if (!current[field]) return current
@@ -220,6 +237,7 @@ export const ProfileForm: React.FC<Props> = ({ defaults }) => {
           autoComplete="postal-code"
           defaultValue={defaults.pincode}
           error={errorFor('pincode')}
+          hint={pincodeHint}
           id="profile-pincode"
           inputMode="numeric"
           label={ACCOUNT_PINCODE_LABEL}

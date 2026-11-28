@@ -11,6 +11,7 @@ One page, one primary query. Copy for each page lives in the module named below;
 | `/products/ready-to-cook` | ready to cook food Chennai | Transactional | dosa batter home delivery Chennai, ready to cook meal kits | `src/utilities/productsCategoryCopy.ts` |
 | `/products/fresh-from-produce` | fresh food online Chennai | Transactional | fresh produce delivery Chennai, farm fresh vegetables Chennai, keerai online Chennai, cut vegetables online | `src/utilities/productsCategoryCopy.ts` |
 | `/products/ready-to-eat` | ready to eat food Chennai | Transactional | home-style meals delivery Chennai, healthy ready to eat meals, office lunch delivery Chennai, tiffin service Chennai | `src/utilities/productsCategoryCopy.ts` |
+| `/delivery-areas` | food delivery areas Chennai | Informational / transactional | cloud kitchen delivery near me, does UNAVE deliver to my area | `src/utilities/deliveryAreaCopy.ts` |
 | `/contact` | Unave cloud kitchen contact | Navigational | order food Chennai phone number, cloud kitchen address Chennai | `src/utilities/contactCopy.ts` |
 
 "fresh food online Chennai" is the primary query of `/products/fresh-from-produce` only; `/products` mentions it but must not compete for it.
@@ -30,7 +31,7 @@ One page, one primary query. Copy for each page lives in the module named below;
 These secondary queries are not used in the copy, because writing them would mean stating something unconfirmed:
 
 - **FSSAI licence number** → "FSSAI certified kitchen" (about, footer, schema).
-- **Delivery areas and timings** → a list of areas on the contact page and a `/delivery-areas` page; schema `areaServed` currently says only Chennai.
+- **Delivery timings** → still unconfirmed. Delivery areas are now staff-managed (admin → Website → Delivery areas): `/delivery-areas` lists them with a pincode check, the contact page names them, and schema `areaServed` lists each area, falling back to Chennai while the list is empty.
 - **Products sold**: dosa batter and keerai are only named once they are on the shelf.
 - **Shelf life and storage** for ready-to-cook and fresh items → FAQ answers.
 - **Opening hours, full address, social profile links** → `openingHoursSpecification`, `sameAs`.

@@ -135,6 +135,15 @@ export default async function AccountPage({ searchParams }: Args) {
   const footer = tab === 'orders' ? ((await getCachedGlobal('footer', 1)()) as Footer | null) : null
   const contact = { phone: footer?.contact?.phone ?? null, whatsapp: footer?.contact?.whatsapp ?? null }
 
+  // The delivery areas, so the address form can warn about a pincode checkout will refuse.
+  const deliveryAreas = tab === 'delivery' ? await getCachedGlobal('delivery-areas')() : null
+  const areas = deliveryAreas
+    ? {
+        areas: (deliveryAreas.areas ?? []).map((area) => ({ name: area.name, pincodes: area.pincodes })),
+        enforce: deliveryAreas.enforce,
+      }
+    : undefined
+
   return (
     <div className="container max-w-5xl py-16 sm:py-20">
       <header className="flex flex-col gap-2">
@@ -158,6 +167,7 @@ export default async function AccountPage({ searchParams }: Args) {
           {tab === 'delivery' ? (
             onboarding ? (
               <OnboardingPanel
+                areas={areas}
                 defaults={{
                   city: profile?.address?.city ?? '',
                   line1: profile?.address?.line1 ?? '',
@@ -169,6 +179,7 @@ export default async function AccountPage({ searchParams }: Args) {
               />
             ) : (
               <DeliveryPanel
+                areas={areas}
                 defaults={{
                   city: profile?.address?.city ?? '',
                   line1: profile?.address?.line1 ?? '',
