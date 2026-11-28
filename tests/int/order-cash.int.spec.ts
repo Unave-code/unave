@@ -76,24 +76,31 @@ const placeCash = async (
   const product = await createTestProduct(payload, run, refs)
   const cashKey = 'cashKey' in options ? options.cashKey : randomUUID()
 
-  const send = async () => {
+  /** One request, with the settings already stubbed by the caller. */
+  const sendStubbed = async () =>
+    (await cashOrderEndpoint.handler(
+      endpointRequest(
+        payload,
+        { cashKey, delivery: checkoutDelivery },
+        { cart: [product], token: customer.token },
+      ),
+    )) as Response
+
+  /** Runs `work` with the settings stubbed once, however many requests it sends. */
+  const withSettings = async <T,>(work: () => Promise<T>): Promise<T> => {
     const spy = stubGlobals(payload, {
       paymentSettings: options.settings ?? { codEnabled: true },
     })
     try {
-      return (await cashOrderEndpoint.handler(
-        endpointRequest(
-          payload,
-          { cashKey, delivery: checkoutDelivery },
-          { cart: [product], token: customer.token },
-        ),
-      )) as Response
+      return await work()
     } finally {
       spy.mockRestore()
     }
   }
 
-  return { cashKey, customer, send }
+  const send = () => withSettings(sendStubbed)
+
+  return { cashKey, customer, product, send, sendStubbed, withSettings }
 }
 
 const ordersWithKey = async (cashKey: string) =>
@@ -111,7 +118,7 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 50))
 
 describe('POST /api/orders/cash', () => {
   it('writes a cash-due order with no gateway fields', async () => {
-    const { cashKey, customer, send } = await placeCash()
+    const { cashKey, customer, product, send } = await placeCash()
     const response = await send()
 
     expect(response.status).toBe(200)
@@ -129,6 +136,9 @@ describe('POST /api/orders/cash', () => {
     expect(order.cashKey).toBe(cashKey)
     expect(order.customer).toBe(customer.id)
     expect(order.items).toHaveLength(1)
+    // The same snapshot as an online order, link to the product included.
+    expect(order.items[0]?.product).toBe(product.id)
+    expect(order.items[0]?.durationLabel).toBe('One week')
 
     await settle()
     expect(mocks.sendOrderMails).toHaveBeenCalledTimes(1)
@@ -141,6 +151,21 @@ describe('POST /api/orders/cash', () => {
     orderIDs.push(first.orderId)
 
     expect(second.orderId).toBe(first.orderId)
+    expect(await ordersWithKey(cashKey as string)).toHaveLength(1)
+    await settle()
+    expect(mocks.sendOrderMails).toHaveBeenCalledTimes(1)
+  })
+
+  it('writes one order when two submits arrive together', async () => {
+    const { cashKey, sendStubbed, withSettings } = await placeCash()
+    const [first, second] = await withSettings(() => Promise.all([sendStubbed(), sendStubbed()]))
+    const a = (await first.json()) as { orderId: number }
+    const b = (await second.json()) as { orderId: number }
+    orderIDs.push(a.orderId)
+
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(200)
+    expect(b.orderId).toBe(a.orderId)
     expect(await ordersWithKey(cashKey as string)).toHaveLength(1)
     await settle()
     expect(mocks.sendOrderMails).toHaveBeenCalledTimes(1)

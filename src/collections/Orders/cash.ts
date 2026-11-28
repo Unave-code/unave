@@ -1,12 +1,13 @@
 import type { Endpoint, Payload } from 'payload'
 
-import type { Order } from '@/payload-types'
+import type { CheckoutIntent, Order } from '@/payload-types'
 import { runAfterReply } from '@/utilities/afterReply'
 import { clearCartCookie } from '@/utilities/cart'
 import { errorMessage } from '@/utilities/errorMessage'
 import { formatPaise } from '@/utilities/money'
 
 import { json, prepareCheckout, type PreparedCheckout } from './checkout'
+import { readCheckoutIntent } from './intent'
 import { sendOrderMails } from './mail'
 import { orderCashSchema } from './schema'
 
@@ -49,14 +50,27 @@ export const recordCashOrder = async (
   const already = await findByCashKey(payload, cashKey)
   if (already) return { order: already, recorded: false }
 
+  // The same reader the online path writes from turns the checked lines into
+  // the order's own shape (productRef → product, addonRef → addon), so a cash
+  // order keeps the same snapshot, product links included.
+  const intent = readCheckoutIntent({
+    customer: Number(checkout.customer.id),
+    delivery: checkout.delivery,
+    id: 0,
+    items: checkout.items,
+    total: checkout.total,
+  } as CheckoutIntent)
+
+  if (!intent) throw new Error('cash_order_snapshot_unreadable')
+
   try {
     const order = (await payload.create({
       collection: 'orders',
       data: {
         cashKey,
         customer: Number(checkout.customer.id),
-        delivery: checkout.delivery,
-        items: checkout.items,
+        delivery: intent.delivery,
+        items: intent.items,
         paymentState: 'cashDue',
         paymentType: 'cash',
         subtotal: checkout.total,
