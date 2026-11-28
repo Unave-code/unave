@@ -740,7 +740,10 @@ describe('POST /api/orders/create, delivery areas', () => {
       const response = await attempt('411001')
 
       expect(response.status).toBe(422)
-      expect(((await response.json()) as { message: string }).message).toContain('don’t deliver to this pincode')
+      const body = (await response.json()) as { message: string; reason?: string }
+      expect(body.message).toContain('don’t deliver to this pincode')
+      // The checkout form opens its contact alert on this reason.
+      expect(body.reason).toBe('pincode-not-served')
       expect(mocks.createRazorpayOrder).not.toHaveBeenCalled()
     } finally {
       spy.mockRestore()

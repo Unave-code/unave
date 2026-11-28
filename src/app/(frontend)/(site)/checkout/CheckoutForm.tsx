@@ -26,6 +26,7 @@ import {
   CHECKOUT_PINCODE_LABEL,
   CHECKOUT_STATE_LABEL,
 } from './copy'
+import { type KitchenContact, PincodeNotServedDialog } from './PincodeNotServedDialog'
 import { useRazorpayCheckout } from './useRazorpayCheckout'
 
 /**
@@ -81,6 +82,8 @@ const CheckoutField: React.FC<{
 export const CheckoutForm: React.FC<{
   /** The delivery areas, so an unserved pincode is caught before the popup; the endpoint is the real gate. */
   areas: DeliveryAreasSource
+  /** The kitchen's phone, WhatsApp and email, offered when a pincode is refused. */
+  contact: KitchenContact
   defaults: {
     city: string
     foodPreference: string
@@ -94,9 +97,18 @@ export const CheckoutForm: React.FC<{
   email: string
   /** The cart total, already formatted, shown on the pay button. */
   total: string
-}> = ({ areas, defaults, email, total }) => {
+}> = ({ areas, contact, defaults, email, total }) => {
   const [errors, setErrors] = useState<FieldErrors>({})
-  const { busy, message, pay } = useRazorpayCheckout(email)
+  const { busy, clearPincodeRefused, message, pay, pincodeRefused } = useRazorpayCheckout(email)
+  const [localRefusal, setLocalRefusal] = useState(false)
+  const [refusedPincode, setRefusedPincode] = useState('')
+  const dialogOpen = localRefusal || pincodeRefused
+
+  const closeDialog = () => {
+    setLocalRefusal(false)
+    clearPincodeRefused()
+    document.getElementById('checkout-pincode')?.focus()
+  }
 
   const readValue = (field: string): string =>
     (document.getElementById(`checkout-${field}`) as HTMLInputElement | null)?.value?.trim() ?? ''
@@ -123,9 +135,11 @@ export const CheckoutForm: React.FC<{
       return
     }
 
+    setRefusedPincode(parsed.data.pincode)
+
     if (deliveryCheck(areas, parsed.data.pincode) === 'not-served') {
       setErrors({ pincode: CHECKOUT_PINCODE_NOT_SERVED })
-      document.getElementById('checkout-pincode')?.focus()
+      setLocalRefusal(true)
       return
     }
 
@@ -136,6 +150,8 @@ export const CheckoutForm: React.FC<{
   return (
     <div>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+
+      <PincodeNotServedDialog contact={contact} onClose={closeDialog} open={dialogOpen} pincode={refusedPincode} />
 
       <form
         className="bg-card flex flex-col gap-5 rounded-2xl p-6 shadow-sm sm:p-8"

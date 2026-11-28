@@ -127,7 +127,7 @@ export const createOrderEndpoint: Endpoint = {
 
     if (deliveryCheck(areas, delivery.pincode) === 'not-served') {
       req.payload.logger.info({ msg: 'order_create_pincode_not_served', pincode: delivery.pincode })
-      return json(CHECKOUT_PINCODE_NOT_SERVED, 422)
+      return Response.json({ message: CHECKOUT_PINCODE_NOT_SERVED, reason: 'pincode-not-served' }, { status: 422 })
     }
 
     // The lines come from the cart cookie read on the server, never from the

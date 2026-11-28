@@ -122,7 +122,15 @@ export default async function CheckoutPage() {
     },
   })) as CheckoutProfile | null
 
-  const deliveryAreas = await getCachedGlobal('delivery-areas')()
+  const [deliveryAreas, footer] = await Promise.all([
+    getCachedGlobal('delivery-areas')(),
+    getCachedGlobal('footer', 1)(),
+  ])
+  const contact = {
+    email: footer?.contact?.email ?? null,
+    phone: footer?.contact?.phone ?? null,
+    whatsapp: footer?.contact?.whatsapp ?? null,
+  }
 
   return (
     <main className="container max-w-6xl py-10 sm:py-14">
@@ -136,6 +144,7 @@ export default async function CheckoutPage() {
             areas: (deliveryAreas.areas ?? []).map((area) => ({ name: area.name, pincodes: area.pincodes })),
             enforce: deliveryAreas.enforce,
           }}
+          contact={contact}
           defaults={{
             city: profile?.address?.city ?? '',
             foodPreference: profile?.foodPreference ?? 'none',

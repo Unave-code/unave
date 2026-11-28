@@ -36,6 +36,15 @@ export const DELIVERY_UNCHECKED = (pincode: string): string =>
 export const CHECKOUT_PINCODE_NOT_SERVED =
   'We don’t deliver to this pincode yet. See our delivery areas, or message us on WhatsApp.'
 
+/** The alert checkout opens when it refuses a pincode. */
+export const PINCODE_DIALOG_HEADING = 'We don’t deliver there yet'
+export const PINCODE_DIALOG_BODY = (pincode: string): string =>
+  pincode
+    ? `Our delivery areas don’t cover ${pincode} yet. Message or call the kitchen and we’ll tell you what we can do.`
+    : 'Our delivery areas don’t cover this pincode yet. Message or call the kitchen and we’ll tell you what we can do.'
+export const PINCODE_DIALOG_CLOSE = 'Close'
+export const PINCODE_DIALOG_AREAS_LINK = 'See our delivery areas'
+
 /** Under the pincode on the account form: a profile is not an order, so it only warns. */
 export const PROFILE_PINCODE_NOT_SERVED =
   'We don’t deliver to this pincode yet, so checkout will not accept it. You can still save it.'

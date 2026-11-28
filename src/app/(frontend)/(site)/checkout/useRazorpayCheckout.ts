@@ -52,6 +52,8 @@ export function useRazorpayCheckout(email: string) {
   const router = useRouter()
   const [message, setMessage] = useState<null | string>(null)
   const [status, setStatus] = useState<Status>('idle')
+  /** Set when the order endpoint refused the pincode, so the form can open its alert. */
+  const [pincodeRefused, setPincodeRefused] = useState(false)
 
   const verifyAndContinue = async (response: RazorpayHandlerResponse) => {
     let orderId: number | string | null = null
@@ -91,6 +93,7 @@ export function useRazorpayCheckout(email: string) {
   /** Starts payment for delivery details the schema has already accepted. */
   const pay = async (parsed: { data: OrderDelivery }, note: string) => {
     setMessage(null)
+    setPincodeRefused(false)
     setStatus('starting')
 
     let created: {
@@ -110,7 +113,13 @@ export function useRazorpayCheckout(email: string) {
         method: 'POST',
       })
 
-      const body = (await answer.json().catch(() => null)) as { message?: string } | null
+      const body = (await answer.json().catch(() => null)) as { message?: string; reason?: string } | null
+
+      if (body?.reason === 'pincode-not-served') {
+        setStatus('idle')
+        setPincodeRefused(true)
+        return
+      }
 
       // The server resolves the live price and opens the gateway order. Accept
       // its own shape check so a successful create is never mistaken for a
@@ -193,5 +202,11 @@ export function useRazorpayCheckout(email: string) {
     }
   }
 
-  return { busy: status !== 'idle', message, pay }
+  return {
+    busy: status !== 'idle',
+    clearPincodeRefused: () => setPincodeRefused(false),
+    message,
+    pay,
+    pincodeRefused,
+  }
 }
