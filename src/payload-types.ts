@@ -3167,6 +3167,10 @@ export interface DeliveryArea {
    */
   intro?: string | null;
   /**
+   * Optional. Marks the kitchen on the /delivery-areas map. Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
+   */
+  kitchenPin?: string | null;
+  /**
    * Drag to reorder. Customers see the area names in this order.
    */
   areas?:
@@ -3175,6 +3179,10 @@ export interface DeliveryArea {
          * As customers know it, for example "Adyar" or "Anna Nagar".
          */
         name: string;
+        /**
+         * Optional. Where the area sits on the /delivery-areas map. Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
+         */
+        pin?: string | null;
         /**
          * One or more 6-digit pincodes, separated by commas, spaces or new lines.
          */
@@ -3462,10 +3470,12 @@ export interface TestimonialsSelect<T extends boolean = true> {
 export interface DeliveryAreasSelect<T extends boolean = true> {
   enforce?: T;
   intro?: T;
+  kitchenPin?: T;
   areas?:
     | T
     | {
         name?: T;
+        pin?: T;
         pincodes?: T;
         id?: T;
       };

@@ -1,10 +1,20 @@
 import type { FieldHook, GlobalConfig } from 'payload'
 
 import { isStaff } from '@/access/isStaff'
-import { duplicatePincodes, invalidPincodeTokens, parsePincodes } from '@/utilities/deliveryArea'
+import { duplicatePincodes, invalidPincodeTokens, parseMapPin, parsePincodes } from '@/utilities/deliveryArea'
 import { revalidateDeliveryAreas } from './hooks/revalidateDeliveryAreas'
 
 type AreaRow = { name?: null | string; pincodes?: null | string }
+
+const PIN_HELP =
+  'Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.'
+
+/** An empty pin is fine; a typed one must read as a point in India. */
+const validatePin = (value: unknown): string | true => {
+  const text = typeof value === 'string' ? value.trim() : ''
+  if (!text) return true
+  return parseMapPin(text) ? true : 'Use latitude, longitude for a place in India, for example 13.0067, 80.2570.'
+}
 
 /** Stores the pincodes one per line, whatever separators staff typed. */
 const normalizePincodes: FieldHook = ({ value }) =>
@@ -46,6 +56,13 @@ export const DeliveryAreas: GlobalConfig = {
       admin: { description: 'The short line under the heading on /delivery-areas.' },
     },
     {
+      name: 'kitchenPin',
+      type: 'text',
+      label: 'Kitchen on the map',
+      admin: { description: `Optional. Marks the kitchen on the /delivery-areas map. ${PIN_HELP}` },
+      validate: validatePin,
+    },
+    {
       name: 'areas',
       type: 'array',
       label: 'Areas',
@@ -70,6 +87,13 @@ export const DeliveryAreas: GlobalConfig = {
           label: 'Area name',
           required: true,
           admin: { description: 'As customers know it, for example "Adyar" or "Anna Nagar".' },
+        },
+        {
+          name: 'pin',
+          type: 'text',
+          label: 'Map pin',
+          admin: { description: `Optional. Where the area sits on the /delivery-areas map. ${PIN_HELP}` },
+          validate: validatePin,
         },
         {
           name: 'pincodes',

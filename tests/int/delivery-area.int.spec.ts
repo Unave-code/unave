@@ -6,6 +6,7 @@ import {
   deliveryCheck,
   duplicatePincodes,
   invalidPincodeTokens,
+  parseMapPin,
   parsePincodes,
   readDeliveryAreas,
 } from '@/utilities/deliveryArea'
@@ -37,6 +38,21 @@ describe('parsePincodes', () => {
   })
 })
 
+describe('parseMapPin', () => {
+  it('reads latitude, longitude the way Google Maps copies a place', () => {
+    expect(parseMapPin('13.0067, 80.2570')).toEqual({ lat: 13.0067, lng: 80.257 })
+    expect(parseMapPin(' 13.0067 80.2570 ')).toEqual({ lat: 13.0067, lng: 80.257 })
+  })
+
+  it('refuses a swapped pair, a point outside India, and anything else', () => {
+    expect(parseMapPin('80.2570, 13.0067')).toBeNull()
+    expect(parseMapPin('51.5072, -0.1276')).toBeNull()
+    expect(parseMapPin('Adyar')).toBeNull()
+    expect(parseMapPin('')).toBeNull()
+    expect(parseMapPin(null)).toBeNull()
+  })
+})
+
 describe('invalidPincodeTokens', () => {
   it('names what staff typed that is not a pincode', () => {
     expect(invalidPincodeTokens('600020, 60002, Adyar\n600041')).toEqual(['60002', 'Adyar'])
@@ -47,6 +63,17 @@ describe('invalidPincodeTokens', () => {
 describe('readDeliveryAreas and areaForPincode', () => {
   it('keeps named areas, trimmed, and drops a row with no name', () => {
     expect(readDeliveryAreas(source).map((area) => area.name)).toEqual(['Adyar', 'Anna Nagar'])
+  })
+
+  it('carries a map pin when the row has a readable one', () => {
+    const [adyar, annaNagar] = readDeliveryAreas({
+      areas: [
+        { name: 'Adyar', pin: '13.0012, 80.2565', pincodes: '600020' },
+        { name: 'Anna Nagar', pin: 'somewhere', pincodes: '600040' },
+      ],
+    })
+    expect(adyar!.pin).toEqual({ lat: 13.0012, lng: 80.2565 })
+    expect(annaNagar!.pin).toBeNull()
   })
 
   it('finds the area a pincode belongs to', () => {
@@ -121,6 +148,13 @@ describe('the delivery areas global', () => {
     expect(pincodesField.validate!('600020, 6000')).toBe('6000 is not a 6-digit pincode.')
     expect(pincodesField.validate!('  ')).toBe('Add at least one 6-digit pincode.')
     expect(pincodesField.validate!('600020,600041')).toBe(true)
+  })
+
+  it('refuses a map pin that is not a place in India, and allows none', () => {
+    const pinField = areasField.fields!.find((field) => field.name === 'pin')!
+    expect(pinField.validate!('80.2570, 13.0067')).toMatch(/^Use latitude, longitude/)
+    expect(pinField.validate!('13.0067, 80.2570')).toBe(true)
+    expect(pinField.validate!('')).toBe(true)
   })
 
   it('stores the pincodes one per line', () => {

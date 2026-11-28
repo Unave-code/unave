@@ -10,8 +10,28 @@ export const DELIVERY_AREAS_PAGE_TITLE = 'Delivery Areas in Chennai'
 export const DELIVERY_AREAS_PAGE_DESCRIPTION =
   'The areas of Chennai the UNAVE cloud kitchen delivers to. Check your pincode, or message us on WhatsApp to ask about yours.'
 
-export const DELIVERY_AREAS_EYEBROW = 'Delivery areas'
-export const DELIVERY_AREAS_HEADLINE = 'Where we deliver'
+export const DELIVERY_AREAS_EYEBROW = 'Delivery areas in Chennai'
+export const DELIVERY_AREAS_HEADLINE = 'Where we'
+export const DELIVERY_AREAS_HEADLINE_ACCENT = 'deliver'
+export const DELIVERY_AREAS_INTRO_FALLBACK =
+  'We cook in Chennai and deliver to the areas below. Check your pincode to be sure.'
+export const DELIVERY_AREAS_HERO_IMAGE = '/images/band-cta.jpg'
+
+export const DELIVERY_STAT_AREAS = (count: number): string => `${count} area${count === 1 ? '' : 's'}`
+export const DELIVERY_STAT_PINCODES = (count: number): string => `${count} pincode${count === 1 ? '' : 's'}`
+
+export const DELIVERY_LIST_INTRO = 'Choose an area to see it on the map.'
+
+export const DELIVERY_MAP_LABEL = 'Map of the areas we deliver to'
+export const DELIVERY_MAP_KITCHEN = 'UNAVE kitchen'
+export const DELIVERY_MAP_SHOW = 'Show on map'
+export const DELIVERY_MAP_SHOWN = 'On the map'
+export const DELIVERY_MAP_EMPTY = 'The areas will appear on the map as the kitchen adds them. The list holds every area we deliver to.'
+
+export const DELIVERY_FINAL_HEADING = 'Not on the list yet?'
+export const DELIVERY_FINAL_BODY =
+  'We add areas as the kitchen grows. Message us your pincode and we’ll tell you honestly whether we can reach you.'
+export const DELIVERY_FINAL_SECONDARY = 'Contact us'
 
 export const DELIVERY_CHECK_HEADING = 'Check your pincode'
 export const DELIVERY_CHECK_LABEL = 'Pincode'

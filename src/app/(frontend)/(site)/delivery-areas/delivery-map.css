@@ -1,0 +1,114 @@
+/* The delivery areas map, in the brand's greens and gold (design.md §3).
+   Leaflet's own stylesheet loads first; these rules only restyle it. */
+
+.unave-map {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  background: var(--green-50);
+}
+
+/* Soften the street map so the pins carry the colour. */
+.unave-map .leaflet-tile-pane {
+  filter: saturate(0.45) sepia(0.08) brightness(1.02);
+}
+
+.unave-map-pin {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--green-700);
+  border: 3px solid var(--cream);
+  box-shadow: 0 2px 6px rgb(15 46 33 / 0.35);
+  transition: transform 200ms ease-out, background-color 200ms ease-out;
+}
+
+.unave-map-pin::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 7px auto 0;
+  border-radius: 9999px;
+  background: var(--gold-400);
+}
+
+.unave-map-pin.is-active {
+  background: var(--gold-400);
+  transform: scale(1.25);
+}
+
+.unave-map-pin.is-active::after {
+  background: var(--green-700);
+}
+
+.unave-map-kitchen {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--green-900);
+  color: var(--gold-400);
+  border: 3px solid var(--gold-400);
+  box-shadow: 0 2px 8px rgb(15 46 33 / 0.4);
+}
+
+.unave-map-area {
+  fill: var(--green-500);
+  fill-opacity: 0.12;
+  stroke: var(--green-600);
+  stroke-opacity: 0.45;
+  stroke-width: 1.5;
+}
+
+.unave-map-area.is-active {
+  fill: var(--gold-400);
+  fill-opacity: 0.22;
+  stroke: var(--gold-600);
+  stroke-opacity: 0.8;
+}
+
+/* Leaflet's controls, at the 44px the design asks of every target. */
+.unave-map .leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  color: var(--green-700);
+  font-size: 20px;
+}
+
+.unave-map .leaflet-bar a:focus-visible,
+.unave-map .leaflet-marker-icon:focus-visible {
+  outline: 3px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.unave-map .leaflet-tooltip {
+  border: 0;
+  border-radius: 8px;
+  background: var(--green-900);
+  color: var(--cream);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 10px;
+  box-shadow: 0 2px 6px rgb(15 46 33 / 0.3);
+}
+
+.unave-map .leaflet-tooltip-top::before {
+  border-top-color: var(--green-900);
+}
+
+.unave-map .leaflet-control-attribution {
+  font-size: 11px;
+  background: rgb(250 247 239 / 0.85);
+}
+
+.unave-map .leaflet-control-attribution a {
+  color: var(--green-700);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unave-map-pin {
+    transition: none;
+  }
+}

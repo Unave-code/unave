@@ -9,14 +9,16 @@
  * the page and the tests all read the same rules.
  */
 
-export type DeliveryAreaRow = { name?: null | string; pincodes?: null | string }
+export type DeliveryAreaRow = { name?: null | string; pin?: null | string; pincodes?: null | string }
 
 export type DeliveryAreasSource = {
   areas?: DeliveryAreaRow[] | null
   enforce?: boolean | null
 }
 
-export type DeliveryArea = { name: string; pincodes: string[] }
+export type MapPin = { lat: number; lng: number }
+
+export type DeliveryArea = { name: string; pin: MapPin | null; pincodes: string[] }
 
 export type DeliveryCheck = 'not-served' | 'served' | 'unchecked'
 
@@ -33,11 +35,27 @@ export const invalidPincodeTokens = (text: null | string | undefined): string[] 
     .map((token) => token.trim())
     .filter((token) => token.length > 0 && !PINCODE.test(token))
 
-/** The areas with a name, each with its parsed pincodes. */
+/** Roughly India, so a pin with latitude and longitude swapped is caught. */
+const INDIA = { lat: [6, 37], lng: [68, 98] } as const
+
+/**
+ * A map pin from "latitude, longitude", the way Google Maps copies a place
+ * ("13.0067, 80.2570"). Anything else, or a point outside India, is no pin.
+ */
+export const parseMapPin = (text: null | string | undefined): MapPin | null => {
+  const match = (text ?? '').trim().match(/^(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)$/)
+  if (!match) return null
+  const lat = Number(match[1])
+  const lng = Number(match[2])
+  const inIndia = lat >= INDIA.lat[0] && lat <= INDIA.lat[1] && lng >= INDIA.lng[0] && lng <= INDIA.lng[1]
+  return inIndia ? { lat, lng } : null
+}
+
+/** The areas with a name, each with its parsed pincodes and map pin. */
 export const readDeliveryAreas = (source: DeliveryAreasSource | null | undefined): DeliveryArea[] =>
   (source?.areas ?? []).flatMap((row) => {
     const name = row?.name?.trim()
-    return name ? [{ name, pincodes: parsePincodes(row.pincodes) }] : []
+    return name ? [{ name, pin: parseMapPin(row.pin), pincodes: parsePincodes(row.pincodes) }] : []
   })
 
 export const areaForPincode = (areas: DeliveryArea[], pincode: string): DeliveryArea | null => {
