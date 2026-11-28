@@ -33,6 +33,14 @@ export const orderCreateSchema = z.object({
 })
 
 /**
+ * A cash on delivery order: the same body plus a key the checkout page makes
+ * once per visit, so a repeated "Place order" finds the first order.
+ */
+export const orderCashSchema = orderCreateSchema.extend({
+  cashKey: z.string().uuid({ message: 'Please reload the page and try again.' }),
+})
+
+/**
  * What the Razorpay popup hands back on success. The names are Razorpay's own,
  * because the browser forwards the handler's response untouched.
  */

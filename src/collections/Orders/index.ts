@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { hasStaffRole, isStaff } from '../../access/isStaff'
 import { staffOrOrderOwner } from '../../access/staffOrOrderOwner'
 
+import { cashOrderEndpoint } from './cash'
 import { createOrderEndpoint, verifyOrderEndpoint } from './endpoints'
 import { orderReportEndpoint } from './report'
 
@@ -465,7 +466,7 @@ export const Orders: CollectionConfig = {
       label: 'Deliveries start on',
     },
   ],
-  endpoints: [orderReportEndpoint, createOrderEndpoint, verifyOrderEndpoint],
+  endpoints: [orderReportEndpoint, createOrderEndpoint, verifyOrderEndpoint, cashOrderEndpoint],
   graphQL: false,
   labels: {
     plural: 'Orders',
