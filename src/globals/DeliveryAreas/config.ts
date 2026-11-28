@@ -59,7 +59,9 @@ export const DeliveryAreas: GlobalConfig = {
       name: 'kitchenPin',
       type: 'text',
       label: 'Kitchen on the map',
-      admin: { description: `Optional. Marks the kitchen on the /delivery-areas map. ${PIN_HELP}` },
+      admin: {
+        description: `Optional. Leave empty and the map places the kitchen from the address in Footer → Contact. To place it exactly: ${PIN_HELP}`,
+      },
       validate: validatePin,
     },
     {
@@ -92,7 +94,9 @@ export const DeliveryAreas: GlobalConfig = {
           name: 'pin',
           type: 'text',
           label: 'Map pin',
-          admin: { description: `Optional. Where the area sits on the /delivery-areas map. ${PIN_HELP}` },
+          admin: {
+            description: `Optional. Leave empty and the map places the area from its name and pincode. To place it exactly: ${PIN_HELP}`,
+          },
           validate: validatePin,
         },
         {

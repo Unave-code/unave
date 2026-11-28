@@ -3167,7 +3167,7 @@ export interface DeliveryArea {
    */
   intro?: string | null;
   /**
-   * Optional. Marks the kitchen on the /delivery-areas map. Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
+   * Optional. Leave empty and the map places the kitchen from the address in Footer → Contact. To place it exactly: Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
    */
   kitchenPin?: string | null;
   /**
@@ -3180,7 +3180,7 @@ export interface DeliveryArea {
          */
         name: string;
         /**
-         * Optional. Where the area sits on the /delivery-areas map. Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
+         * Optional. Leave empty and the map places the area from its name and pincode. To place it exactly: Latitude, longitude, for example 13.0067, 80.2570. In Google Maps, right-click the place and click the numbers at the top to copy them.
          */
         pin?: string | null;
         /**

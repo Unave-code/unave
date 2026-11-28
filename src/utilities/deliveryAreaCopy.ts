@@ -15,18 +15,17 @@ export const DELIVERY_AREAS_HEADLINE = 'Where we'
 export const DELIVERY_AREAS_HEADLINE_ACCENT = 'deliver'
 export const DELIVERY_AREAS_INTRO_FALLBACK =
   'We cook in Chennai and deliver to the areas below. Check your pincode to be sure.'
-export const DELIVERY_AREAS_HERO_IMAGE = '/images/band-cta.jpg'
 
 export const DELIVERY_STAT_AREAS = (count: number): string => `${count} area${count === 1 ? '' : 's'}`
 export const DELIVERY_STAT_PINCODES = (count: number): string => `${count} pincode${count === 1 ? '' : 's'}`
 
-export const DELIVERY_LIST_INTRO = 'Choose an area to see it on the map.'
+export const DELIVERY_LIST_INTRO = 'Every area the kitchen delivers to, with its pincodes. Choose one to see it on the map.'
 
 export const DELIVERY_MAP_LABEL = 'Map of the areas we deliver to'
 export const DELIVERY_MAP_KITCHEN = 'UNAVE kitchen'
 export const DELIVERY_MAP_SHOW = 'Show on map'
 export const DELIVERY_MAP_SHOWN = 'On the map'
-export const DELIVERY_MAP_EMPTY = 'The areas will appear on the map as the kitchen adds them. The list holds every area we deliver to.'
+export const DELIVERY_MAP_EMPTY = 'We couldn’t place the areas on the map just now. The list below holds every area we deliver to.'
 
 export const DELIVERY_FINAL_HEADING = 'Not on the list yet?'
 export const DELIVERY_FINAL_BODY =
